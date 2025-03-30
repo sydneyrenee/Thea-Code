@@ -51,30 +51,64 @@ export async function getStorageBasePath(defaultPath: string): Promise<string> {
  * Gets the storage directory path for a task
  */
 export async function getTaskDirectoryPath(globalStoragePath: string, taskId: string): Promise<string> {
-	const basePath = await getStorageBasePath(globalStoragePath)
-	const taskDir = path.join(basePath, "tasks", taskId)
-	await fs.mkdir(taskDir, { recursive: true })
-	return taskDir
+ const resolvedBasePath = await getStorageBasePath(globalStoragePath);
+ let finalPathBase: string;
+
+ // Check if the resolved base path is the default VS Code storage path or a custom one.
+ // If they differ, it means a custom path is in use.
+ if (resolvedBasePath === globalStoragePath) {
+ 	// Using default VS Code storage (already unique per extension ID)
+ 	finalPathBase = resolvedBasePath;
+ } else {
+ 	// Using custom storage path - append EXTENSION_NAME to ensure uniqueness
+ 	finalPathBase = path.join(resolvedBasePath, EXTENSION_NAME);
+ }
+
+ const taskDir = path.join(finalPathBase, "tasks", taskId);
+ await fs.mkdir(taskDir, { recursive: true });
+ return taskDir;
 }
 
 /**
  * Gets the settings directory path
  */
 export async function getSettingsDirectoryPath(globalStoragePath: string): Promise<string> {
-	const basePath = await getStorageBasePath(globalStoragePath)
-	const settingsDir = path.join(basePath, "settings")
-	await fs.mkdir(settingsDir, { recursive: true })
-	return settingsDir
+ const resolvedBasePath = await getStorageBasePath(globalStoragePath);
+ let finalPathBase: string;
+
+ // Check if the resolved base path is the default VS Code storage path or a custom one.
+ if (resolvedBasePath === globalStoragePath) {
+ 	// Using default VS Code storage (already unique per extension ID)
+ 	finalPathBase = resolvedBasePath;
+ } else {
+ 	// Using custom storage path - append EXTENSION_NAME to ensure uniqueness
+ 	finalPathBase = path.join(resolvedBasePath, EXTENSION_NAME);
+ }
+
+ const settingsDir = path.join(finalPathBase, "settings");
+ await fs.mkdir(settingsDir, { recursive: true });
+ return settingsDir;
 }
 
 /**
  * Gets the cache directory path
  */
 export async function getCacheDirectoryPath(globalStoragePath: string): Promise<string> {
-	const basePath = await getStorageBasePath(globalStoragePath)
-	const cacheDir = path.join(basePath, "cache")
-	await fs.mkdir(cacheDir, { recursive: true })
-	return cacheDir
+ const resolvedBasePath = await getStorageBasePath(globalStoragePath);
+ let finalPathBase: string;
+
+ // Check if the resolved base path is the default VS Code storage path or a custom one.
+ if (resolvedBasePath === globalStoragePath) {
+ 	// Using default VS Code storage (already unique per extension ID)
+ 	finalPathBase = resolvedBasePath;
+ } else {
+ 	// Using custom storage path - append EXTENSION_NAME to ensure uniqueness
+ 	finalPathBase = path.join(resolvedBasePath, EXTENSION_NAME);
+ }
+
+ const cacheDir = path.join(finalPathBase, "cache");
+ await fs.mkdir(cacheDir, { recursive: true });
+ return cacheDir;
 }
 
 /**

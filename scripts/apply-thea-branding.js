@@ -8,6 +8,7 @@ console.log('Starting Thea Branding Application...');
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
 const brandingJsonPath = path.join(__dirname, '..', 'branding.json');
 const generatedConfigPath = path.join(__dirname, '..', 'dist', 'thea-config.ts'); // Define output path for generated TS config
+const contributesTemplatePath = path.join(__dirname, '..', 'dist', 'contributes.template.json'); // Path to the new template
 const newVersion = '0.0.1'; // Define the starting version for this fork
 
 // --- Read Files ---
@@ -53,6 +54,7 @@ const stringReplacements = {
   'https://github.com/RooVetGit/Roo-Code': brandingJson.repository.url,
   'roo code': brandingJson.name, 
   'roocode': brandingJson.name,  
+  'roo-code': brandingJson.name, // Add replacement for submenu IDs
 };
 console.log('Defined string replacements:', stringReplacements);
 
@@ -76,6 +78,57 @@ if (brandingJson.extensionConfigDir) {
     delete packageObj.extensionConfigDir;
 }
 console.log('Top-level fields updated.');
+
+
+// --- Apply Selective Recursive Replacement to Contributes ---
+console.log('Applying selective recursive replacements to contributes section...');
+if (packageObj.contributes) {
+  const sectionsToBrand = ['viewsContainers', 'views', 'commands', 'configuration'];
+  sectionsToBrand.forEach(section => {
+    if (packageObj.contributes[section]) {
+      packageObj.contributes[section] = replaceStringsRecursively(packageObj.contributes[section]);
+      console.log(`Branded contributes.${section}`);
+    } else {
+      console.log(`Skipping contributes.${section} (not found).`);
+    }
+  });
+} else {
+  console.log('Skipping selective contributes branding (contributes section not found).');
+}
+console.log('Selective replacement in contributes done.');
+
+// --- Process Contributes Template ---
+console.log('Processing contributes template...');
+try {
+  let templateContent = fs.readFileSync(contributesTemplatePath, 'utf8');
+  console.log('Read contributes template.');
+
+  // Replace placeholders
+  templateContent = templateContent.replaceAll('{{EXTENSION_NAME}}', brandingJson.name);
+  templateContent = templateContent.replaceAll('{{DISPLAY_NAME}}', brandingJson.displayName);
+  console.log('Replaced placeholders in template.');
+
+  const brandedContributes = JSON.parse(templateContent);
+  console.log('Parsed branded template content.');
+
+  // Ensure contributes exists
+  if (!packageObj.contributes) {
+    packageObj.contributes = {};
+  }
+
+  // Remove old sections if they exist (to avoid merge conflicts)
+  delete packageObj.contributes.submenus;
+  delete packageObj.contributes.menus;
+
+  // Merge branded template into contributes
+  packageObj.contributes = { ...packageObj.contributes, ...brandedContributes };
+  console.log('Merged branded template into package.json object.');
+
+} catch (err) {
+  console.error(`Failed to process contributes template: ${err.message}`);
+  process.exit(1);
+}
+
 
 // --- Merge Keywords ---
 console.log('Merging keywords...');
@@ -112,15 +165,11 @@ function replaceStringsRecursively(item) {
   return item;
 }
 
-// --- Apply Recursive Replacement to package.json object ---
-console.log('Applying recursive string replacements throughout package.json object...');
-const finalPackageObj = replaceStringsRecursively(packageObj);
-console.log('Recursive replacements applied to package.json object.');
-
 // --- Write updated package.json ---
 try {
   console.log(`Writing final branded content to ${packageJsonPath}...`);
-  fs.writeFileSync(packageJsonPath, JSON.stringify(finalPackageObj, null, 2));
+  // NOTE: We now write packageObj directly, as recursive replacement is handled selectively
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageObj, null, 2));
   console.log('Successfully wrote final branded package.json.');
 } catch (err) {
   console.error(`Failed to write updated package.json: ${err.message}`);

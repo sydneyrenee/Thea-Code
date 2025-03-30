@@ -53,16 +53,6 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "submenus": [
-      {
-        "id": "roo-code.contextMenu",
-        "label": "Thea Code"
-      },
-      {
-        "id": "roo-code.terminalMenu",
-        "label": "Thea Code"
-      }
-    ],
     "viewsContainers": {
       "activitybar": [
         {
@@ -178,14 +168,63 @@
         "category": "Thea Code"
       }
     ],
+    "configuration": {
+      "title": "Thea Code",
+      "properties": {
+        "thea-code.allowedCommands": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "npm test",
+            "npm install",
+            "tsc",
+            "git log",
+            "git diff",
+            "git show"
+          ],
+          "description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
+        },
+        "thea-code.vsCodeLmModelSelector": {
+          "type": "object",
+          "properties": {
+            "vendor": {
+              "type": "string",
+              "description": "The vendor of the language model (e.g. copilot)"
+            },
+            "family": {
+              "type": "string",
+              "description": "The family of the language model (e.g. gpt-4)"
+            }
+          },
+          "description": "Settings for VSCode Language Model API"
+        },
+        "thea-code.customStoragePath": {
+          "type": "string",
+          "default": "",
+          "description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
+        }
+      }
+    },
+    "submenus": [
+      {
+        "id": "thea-code.contextMenu",
+        "label": "Thea Code"
+      },
+      {
+        "id": "thea-code.terminalMenu",
+        "label": "Thea Code"
+      }
+    ],
     "menus": {
       "editor/context": [
         {
-          "submenu": "roo-code.contextMenu",
+          "submenu": "thea-code.contextMenu",
           "group": "navigation"
         }
       ],
-      "roo-code.contextMenu": [
+      "thea-code.contextMenu": [
         {
           "command": "thea-code.explainCode",
           "group": "1_actions@1"
@@ -205,11 +244,11 @@
       ],
       "terminal/context": [
         {
-          "submenu": "roo-code.terminalMenu",
+          "submenu": "thea-code.terminalMenu",
           "group": "navigation"
         }
       ],
-      "roo-code.terminalMenu": [
+      "thea-code.terminalMenu": [
         {
           "command": "thea-code.terminalAddToContext",
           "group": "1_actions@1"
@@ -268,45 +307,6 @@
           "when": "view == thea-code.SidebarProvider"
         }
       ]
-    },
-    "configuration": {
-      "title": "Thea Code",
-      "properties": {
-        "thea-code.allowedCommands": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "default": [
-            "npm test",
-            "npm install",
-            "tsc",
-            "git log",
-            "git diff",
-            "git show"
-          ],
-          "description": "Commands that can be auto-executed when 'Always approve execute operations' is enabled"
-        },
-        "thea-code.vsCodeLmModelSelector": {
-          "type": "object",
-          "properties": {
-            "vendor": {
-              "type": "string",
-              "description": "The vendor of the language model (e.g. copilot)"
-            },
-            "family": {
-              "type": "string",
-              "description": "The family of the language model (e.g. gpt-4)"
-            }
-          },
-          "description": "Settings for VSCode Language Model API"
-        },
-        "thea-code.customStoragePath": {
-          "type": "string",
-          "default": "",
-          "description": "Custom storage path. Leave empty to use the default location. Supports absolute paths (e.g. 'D:\\RooCodeStorage')"
-        }
-      }
     }
   },
   "scripts": {

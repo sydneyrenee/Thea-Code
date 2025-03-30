@@ -309,8 +309,14 @@ console.log(`Version set to ${newVersion}.`);
 console.log(`Please review package.json and test thoroughly.`);
 
 // --- Update i18n JSON files ---
-console.log('Updating i18n common.json files...');
-const i18nDirs = [
+// Check if we should skip i18n updates (for packaging)
+const skipI18nUpdates = process.argv.includes('--skip-i18n');
+
+if (skipI18nUpdates) {
+  console.log('Skipping i18n updates as requested by --skip-i18n flag');
+} else {
+  console.log('Updating i18n common.json files...');
+  const i18nDirs = [
   path.join(__dirname, '..', 'src', 'i18n', 'locales'),
   path.join(__dirname, '..', 'webview-ui', 'src', 'i18n', 'locales')
 ];
@@ -387,6 +393,7 @@ i18nDirs.forEach(dir => {
   // Update other language files
   jsonFiles.forEach(file => updateJsonFile(file, brandingJson));
 });
+}
 
 // --- Process Modes Template File ---
 console.log('Processing modes template file...');

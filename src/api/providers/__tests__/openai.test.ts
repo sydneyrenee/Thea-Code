@@ -1,6 +1,7 @@
 import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Anthropic } from "@anthropic-ai/sdk"
+import { API_REFERENCES } from "../../../../dist/thea-config";
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -99,8 +100,8 @@ describe("OpenAiHandler", () => {
 				baseURL: expect.any(String),
 				apiKey: expect.any(String),
 				defaultHeaders: {
-					"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-					"X-Title": "Roo Code",
+					"HTTP-Referer": API_REFERENCES.REPO_URL, // Use constant
+					"X-Title": API_REFERENCES.APP_TITLE, // Use constant
 				},
 			})
 		})

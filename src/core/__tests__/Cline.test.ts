@@ -470,7 +470,7 @@ describe("Cline", () => {
 				task: "test task",
 			})
 
-			const details = await cline["getEnvironmentDetails"](false)
+			const details = await (cline as any).getEnvironmentDetails(false)
 
 			// Verify timezone information is present and formatted correctly
 			expect(details).toContain("America/Los_Angeles")

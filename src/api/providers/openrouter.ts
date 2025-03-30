@@ -2,7 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import axios, { AxiosRequestConfig } from "axios"
 import OpenAI from "openai"
-import delay from "delay"
+import * as vscode from "vscode" // Added vscode import
 
 import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
@@ -14,6 +14,8 @@ import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { getModelParams, SingleCompletionHandler } from ".."
 import { BaseProvider } from "./base-provider"
 import { defaultHeaders } from "./openai"
+// TODO: Update this path if the generated file is elsewhere relative to src/api/providers
+import { API_REFERENCES } from "../../../dist/thea-config" // Import from generated config
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -35,7 +37,21 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
 		const apiKey = this.options.openRouterApiKey ?? "not-provided"
 
-		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
+		// Create custom headers with API_REFERENCES values
+		const customHeaders = {
+			"HTTP-Referer": API_REFERENCES.HOMEPAGE,
+			"X-Title": API_REFERENCES.APP_TITLE,
+		}
+
+		// Merge with defaultHeaders
+		this.client = new OpenAI({
+			baseURL,
+			apiKey,
+			defaultHeaders: {
+				...defaultHeaders, // Assumes defaultHeaders is correctly exported from openai.ts now
+				...customHeaders
+			}
+		})
 	}
 
 	override async *createMessage(
@@ -200,12 +216,27 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 	}
 }
 
-export async function getOpenRouterModels(options?: ApiHandlerOptions) {
+// Updated to accept either ApiHandlerOptions or vscode.OutputChannel
+export async function getOpenRouterModels(optionsOrOutputChannel?: ApiHandlerOptions | vscode.OutputChannel) {
 	const models: Record<string, ModelInfo> = {}
+
+	// Type-guard function
+	const isOutputChannel = (val: any): val is vscode.OutputChannel => {
+		return val && typeof val === 'object' && 'appendLine' in val && typeof val.appendLine === 'function';
+	};
+
+	// Handle parameter type
+	const outputChannel = isOutputChannel(optionsOrOutputChannel) ? optionsOrOutputChannel : undefined;
+	const options = !isOutputChannel(optionsOrOutputChannel) ? optionsOrOutputChannel as ApiHandlerOptions | undefined : undefined;
 
 	const baseURL = options?.openRouterBaseUrl || "https://openrouter.ai/api/v1"
 
 	try {
+		// Log to output channel if provided
+		if (outputChannel) {
+			outputChannel.appendLine("Fetching models from OpenRouter...")
+		}
+
 		const response = await axios.get(`${baseURL}/models`)
 		const rawModels = response.data.data
 
@@ -267,10 +298,17 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 
 			models[rawModel.id] = modelInfo
 		}
+
+		// Log to output channel if provided
+		if (outputChannel) {
+			outputChannel.appendLine(`Successfully fetched ${Object.keys(models).length} models from OpenRouter`)
+		}
 	} catch (error) {
-		console.error(
-			`Error fetching OpenRouter models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-		)
+		// Log to output channel if provided
+		if (outputChannel) {
+			outputChannel.appendLine(`Error fetching OpenRouter models: ${error instanceof Error ? error.message : String(error)}`)
+		}
+		console.error(`Error fetching OpenRouter models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
 	}
 
 	return models

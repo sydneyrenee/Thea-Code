@@ -1,10 +1,13 @@
 import axios from "axios"
+import * as vscode from "vscode"
 
 import { ModelInfo, requestyDefaultModelInfo, requestyDefaultModelId } from "../../shared/api"
 import { calculateApiCostOpenAI, parseApiPrice } from "../../utils/cost"
 import { ApiStreamUsageChunk } from "../transform/stream"
 import { OpenAiHandler, OpenAiHandlerOptions } from "./openai"
 import OpenAI from "openai"
+// TODO: Update this path if the generated file is elsewhere relative to src/api/providers
+import { API_REFERENCES } from "../../../dist/thea-config" // Import from generated config
 
 // Requesty usage includes an extra field for Anthropic use cases.
 // Safely cast the prompt token details section to the appropriate structure.
@@ -58,10 +61,16 @@ export class RequestyHandler extends OpenAiHandler {
 	}
 }
 
-export async function getRequestyModels() {
+// Updated to accept outputChannel parameter to match call sites, but maintains original functionality
+export async function getRequestyModels(outputChannel?: vscode.OutputChannel) {
 	const models: Record<string, ModelInfo> = {}
 
 	try {
+		// Log to output channel if provided
+		if (outputChannel) {
+			outputChannel.appendLine("Fetching models from Requesty...")
+		}
+		
 		const response = await axios.get("https://router.requesty.ai/v1/models")
 		const rawModels = response.data.data
 
@@ -97,7 +106,16 @@ export async function getRequestyModels() {
 
 			models[rawModel.id] = modelInfo
 		}
+		
+		// Log to output channel if provided
+		if (outputChannel) {
+			outputChannel.appendLine(`Successfully fetched ${Object.keys(models).length} models from Requesty`)
+		}
 	} catch (error) {
+		// Log to output channel if provided
+		if (outputChannel) {
+			outputChannel.appendLine(`Error fetching Requesty models: ${error instanceof Error ? error.message : String(error)}`)
+		}
 		console.error(`Error fetching Requesty models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
 	}
 

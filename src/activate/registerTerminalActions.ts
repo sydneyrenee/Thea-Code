@@ -2,25 +2,27 @@ import * as vscode from "vscode"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { Terminal } from "../integrations/terminal/Terminal"
 import { t } from "../i18n"
+// TODO: Update this path if the generated file is elsewhere relative to src/activate
+import { COMMANDS, EXTENSION_DISPLAY_NAME } from "../../dist/thea-config" // Import from generated config
 
 const TERMINAL_COMMAND_IDS = {
-	ADD_TO_CONTEXT: "roo-cline.terminalAddToContext",
-	FIX: "roo-cline.terminalFixCommand",
-	FIX_IN_CURRENT_TASK: "roo-cline.terminalFixCommandInCurrentTask",
-	EXPLAIN: "roo-cline.terminalExplainCommand",
-	EXPLAIN_IN_CURRENT_TASK: "roo-cline.terminalExplainCommandInCurrentTask",
+	ADD_TO_CONTEXT: COMMANDS.TERMINAL_ADD_TO_CONTEXT,
+	FIX: COMMANDS.TERMINAL_FIX,
+	FIX_IN_CURRENT_TASK: COMMANDS.TERMINAL_FIX_CURRENT,
+	EXPLAIN: COMMANDS.TERMINAL_EXPLAIN,
+	EXPLAIN_IN_CURRENT_TASK: COMMANDS.TERMINAL_EXPLAIN_CURRENT,
 } as const
 
 export const registerTerminalActions = (context: vscode.ExtensionContext) => {
 	registerTerminalAction(context, TERMINAL_COMMAND_IDS.ADD_TO_CONTEXT, "TERMINAL_ADD_TO_CONTEXT")
 
-	registerTerminalActionPair(context, TERMINAL_COMMAND_IDS.FIX, "TERMINAL_FIX", "What would you like Roo to fix?")
+	registerTerminalActionPair(context, TERMINAL_COMMAND_IDS.FIX, "TERMINAL_FIX", `What would you like ${EXTENSION_DISPLAY_NAME} to fix?`)
 
 	registerTerminalActionPair(
 		context,
 		TERMINAL_COMMAND_IDS.EXPLAIN,
 		"TERMINAL_EXPLAIN",
-		"What would you like Roo to explain?",
+		`What would you like ${EXTENSION_DISPLAY_NAME} to explain?`,
 	)
 }
 

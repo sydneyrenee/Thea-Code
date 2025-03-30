@@ -22,9 +22,11 @@ export interface LanguageModelChatSelector {
 export interface ExtensionMessage {
 	type:
 		| "action"
+		| "ask" // Added from ClineMessage
 		| "state"
 		| "selectedImages"
 		| "ollamaModels"
+		| "code" // Added missing type
 		| "lmStudioModels"
 		| "theme"
 		| "workspaceUpdated"
@@ -36,8 +38,10 @@ export interface ExtensionMessage {
 		| "requestyModels"
 		| "openAiModels"
 		| "mcpServers"
+		| "gitSearchResults" // Added missing type
 		| "enhancedPrompt"
 		| "commitSearchResults"
+		| "images" // Added missing type
 		| "listApiConfig"
 		| "vsCodeLmModels"
 		| "vsCodeLmApiAvailable"
@@ -49,12 +53,15 @@ export interface ExtensionMessage {
 		| "deleteCustomMode"
 		| "currentCheckpointUpdated"
 		| "showHumanRelayDialog"
+		| "say" // Added from ClineMessage
 		| "humanRelayResponse"
 		| "humanRelayCancel"
 		| "browserToolEnabled"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
+		| "taskStarted" // Added missing type
 		| "ttsStart"
+		| "terminal" // Added missing type
 		| "ttsStop"
 		| "maxReadFileLine"
 		| "fileSearchResults"
@@ -79,10 +86,14 @@ export interface ExtensionMessage {
 		isActive: boolean
 		path?: string
 	}>
+	code?: string // Added for 'code' and 'terminal' types
+	language?: string; // Added for 'code' type
 	partialMessage?: ClineMessage
 	openRouterModels?: Record<string, ModelInfo>
 	glamaModels?: Record<string, ModelInfo>
 	unboundModels?: Record<string, ModelInfo>
+	task?: string; // Added for 'taskStarted' type
+	taskId?: string // Added for 'taskStarted' type
 	requestyModels?: Record<string, ModelInfo>
 	openAiModels?: string[]
 	mcpServers?: McpServer[]
@@ -93,6 +104,7 @@ export interface ExtensionMessage {
 	slug?: string
 	success?: boolean
 	values?: Record<string, any>
+	gitSearchResults?: GitCommit[] // Added for 'gitSearchResults' type, renaming 'results'
 	requestId?: string
 	promptText?: string
 	results?: Array<{
@@ -144,6 +156,7 @@ export interface ExtensionState {
 	enableCheckpoints: boolean
 	checkpointStorage: CheckpointStorage
 	browserViewportSize?: string
+	mcpServers?: McpServer[]; // Added missing property
 	screenshotQuality?: number
 	remoteBrowserHost?: string
 	remoteBrowserEnabled?: boolean

@@ -3,6 +3,7 @@ import { ConfigManager, ApiConfigData } from "../ConfigManager"
 import { ApiConfiguration } from "../../../shared/api"
 
 // Mock VSCode ExtensionContext
+import { EXTENSION_SECRETS_PREFIX } from "../../../../dist/thea-config"; // Corrected path
 const mockSecrets = {
 	get: jest.fn(),
 	store: jest.fn(),
@@ -183,7 +184,7 @@ describe("ConfigManager", () => {
 			}
 
 			expect(mockSecrets.store).toHaveBeenCalledWith(
-				"roo_cline_config_api_config",
+				`${EXTENSION_SECRETS_PREFIX}api_config`, // Use constant
 				JSON.stringify(expectedConfig, null, 2),
 			)
 		})
@@ -221,7 +222,7 @@ describe("ConfigManager", () => {
 			}
 
 			expect(mockSecrets.store).toHaveBeenCalledWith(
-				"roo_cline_config_api_config",
+				`${EXTENSION_SECRETS_PREFIX}api_config`, // Use constant
 				JSON.stringify(expectedConfig, null, 2),
 			)
 		})
@@ -443,11 +444,11 @@ describe("ConfigManager", () => {
 
 			await configManager.resetAllConfigs()
 
-			// Should have called delete with the correct config key
-			expect(mockSecrets.delete).toHaveBeenCalledWith("roo_cline_config_api_config")
-		})
-	})
-
+			
+						// Should have called delete with the correct config key
+						expect(mockSecrets.delete).toHaveBeenCalledWith(`${EXTENSION_SECRETS_PREFIX}api_config`) // Use constant
+					})
+				})
 	describe("HasConfig", () => {
 		it("should return true for existing config", async () => {
 			const existingConfig: ApiConfigData = {

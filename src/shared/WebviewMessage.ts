@@ -10,10 +10,12 @@ export type AudioType = "notification" | "celebration" | "progress_loop"
 
 export interface WebviewMessage {
 	type:
+		| "action" // Added missing type
 		| "apiConfiguration"
 		| "deleteMultipleTasksWithIds"
 		| "currentApiConfigName"
 		| "saveApiConfiguration"
+		| "chat" // Added missing type
 		| "upsertApiConfiguration"
 		| "deleteApiConfiguration"
 		| "loadApiConfiguration"
@@ -100,10 +102,13 @@ export interface WebviewMessage {
 		| "updateCustomMode"
 		| "deleteCustomMode"
 		| "setopenAiCustomModelInfo"
+		| "checkoutDiff" // Added missing type
 		| "openCustomModesSettings"
+		| "checkoutRestore" // Added missing type
 		| "checkpointDiff"
 		| "checkpointRestore"
 		| "deleteMcpServer"
+		| "ready" // Added missing type
 		| "maxOpenTabsContext"
 		| "maxWorkspaceFiles"
 		| "humanRelayResponse"
@@ -113,6 +118,7 @@ export interface WebviewMessage {
 		| "showRooIgnoredFiles"
 		| "testBrowserConnection"
 		| "discoverBrowser"
+		| "telemetry" // Added missing type
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"
 		| "language"

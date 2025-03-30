@@ -2,43 +2,52 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import os from "os"
 import * as path from "path"
 import * as vscode from "vscode"
+import * as fs from 'fs/promises';
 
-export async function downloadTask(dateTs: number, conversationHistory: Anthropic.MessageParam[]) {
-	// File name
-	const date = new Date(dateTs)
-	const month = date.toLocaleString("en-US", { month: "short" }).toLowerCase()
-	const day = date.getDate()
-	const year = date.getFullYear()
-	let hours = date.getHours()
-	const minutes = date.getMinutes().toString().padStart(2, "0")
-	const seconds = date.getSeconds().toString().padStart(2, "0")
-	const ampm = hours >= 12 ? "pm" : "am"
-	hours = hours % 12
-	hours = hours ? hours : 12 // the hour '0' should be '12'
-	const fileName = `cline_task_${month}-${day}-${year}_${hours}-${minutes}-${seconds}-${ampm}.md`
+/**
+ * Converts API conversation history to Markdown format
+ */
+function convertToMarkdown(history: Anthropic.MessageParam[]): string {
+    let markdown = '# Thea Code Conversation\n\n';
+    
+    for (const message of history) {
+        const role = message.role === 'user' ? '## User' : '## Assistant';
+        markdown += `${role}\n\n${message.content}\n\n`;
+    }
+    
+    return markdown;
+}
 
-	// Generate markdown
-	const markdownContent = conversationHistory
-		.map((message) => {
-			const role = message.role === "user" ? "**User:**" : "**Assistant:**"
-			const content = Array.isArray(message.content)
-				? message.content.map((block) => formatContentBlockToMarkdown(block)).join("\n")
-				: message.content
-			return `${role}\n\n${content}\n\n`
-		})
-		.join("---\n\n")
-
-	// Prompt user for save location
-	const saveUri = await vscode.window.showSaveDialog({
-		filters: { Markdown: ["md"] },
-		defaultUri: vscode.Uri.file(path.join(os.homedir(), "Downloads", fileName)),
-	})
-
-	if (saveUri) {
-		// Write content to the selected location
-		await vscode.workspace.fs.writeFile(saveUri, Buffer.from(markdownContent))
-		vscode.window.showTextDocument(saveUri, { preview: true })
-	}
+/**
+ * Downloads the conversation history as a Markdown file
+ */
+export async function downloadTask(timestamp: number, apiConversationHistory: Anthropic.MessageParam[]): Promise<void> {
+    try {
+        // Convert timestamp to formatted date string for the filename
+        const date = new Date(timestamp);
+        const formattedDate = date.toISOString().replace(/:/g, '-').replace(/\..+/, '');
+        
+        // Create markdown content
+        const markdown = convertToMarkdown(apiConversationHistory);
+        
+        // Ask the user where to save the file
+        const fileUri = await vscode.window.showSaveDialog({
+            defaultUri: vscode.Uri.file(`thea-code-conversation-${formattedDate}.md`),
+            filters: {
+                'Markdown': ['md']
+            },
+            title: 'Export Conversation'
+        });
+        
+        if (fileUri) {
+            // Write the markdown to the selected file
+            await fs.writeFile(fileUri.fsPath, markdown);
+            vscode.window.showInformationMessage(`Conversation exported to ${path.basename(fileUri.fsPath)}`);
+        }
+    } catch (error) {
+        console.error('Error exporting conversation:', error);
+        vscode.window.showErrorMessage(`Failed to export conversation: ${error.message}`);
+    }
 }
 
 export function formatContentBlockToMarkdown(block: Anthropic.Messages.ContentBlockParam): string {

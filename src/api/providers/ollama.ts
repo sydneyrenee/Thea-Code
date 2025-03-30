@@ -1,6 +1,8 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import axios from "axios"
+import * as vscode from 'vscode';
+import { createSafeModelFetcher } from './apiProviderUtils';
 
 import { SingleCompletionHandler } from "../"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
@@ -10,6 +12,43 @@ import { ApiStream } from "../transform/stream"
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { XmlMatcher } from "../../utils/xml-matcher"
 import { BaseProvider } from "./base-provider"
+import { handleProviderError } from './apiProviderUtils';
+
+/**
+ * Fetches available models from the local Ollama instance
+ * @param outputChannel VS Code output channel for logging
+ * @returns Record of model IDs to their info objects
+ */
+export async function getOllamaModels(outputChannel: vscode.OutputChannel): Promise<Record<string, ModelInfo>> {
+    const models: Record<string, ModelInfo> = {};
+    const baseUrl = "http://localhost:11434"; // Default Ollama URL
+    
+    try {
+        outputChannel.appendLine("Fetching models from Ollama...");
+        const response = await axios.get(`${baseUrl}/api/tags`);
+        
+        if (response.data && Array.isArray(response.data.models)) {
+            for (const model of response.data.models) {
+                models[model.name] = {
+                    maxTokens: model.details?.parameter_size ? parseInt(model.details.parameter_size) * 1024 : 4096,
+                    contextWindow: model.details?.context_length || 8192,
+                    supportsImages: Boolean(model.details?.modality?.includes("vision")),
+                    supportsPromptCache: false,
+                    inputPrice: 0, // Local models have no direct cost
+                    outputPrice: 0,
+                    description: `Ollama ${model.name}${model.details?.family ? ` (${model.details.family})` : ''}`,
+                };
+            }
+        }
+        
+        outputChannel.appendLine(`Successfully fetched ${Object.keys(models).length} models from Ollama`);
+        return models;
+    } catch (error) {
+        await handleProviderError(outputChannel, "Ollama", error, "model fetch error");
+        // Return empty object as Ollama is optional
+        return {};
+    }
+}
 
 export class OllamaHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: ApiHandlerOptions
@@ -86,19 +125,5 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 			}
 			throw error
 		}
-	}
-}
-
-export async function getOllamaModels(baseUrl = "http://localhost:11434") {
-	try {
-		if (!URL.canParse(baseUrl)) {
-			return []
-		}
-
-		const response = await axios.get(`${baseUrl}/api/tags`)
-		const modelsArray = response.data?.models?.map((model: any) => model.name) || []
-		return [...new Set<string>(modelsArray)]
-	} catch (error) {
-		return []
 	}
 }

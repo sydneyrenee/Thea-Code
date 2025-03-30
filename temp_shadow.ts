@@ -14,7 +14,6 @@ import { CheckpointStorage } from "../../shared/checkpoints"
 import { GIT_DISABLED_SUFFIX } from "./constants"
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
-import { EXTENSION_DISPLAY_NAME, EXTENSION_NAME } from "../../../dist/thea-config"
 
 export abstract class ShadowCheckpointService extends EventEmitter {
 	public readonly taskId: string
@@ -92,7 +91,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.init()
 			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
-			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME)
+			await git.addConfig("user.name", "Roo Code")
 			await git.addConfig("user.email", "noreply@example.com")
 			await this.writeExcludeFile()
 			await this.stageAll(git)
@@ -371,7 +370,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		const git = simpleGit(workspaceRepoDir)
 		const branches = await git.branchLocal()
 
-		if (branches.all.includes(`${EXTENSION_NAME}-${taskId}`)) {
+		if (branches.all.includes(`roo-${taskId}`)) {
 			return "workspace"
 		}
 
@@ -395,7 +394,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			console.log(`[${this.name}#deleteTask.${taskId}] removed ${taskRepoDir}`)
 		} else if (storage === "workspace") {
 			const workspaceRepoDir = this.workspaceRepoDir({ globalStorageDir, workspaceDir })
-			const branchName = `${EXTENSION_NAME}-${taskId}`
+			const branchName = `roo-${taskId}`
 			const git = simpleGit(workspaceRepoDir)
 			const success = await this.deleteBranch(git, branchName)
 

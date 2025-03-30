@@ -1,6 +1,7 @@
 // npx jest src/api/providers/__tests__/openrouter.test.ts
 
 import axios from "axios"
+import { API_REFERENCES } from "../../../../dist/thea-config";
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 
@@ -38,8 +39,8 @@ describe("OpenRouterHandler", () => {
 			baseURL: "https://openrouter.ai/api/v1",
 			apiKey: mockOptions.openRouterApiKey,
 			defaultHeaders: {
-				"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-				"X-Title": "Roo Code",
+				"HTTP-Referer": API_REFERENCES.REPO_URL, // Use constant
+				"X-Title": API_REFERENCES.APP_TITLE, // Use constant
 			},
 		})
 	})

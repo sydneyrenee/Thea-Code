@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import { ApiHandlerOptions, ModelInfo, requestyDefaultModelInfo } from "../../../shared/api"
+import { API_REFERENCES } from "../../../../dist/thea-config";
 import { RequestyHandler } from "../requesty"
 import { convertToOpenAiMessages } from "../../transform/openai-format"
 import { convertToR1Format } from "../../transform/r1-format"
@@ -67,8 +68,8 @@ describe("RequestyHandler", () => {
 				baseURL: "https://router.requesty.ai/v1",
 				apiKey: defaultOptions.requestyApiKey,
 				defaultHeaders: {
-					"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-					"X-Title": "Roo Code",
+					"HTTP-Referer": API_REFERENCES.REPO_URL, // Use constant
+					"X-Title": API_REFERENCES.APP_TITLE, // Use constant
 				},
 			})
 		})

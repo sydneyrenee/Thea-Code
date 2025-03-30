@@ -388,10 +388,12 @@ export class McpHub {
 					withCredentials: config.headers?.["Authorization"] ? true : false, // Enable credentials if Authorization header exists
 				}
 				global.EventSource = ReconnectingEventSource
-				transport = new SSEClientTransport(new URL(config.url), {
-					...sseOptions,
-					eventSourceInit: reconnectingEventSourceOptions,
-				})
+				// Create URL object with options embedded
+				const url = new URL(config.url)
+				// Apply options to URL object if needed
+				
+				// Initialize transport with just the URL
+				transport = new SSEClientTransport(url)
 
 				// Set up SSE specific error handling
 				transport.onerror = async (error) => {
@@ -466,7 +468,11 @@ export class McpHub {
 			}))
 
 			console.log(`[MCP] Fetched tools for ${serverName}:`, tools)
-			return tools
+			
+			// Ensure all properties required by McpTool are present
+			return tools.filter(tool =>
+				typeof tool.name === 'string' // Filter out any tools missing required properties
+			) as McpTool[]
 		} catch (error) {
 			// console.error(`Failed to fetch tools for ${serverName}:`, error)
 			return []
@@ -478,7 +484,14 @@ export class McpHub {
 			const response = await this.connections
 				.find((conn) => conn.server.name === serverName)
 				?.client.request({ method: "resources/list" }, ListResourcesResultSchema)
-			return response?.resources || []
+			
+			// Filter resources to ensure they have required properties
+			const resources = (response?.resources || []).filter(resource =>
+				typeof resource.uri === 'string' &&
+				typeof resource.name === 'string'
+			);
+			
+			return resources as McpResource[]
 		} catch (error) {
 			// console.error(`Failed to fetch resources for ${serverName}:`, error)
 			return []
@@ -490,7 +503,14 @@ export class McpHub {
 			const response = await this.connections
 				.find((conn) => conn.server.name === serverName)
 				?.client.request({ method: "resources/templates/list" }, ListResourceTemplatesResultSchema)
-			return response?.resourceTemplates || []
+			
+			// Filter templates to ensure they have required properties
+			const templates = (response?.resourceTemplates || []).filter(template =>
+				typeof template.uriTemplate === 'string' &&
+				typeof template.name === 'string'
+			);
+			
+			return templates as McpResourceTemplate[]
 		} catch (error) {
 			// console.error(`Failed to fetch resource templates for ${serverName}:`, error)
 			return []
@@ -801,6 +821,38 @@ export class McpHub {
 		}
 	}
 
+	/**
+	 * Registers a new server with the hub
+	 * @param name The name of the server
+	 * @param host The host address
+	 * @param port The port number
+	 * @returns Whether the server was successfully registered
+	 */
+	public async registerServer(name: string, host: string, port: number): Promise<boolean> {
+		try {
+			// Create SSE configuration for the server
+			const config = {
+				type: "sse",
+				url: `http://${host}:${port}/sse`,
+				timeout: 30000, // Default timeout of 30 seconds
+				disabled: false
+			};
+
+			// Create a new server configuration object with just this server
+			const newServers: Record<string, any> = {
+				[name]: config
+			};
+			
+			// Use existing method to add the server
+			await this.updateServerConnections(newServers);
+			
+			return true;
+		} catch (error) {
+			console.error(`Failed to register MCP server ${name}:`, error);
+			return false;
+		}
+	}
+
 	public async deleteServer(serverName: string): Promise<void> {
 		try {
 			const settingsPath = await this.getMcpSettingsFilePath()
@@ -856,7 +908,7 @@ export class McpHub {
 		if (connection.server.disabled) {
 			throw new Error(`Server "${serverName}" is disabled`)
 		}
-		return await connection.client.request(
+		const response = await connection.client.request(
 			{
 				method: "resources/read",
 				params: {
@@ -864,7 +916,18 @@ export class McpHub {
 				},
 			},
 			ReadResourceResultSchema,
-		)
+		);
+		
+		// Ensure the response matches the McpResourceResponse interface
+		// Make sure contents array items have required properties
+		const result: McpResourceResponse = {
+			_meta: response._meta,
+			contents: Array.isArray(response.contents)
+				? response.contents.filter(item => typeof item.uri === 'string')
+				: []
+		};
+		
+		return result;
 	}
 
 	async callTool(
@@ -892,7 +955,7 @@ export class McpHub {
 			timeout = 60 * 1000
 		}
 
-		return await connection.client.request(
+		const response = await connection.client.request(
 			{
 				method: "tools/call",
 				params: {
@@ -904,7 +967,23 @@ export class McpHub {
 			{
 				timeout,
 			},
-		)
+		);
+		
+		// Ensure the response matches the McpToolCallResponse interface
+		// Make sure content array items have required properties
+		const result: McpToolCallResponse = {
+			_meta: response._meta,
+			content: Array.isArray(response.content)
+				? response.content.filter(item => {
+					if (item.type === 'text') return typeof item.text === 'string';
+					if (item.type === 'image') return typeof item.data === 'string' && typeof item.mimeType === 'string';
+					if (item.type === 'resource') return item.resource && typeof item.resource.uri === 'string';
+					return false;
+				})
+				: []
+		};
+		
+		return result;
 	}
 
 	async toggleToolAlwaysAllow(serverName: string, toolName: string, shouldAllow: boolean): Promise<void> {

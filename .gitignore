@@ -31,3 +31,7 @@ docs/_site/
 
 #Logging
 logs
+package.json.bak*
+assets/icons/SOLACE-ICON-README.md
+REBRANDING-INSTRUCTIONS.md
+docs/REBRANDING.md

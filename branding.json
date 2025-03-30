@@ -1,0 +1,32 @@
+{
+  "name": "thea-code",
+  "displayName": "Thea Code",
+  "description": "A whole dev team of AI agents in your editor.",
+  "publisher": "sydneyrenee",
+  "extensionSecretsPrefix": "thea_code_config_",
+  "icon": "assets/icons/solace-icon.png",
+  "author": {
+    "name": "Test User",
+    "email": "test@example.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sydneyrenee/Thea-Code"
+  },
+  "homepage": "https://github.com/sydneyrenee/Thea-Code",
+  "keywords": [
+    "cline",
+    "claude",
+    "thea",
+    "solace",
+    "ember",
+    "dev",
+    "mcp",
+    "openrouter",
+    "coding",
+    "agent",
+    "autonomous",
+    "chatgpt",
+    "ai"
+  ]
+}

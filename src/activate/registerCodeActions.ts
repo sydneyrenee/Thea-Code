@@ -3,13 +3,15 @@ import * as vscode from "vscode"
 import { ACTION_NAMES, COMMAND_IDS } from "../core/CodeActionProvider"
 import { EditorUtils } from "../core/EditorUtils"
 import { ClineProvider } from "../core/webview/ClineProvider"
+// TODO: Update this path if the generated file is elsewhere relative to src/activate
+import { EXTENSION_DISPLAY_NAME } from "../../dist/thea-config" // Import from generated config
 
 export const registerCodeActions = (context: vscode.ExtensionContext) => {
 	registerCodeActionPair(
 		context,
 		COMMAND_IDS.EXPLAIN,
 		"EXPLAIN",
-		"What would you like Roo to explain?",
+		`What would you like ${EXTENSION_DISPLAY_NAME} to explain?`, // Use imported constant
 		"E.g. How does the error handling work?",
 	)
 
@@ -17,7 +19,7 @@ export const registerCodeActions = (context: vscode.ExtensionContext) => {
 		context,
 		COMMAND_IDS.FIX,
 		"FIX",
-		"What would you like Roo to fix?",
+		`What would you like ${EXTENSION_DISPLAY_NAME} to fix?`, // Use imported constant
 		"E.g. Maintain backward compatibility",
 	)
 
@@ -25,7 +27,7 @@ export const registerCodeActions = (context: vscode.ExtensionContext) => {
 		context,
 		COMMAND_IDS.IMPROVE,
 		"IMPROVE",
-		"What would you like Roo to improve?",
+		`What would you like ${EXTENSION_DISPLAY_NAME} to improve?`, // Use imported constant
 		"E.g. Focus on performance optimization",
 	)
 

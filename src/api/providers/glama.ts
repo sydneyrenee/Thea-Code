@@ -1,6 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import axios from "axios"
 import OpenAI from "openai"
+import * as vscode from 'vscode';
 
 import { ApiHandlerOptions, ModelInfo, glamaDefaultModelId, glamaDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
@@ -8,6 +9,10 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
+// TODO: Update this path if the generated file is elsewhere relative to src/api/providers
+import { EXTENSION_ID } from "../../../dist/thea-config" // Import from generated config
+import { createSafeModelFetcher } from './apiProviderUtils';
+import { handleProviderError } from './apiProviderUtils';
 
 const GLAMA_DEFAULT_TEMPERATURE = 0
 
@@ -109,7 +114,7 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 						labels: [
 							{
 								key: "app",
-								value: "vscode.rooveterinaryinc.roo-cline",
+								value: `vscode.${EXTENSION_ID}`, // Use imported constant
 							},
 						],
 					}),
@@ -195,40 +200,53 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 	}
 }
 
-export async function getGlamaModels() {
-	const models: Record<string, ModelInfo> = {}
-
-	try {
-		const response = await axios.get("https://glama.ai/api/gateway/v1/models")
-		const rawModels = response.data
-
-		for (const rawModel of rawModels) {
-			const modelInfo: ModelInfo = {
-				maxTokens: rawModel.maxTokensOutput,
-				contextWindow: rawModel.maxTokensInput,
-				supportsImages: rawModel.capabilities?.includes("input:image"),
-				supportsComputerUse: rawModel.capabilities?.includes("computer_use"),
-				supportsPromptCache: rawModel.capabilities?.includes("caching"),
-				inputPrice: parseApiPrice(rawModel.pricePerToken?.input),
-				outputPrice: parseApiPrice(rawModel.pricePerToken?.output),
-				description: undefined,
-				cacheWritesPrice: parseApiPrice(rawModel.pricePerToken?.cacheWrite),
-				cacheReadsPrice: parseApiPrice(rawModel.pricePerToken?.cacheRead),
-			}
-
-			switch (rawModel.id) {
-				case rawModel.id.startsWith("anthropic/"):
-					modelInfo.maxTokens = 8192
-					break
-				default:
-					break
-			}
-
-			models[rawModel.id] = modelInfo
-		}
-	} catch (error) {
-		console.error(`Error fetching Glama models: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
-	}
-
-	return models
+/**
+ * Fetches available models from the Glama API
+ * @param outputChannel VS Code output channel for logging
+ * @returns Record of model IDs to their info objects
+ */
+export async function getGlamaModels(outputChannel: vscode.OutputChannel): Promise<Record<string, ModelInfo>> {
+    const models: Record<string, ModelInfo> = {};
+    
+    try {
+        outputChannel.appendLine("Fetching models from Glama...");
+        const response = await axios.get("https://glama.ai/api/gateway/v1/models");
+        
+        if (response.data && Array.isArray(response.data.models)) {
+            for (const model of response.data.models) {
+                models[model.id] = {
+                    maxTokens: model.max_tokens || 4096,
+                    contextWindow: model.context_window || 16384,
+                    supportsImages: Boolean(model.supports_vision),
+                    supportsPromptCache: model.id.includes("claude-3"),
+                    inputPrice: parseApiPrice(model.input_price_per_token),
+                    outputPrice: parseApiPrice(model.output_price_per_token),
+                    description: model.description || `Glama ${model.id}`,
+                };
+                
+                // Add cache pricing for Claude models
+                if (models[model.id].supportsPromptCache) {
+                    if (model.id.includes("sonnet")) {
+                        models[model.id].cacheWritesPrice = 3.75;
+                        models[model.id].cacheReadsPrice = 0.3;
+                    } else if (model.id.includes("haiku")) {
+                        models[model.id].cacheWritesPrice = model.id.includes("3-5") ? 1.25 : 0.3;
+                        models[model.id].cacheReadsPrice = model.id.includes("3-5") ? 0.1 : 0.03;
+                    } else if (model.id.includes("opus")) {
+                        models[model.id].cacheWritesPrice = 18.75;
+                        models[model.id].cacheReadsPrice = 1.5;
+                    }
+                }
+            }
+        }
+        
+        outputChannel.appendLine(`Successfully fetched ${Object.keys(models).length} models from Glama`);
+        return models;
+    } catch (error) {
+        await handleProviderError(outputChannel, "Glama", error, "model fetch error");
+        // Return default model as fallback
+        return {
+            "anthropic/claude-3-sonnet": glamaDefaultModelInfo
+        };
+    }
 }

@@ -5,6 +5,7 @@ import path from "path"
 import os from "os"
 import { EventEmitter } from "events"
 
+import { AUTHOR_NAME, AUTHOR_EMAIL } from "../../../../dist/thea-config"; // Import branding constants
 import { simpleGit, SimpleGit } from "simple-git"
 
 import { fileExistsAtPath } from "../../../utils/fs"
@@ -21,8 +22,8 @@ const tmpDir = path.join(os.tmpdir(), "CheckpointService")
 
 const initWorkspaceRepo = async ({
 	workspaceDir,
-	userName = "Roo Code",
-	userEmail = "support@roocode.com",
+	userName = AUTHOR_NAME, // Use constant
+	userEmail = AUTHOR_EMAIL, // Use constant
 	testFileName = "test.txt",
 	textFileContent = "Hello, world!",
 }: {
@@ -150,6 +151,7 @@ describe.each([
 	describe(`${klass.name}#saveCheckpoint`, () => {
 		it("creates a checkpoint if there are pending changes", async () => {
 			await fs.writeFile(testFile, "Ahoy, world!")
+			await workspaceGit.add(testFile) // Explicitly stage change in workspace
 			const commit1 = await service.saveCheckpoint("First checkpoint")
 			expect(commit1?.commit).toBeTruthy()
 			const details1 = await service.getDiff({ to: commit1!.commit })
@@ -157,6 +159,7 @@ describe.each([
 			expect(details1[0].content.after).toContain("Ahoy, world!")
 
 			await fs.writeFile(testFile, "Hola, world!")
+			await workspaceGit.add(testFile) // Explicitly stage change in workspace
 			const commit2 = await service.saveCheckpoint("Second checkpoint")
 			expect(commit2?.commit).toBeTruthy()
 			const details2 = await service.getDiff({ from: commit1!.commit, to: commit2!.commit })
@@ -396,16 +399,16 @@ describe.each([
 			await fs.mkdir(workspaceDir, { recursive: true })
 			const mainGit = simpleGit(workspaceDir)
 			await mainGit.init()
-			await mainGit.addConfig("user.name", "Roo Code")
-			await mainGit.addConfig("user.email", "support@roocode.com")
+			await mainGit.addConfig("user.name", AUTHOR_NAME) // Use constant
+			await mainGit.addConfig("user.email", AUTHOR_EMAIL) // Use constant
 
 			// Create a nested repo inside the workspace.
 			const nestedRepoPath = path.join(workspaceDir, "nested-project")
 			await fs.mkdir(nestedRepoPath, { recursive: true })
 			const nestedGit = simpleGit(nestedRepoPath)
 			await nestedGit.init()
-			await nestedGit.addConfig("user.name", "Roo Code")
-			await nestedGit.addConfig("user.email", "support@roocode.com")
+			await nestedGit.addConfig("user.name", AUTHOR_NAME) // Use constant
+			await nestedGit.addConfig("user.email", AUTHOR_EMAIL) // Use constant
 
 			// Add a file to the nested repo.
 			const nestedFile = path.join(nestedRepoPath, "nested-file.txt")
@@ -710,8 +713,8 @@ describe("ShadowCheckpointService", () => {
 			// Create git repo without adding the specific branch
 			const git = simpleGit(workspaceRepoDir)
 			await git.init()
-			await git.addConfig("user.name", "Roo Code")
-			await git.addConfig("user.email", "noreply@example.com")
+			await git.addConfig("user.name", AUTHOR_NAME) // Use constant
+			await git.addConfig("user.email", AUTHOR_EMAIL) // Use constant
 
 			// We need to create a commit, but we won't create the specific branch
 			const testFile = path.join(workspaceRepoDir, "test.txt")

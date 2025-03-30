@@ -140,6 +140,17 @@ export function mergeJson(
 	}
 }
 
+import { EXTENSION_ID } from "../../../dist/thea-config"; // Import from generated config
+
 function getExtensionUri(): vscode.Uri {
-	return vscode.extensions.getExtension("rooveterinaryinc.roo-cline")!.extensionUri
+	// Use the EXTENSION_ID constant
+	const extension = vscode.extensions.getExtension(EXTENSION_ID);
+	if (!extension) {
+		// Handle the case where the extension might not be found
+		// This could happen in tests or if the ID is incorrect
+		// Returning a placeholder or throwing an error might be appropriate
+		// For now, let's throw an error as it's unexpected in runtime
+		throw new Error(`Extension with ID ${EXTENSION_ID} not found.`);
+	}
+	return extension.extensionUri;
 }

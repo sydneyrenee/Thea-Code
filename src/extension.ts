@@ -1,3 +1,5 @@
+import { EXTENSION_DISPLAY_NAME, EXTENSION_NAME } from "../dist/thea-config"; // Import from generated config
+
 import * as vscode from "vscode"
 import * as dotenvx from "@dotenvx/dotenvx"
 import * as path from "path"
@@ -42,9 +44,9 @@ let extensionContext: vscode.ExtensionContext
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
-	outputChannel = vscode.window.createOutputChannel("Roo-Code")
+	outputChannel = vscode.window.createOutputChannel(EXTENSION_DISPLAY_NAME) // Use constant
 	context.subscriptions.push(outputChannel)
-	outputChannel.appendLine("Roo-Code extension activated")
+	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension activated`) // Use constant
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
@@ -59,7 +61,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	TerminalRegistry.initialize()
 
 	// Get default commands from configuration.
-	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+	const defaultCommands = vscode.workspace.getConfiguration(EXTENSION_NAME).get<string[]>("allowedCommands") || [] // Use constant
 
 	// Initialize global state if not already set.
 	if (!context.globalState.get("allowedCommands")) {

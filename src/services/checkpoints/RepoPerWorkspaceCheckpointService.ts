@@ -1,3 +1,5 @@
+import { BRANCH_PREFIX, EXTENSION_NAME } from "../../../dist/thea-config"; // Import both constants
+
 import * as path from "path"
 
 import { CheckpointServiceOptions } from "./types"
@@ -10,7 +12,7 @@ export class RepoPerWorkspaceCheckpointService extends ShadowCheckpointService {
 		}
 
 		const startTime = Date.now()
-		const branch = `roo-${this.taskId}`
+		const branch = `${BRANCH_PREFIX}${this.taskId}` // Use BRANCH_PREFIX constant
 		const currentBranch = await this.git.revparse(["--abbrev-ref", "HEAD"])
 
 		if (currentBranch === branch) {

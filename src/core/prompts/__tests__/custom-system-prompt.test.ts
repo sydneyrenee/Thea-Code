@@ -1,17 +1,14 @@
+import { EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config"; // Import from generated config
+
 import { SYSTEM_PROMPT } from "../system"
 import { defaultModeSlug, modes } from "../../../shared/modes"
 import * as vscode from "vscode"
 import * as fs from "fs/promises"
 import { toPosix } from "./utils"
 
-// Mock the generated config module
-jest.mock("../../../../dist/thea-config", () => ({
-	EXTENSION_CONFIG_DIR: ".thea", // Define the expected value for the test
-	// Add other constants if needed by the test
-}), { virtual: true });
+// We're using the real config values, not mocking them
 
 // Now import the mocked constant
-import { EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config";
 // Mock the fs/promises module
 jest.mock("fs/promises", () => ({
 	readFile: jest.fn(),

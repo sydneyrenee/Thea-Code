@@ -1,3 +1,5 @@
+import { EXTENSION_DISPLAY_NAME } from "../../../../dist/thea-config"; // Import from generated config
+
 // npx jest src/integrations/terminal/__tests__/TerminalProcess.test.ts
 
 import * as vscode from "vscode"
@@ -45,7 +47,7 @@ describe("TerminalProcess", () => {
 			shellIntegration: {
 				executeCommand: jest.fn(),
 			},
-			name: "Roo Code",
+			name: EXTENSION_DISPLAY_NAME, // Use constant
 			processId: Promise.resolve(123),
 			creationOptions: {},
 			exitStatus: undefined,

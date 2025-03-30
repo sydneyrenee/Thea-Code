@@ -2,6 +2,7 @@
 
 import { formatResponse } from "../responses"
 import { RooIgnoreController, LOCK_TEXT_SYMBOL } from "../../ignore/RooIgnoreController"
+import { GLOBAL_FILENAMES } from "../../../../dist/thea-config"
 import { fileExistsAtPath } from "../../../utils/fs"
 import * as fs from "fs/promises"
 import { toPosix } from "./utils"
@@ -216,7 +217,7 @@ describe("RooIgnore Response Formatting", () => {
 			const instructions = controller.getInstructions()
 
 			// Verify format and content
-			expect(instructions).toContain("# .rooignore")
+			expect(instructions).toContain(`# ${GLOBAL_FILENAMES.IGNORE_FILENAME}`)
 			expect(instructions).toContain(LOCK_TEXT_SYMBOL)
 			expect(instructions).toContain("node_modules")
 			expect(instructions).toContain(".git")

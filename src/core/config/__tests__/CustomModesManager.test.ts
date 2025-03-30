@@ -1,3 +1,5 @@
+import { GLOBAL_FILENAMES } from "../../../../dist/thea-config"; // Import from generated config
+
 // npx jest src/core/config/__tests__/CustomModesManager.test.ts
 
 import * as vscode from "vscode"
@@ -23,7 +25,7 @@ describe("CustomModesManager", () => {
 	// Use path.sep to ensure correct path separators for the current platform
 	const mockStoragePath = `${path.sep}mock${path.sep}settings`
 	const mockSettingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
-	const mockRoomodes = `${path.sep}mock${path.sep}workspace${path.sep}.roomodes`
+	const mockRoomodes = `${path.sep}mock${path.sep}workspace${path.sep}${GLOBAL_FILENAMES.MODES_FILENAME}` // Use constant
 
 	beforeEach(() => {
 		mockOnUpdate = jest.fn()
@@ -60,7 +62,7 @@ describe("CustomModesManager", () => {
 	})
 
 	describe("getCustomModes", () => {
-		it("should merge modes with .roomodes taking precedence", async () => {
+		it(`should merge modes with ${GLOBAL_FILENAMES.MODES_FILENAME} taking precedence`, async () => {
 			const settingsModes = [
 				{ slug: "mode1", name: "Mode 1", roleDefinition: "Role 1", groups: ["read"] },
 				{ slug: "mode2", name: "Mode 2", roleDefinition: "Role 2", groups: ["read"] },
@@ -83,17 +85,17 @@ describe("CustomModesManager", () => {
 
 			const modes = await manager.getCustomModes()
 
-			// Should contain 3 modes (mode1 from settings, mode2 and mode3 from roomodes)
+			// Should contain 3 modes (mode1 from settings, mode2 and mode3 from modes file)
 			expect(modes).toHaveLength(3)
 			expect(modes.map((m) => m.slug)).toEqual(["mode2", "mode3", "mode1"])
 
-			// mode2 should come from .roomodes since it takes precedence
+			// mode2 should come from the project modes file since it takes precedence
 			const mode2 = modes.find((m) => m.slug === "mode2")
 			expect(mode2?.name).toBe("Mode 2 Override")
 			expect(mode2?.roleDefinition).toBe("Role 2 Override")
 		})
 
-		it("should handle missing .roomodes file", async () => {
+		it(`should handle missing ${GLOBAL_FILENAMES.MODES_FILENAME} file`, async () => {
 			const settingsModes = [{ slug: "mode1", name: "Mode 1", roleDefinition: "Role 1", groups: ["read"] }]
 
 			;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
@@ -112,7 +114,7 @@ describe("CustomModesManager", () => {
 			expect(modes[0].slug).toBe("mode1")
 		})
 
-		it("should handle invalid JSON in .roomodes", async () => {
+		it(`should handle invalid JSON in ${GLOBAL_FILENAMES.MODES_FILENAME}`, async () => {
 			const settingsModes = [{ slug: "mode1", name: "Mode 1", roleDefinition: "Role 1", groups: ["read"] }]
 
 			;(fs.readFile as jest.Mock).mockImplementation(async (path: string) => {
@@ -127,14 +129,14 @@ describe("CustomModesManager", () => {
 
 			const modes = await manager.getCustomModes()
 
-			// Should fall back to settings modes when .roomodes is invalid
+			// Should fall back to settings modes when the project modes file is invalid
 			expect(modes).toHaveLength(1)
 			expect(modes[0].slug).toBe("mode1")
 		})
 	})
 
 	describe("updateCustomMode", () => {
-		it("should update mode in settings file while preserving .roomodes precedence", async () => {
+		it(`should update mode in settings file while preserving ${GLOBAL_FILENAMES.MODES_FILENAME} precedence`, async () => {
 			const newMode: ModeConfig = {
 				slug: "mode1",
 				name: "Updated Mode 1",
@@ -198,13 +200,13 @@ describe("CustomModesManager", () => {
 				}),
 			)
 
-			// Should update global state with merged modes where .roomodes takes precedence
+			// Should update global state with merged modes where the project modes file takes precedence
 			expect(mockContext.globalState.update).toHaveBeenCalledWith(
 				"customModes",
 				expect.arrayContaining([
 					expect.objectContaining({
 						slug: "mode1",
-						name: "Roomodes Mode 1", // .roomodes version should take precedence
+						name: "Roomodes Mode 1", // Project modes file version should take precedence
 						source: "project",
 					}),
 				]),
@@ -214,7 +216,7 @@ describe("CustomModesManager", () => {
 			expect(mockOnUpdate).toHaveBeenCalled()
 		})
 
-		it("creates .roomodes file when adding project-specific mode", async () => {
+		it(`creates ${GLOBAL_FILENAMES.MODES_FILENAME} file when adding project-specific mode`, async () => {
 			const projectMode: ModeConfig = {
 				slug: "project-mode",
 				name: "Project Mode",
@@ -223,7 +225,7 @@ describe("CustomModesManager", () => {
 				source: "project",
 			}
 
-			// Mock .roomodes to not exist initially
+			// Mock project modes file to not exist initially
 			let roomodesContent: any = null
 			;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
 				return path === mockSettingsPath
@@ -249,9 +251,9 @@ describe("CustomModesManager", () => {
 
 			await manager.updateCustomMode("project-mode", projectMode)
 
-			// Verify .roomodes was created with the project mode
+			// Verify the project modes file was created with the project mode
 			expect(fs.writeFile).toHaveBeenCalledWith(
-				expect.any(String), // Don't check exact path as it may have different separators on different platforms
+				expect.stringContaining(GLOBAL_FILENAMES.MODES_FILENAME), // Check the correct filename constant was used in the path
 				expect.stringContaining("project-mode"),
 				"utf-8",
 			)

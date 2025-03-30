@@ -2,12 +2,12 @@
   "name": "thea-code",
   "displayName": "Thea Code",
   "description": "A whole dev team of AI agents in your editor.",
-  "publisher": "sydneyrenee",
+  "publisher": "SolaceHarmony",
   "extensionSecretsPrefix": "thea_code_config_",
   "icon": "assets/icons/solace-icon.png",
   "author": {
-    "name": "Test User",
-    "email": "test@example.com"
+    "name": "Sydney Renee",
+    "email": "sydney@solace.ofharmony.ai"
   },
   "repository": {
     "type": "git",
@@ -15,10 +15,9 @@
   },
   "homepage": "https://github.com/sydneyrenee/Thea-Code",
   "keywords": [
-    "cline",
-    "claude",
-    "thea",
+    "thea",    
     "solace",
+    "claude",
     "ember",
     "dev",
     "mcp",
@@ -28,5 +27,10 @@
     "autonomous",
     "chatgpt",
     "ai"
-  ]
+  ],
+  "ignoreFileName": ".thea_ignore",
+  "modesFileName": ".thea_modes",
+  "aiIdentityName": "Thea",
+  "branchPrefix": "thea-",
+  "configDirName": ".thea"
 }

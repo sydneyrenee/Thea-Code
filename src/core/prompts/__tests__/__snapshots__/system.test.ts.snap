@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`SYSTEM_PROMPT experimental tools should disable experimental tools by default 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -400,7 +400,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT experimental tools should enable experimental tools when explicitly enabled 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -888,7 +888,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT experimental tools should selectively enable experimental tools 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -1340,7 +1340,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should exclude diff strategy tool description when diffEnabled is false 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -1739,7 +1739,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should exclude diff strategy tool description when diffEnabled is undefined 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -2138,7 +2138,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should explicitly handle undefined mcpHub 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -2537,7 +2537,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should handle different browser viewport sizes 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -2985,7 +2985,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should include MCP server info when mcpHub is provided 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -3452,7 +3452,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should include browser actions when supportsComputerUse is true 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -3900,7 +3900,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should include diff strategy tool description when diffEnabled is true 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -4361,7 +4361,7 @@ Mock generic rules"
 `;
 
 exports[`SYSTEM_PROMPT should maintain consistent system prompt 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -4802,7 +4802,7 @@ Mock generic rules"
 `;
 
 exports[`addCustomInstructions should exclude MCP server creation info when disabled 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 
@@ -5363,7 +5363,7 @@ Mock generic rules"
 `;
 
 exports[`addCustomInstructions should generate correct prompt for architect mode 1`] = `
-"You are Roo, an experienced technical leader who is inquisitive and an excellent planner. Your goal is to gather information and get context to create a detailed plan for accomplishing the user's task, which the user will review and approve before they switch into another mode to implement the solution.
+"You are Thea, an experienced technical leader who is inquisitive and an excellent planner. Your goal is to gather information and get context to create a detailed plan for accomplishing the user's task, which the user will review and approve before they switch into another mode to implement the solution.
 
 ====
 
@@ -5838,7 +5838,7 @@ Mock generic rules"
 `;
 
 exports[`addCustomInstructions should generate correct prompt for ask mode 1`] = `
-"You are Roo, a knowledgeable technical assistant focused on answering questions and providing information about software development, technology, and related topics.
+"You are Thea, a knowledgeable technical assistant focused on answering questions and providing information about software development, technology, and related topics.
 
 ====
 
@@ -6211,7 +6211,7 @@ Mock generic rules"
 `;
 
 exports[`addCustomInstructions should include MCP server creation info when enabled 1`] = `
-"You are Roo, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
+"You are Thea, a highly skilled software engineer with extensive knowledge in many programming languages, frameworks, design patterns, and best practices.
 
 ====
 

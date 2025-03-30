@@ -1,3 +1,5 @@
+import { GLOBAL_FILENAMES } from "../../../../dist/thea-config"; // Import from generated config
+
 // npx jest src/core/ignore/__tests__/RooIgnoreController.test.ts
 
 import { RooIgnoreController, LOCK_TEXT_SYMBOL } from "../RooIgnoreController"
@@ -70,9 +72,9 @@ describe("RooIgnoreController", () => {
 
 	describe("initialization", () => {
 		/**
-		 * Tests the controller initialization when .rooignore exists
+		 * Tests the controller initialization when the ignore file exists
 		 */
-		it("should load .rooignore patterns on initialization when file exists", async () => {
+		it(`should load ${GLOBAL_FILENAMES.IGNORE_FILENAME} patterns on initialization when file exists`, async () => {
 			// Setup mocks to simulate existing .rooignore file
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets.json")
@@ -81,8 +83,8 @@ describe("RooIgnoreController", () => {
 			await controller.initialize()
 
 			// Verify file was checked and read
-			expect(mockFileExists).toHaveBeenCalledWith(path.join(TEST_CWD, ".rooignore"))
-			expect(mockReadFile).toHaveBeenCalledWith(path.join(TEST_CWD, ".rooignore"), "utf8")
+			expect(mockFileExists).toHaveBeenCalledWith(path.join(TEST_CWD, GLOBAL_FILENAMES.IGNORE_FILENAME))
+			expect(mockReadFile).toHaveBeenCalledWith(path.join(TEST_CWD, GLOBAL_FILENAMES.IGNORE_FILENAME), "utf8")
 
 			// Verify content was stored
 			expect(controller.rooIgnoreContent).toBe("node_modules\n.git\nsecrets.json")
@@ -95,9 +97,9 @@ describe("RooIgnoreController", () => {
 		})
 
 		/**
-		 * Tests the controller behavior when .rooignore doesn't exist
+		 * Tests the controller behavior when the ignore file doesn't exist
 		 */
-		it("should allow all access when .rooignore doesn't exist", async () => {
+		it(`should allow all access when ${GLOBAL_FILENAMES.IGNORE_FILENAME} doesn't exist`, async () => {
 			// Setup mocks to simulate missing .rooignore file
 			mockFileExists.mockResolvedValue(false)
 
@@ -115,12 +117,12 @@ describe("RooIgnoreController", () => {
 		/**
 		 * Tests the file watcher setup
 		 */
-		it("should set up file watcher for .rooignore changes", async () => {
+		it(`should set up file watcher for ${GLOBAL_FILENAMES.IGNORE_FILENAME} changes`, async () => {
 			// Check that watcher was created with correct pattern
 			expect(vscode.workspace.createFileSystemWatcher).toHaveBeenCalledWith(
 				expect.objectContaining({
 					base: TEST_CWD,
-					pattern: ".rooignore",
+					pattern: GLOBAL_FILENAMES.IGNORE_FILENAME, // Check constant is used
 				}),
 			)
 
@@ -133,7 +135,7 @@ describe("RooIgnoreController", () => {
 		/**
 		 * Tests error handling during initialization
 		 */
-		it("should handle errors when loading .rooignore", async () => {
+		it(`should handle errors when loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}`, async () => {
 			// Setup mocks to simulate error
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockRejectedValue(new Error("Test file read error"))
@@ -145,7 +147,7 @@ describe("RooIgnoreController", () => {
 			await controller.initialize()
 
 			// Verify error was logged
-			expect(consoleSpy).toHaveBeenCalledWith("Unexpected error loading .rooignore:", expect.any(Error))
+			expect(consoleSpy).toHaveBeenCalledWith(`Unexpected error loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}:`, expect.any(Error))
 
 			// Cleanup
 			consoleSpy.mockRestore()
@@ -154,7 +156,7 @@ describe("RooIgnoreController", () => {
 
 	describe("validateAccess", () => {
 		beforeEach(async () => {
-			// Setup .rooignore content
+			// Setup ignore file content
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets/**\n*.log")
 			await controller.initialize()
@@ -202,9 +204,9 @@ describe("RooIgnoreController", () => {
 		})
 
 		/**
-		 * Tests the default behavior when no .rooignore exists
+		 * Tests the default behavior when no ignore file exists
 		 */
-		it("should allow all access when no .rooignore content", async () => {
+		it(`should allow all access when ${GLOBAL_FILENAMES.IGNORE_FILENAME} file doesn't exist`, async () => {
 			// Create a new controller with no .rooignore
 			mockFileExists.mockResolvedValue(false)
 			const emptyController = new RooIgnoreController(TEST_CWD)
@@ -219,7 +221,7 @@ describe("RooIgnoreController", () => {
 
 	describe("validateCommand", () => {
 		beforeEach(async () => {
-			// Setup .rooignore content
+			// Setup ignore file content
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets/**\n*.log")
 			await controller.initialize()
@@ -274,9 +276,9 @@ describe("RooIgnoreController", () => {
 		})
 
 		/**
-		 * Tests behavior when no .rooignore exists
+		 * Tests behavior when no ignore file exists
 		 */
-		it("should allow all commands when no .rooignore exists", async () => {
+		it(`should allow all commands when ${GLOBAL_FILENAMES.IGNORE_FILENAME} doesn't exist`, async () => {
 			// Create a new controller with no .rooignore
 			mockFileExists.mockResolvedValue(false)
 			const emptyController = new RooIgnoreController(TEST_CWD)
@@ -290,7 +292,7 @@ describe("RooIgnoreController", () => {
 
 	describe("filterPaths", () => {
 		beforeEach(async () => {
-			// Setup .rooignore content
+			// Setup ignore file content
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets/**\n*.log")
 			await controller.initialize()
@@ -353,10 +355,10 @@ describe("RooIgnoreController", () => {
 
 	describe("getInstructions", () => {
 		/**
-		 * Tests instructions generation with .rooignore
+		 * Tests instructions generation with the ignore file
 		 */
-		it("should generate formatted instructions when .rooignore exists", async () => {
-			// Setup .rooignore content
+		it(`should generate formatted instructions when ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => {
+			// Setup ignore file content
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets/**")
 			await controller.initialize()
@@ -364,7 +366,7 @@ describe("RooIgnoreController", () => {
 			const instructions = controller.getInstructions()
 
 			// Verify instruction format
-			expect(instructions).toContain("# .rooignore")
+			expect(instructions).toContain(`# ${GLOBAL_FILENAMES.IGNORE_FILENAME}`) // Check constant is used in output
 			expect(instructions).toContain(LOCK_TEXT_SYMBOL)
 			expect(instructions).toContain("node_modules")
 			expect(instructions).toContain(".git")
@@ -372,9 +374,9 @@ describe("RooIgnoreController", () => {
 		})
 
 		/**
-		 * Tests behavior when no .rooignore exists
+		 * Tests behavior when no ignore file exists
 		 */
-		it("should return undefined when no .rooignore exists", async () => {
+		it(`should return undefined when ${GLOBAL_FILENAMES.IGNORE_FILENAME} doesn't exist`, async () => {
 			// Setup no .rooignore
 			mockFileExists.mockResolvedValue(false)
 			await controller.initialize()
@@ -408,10 +410,10 @@ describe("RooIgnoreController", () => {
 
 	describe("file watcher", () => {
 		/**
-		 * Tests behavior when .rooignore is created
+		 * Tests behavior when the ignore file is created
 		 */
-		it("should reload .rooignore when file is created", async () => {
-			// Setup initial state without .rooignore
+		it(`should reload ${GLOBAL_FILENAMES.IGNORE_FILENAME} when file is created`, async () => {
+			// Setup initial state without ignore file
 			mockFileExists.mockResolvedValue(false)
 			await controller.initialize()
 
@@ -422,7 +424,7 @@ describe("RooIgnoreController", () => {
 			// Setup for the test
 			mockFileExists.mockResolvedValue(false) // Initially no file exists
 
-			// Create and initialize controller with no .rooignore
+			// Create and initialize controller with no ignore file
 			controller = new RooIgnoreController(TEST_CWD)
 			await controller.initialize()
 
@@ -436,7 +438,7 @@ describe("RooIgnoreController", () => {
 			// Find and trigger the onCreate handler
 			const onCreateHandler = mockWatcher.onDidCreate.mock.calls[0][0]
 
-			// Force reload of .rooignore content manually
+			// Force reload of ignore file content manually
 			await controller.initialize()
 
 			// Now verify content was updated
@@ -447,10 +449,10 @@ describe("RooIgnoreController", () => {
 		})
 
 		/**
-		 * Tests behavior when .rooignore is changed
+		 * Tests behavior when the ignore file is changed
 		 */
-		it("should reload .rooignore when file is changed", async () => {
-			// Setup initial state with .rooignore
+		it(`should reload ${GLOBAL_FILENAMES.IGNORE_FILENAME} when file is changed`, async () => {
+			// Setup initial state with ignore file
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules")
 			await controller.initialize()
@@ -475,10 +477,10 @@ describe("RooIgnoreController", () => {
 		})
 
 		/**
-		 * Tests behavior when .rooignore is deleted
+		 * Tests behavior when the ignore file is deleted
 		 */
-		it("should reset when .rooignore is deleted", async () => {
-			// Setup initial state with .rooignore
+		it(`should reset when ${GLOBAL_FILENAMES.IGNORE_FILENAME} is deleted`, async () => {
+			// Setup initial state with ignore file
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules")
 			await controller.initialize()

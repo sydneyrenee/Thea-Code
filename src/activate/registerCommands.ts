@@ -52,6 +52,7 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 }
 
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
+	// Use COMMANDS constants for keys
 	return {
 		[COMMANDS.PLUS_BUTTON]: async () => {
 			await provider.removeClineFromStack()
@@ -73,7 +74,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		[COMMANDS.HELP_BUTTON]: () => {
-			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL)) // Use imported constant
+			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL))
 		},
 		// Assuming these commands were intended to be prefixed - using dynamic prefixing
 		[`${EXTENSION_NAME}.showHumanRelayDialog`]: (params: { requestId: string; promptText: string }) => {
@@ -142,3 +143,4 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 	await delay(100)
 	await vscode.commands.executeCommand("workbench.action.lockEditorGroup")
 }
+

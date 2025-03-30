@@ -14,7 +14,7 @@ import { CheckpointStorage } from "../../shared/checkpoints"
 import { GIT_DISABLED_SUFFIX } from "./constants"
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
-import { EXTENSION_DISPLAY_NAME, EXTENSION_NAME } from "../../../dist/thea-config"
+import { EXTENSION_DISPLAY_NAME, EXTENSION_NAME, BRANCH_PREFIX } from "../../../dist/thea-config"
 
 export abstract class ShadowCheckpointService extends EventEmitter {
 	public readonly taskId: string
@@ -371,7 +371,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		const git = simpleGit(workspaceRepoDir)
 		const branches = await git.branchLocal()
 
-		if (branches.all.includes(`${EXTENSION_NAME}-${taskId}`)) {
+		if (branches.all.includes(`${BRANCH_PREFIX}${taskId}`)) {
 			return "workspace"
 		}
 
@@ -395,7 +395,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			console.log(`[${this.name}#deleteTask.${taskId}] removed ${taskRepoDir}`)
 		} else if (storage === "workspace") {
 			const workspaceRepoDir = this.workspaceRepoDir({ globalStorageDir, workspaceDir })
-			const branchName = `${EXTENSION_NAME}-${taskId}`
+			const branchName = `${BRANCH_PREFIX}${taskId}`
 			const git = simpleGit(workspaceRepoDir)
 			const success = await this.deleteBranch(git, branchName)
 

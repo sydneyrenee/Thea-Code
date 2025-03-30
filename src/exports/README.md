@@ -1,4 +1,4 @@
-# Roo Code API
+# ${EXTENSION_DISPLAY_NAME} API // Use constant
 
 The Roo Code extension exposes an API that can be used by other extensions. To use this API in your extension:
 
@@ -7,8 +7,9 @@ The Roo Code extension exposes an API that can be used by other extensions. To u
 3. Get access to the API with the following code:
 
 ```typescript
-const extension = vscode.extensions.getExtension<RooCodeAPI>("rooveterinaryinc.roo-cline")
+import { EXTENSION_ID } from "../../dist/thea-config"; // Adjust path as needed
 
+const extension = vscode.extensions.getExtension<RooCodeAPI>(EXTENSION_ID) // Use constant
 if (!extension?.isActive) {
 	throw new Error("Extension is not activated")
 }
@@ -20,7 +21,7 @@ if (!api) {
 }
 
 // Start a new task with an initial message.
-await api.startNewTask("Hello, Roo Code API! Let's make a new project...")
+await api.startNewTask(\`Hello, ${EXTENSION_DISPLAY_NAME} API! Let's make a new project...\`) // Use constant
 
 // Start a new task with an initial message and images.
 await api.startNewTask("Use this design language", ["data:image/webp;base64,..."])

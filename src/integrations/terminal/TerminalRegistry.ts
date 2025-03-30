@@ -1,3 +1,5 @@
+import { EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config"; // Import from generated config
+
 import * as vscode from "vscode"
 import { arePathsEqual } from "../../utils/path"
 import { Terminal } from "./Terminal"
@@ -111,7 +113,7 @@ export class TerminalRegistry {
 	static createTerminal(cwd: string | vscode.Uri): Terminal {
 		const terminal = vscode.window.createTerminal({
 			cwd,
-			name: "Roo Code",
+			name: EXTENSION_DISPLAY_NAME, // Use constant
 			iconPath: new vscode.ThemeIcon("rocket"),
 			env: {
 				PAGER: "cat",

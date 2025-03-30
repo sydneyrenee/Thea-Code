@@ -1,3 +1,7 @@
+import { GLOBAL_FILENAMES } from "../../../dist/thea-config"; // Import from generated config
+
+import { EXTENSION_NAME } from "../../../dist/thea-config"; // Import from generated config
+
 import path from "path"
 import { fileExistsAtPath } from "../../utils/fs"
 import fs from "fs/promises"
@@ -37,8 +41,9 @@ export class RooIgnoreController {
 	 * Set up the file watcher for .rooignore changes
 	 */
 	private setupFileWatcher(): void {
-		const rooignorePattern = new vscode.RelativePattern(this.cwd, ".rooignore")
-		const fileWatcher = vscode.workspace.createFileSystemWatcher(rooignorePattern)
+		// Use the constant for the ignore file name
+		const ignorePattern = new vscode.RelativePattern(this.cwd, GLOBAL_FILENAMES.IGNORE_FILENAME)
+		const fileWatcher = vscode.workspace.createFileSystemWatcher(ignorePattern) // Correct variable name
 
 		// Watch for changes and updates
 		this.disposables.push(
@@ -58,24 +63,25 @@ export class RooIgnoreController {
 	}
 
 	/**
-	 * Load custom patterns from .rooignore if it exists
+	 * Load custom patterns from ignore file if it exists
 	 */
 	private async loadRooIgnore(): Promise<void> {
 		try {
 			// Reset ignore instance to prevent duplicate patterns
 			this.ignoreInstance = ignore()
-			const ignorePath = path.join(this.cwd, ".rooignore")
+			// Use constant for ignore file name
+			const ignorePath = path.join(this.cwd, GLOBAL_FILENAMES.IGNORE_FILENAME)
 			if (await fileExistsAtPath(ignorePath)) {
 				const content = await fs.readFile(ignorePath, "utf8")
 				this.rooIgnoreContent = content
 				this.ignoreInstance.add(content)
-				this.ignoreInstance.add(".rooignore")
+				this.ignoreInstance.add(GLOBAL_FILENAMES.IGNORE_FILENAME) // Also ignore the ignore file itself
 			} else {
 				this.rooIgnoreContent = undefined
 			}
 		} catch (error) {
 			// Should never happen: reading file failed even though it exists
-			console.error("Unexpected error loading .rooignore:", error)
+			console.error(`Unexpected error loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}:`, error)
 		}
 	}
 
@@ -196,6 +202,7 @@ export class RooIgnoreController {
 			return undefined
 		}
 
-		return `# .rooignore\n\n(The following is provided by a root-level .rooignore file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)\n\n${this.rooIgnoreContent}\n.rooignore`
+		// Use the constant for the ignore file name in the instruction string
+		return `# ${GLOBAL_FILENAMES.IGNORE_FILENAME}\n\n(The following is provided by a root-level ${GLOBAL_FILENAMES.IGNORE_FILENAME} file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)\n\n${this.rooIgnoreContent}\n${GLOBAL_FILENAMES.IGNORE_FILENAME}`
 	}
 }

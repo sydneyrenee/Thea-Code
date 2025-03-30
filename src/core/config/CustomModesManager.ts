@@ -1,3 +1,5 @@
+import { EXTENSION_NAME, GLOBAL_FILENAMES } from "../../../dist/thea-config"; // Import from generated config
+
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
@@ -8,7 +10,7 @@ import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 
-const ROOMODES_FILENAME = ".roomodes"
+const ROOMODES_FILENAME = GLOBAL_FILENAMES.MODES_FILENAME // Use constant from generated config
 
 export class CustomModesManager {
 	private disposables: vscode.Disposable[] = []

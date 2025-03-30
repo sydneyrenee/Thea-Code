@@ -1,3 +1,5 @@
+import { EXTENSION_DISPLAY_NAME } from "../../../../dist/thea-config"; // Import from generated config
+
 // npx jest src/integrations/terminal/__tests__/TerminalRegistry.test.ts
 
 import { TerminalRegistry } from "../TerminalRegistry"
@@ -27,7 +29,7 @@ describe("TerminalRegistry", () => {
 
 			expect(mockCreateTerminal).toHaveBeenCalledWith({
 				cwd: "/test/path",
-				name: "Roo Code",
+				name: EXTENSION_DISPLAY_NAME, // Use constant
 				iconPath: expect.any(Object),
 				env: {
 					PAGER: "cat",

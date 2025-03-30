@@ -1,3 +1,5 @@
+import { EXTENSION_DISPLAY_NAME, AI_IDENTITY_NAME } from "../../../dist/thea-config"; // Import from generated config
+
 // Mock setup must come before imports
 jest.mock("vscode")
 const mockAddCustomInstructions = jest.fn().mockResolvedValue("Combined instructions")
@@ -340,7 +342,7 @@ describe("FileRestrictionError", () => {
 				slug: "debug",
 				name: "Debug",
 				roleDefinition:
-					"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
+					`You are ${AI_IDENTITY_NAME}, an expert software debugger specializing in systematic problem diagnosis and resolution.`, // Use AI identity name
 				groups: ["read", "edit", "browser", "command", "mcp"],
 			})
 			expect(debugMode?.customInstructions).toContain(
@@ -361,7 +363,7 @@ describe("FileRestrictionError", () => {
 				slug: "debug",
 				name: "Debug",
 				roleDefinition:
-					"You are Roo, an expert software debugger specializing in systematic problem diagnosis and resolution.",
+					`You are ${AI_IDENTITY_NAME}, an expert software debugger specializing in systematic problem diagnosis and resolution.`,
 			})
 		})
 

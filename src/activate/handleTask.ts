@@ -1,3 +1,5 @@
+import { VIEWS } from "../../dist/thea-config"; // Import from generated config
+
 import * as vscode from "vscode"
 import { COMMAND_IDS } from "../core/CodeActionProvider"
 import { ClineProvider } from "../core/webview/ClineProvider"
@@ -12,7 +14,7 @@ export const handleNewTask = async (params: { prompt?: string } | null | undefin
 		})
 	}
 	if (!prompt) {
-		await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+		await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) // Use constant
 		return
 	}
 

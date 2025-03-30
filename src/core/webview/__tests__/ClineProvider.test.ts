@@ -1,3 +1,5 @@
+import { EXTENSION_DISPLAY_NAME } from "../../../../dist/thea-config"; // Import from generated config
+
 // npx jest src/core/webview/__tests__/ClineProvider.test.ts
 
 import * as vscode from "vscode"
@@ -290,7 +292,7 @@ afterAll(() => {
 	jest.restoreAllMocks()
 })
 
-describe("ClineProvider", () => {
+describe(`${EXTENSION_DISPLAY_NAME} Provider`, () => { // Use constant
 	let provider: ClineProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel

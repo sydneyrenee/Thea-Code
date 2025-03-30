@@ -2,7 +2,7 @@
   "name": "thea-code",
   "displayName": "Thea Code",
   "description": "A whole dev team of AI agents in your editor.",
-  "publisher": "sydneyrenee",
+  "publisher": "SolaceHarmony",
   "version": "0.0.1",
   "icon": "assets/icons/solace-icon.png",
   "galleryBanner": {
@@ -14,8 +14,8 @@
     "node": ">=20.18.1"
   },
   "author": {
-    "name": "Test User",
-    "email": "test@example.com"
+    "name": "Sydney Renee",
+    "email": "sydney@solace.ofharmony.ai"
   },
   "repository": {
     "type": "git",

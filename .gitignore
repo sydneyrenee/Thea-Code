@@ -7,7 +7,7 @@ coverage/
 .DS_Store
 # Builds
 bin/
-roo-cline-*.vsix
+thea-code-*.vsix # Updated vsix name
 # Local prompts and rules
 /local-prompts
 # Test environment
@@ -25,25 +25,28 @@ docs/_site/
 logs
 package.json.bak*
 assets/icons/SOLACE-ICON-README.md
-REBRANDING-INSTRUCTIONS.md
-docs/REBRANDING.md
-\n# Generated branded files - edit templates in localization-templates/ instead\nREADME.md\nCONTRIBUTING.md\nPRIVACY.md\nCHANGELOG.md\nlocales/\n/.github/pull_request_template.md\n/.github/ISSUE_TEMPLATE/config.yml
-\n# Generated i18n files - edit templates in localization-templates/ instead\nsrc/i18n/locales/\nwebview-ui/src/i18n/locales/
-\n# Rebranding work files\nREBRANDING_TOUCHPOINTS.md
+
 # Generated branded files - edit templates in localization-templates/ instead
 README.md
 CONTRIBUTING.md
 PRIVACY.md
 CHANGELOG.md
-locales/
 /.github/pull_request_template.md
 /.github/ISSUE_TEMPLATE/config.yml
 src/i18n/locales/
-webview-ui/src/i18n/locales/
+/locales/
+/webview-ui/src/i18n/locales/
 # Rebranding work files
 REBRANDING_TOUCHPOINTS.md
 codesearch.md
 id_search.md
 /Roo Code Search.md
-\n# Generated type definitions\nsrc/exports/thea-code.d.ts
+REBRANDING-INSTRUCTIONS.md
+
+# Generated type definitions
 src/exports/thea-code.d.ts
+
+# Generated shared files - edit templates in localization-templates/src/shared/ instead
+src/shared/ExtensionMessage.ts
+src/shared/getApiMetrics.ts
+src/shared/globalState.ts

@@ -50,37 +50,48 @@ try {
 }
 
 // --- Define String Replacements (Old -> New from branding.json) ---
-const stringReplacements = {
-  'roo-cline': brandingJson.name,
-  'Roo Code': brandingJson.displayName,
-  'Roo Code (prev. Roo Cline)': brandingJson.displayName,
-  'RooVeterinaryInc': brandingJson.publisher,
-  'Roo Vet': brandingJson.author.name,
+// Sort replacements by key length descending to handle overlapping strings correctly
+const rawReplacements = {
+  'Roo Code (prev. Roo Cline)': brandingJson.displayName, // Longest first
+  'https://github.com/RooVetGit/Roo-Code-Docs': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}-Docs`,
+  'https://github.com/RooVetGit/Roo-Code/discussions': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/discussions`,
+  'https://github.com/RooVetGit/Roo-Code/issues': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/issues`,
   'https://github.com/RooVetGit/Roo-Code': brandingJson.repository.url,
+  'RooVetGit/Roo-Code-Docs': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}-Docs`,
+  'RooVetGit/Roo-Code/discussions': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/discussions`,
+  'RooVetGit/Roo-Code/issues': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/issues`,
+  'orgs/RooVetGit/projects/1': `orgs/${brandingJson.repository.org || 'sydneyrenee'}/projects/1`,
+  'https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline': `https://marketplace.visualstudio.com/items?itemName=${brandingJson.publisher}.${brandingJson.name}`,
+  'Roo Veterinary Inc.': brandingJson.author.corp || 'Solace & Harmony, Inc.',
+  'RooCodeStorage': `${brandingJson.displayName.replace(/\s+/g, '')}Storage`,
+  'RooVeterinaryInc': brandingJson.publisher,
+  'support@roocode.com': brandingJson.author?.email || 'support@example.com',
+  'discord.gg/roocode': 'discord.gg/thea-placeholder', // Placeholder
+  'reddit.com/r/RooCode': 'reddit.com/r/thea-placeholder', // Placeholder
+  'docs.roocode.com': 'docs.thea-placeholder.com', // Placeholder
+  'Roo Code': brandingJson.displayName,
+  'roo-cline': brandingJson.name,
   'roo code': brandingJson.name,
   'roocode': brandingJson.name,
-  'roo-code': brandingJson.name, // Add replacement for submenu IDs
-  // --- URL / Path Replacements for Config/Docs ---
-  'support@roocode.com': brandingJson.author?.email || 'support@example.com',
-  'discord.gg/roocode': 'discord.gg/thea-placeholder', // Placeholder - Update with actual URL
-  'reddit.com/r/RooCode': 'reddit.com/r/thea-placeholder', // Placeholder - Update with actual URL
-  'docs.roocode.com': 'docs.thea-placeholder.com', // Placeholder - Update with actual URL
+  'roo-code': brandingJson.name,
+  'Roo Vet': brandingJson.author.name,
   '.rooignore': brandingJson.ignoreFileName || `.${brandingJson.name.toLowerCase()}ignore`,
   '.roomodes': brandingJson.modesFileName || `.${brandingJson.name.toLowerCase()}modes`,
   '.roo/': `${brandingJson.configDirName || '.' + brandingJson.name.toLowerCase()}/`,
-  'RooCodeStorage': `${brandingJson.displayName.replace(/\s+/g, '')}Storage`,
-  // Add specific type renames needed within .d.ts files
-  'RooCodeAPI': `${brandingJson.aiIdentityName || brandingJson.displayName}CodeAPI`,
-  'RooCodeEvents': `${brandingJson.aiIdentityName || brandingJson.displayName}CodeEvents`,
+  // Type names - apply AFTER general replacements if needed within templates
+  // Specific import path replacement for shared types
+  '../exports/roo-code': `../exports/${brandingJson.name}`,
 
-  // Add specific replacements for known hardcoded values in templates
-  'RooVetGit/Roo-Code/issues': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/issues`, // Fallback added
-  'RooVetGit/Roo-Code/discussions': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/discussions`, // Fallback added
-  'orgs/RooVetGit/projects/1': `orgs/${brandingJson.repository.org || 'sydneyrenee'}/projects/1`, // Fallback added, Assuming project number stays 1
-  'RooVetGit/Roo-Code-Docs': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}-Docs`, // Fallback added, Assuming docs repo follows pattern
-  'Roo Veterinary Inc.': brandingJson.author.corp || 'Solace & Harmony, Inc.' // Add corp name if available
+  'RooCodeAPI': `${brandingJson.aiIdentityName || brandingJson.displayName}CodeAPI`,
+  'RooCodeEvents': `${brandingJson.aiIdentityName || brandingJson.displayName}CodeEvents`
 };
-console.log('Defined string replacements:', stringReplacements);
+
+// Sort keys by length descending
+const stringReplacements = Object.fromEntries(
+  Object.entries(rawReplacements).sort(([keyA], [keyB]) => keyB.length - keyA.length)
+);
+console.log('Defined string replacements (sorted):', stringReplacements);
+
 
 // --- Update Top-Level Fields in package.json ---
 console.log('Updating top-level package.json fields...');
@@ -125,17 +136,19 @@ console.log('Selective replacement in contributes done.');
 // --- Merge Keywords in package.json ---
 console.log('Merging keywords...');
 const currentKeywords = new Set(packageObj.keywords || []);
-const oldKeywords = new Set(['roo code', 'roocode']); // Keywords to remove
+// Use the actual keys from stringReplacements that need removing
+const oldKeywords = new Set(['roo code', 'roocode', 'roo-cline', 'Roo Code']);
 brandingJson.keywords.forEach(k => currentKeywords.add(k)); // Add new keywords
 oldKeywords.forEach(k => currentKeywords.delete(k)); // Remove old keywords
 packageObj.keywords = Array.from(currentKeywords);
 console.log('Keywords merged.');
 
-// --- Recursive String Replacement Function (used for JSON objects like package.json contributes) ---
+// --- Recursive String Replacement Function (used for JSON objects) ---
 function replaceStringsRecursively(item) {
   if (typeof item === 'string') {
     let replacedItem = item;
     // Apply replacements case-insensitively for broader matching in JSON values/keys
+    // Use sorted replacements
     for (const [oldStr, newStr] of Object.entries(stringReplacements)) {
        const regex = new RegExp(oldStr.replace(/[.*+?^${}()|[\\\]]/g, '\\$&'), 'gi');
        replacedItem = replacedItem.replace(regex, newStr);
@@ -160,8 +173,8 @@ function replaceStringsRecursively(item) {
   return item;
 }
 
-// --- Recursive helper to replace AI Identity Name in strings ---
-// IMPORTANT: This should run *after* replaceStringsRecursively for JSON
+// --- Recursive helper to replace AI Identity Name ("Roo") in strings ---
+// IMPORTANT: This should run *after* replaceStringsRecursively
 // to ensure "Roo" is replaced even if it was part of a larger branded string initially.
 function replaceAiIdentityNameRecursively(item, aiIdentityName) {
   if (typeof item === 'string') {
@@ -368,7 +381,15 @@ function walkAndReplaceTemplates(templateBaseDir, targetBaseDir, replacements, e
     for (const entry of entries) {
       const currentTemplatePath = path.join(templateBaseDir, entry.name);
       const relativePath = path.relative(templateDirPath, currentTemplatePath); // Path relative to template root
-      const currentTargetPath = path.join(targetBaseDir, relativePath); // Corresponding path in target project root
+      let currentTargetPath = path.join(targetBaseDir, relativePath); // Corresponding path in target project root - USE LET
+
+      // --- START ADDED LOGIC ---
+      // Special case: Rename roo-code.d.ts to thea-code.d.ts in the target
+      if (entry.name === 'roo-code.d.ts') {
+          currentTargetPath = path.join(path.dirname(currentTargetPath), 'thea-code.d.ts');
+          // console.log(`Adjusted target path for .d.ts: ${currentTargetPath}`); // Optional debug log
+      }
+      // --- END ADDED LOGIC ---
 
       // Skip excluded directories and files based on name
       if (excludeDirs.some(exclude => entry.name.startsWith(exclude)) || entry.name.includes('.bak-')) {
@@ -391,13 +412,13 @@ function walkAndReplaceTemplates(templateBaseDir, targetBaseDir, replacements, e
               if (fileExtension === '.json') {
                  // Handle JSON files: Parse, replace recursively, stringify
                  let jsonObj = JSON.parse(templateContent);
-                 jsonObj = replaceStringsRecursively(jsonObj); // Apply general replacements
+                 jsonObj = replaceStringsRecursively(jsonObj); // Apply general replacements (uses sorted replacements)
                  jsonObj = replaceAiIdentityNameRecursively(jsonObj, aiIdentityName); // Apply specific AI name replacement
                  modifiedContent = JSON.stringify(jsonObj, null, 2); // Pretty print JSON
               } else {
                  // Handle other text files (MD, TS, JS, YAML, etc.)
-                 // Perform general string replacements
-                 for (const [oldStr, newStr] of Object.entries(replacements)) {
+                 // Perform general string replacements (use sorted replacements)
+                 for (const [oldStr, newStr] of Object.entries(replacements)) { // Use sorted `replacements`
                    const regex = new RegExp(oldStr.replace(/[.*+?^${}()|[\\\]]/g, '\\$&'), 'gi');
                    modifiedContent = modifiedContent.replace(regex, newStr);
                  }
@@ -443,29 +464,35 @@ function walkAndReplaceTemplates(templateBaseDir, targetBaseDir, replacements, e
 
 // --- Generate Branded Files from Templates ---
 console.log(`Generating branded files from ${templateDirName}...`);
+const templateExcludeDirs = []; // No exclusions needed within templates dir itself for now
+const templateIncludeExtensions = ['.ts', '.js', '.md', '.json', '.yml', '.yaml', '.nix', '.d.ts']; // Files to process, Added .d.ts
+walkAndReplaceTemplates(templateDirPath, projectRoot, stringReplacements, templateExcludeDirs, templateIncludeExtensions); // Use sorted stringReplacements
+console.log('Finished generating branded files from templates.');
 
 // --- Explicitly Rename Generated .d.ts File ---
 console.log('Renaming generated .d.ts file...');
-const oldDtsPath = path.join(projectRoot, 'src', 'exports', 'roo-code.d.ts');
+const oldDtsPath = path.join(projectRoot, 'src', 'exports', 'roo-code.d.ts'); // Path where it might be initially generated if content didn't change significantly
 const newDtsPath = path.join(projectRoot, 'src', 'exports', 'thea-code.d.ts');
 try {
   if (fs.existsSync(oldDtsPath)) {
-    fs.renameSync(oldDtsPath, newDtsPath);
-    console.log(`Successfully renamed ${oldDtsPath} to ${newDtsPath}`);
+    // Only rename if the old file exists and the new one doesn't (or if they are the same file somehow)
+    if (!fs.existsSync(newDtsPath) || fs.statSync(oldDtsPath).ino === fs.statSync(newDtsPath).ino) {
+       fs.renameSync(oldDtsPath, newDtsPath);
+       console.log(`Successfully renamed ${oldDtsPath} to ${newDtsPath}`);
+    } else {
+       console.log(`Target ${newDtsPath} already exists, possibly generated correctly. Skipping rename.`);
+       // Optionally delete the incorrectly named old file if it somehow reappeared
+       // fs.unlinkSync(oldDtsPath);
+    }
   } else if (fs.existsSync(newDtsPath)) {
-    console.log('.d.ts file already renamed.'); // Already renamed, nothing to do
+    console.log('.d.ts file already named correctly.'); // Already generated/renamed correctly, nothing to do
   } else {
-    console.warn(`Warning: Generated ${oldDtsPath} not found, skipping rename.`);
+    console.warn(`Warning: Generated .d.ts file not found at either expected path, skipping rename.`);
   }
 } catch (err) {
-  console.error(`Error renaming .d.ts file: ${err.message}`);
+  console.error(`Error during .d.ts file rename/check: ${err.message}`);
   // Continue script execution even if rename fails
 }
-
-const templateExcludeDirs = []; // No exclusions needed within templates dir itself for now
-const templateIncludeExtensions = ['.ts', '.js', '.md', '.json', '.yml', '.yaml', '.nix', '.d.ts']; // Files to process, Added .d.ts
-walkAndReplaceTemplates(templateDirPath, projectRoot, stringReplacements, templateExcludeDirs, templateIncludeExtensions);
-console.log('Finished generating branded files from templates.');
 
 
 // --- Generate Runtime Config File ---
@@ -485,47 +512,7 @@ try {
 }
 
 // --- Update i18n JSON files --- // REMOVED - Now handled by template walker
-// Check if we should skip i18n updates (for packaging)
-// const skipI18nUpdates = process.argv.includes('--skip-i18n');
-//
-// if (skipI18nUpdates) {
-//   console.log('Skipping i18n updates as requested by --skip-i18n flag');
-// } else {
-//   console.log('Updating i18n common.json files...');
-//   const i18nDirs = [
-//   path.join(__dirname, '..', 'src', 'i18n', 'locales'),
-//   path.join(__dirname, '..', 'webview-ui', 'src', 'i18n', 'locales')
-// ];
-//
-// // Collect all relevant localization files (JSON only for now, MD handled by template walker)
-// let allLocaleFiles = [];
-// // const rootLocalesDir = path.join(__dirname, '..', 'locales'); // MD files handled by template walker
-//
-// // Add common.json files from src and webview-ui i18n dirs
-// i18nDirs.forEach(dir => {
-//   if (fs.existsSync(dir)) {
-//     const jsonFiles = findJsonFiles(dir, "common.json");
-//     // Also add the English file
-//     const enFilePath = path.join(dir, 'en', 'common.json');
-//     if (fs.existsSync(enFilePath)) {
-//       allLocaleFiles.push(enFilePath);
-//     }
-//     allLocaleFiles = allLocaleFiles.concat(jsonFiles);
-//   }
-// });
-//
-// // Now process the i18n JSON files
-// i18nDirs.forEach(dir => {
-//   const jsonFiles = findJsonFiles(dir, "common.json"); // Find only common.json
-//   // Also update the English file
-//   const enFilePath = path.join(dir, 'en', 'common.json');
-//   if (fs.existsSync(enFilePath)) {
-//       updateJsonFile(enFilePath, brandingJson);
-//   }
-//   // Update other language files
-//   jsonFiles.forEach(file => updateJsonFile(file, brandingJson));
-// });
-// } // End of else block for skipI18nUpdates
+
 
 // --- Process Modes Template File ---
 console.log('Processing modes template file...');

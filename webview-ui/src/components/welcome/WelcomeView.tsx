@@ -6,11 +6,10 @@ import { vscode } from "../../utils/vscode"
 import ApiOptions from "../settings/ApiOptions"
 import { Tab, TabContent } from "../common/Tab"
 import { useAppTranslation } from "../../i18n/TranslationContext"
-import { getRequestyAuthUrl, getOpenRouterAuthUrl } from "../../oauth/urls"
-import knuthShuffle from "knuth-shuffle-seeded"
+// Removed unused imports: getRequestyAuthUrl, getOpenRouterAuthUrl, knuthShuffle
 
 const WelcomeView = () => {
-	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme, machineId } = useExtensionState()
+	const { apiConfiguration, currentApiConfigName, setApiConfiguration, uriScheme } = useExtensionState() // Removed unused machineId
 	const { t } = useAppTranslation()
 	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
 
@@ -26,11 +25,7 @@ const WelcomeView = () => {
 		vscode.postMessage({ type: "upsertApiConfiguration", text: currentApiConfigName, apiConfiguration })
 	}, [apiConfiguration, currentApiConfigName])
 
-	// Using a lazy initializer so it reads once at mount
-	const [imagesBaseUri] = useState(() => {
-		const w = window as any
-		return w.IMAGES_BASE_URI || ""
-	})
+	// Removed unused imagesBaseUri state
 
 	return (
 		<Tab>

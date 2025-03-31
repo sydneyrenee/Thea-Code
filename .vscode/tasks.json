@@ -41,7 +41,7 @@
 			"type": "npm",
 			"script": "watch:esbuild",
 			"group": "build",
-			"problemMatcher": "$esbuild-watch",
+			// "problemMatcher": "$esbuild-watch", // Removed invalid built-in matcher
 			"isBackground": true,
 			"presentation": {
 				"group": "watch",

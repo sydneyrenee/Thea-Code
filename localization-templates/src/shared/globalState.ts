@@ -3,9 +3,9 @@ import type { SecretKey, GlobalStateKey, ConfigurationKey, ConfigurationValues }
 export type { SecretKey, GlobalStateKey, ConfigurationKey, ConfigurationValues }
 
 /**
-* For convenience we'd like the `TheaCodeAPI` to define `SecretKey` and `GlobalStateKey`, // Updated comment
-* but since it is a type definition file we can't export constants without some
-* annoyances. In order to achieve proper type safety without using constants as
+ * For convenience we'd like the `RooCodeAPI` to define `SecretKey` and `GlobalStateKey`,
+ * but since it is a type definition file we can't export constants without some
+ * annoyances. In order to achieve proper type safety without using constants as
  * in the type definition we use this clever Check<>Exhaustiveness pattern.
  * If you extend the `SecretKey` or `GlobalStateKey` types, you will need to
  * update the `SECRET_KEYS` and `GLOBAL_STATE_KEYS` arrays to include the new
@@ -120,7 +120,7 @@ export const GLOBAL_STATE_KEYS = [
 	"lmStudioSpeculativeDecodingEnabled",
 	"lmStudioDraftModelId",
 	"telemetrySetting",
-	"showTheaCodeIgnoredFiles", // Renamed setting key literal
+	"showRooIgnoredFiles",
 	"remoteBrowserEnabled",
 	"language",
 	"maxWorkspaceFiles",

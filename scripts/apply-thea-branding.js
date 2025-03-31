@@ -9,7 +9,6 @@ const packageJsonPath = path.join(__dirname, "..", "package.json")
 const brandingJsonPath = path.join(__dirname, "..", "branding.json")
 const generatedConfigPath = path.join(__dirname, "..", "dist", "thea-config.ts") // Define output path for generated TS config
 const contributesTemplatePath = path.join(__dirname, "..", "dist", "contributes.template.json") // Path to the new template
-const newVersion = "0.0.1" // Define the starting version for this fork
 const templateDirName = "localization-templates" // Directory for original templates
 const templateDirPath = path.join(__dirname, "..", templateDirName)
 const projectRoot = path.join(__dirname, "..")
@@ -101,7 +100,6 @@ packageObj.name = brandingJson.name
 packageObj.displayName = brandingJson.displayName
 packageObj.description = brandingJson.description
 packageObj.publisher = brandingJson.publisher
-packageObj.version = newVersion
 packageObj.icon = brandingJson.icon
 packageObj.author = brandingJson.author
 packageObj.repository = brandingJson.repository
@@ -109,6 +107,7 @@ packageObj.homepage = brandingJson.homepage
 if (brandingJson.extensionSecretsPrefix) {
 	packageObj.extensionSecretsPrefix = brandingJson.extensionSecretsPrefix
 }
+const newVersion = packageObj.version
 if (brandingJson.extensionConfigDir) {
 	packageObj.extensionConfigDir = brandingJson.extensionConfigDir
 } else {

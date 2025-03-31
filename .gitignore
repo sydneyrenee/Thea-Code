@@ -9,74 +9,75 @@ coverage/
 .DS_Store
 
 # Builds
-bin/
-thea-code-*.vsix
+/bin/
+/bin/thea-code-*.vsix
 
 # Local prompts and rules
 /local-prompts
 
 # Test environment
-.test_env
-.vscode-test/
+/.test_env
+/.vscode-test/
 
 # Docs site
-docs/_site/
+/docs/_site/
 
 # Dotenv files (allow samples)
-.env
-.env.*
+/.env
+/.env.*
 !.env.*.sample
 
 # Local lint config
-.eslintrc.local.json
+/.eslintrc.local.json
 
 # Logging
-logs
+/logs
 
 # Backups
 package.json.bak*
 
 # Specific assets to ignore
-assets/icons/SOLACE-ICON-README.md
+/assets/icons/SOLACE-ICON-README.md
 
 # --- Generated Files (Edit Templates Instead) ---
 
 # Generated root Markdown files
-README.md
-CONTRIBUTING.md
-PRIVACY.md
-CHANGELOG.md
+/README.md
+/CONTRIBUTING.md
+/PRIVACY.md
+/CHANGELOG.md
 
 # Generated root locale Markdown files
-locales/
+/locales/
 
 # Generated .github files
 /.github/pull_request_template.md
 /.github/ISSUE_TEMPLATE/config.yml
 
 # Generated src i18n JSON files
-src/i18n/locales/
+/src/i18n/locales/
 
 # Generated webview-ui i18n JSON files
-webview-ui/src/i18n/locales/
+/webview-ui/src/i18n/locales/
 
 # Generated type definitions
-src/exports/thea-code.d.ts
+/src/exports/thea-code.d.ts
 
 # Generated shared source files
-src/shared/ExtensionMessage.ts
-src/shared/getApiMetrics.ts
-src/shared/globalState.ts
+/src/shared/ExtensionMessage.ts
+/src/shared/getApiMetrics.ts
+/src/shared/globalState.ts
 
 # Generated webview-ui template files
-webview-ui/index.html
-webview-ui/src/stories/Welcome.mdx
-webview-ui/src/components/prompts/PromptsView.tsx
-webview-ui/src/components/chat/ChatView.tsx
-webview-ui/src/components/settings/About.tsx
-webview-ui/src/components/chat/checkpoints/CheckpointMenu.tsx
-webview-ui/src/components/ui/select-dropdown.tsx
-webview-ui/src/__mocks__/i18n/setup.ts
+/webview-ui/index.html
+/webview-ui/src/stories/Welcome.mdx
+/webview-ui/src/components/prompts/PromptsView.tsx
+/webview-ui/src/components/chat/ChatView.tsx
+/webview-ui/src/components/settings/About.tsx
+/webview-ui/src/components/chat/checkpoints/CheckpointMenu.tsx
+/webview-ui/src/components/ui/select-dropdown.tsx
+/webview-ui/src/__mocks__/i18n/setup.ts
+
 
 # --- Rebranding Work Files (Not for commit) ---
 REBRANDING_TOUCHPOINTS.md

@@ -54,3 +54,6 @@ webview-ui/node_modules/**
 
 # Include .env file for telemetry
 !.env
+
+# Include generated config file
+!dist/thea-config.ts

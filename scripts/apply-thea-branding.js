@@ -86,6 +86,7 @@ const rawReplacements = {
 
 	RooCodeAPI: `${brandingJson.aiIdentityName || brandingJson.displayName}CodeAPI`,
 	RooCodeEvents: `${brandingJson.aiIdentityName || brandingJson.displayName}CodeEvents`,
+	"roo-portal": "thea-portal", // For React portal container
 }
 
 // Sort keys by length descending
@@ -505,7 +506,19 @@ function walkAndReplaceTemplates(templateBaseDir, targetBaseDir, replacements, e
 // --- Generate Branded Files from Templates ---
 console.log(`Generating branded files from ${templateDirName}...`)
 const templateExcludeDirs = [] // No exclusions needed within templates dir itself for now
-const templateIncludeExtensions = [".ts", ".js", ".md", ".json", ".yml", ".yaml", ".nix", ".d.ts"] // Files to process, Added .d.ts
+const templateIncludeExtensions = [
+	".ts",
+	".tsx",
+	".js",
+	".md",
+	".mdx",
+	".json",
+	".yml",
+	".yaml",
+	".nix",
+	".d.ts",
+	".html",
+] // Added .tsx, .mdx, .html
 walkAndReplaceTemplates(
 	templateDirPath,
 	projectRoot,

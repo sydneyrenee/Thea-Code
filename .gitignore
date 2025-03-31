@@ -1,52 +1,86 @@
+# Build artifacts
 dist
 out
 out-*
 node_modules
 coverage/
 
+# OS generated files
 .DS_Store
+
 # Builds
 bin/
-thea-code-*.vsix # Updated vsix name
+thea-code-*.vsix
+
 # Local prompts and rules
 /local-prompts
+
 # Test environment
 .test_env
 .vscode-test/
-# Docs
+
+# Docs site
 docs/_site/
-# Dotenv
+
+# Dotenv files (allow samples)
 .env
 .env.*
 !.env.*.sample
-#Local lint config
+
+# Local lint config
 .eslintrc.local.json
-#Logging
+
+# Logging
 logs
+
+# Backups
 package.json.bak*
+
+# Specific assets to ignore
 assets/icons/SOLACE-ICON-README.md
 
-# Generated branded files - edit templates in localization-templates/ instead
+# --- Generated Files (Edit Templates Instead) ---
+
+# Generated root Markdown files
 README.md
 CONTRIBUTING.md
 PRIVACY.md
 CHANGELOG.md
+
+# Generated root locale Markdown files
+locales/
+
+# Generated .github files
 /.github/pull_request_template.md
 /.github/ISSUE_TEMPLATE/config.yml
+
+# Generated src i18n JSON files
 src/i18n/locales/
-/locales/
-/webview-ui/src/i18n/locales/
-# Rebranding work files
+
+# Generated webview-ui i18n JSON files
+webview-ui/src/i18n/locales/
+
+# Generated type definitions
+src/exports/thea-code.d.ts
+
+# Generated shared source files
+src/shared/ExtensionMessage.ts
+src/shared/getApiMetrics.ts
+src/shared/globalState.ts
+
+# Generated webview-ui template files
+webview-ui/index.html
+webview-ui/src/stories/Welcome.mdx
+webview-ui/src/components/prompts/PromptsView.tsx
+webview-ui/src/components/chat/ChatView.tsx
+webview-ui/src/components/settings/About.tsx
+webview-ui/src/components/chat/checkpoints/CheckpointMenu.tsx
+webview-ui/src/components/ui/select-dropdown.tsx
+webview-ui/src/__mocks__/i18n/setup.ts
+
+# --- Rebranding Work Files (Not for commit) ---
 REBRANDING_TOUCHPOINTS.md
 codesearch.md
 id_search.md
 /Roo Code Search.md
 REBRANDING-INSTRUCTIONS.md
-
-# Generated type definitions
-src/exports/thea-code.d.ts
-
-# Generated shared files - edit templates in localization-templates/src/shared/ instead
-src/shared/ExtensionMessage.ts
-src/shared/getApiMetrics.ts
-src/shared/globalState.ts

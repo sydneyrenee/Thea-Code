@@ -893,7 +893,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; img-src ${webview.cspSource} https: data:; script-src 'nonce-${nonce}';">
 				<title>${EXTENSION_DISPLAY_NAME}</title>
-				<!-- <link rel="stylesheet" href="codicons.css"> --> {/* Codicons likely bundled */}
+				<!-- Removed codicon link as it seems bundled -->
 				<link rel="stylesheet" href="${stylesUri}">
 			</head>
 			<body>

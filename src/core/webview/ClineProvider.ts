@@ -551,6 +551,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				vscode.Uri.file(path.join(this.context.extensionPath, "dist")),
 				vscode.Uri.file(path.join(this.context.extensionPath, "public")),
 				vscode.Uri.file(path.join(this.context.extensionPath, "assets")),
+				vscode.Uri.file(path.join(this.context.extensionPath, "webview-ui", "build")), // Allow loading webview assets
 			],
 		}
 
@@ -874,9 +875,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	private getHtmlContent(webview: vscode.Webview): string {
 		// Get base HTML content URI
-		const stylesUri = getUri(webview, this.context.extensionUri, ["dist", "assets", "main.css"])
-		const scriptUri = getUri(webview, this.context.extensionUri, ["dist", "assets", "main.js"])
-		const codiconsUri = getUri(webview, this.context.extensionUri, ["dist", "assets", "codicon.css"])
+		const stylesUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "assets", "index.css"])
+		const scriptUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "assets", "index.js"])
+		// const codiconsUri = getUri(webview, this.context.extensionUri, ["webview-ui", "build", "assets", "codicon.css"]) // Codicon might be bundled in index.css or loaded differently
 		const nonce = getNonce()
 		// Original lines: ~654-737 (Structure changed)
 
@@ -892,7 +893,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; img-src ${webview.cspSource} https: data:; script-src 'nonce-${nonce}';">
 				<title>${EXTENSION_DISPLAY_NAME}</title>
-				<link rel="stylesheet" href="${codiconsUri}">
+				<!-- <link rel="stylesheet" href="codicons.css"> --> {/* Codicons likely bundled */}
 				<link rel="stylesheet" href="${stylesUri}">
 			</head>
 			<body>

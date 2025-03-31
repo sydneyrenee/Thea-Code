@@ -10,7 +10,36 @@ import * as os from "os"
 import * as path from "path"
 
 // Mock RooIgnoreController
-jest.mock("../ignore/RooIgnoreController")
+// Mock TheaIgnoreController with a mock constructor and methods
+const mockInitialize = jest.fn().mockResolvedValue(undefined)
+const mockDispose = jest.fn()
+const mockGetInstructions = jest.fn().mockReturnValue(undefined)
+const mockValidateAccess = jest.fn().mockReturnValue(true) // Default to allowing access
+const mockFilterPaths = jest.fn((paths) => paths) // Default to allowing all paths
+const mockValidateCommand = jest.fn().mockReturnValue(undefined) // Default to allowing command
+
+jest.mock("../ignore/TheaIgnoreController", () => {
+	return {
+		TheaIgnoreController: jest.fn().mockImplementation(() => {
+			return {
+				initialize: mockInitialize,
+				dispose: mockDispose,
+				getInstructions: mockGetInstructions,
+				validateAccess: mockValidateAccess,
+				filterPaths: mockFilterPaths,
+				validateCommand: mockValidateCommand,
+				// Add any other methods/properties needed by Cline.ts tests
+			}
+		}),
+	}
+})
+
+// Optionally, clear mocks before each test if needed globally for this file
+// beforeEach(() => {
+//  mockInitialize.mockClear();
+//  mockDispose.mockClear();
+//  ... clear other mocks ...
+// });
 
 // Mock all MCP-related modules
 jest.mock(

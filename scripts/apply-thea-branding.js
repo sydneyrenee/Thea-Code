@@ -69,6 +69,10 @@ const stringReplacements = {
   '.roomodes': brandingJson.modesFileName || `.${brandingJson.name.toLowerCase()}modes`,
   '.roo/': `${brandingJson.configDirName || '.' + brandingJson.name.toLowerCase()}/`,
   'RooCodeStorage': `${brandingJson.displayName.replace(/\s+/g, '')}Storage`,
+  // Add specific type renames needed within .d.ts files
+  'RooCodeAPI': `${brandingJson.aiIdentityName || brandingJson.displayName}CodeAPI`,
+  'RooCodeEvents': `${brandingJson.aiIdentityName || brandingJson.displayName}CodeEvents`,
+
   // Add specific replacements for known hardcoded values in templates
   'RooVetGit/Roo-Code/issues': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/issues`, // Fallback added
   'RooVetGit/Roo-Code/discussions': `${brandingJson.repository.org || 'sydneyrenee'}/${brandingJson.repository.repo || 'Thea-Code'}/discussions`, // Fallback added
@@ -359,7 +363,7 @@ function walkAndReplaceTemplates(templateBaseDir, targetBaseDir, replacements, e
         console.warn(`Template directory not found, skipping: ${templateBaseDir}`);
         return;
     }
-    const entries = fs.readdirSync(templateBaseDir, { withFileTypes: true });
+    let entries = fs.readdirSync(templateBaseDir, { withFileTypes: true }); // Changed const to let for debugging
 
     for (const entry of entries) {
       const currentTemplatePath = path.join(templateBaseDir, entry.name);
@@ -439,8 +443,27 @@ function walkAndReplaceTemplates(templateBaseDir, targetBaseDir, replacements, e
 
 // --- Generate Branded Files from Templates ---
 console.log(`Generating branded files from ${templateDirName}...`);
+
+// --- Explicitly Rename Generated .d.ts File ---
+console.log('Renaming generated .d.ts file...');
+const oldDtsPath = path.join(projectRoot, 'src', 'exports', 'roo-code.d.ts');
+const newDtsPath = path.join(projectRoot, 'src', 'exports', 'thea-code.d.ts');
+try {
+  if (fs.existsSync(oldDtsPath)) {
+    fs.renameSync(oldDtsPath, newDtsPath);
+    console.log(`Successfully renamed ${oldDtsPath} to ${newDtsPath}`);
+  } else if (fs.existsSync(newDtsPath)) {
+    console.log('.d.ts file already renamed.'); // Already renamed, nothing to do
+  } else {
+    console.warn(`Warning: Generated ${oldDtsPath} not found, skipping rename.`);
+  }
+} catch (err) {
+  console.error(`Error renaming .d.ts file: ${err.message}`);
+  // Continue script execution even if rename fails
+}
+
 const templateExcludeDirs = []; // No exclusions needed within templates dir itself for now
-const templateIncludeExtensions = ['.ts', '.js', '.md', '.json', '.yml', '.yaml', '.nix']; // Files to process
+const templateIncludeExtensions = ['.ts', '.js', '.md', '.json', '.yml', '.yaml', '.nix', '.d.ts']; // Files to process, Added .d.ts
 walkAndReplaceTemplates(templateDirPath, projectRoot, stringReplacements, templateExcludeDirs, templateIncludeExtensions);
 console.log('Finished generating branded files from templates.');
 

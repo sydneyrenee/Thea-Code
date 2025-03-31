@@ -30,6 +30,9 @@ cline_docs/**
 coverage/**
 locales/**
 
+# Ignore backup files created by branding script
+package.json.bak*
+
 # Ignore all webview-ui files except the build directory (https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/frameworks/hello-world-react-cra/.vscodeignore)
 webview-ui/src/**
 webview-ui/public/**

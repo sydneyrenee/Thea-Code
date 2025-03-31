@@ -61,7 +61,7 @@ Otherwise, if you have not completed the task and do not need additional informa
 		files: string[],
 		didHitLimit: boolean,
 		theaIgnoreController: TheaIgnoreController | undefined,
-		showRooIgnoredFiles: boolean,
+		showTheaIgnoredFiles: boolean,
 	): string => {
 		const sorted = files
 			.map((file) => {
@@ -104,7 +104,7 @@ Otherwise, if you have not completed the task and do not need additional informa
 
 				if (isIgnored) {
 					// If file is ignored and we're not showing ignored files, skip it
-					if (!showRooIgnoredFiles) {
+					if (!showTheaIgnoredFiles) {
 						continue
 					}
 					// Otherwise, mark it with a lock symbol
@@ -168,4 +168,3 @@ I have completed the task...
 </attempt_completion>
 
 Always adhere to this format for all tool uses to ensure proper parsing and execution.`
-

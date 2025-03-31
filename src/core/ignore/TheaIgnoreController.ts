@@ -1,4 +1,4 @@
-import { GLOBAL_FILENAMES, EXTENSION_NAME } from "../../../dist/thea-config"; // Import from generated config
+import { GLOBAL_FILENAMES, EXTENSION_NAME } from "../../../dist/thea-config" // Import from generated config
 
 import path from "path"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -32,7 +32,7 @@ export class TheaIgnoreController {
 	 * Must be called after construction and before using the controller
 	 */
 	async initialize(): Promise<void> {
-		await this.loadRooIgnore()
+		await this.loadTheaIgnore()
 	}
 
 	/**
@@ -46,13 +46,13 @@ export class TheaIgnoreController {
 		// Watch for changes and updates
 		this.disposables.push(
 			fileWatcher.onDidChange(() => {
-				this.loadRooIgnore()
+				this.loadTheaIgnore()
 			}),
 			fileWatcher.onDidCreate(() => {
-				this.loadRooIgnore()
+				this.loadTheaIgnore()
 			}),
 			fileWatcher.onDidDelete(() => {
-				this.loadRooIgnore()
+				this.loadTheaIgnore()
 			}),
 		)
 
@@ -63,7 +63,7 @@ export class TheaIgnoreController {
 	/**
 	 * Load custom patterns from ignore file if it exists
 	 */
-	private async loadRooIgnore(): Promise<void> {
+	private async loadTheaIgnore(): Promise<void> {
 		try {
 			// Reset ignore instance to prevent duplicate patterns
 			this.ignoreInstance = ignore()

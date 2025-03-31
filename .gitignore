@@ -78,16 +78,6 @@ package.json.bak*
 /webview-ui/src/components/ui/select-dropdown.tsx
 /webview-ui/src/__mocks__/i18n/setup.ts
 
-# Generated core files
-/src/core/config/CustomModesManager.ts
-/src/core/ignore/TheaIgnoreController.ts
-/src/core/prompts/__tests__/responses-rooignore.test.ts
-/src/core/webview/ClineProvider.ts
-
-# Generated service files
-/src/services/ripgrep/index.ts
-/src/services/tree-sitter/index.ts
-
 
 # --- Rebranding Work Files (Not for commit) ---
 REBRANDING_TOUCHPOINTS.md

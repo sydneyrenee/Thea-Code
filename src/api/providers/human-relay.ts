@@ -1,6 +1,6 @@
 import { EXTENSION_NAME } from "../../../dist/thea-config"; // Import from generated config
 
-// filepath: e:\Project\Roo-Code\src\api\providers\human-relay.ts
+// filepath: e:\Project\thea-code\src\api\providers\human-relay.ts
 import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
 import { ApiHandler, SingleCompletionHandler } from "../index"

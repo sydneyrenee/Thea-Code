@@ -105,7 +105,7 @@ In addition to the ClineProvider refactoring, several branding-related changes w
 
 Specifically, in the `ShadowCheckpointService.ts` file, we:
 - Imported the EXTENSION_NAME and EXTENSION_DISPLAY_NAME constants
-- Replaced "Roo Code" with EXTENSION_DISPLAY_NAME
+- Replaced "Thea Code" with EXTENSION_DISPLAY_NAME
 - Replaced "roo-${taskId}" branch names with "${EXTENSION_NAME}-${taskId}"
 
 ## Verification Status

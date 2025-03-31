@@ -28,7 +28,7 @@ describe("ContextManagementSettings", () => {
 	const defaultProps = {
 		maxOpenTabsContext: 20,
 		maxWorkspaceFiles: 200,
-		showRooIgnoredFiles: false,
+		showTheaCodeIgnoredFiles: false, // Updated key name
 		setCachedStateField: jest.fn(),
 	}
 
@@ -47,10 +47,10 @@ describe("ContextManagementSettings", () => {
 		const workspaceFilesSlider = screen.getByTestId("workspace-files-limit-slider")
 		expect(workspaceFilesSlider).toBeInTheDocument()
 
-		// Show .rooignore'd files
-		const showRooIgnoredFilesCheckbox = screen.getByTestId("show-rooignored-files-checkbox")
-		expect(showRooIgnoredFilesCheckbox).toBeInTheDocument()
-		expect(screen.getByTestId("show-rooignored-files-checkbox")).not.toBeChecked()
+		// Show ignored files checkbox
+		const showIgnoredFilesCheckbox = screen.getByTestId("show-theacodeignored-files-checkbox") // Updated test ID
+		expect(showIgnoredFilesCheckbox).toBeInTheDocument()
+		expect(screen.getByTestId("show-theacodeignored-files-checkbox")).not.toBeChecked() // Updated test ID
 	})
 
 	it("updates open tabs context limit", () => {
@@ -71,12 +71,12 @@ describe("ContextManagementSettings", () => {
 		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("maxWorkspaceFiles", 50)
 	})
 
-	it("updates show rooignored files setting", () => {
+	it("updates show theacodeignored files setting", () => { // Updated test description
 		render(<ContextManagementSettings {...defaultProps} />)
 
-		const checkbox = screen.getByTestId("show-rooignored-files-checkbox")
+		const checkbox = screen.getByTestId("show-theacodeignored-files-checkbox") // Updated test ID
 		fireEvent.click(checkbox)
 
-		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("showRooIgnoredFiles", true)
+		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("showTheaCodeIgnoredFiles", true) // Updated key name
 	})
 })

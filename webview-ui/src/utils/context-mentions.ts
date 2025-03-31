@@ -1,7 +1,6 @@
 import { mentionRegex } from "../../../src/shared/context-mentions"
 import { Fzf } from "fzf"
 import { ModeConfig } from "../../../src/shared/modes"
-import * as path from "path"
 
 export interface SearchResult {
 	path: string
@@ -235,7 +234,7 @@ export function getContextMenuOptions(
 		return {
 			type: result.type === "folder" ? ContextMenuOptionType.Folder : ContextMenuOptionType.File,
 			value: formattedPath,
-			label: result.label || path.basename(result.path),
+			label: result.label || result.path.substring(result.path.lastIndexOf('/') + 1),
 			description: formattedPath,
 		}
 	})

@@ -466,7 +466,7 @@ describe(`${EXTENSION_DISPLAY_NAME} Provider`, () => { // Use constant
 			maxWorkspaceFiles: 200,
 			browserToolEnabled: true,
 			telemetrySetting: "unset",
-			showRooIgnoredFiles: true,
+			showTheaCodeIgnoredFiles: true, // Updated key name
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
 		}
@@ -769,20 +769,20 @@ describe(`${EXTENSION_DISPLAY_NAME} Provider`, () => { // Use constant
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
 		// Test showRooIgnoredFiles with true
-		await messageHandler({ type: "showRooIgnoredFiles", bool: true })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("showRooIgnoredFiles", true)
+		await messageHandler({ type: "showRooIgnoredFiles", bool: true }) // Keep message type for now
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("showTheaCodeIgnoredFiles", true) // Use new key
 		expect(mockPostMessage).toHaveBeenCalled()
 
 		// Test showRooIgnoredFiles with false
 		jest.clearAllMocks() // Clear all mocks including mockContext.globalState.update
-		await messageHandler({ type: "showRooIgnoredFiles", bool: false })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("showRooIgnoredFiles", false)
+		await messageHandler({ type: "showRooIgnoredFiles", bool: false }) // Keep message type for now
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("showTheaCodeIgnoredFiles", false) // Use new key
 		expect(mockPostMessage).toHaveBeenCalled()
 
-		// Verify state includes showRooIgnoredFiles
+		// Verify state includes showTheaCodeIgnoredFiles
 		const state = await provider.getState()
-		expect(state).toHaveProperty("showRooIgnoredFiles")
-		expect(state.showRooIgnoredFiles).toBe(true) // Default value should be true
+		expect(state).toHaveProperty("showTheaCodeIgnoredFiles") // Use new key
+		expect((state as any).showTheaCodeIgnoredFiles).toBe(true) // Use new key (with 'as any' to bypass potential temp type mismatch)
 	})
 
 	test("handles request delay settings messages", async () => {

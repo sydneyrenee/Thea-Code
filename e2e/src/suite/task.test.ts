@@ -1,6 +1,6 @@
 import { waitForMessage } from "./utils"
 
-suite("Roo Code Task", () => {
+suite("Thea Code Task", () => {
 	test("Should handle prompt and response correctly", async function () {
 		const api = globalThis.api
 		await api.setConfiguration({ mode: "Ask", alwaysAllowModeSwitch: true, autoApprovalEnabled: true })

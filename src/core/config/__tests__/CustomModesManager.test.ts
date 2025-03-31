@@ -262,7 +262,7 @@ describe("CustomModesManager", () => {
 			const writeCall = (fs.writeFile as jest.Mock).mock.calls[0]
 			expect(path.normalize(writeCall[0])).toBe(path.normalize(mockRoomodes))
 
-			// Verify the content written to .roomodes
+			// Verify the content written to .thea_modes
 			expect(roomodesContent).toEqual({
 				customModes: [
 					expect.objectContaining({

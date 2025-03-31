@@ -42,7 +42,7 @@ async function generatePrompt(
 	experiments?: Record<string, boolean>,
 	enableMcpServerCreation?: boolean,
 	language?: string,
-	rooIgnoreInstructions?: string,
+	theaIgnoreInstructions?: string,
 ): Promise<string> {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -91,7 +91,7 @@ ${getSystemInfoSection(cwd, mode, customModeConfigs)}
 
 ${getObjectiveSection()}
 
-${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions })}`
+${await addCustomInstructions(promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { language: language ?? formatLanguage(vscode.env.language), theaIgnoreInstructions })}`
 
 	return basePrompt
 }
@@ -111,7 +111,7 @@ export const SYSTEM_PROMPT = async (
 	experiments?: Record<string, boolean>,
 	enableMcpServerCreation?: boolean,
 	language?: string,
-	rooIgnoreInstructions?: string,
+	theaIgnoreInstructions?: string,
 ): Promise<string> => {
 	if (!context) {
 		throw new Error("Extension context is required for generating system prompt")
@@ -141,7 +141,7 @@ export const SYSTEM_PROMPT = async (
 			globalCustomInstructions || "",
 			cwd,
 			mode,
-			{ language: language ?? formatLanguage(vscode.env.language), rooIgnoreInstructions },
+			{ language: language ?? formatLanguage(vscode.env.language), theaIgnoreInstructions },
 		)
 		// For file-based prompts, don't include the tool sections
 		return `${roleDefinition}
@@ -169,6 +169,6 @@ ${customInstructions}`
 		experiments,
 		enableMcpServerCreation,
 		language,
-		rooIgnoreInstructions,
+		theaIgnoreInstructions,
 	)
 }

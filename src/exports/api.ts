@@ -3,10 +3,10 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
-import { RooCodeAPI, RooCodeEvents, ConfigurationValues, TokenUsage } from "./roo-code"
+import { TheaCodeAPI, TheaCodeEvents, ConfigurationValues, TokenUsage } from "./thea-code" // Renamed import
 import { MessageHistory } from "./message-history"
 
-export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
+export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI { // Renamed implements and event type
 	private readonly outputChannel: vscode.OutputChannel
 	private readonly provider: ClineProvider
 	private readonly history: MessageHistory

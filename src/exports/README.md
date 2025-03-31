@@ -1,15 +1,15 @@
 # ${EXTENSION_DISPLAY_NAME} API // Use constant
 
-The Roo Code extension exposes an API that can be used by other extensions. To use this API in your extension:
+The Thea Code extension exposes an API that can be used by other extensions. To use this API in your extension:
 
-1. Copy `src/extension-api/roo-code.d.ts` to your extension's source directory.
-2. Include `roo-code.d.ts` in your extension's compilation.
+1. Copy `src/extension-api/thea-code.d.ts` to your extension's source directory.
+2. Include `thea-code.d.ts` in your extension's compilation.
 3. Get access to the API with the following code:
 
 ```typescript
 import { EXTENSION_ID } from "../../dist/thea-config"; // Adjust path as needed
 
-const extension = vscode.extensions.getExtension<RooCodeAPI>(EXTENSION_ID) // Use constant
+const extension = vscode.extensions.getExtension<TheaCodeAPI>(EXTENSION_ID) // Use constant
 if (!extension?.isActive) {
 	throw new Error("Extension is not activated")
 }
@@ -36,10 +36,10 @@ await api.pressPrimaryButton()
 await api.pressSecondaryButton()
 ```
 
-**NOTE:** To ensure that the `rooveterinaryinc.roo-cline` extension is activated before your extension, add it to the `extensionDependencies` in your `package.json`:
+**NOTE:** To ensure that the `SolaceHarmony.thea-code` extension is activated before your extension, add it to the `extensionDependencies` in your `package.json`:
 
 ```json
-"extensionDependencies": ["rooveterinaryinc.roo-cline"]
+"extensionDependencies": ["SolaceHarmony.thea-code"]
 ```
 
-For detailed information on the available methods and their usage, refer to the `roo-code.d.ts` file.
+For detailed information on the available methods and their usage, refer to the `thea-code.d.ts` file.

@@ -11,7 +11,7 @@ const fs = require("fs")
 const path = require("path")
 
 // GitHub API URL for fetching contributors
-const GITHUB_API_URL = "https://api.github.com/repos/RooVetGit/Roo-Code/contributors?per_page=100"
+const GITHUB_API_URL = "https://api.github.com/repos/RooVetGit/thea-code/contributors?per_page=100"
 const README_PATH = path.join(__dirname, "..", "README.md")
 const LOCALES_DIR = path.join(__dirname, "..", "locales")
 
@@ -22,7 +22,7 @@ const END_MARKER = "<!-- END CONTRIBUTORS SECTION -->"
 // HTTP options for GitHub API request
 const options = {
 	headers: {
-		"User-Agent": "Roo-Code-Contributors-Script",
+		"User-Agent": "thea-code-Contributors-Script",
 	},
 }
 

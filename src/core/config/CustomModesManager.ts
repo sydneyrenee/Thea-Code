@@ -152,11 +152,11 @@ export class CustomModesManager {
 						return
 					}
 
-					// Get modes from .roomodes if it exists (takes precedence)
+					// Get modes from .thea_modes if it exists (takes precedence)
 					const roomodesPath = await this.getWorkspaceRoomodes()
 					const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
 
-					// Merge modes from both sources (.roomodes takes precedence)
+					// Merge modes from both sources (.thea_modes takes precedence)
 					const mergedModes = await this.mergeCustomModes(roomodesModes, result.data.customModes)
 					await this.context.globalState.update("customModes", mergedModes)
 					await this.onUpdate()
@@ -164,7 +164,7 @@ export class CustomModesManager {
 			}),
 		)
 
-		// Watch .roomodes file if it exists
+		// Watch .thea_modes file if it exists
 		const roomodesPath = await this.getWorkspaceRoomodes()
 		if (roomodesPath) {
 			this.disposables.push(
@@ -172,7 +172,7 @@ export class CustomModesManager {
 					if (arePathsEqual(document.uri.fsPath, roomodesPath)) {
 						const settingsModes = await this.loadModesFromFile(settingsPath)
 						const roomodesModes = await this.loadModesFromFile(roomodesPath)
-						// .roomodes takes precedence
+						// .thea_modes takes precedence
 						const mergedModes = await this.mergeCustomModes(roomodesModes, settingsModes)
 						await this.context.globalState.update("customModes", mergedModes)
 						await this.onUpdate()
@@ -187,7 +187,7 @@ export class CustomModesManager {
 		const settingsPath = await this.getCustomModesFilePath()
 		const settingsModes = await this.loadModesFromFile(settingsPath)
 
-		// Get modes from .roomodes if it exists
+		// Get modes from .thea_modes if it exists
 		const roomodesPath = await this.getWorkspaceRoomodes()
 		const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
 
@@ -209,7 +209,7 @@ export class CustomModesManager {
 
 		// Combine modes in the correct order: project modes first, then global modes
 		const mergedModes = [
-			...roomodesModes.map((mode) => ({ ...mode, source: "project" as const })),
+			...thea_modesModes.map((mode) => ({ ...mode, source: "project" as const })),
 			...settingsModes
 				.filter((mode) => !projectModes.has(mode.slug))
 				.map((mode) => ({ ...mode, source: "global" as const })),

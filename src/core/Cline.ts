@@ -13,7 +13,7 @@ import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 import { isPathOutsideWorkspace } from "../utils/pathUtils"
 
-import { TokenUsage } from "../exports/roo-code"
+import { TokenUsage } from "../exports/thea-code"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
@@ -67,7 +67,7 @@ import { calculateApiCostAnthropic } from "../utils/cost"
 import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual, getReadablePath } from "../utils/path"
 import { parseMentions } from "./mentions"
-import { RooIgnoreController } from "./ignore/RooIgnoreController"
+import { TheaIgnoreController } from "./ignore/TheaIgnoreController"
 import { AssistantMessageContent, parseAssistantMessage, ToolParamName, ToolUseName } from "./assistant-message"
 import { formatResponse } from "./prompts/responses"
 import { SYSTEM_PROMPT } from "./prompts/system"
@@ -146,7 +146,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 	apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
 	clineMessages: ClineMessage[] = []
-	rooIgnoreController?: RooIgnoreController
+	theaIgnoreController?: TheaIgnoreController
 	private askResponse?: ClineAskResponse
 	private askResponseText?: string
 	private askResponseImages?: string[]
@@ -203,8 +203,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			throw new Error("Either historyItem or task/images must be provided")
 		}
 
-		this.rooIgnoreController = new RooIgnoreController(this.cwd)
-		this.rooIgnoreController.initialize().catch((error) => {
+		this.theaIgnoreController = new TheaIgnoreController(this.cwd)
+		this.theaIgnoreController.initialize().catch((error) => {
 			console.error("Failed to initialize RooIgnoreController:", error)
 		})
 
@@ -938,7 +938,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 		this.urlContentFetcher.closeBrowser()
 		this.browserSession.closeBrowser()
-		this.rooIgnoreController?.dispose()
+		this.theaIgnoreController?.dispose()
 
 		// If we're not streaming then `abortStream` (which reverts the diff
 		// view changes) won't be called, so we need to revert the changes here.
@@ -1127,7 +1127,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			})
 		}
 
-		const rooIgnoreInstructions = this.rooIgnoreController?.getInstructions()
+		const theaIgnoreInstructions = this.theaIgnoreController?.getInstructions()
 
 		const {
 			browserViewportSize,
@@ -1159,7 +1159,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				experiments,
 				enableMcpServerCreation,
 				language,
-				rooIgnoreInstructions,
+				theaIgnoreInstructions,
 			)
 		})()
 
@@ -1569,10 +1569,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 							break
 						}
 
-						const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
+						const accessAllowed = this.theaIgnoreController?.validateAccess(relPath)
 						if (!accessAllowed) {
-							await this.say("rooignore_error", relPath)
-							pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+							await this.say("theaignore_error", relPath)
+							pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 							break
 						}
@@ -1702,7 +1702,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 												if (selection === "Follow this guide to fix the issue") {
 													vscode.env.openExternal(
 														vscode.Uri.parse(
-															"https://github.com/cline/cline/wiki/Troubleshooting-%E2%80%90-Cline-Deleting-Code-with-%22Rest-of-Code-Here%22-Comments",
+															"https://github.com/sydneyrenee/Thea-Code/wiki/Troubleshooting-%E2%80%90-Thea-Deleting-Code-with-%22Rest-of-Code-Here%22-Comments",
 														),
 													)
 												}
@@ -1799,10 +1799,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
+								const accessAllowed = this.theaIgnoreController?.validateAccess(relPath)
 								if (!accessAllowed) {
-									await this.say("rooignore_error", relPath)
-									pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+									await this.say("theaignore_error", relPath)
+									pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 									break
 								}
@@ -2318,10 +2318,10 @@ export class Cline extends EventEmitter<ClineEvents> {
 									endLine -= 1
 								}
 
-								const accessAllowed = this.rooIgnoreController?.validateAccess(relPath)
+								const accessAllowed = this.theaIgnoreController?.validateAccess(relPath)
 								if (!accessAllowed) {
-									await this.say("rooignore_error", relPath)
-									pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+									await this.say("theaignore_error", relPath)
+									pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 									break
 								}
@@ -2372,7 +2372,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 
 									const res = await Promise.all([
 										maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
-										parseSourceCodeDefinitionsForFile(absolutePath, this.rooIgnoreController),
+										parseSourceCodeDefinitionsForFile(absolutePath, this.theaIgnoreController),
 									])
 
 									content = res[0].length > 0 ? addLineNumbers(res[0]) : ""
@@ -2480,13 +2480,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 								this.consecutiveMistakeCount = 0
 								const absolutePath = path.resolve(this.cwd, relDirPath)
 								const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
-								const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+								const { showTheaCodeIgnoredFiles } = (await this.providerRef.deref()?.getState() as any) ?? {} // Cast state to any
 								const result = formatResponse.formatFilesList(
 									absolutePath,
 									files,
 									didHitLimit,
-									this.rooIgnoreController,
-									showRooIgnoredFiles ?? true,
+									this.theaIgnoreController,
+									showTheaCodeIgnoredFiles ?? true, // Use updated variable name
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2530,7 +2530,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 								const absolutePath = path.resolve(this.cwd, relDirPath)
 								const result = await parseSourceCodeForDefinitionsTopLevel(
 									absolutePath,
-									this.rooIgnoreController,
+									this.theaIgnoreController,
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2584,7 +2584,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 									absolutePath,
 									regex,
 									filePattern,
-									this.rooIgnoreController,
+									this.theaIgnoreController,
 								)
 								const completeMessage = JSON.stringify({
 									...sharedMessageProps,
@@ -2766,12 +2766,12 @@ export class Cline extends EventEmitter<ClineEvents> {
 									break
 								}
 
-								const ignoredFileAttemptedToAccess = this.rooIgnoreController?.validateCommand(command)
+								const ignoredFileAttemptedToAccess = this.theaIgnoreController?.validateCommand(command)
 								if (ignoredFileAttemptedToAccess) {
-									await this.say("rooignore_error", ignoredFileAttemptedToAccess)
+									await this.say("theaignore_error", ignoredFileAttemptedToAccess)
 									pushToolResult(
 										formatResponse.toolError(
-											formatResponse.rooIgnoreError(ignoredFileAttemptedToAccess),
+											formatResponse.theaIgnoreError(ignoredFileAttemptedToAccess),
 										),
 									)
 
@@ -3390,7 +3390,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				"mistake_limit_reached",
 				this.api.getModel().id.includes("claude")
 					? `This may indicate a failure in his thought process or inability to use a tool properly, which can be mitigated with some user guidance (e.g. "Try breaking down the task into smaller steps").`
-					: "Roo Code uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 3.7 Sonnet for its advanced agentic coding capabilities.",
+					: "Thea Code uses complex prompts and iterative task execution that may be challenging for less capable models. For best results, it's recommended to use Claude 3.7 Sonnet for its advanced agentic coding capabilities.",
 			)
 			if (response === "messageResponse") {
 				userContent.push(
@@ -3770,8 +3770,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			.slice(0, maxWorkspaceFiles ?? 200)
 
 		// Filter paths through rooIgnoreController
-		const allowedVisibleFiles = this.rooIgnoreController
-			? this.rooIgnoreController.filterPaths(visibleFilePaths)
+		const allowedVisibleFiles = this.theaIgnoreController
+			? this.theaIgnoreController.filterPaths(visibleFilePaths)
 			: visibleFilePaths.map((p) => p.toPosix()).join("\n")
 
 		if (allowedVisibleFiles) {
@@ -3791,8 +3791,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			.slice(0, maxTabs)
 
 		// Filter paths through rooIgnoreController
-		const allowedOpenTabs = this.rooIgnoreController
-			? this.rooIgnoreController.filterPaths(openTabPaths)
+		const allowedOpenTabs = this.theaIgnoreController
+			? this.theaIgnoreController.filterPaths(openTabPaths)
 			: openTabPaths.map((p) => p.toPosix()).join("\n")
 
 		if (allowedOpenTabs) {
@@ -3979,13 +3979,13 @@ export class Cline extends EventEmitter<ClineEvents> {
 			} else {
 				const maxFiles = maxWorkspaceFiles ?? 200
 				const [files, didHitLimit] = await listFiles(this.cwd, true, maxFiles)
-				const { showRooIgnoredFiles } = (await this.providerRef.deref()?.getState()) ?? {}
+				const { showTheaCodeIgnoredFiles } = (await this.providerRef.deref()?.getState() as any) ?? {} // Cast state to any for destructuring
 				const result = formatResponse.formatFilesList(
 					this.cwd,
 					files,
 					didHitLimit,
-					this.rooIgnoreController,
-					showRooIgnoredFiles,
+					this.theaIgnoreController,
+					showTheaCodeIgnoredFiles, // Use updated variable name
 				)
 				details += result
 			}

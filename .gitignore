@@ -5,33 +5,43 @@ node_modules
 coverage/
 
 .DS_Store
-
 # Builds
 bin/
 roo-cline-*.vsix
-
 # Local prompts and rules
 /local-prompts
-
 # Test environment
 .test_env
 .vscode-test/
-
 # Docs
 docs/_site/
-
 # Dotenv
 .env
 .env.*
 !.env.*.sample
-
-
 #Local lint config
 .eslintrc.local.json
-
 #Logging
 logs
 package.json.bak*
 assets/icons/SOLACE-ICON-README.md
 REBRANDING-INSTRUCTIONS.md
 docs/REBRANDING.md
+\n# Generated branded files - edit templates in localization-templates/ instead\nREADME.md\nCONTRIBUTING.md\nPRIVACY.md\nCHANGELOG.md\nlocales/\n/.github/pull_request_template.md\n/.github/ISSUE_TEMPLATE/config.yml
+\n# Generated i18n files - edit templates in localization-templates/ instead\nsrc/i18n/locales/\nwebview-ui/src/i18n/locales/
+\n# Rebranding work files\nREBRANDING_TOUCHPOINTS.md
+# Generated branded files - edit templates in localization-templates/ instead
+README.md
+CONTRIBUTING.md
+PRIVACY.md
+CHANGELOG.md
+locales/
+/.github/pull_request_template.md
+/.github/ISSUE_TEMPLATE/config.yml
+src/i18n/locales/
+webview-ui/src/i18n/locales/
+# Rebranding work files
+REBRANDING_TOUCHPOINTS.md
+codesearch.md
+id_search.md
+/Roo Code Search.md

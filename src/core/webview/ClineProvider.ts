@@ -1,3 +1,4 @@
+import { SETTING_KEYS } from "../../../dist/thea-config"; // Import branded keys
 // Extracted from src/core/webview/ClineProvider-original.ts
 
 import delay from "delay"
@@ -378,7 +379,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const mode = message.mode ?? defaultModeSlug
 		const customModes = await this.customModesManager.getCustomModes()
 
-		const rooIgnoreInstructions = this.getCurrentCline()?.rooIgnoreController?.getInstructions()
+		const rooIgnoreInstructions = this.getCurrentCline()?.thea_ignoreController?.getInstructions()
 
 		// Determine if browser tools can be used based on model support, mode, and user settings
 		let modelSupportsComputerUse = false
@@ -1750,8 +1751,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 						await this.updateGlobalState("browserToolEnabled", message.bool ?? true) // Use message.bool
 						await this.postStateToWebview()
 						break
-					case "showRooIgnoredFiles": // Corrected placement
-						await this.updateGlobalState("showRooIgnoredFiles", message.bool ?? true) // Use message.bool
+					case "showRooIgnoredFiles": // Keep the message type name for now
+						// Add type assertion to satisfy the compiler
+						await this.updateGlobalState(SETTING_KEYS.SHOW_IGNORED_FILES as GlobalStateKey, message.bool ?? true)
 						await this.postStateToWebview()
 						break
 					case "maxReadFileLine":
@@ -2082,7 +2084,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// Original lines: 2536-2539 (postStateToWebview)
 			maxWorkspaceFiles: state.maxWorkspaceFiles ?? 200,
 			telemetrySetting: state.telemetrySetting ?? "unset",
-			showRooIgnoredFiles: state.showRooIgnoredFiles ?? true,
+			// Explicitly use the required property name from ExtensionState, cast state to any for indexing
+			showTheaCodeIgnoredFiles: (state as any)[SETTING_KEYS.SHOW_IGNORED_FILES] ?? true,
 			maxReadFileLine: state.maxReadFileLine ?? 500,
 			// Properties added previously
 			taskHistory: state.taskHistory || [],

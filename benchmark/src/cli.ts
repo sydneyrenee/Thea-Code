@@ -5,7 +5,7 @@ import { build, filesystem, GluegunPrompt } from "gluegun"
 import { runTests } from "@vscode/test-electron"
 
 // console.log(__dirname)
-// <...>/Roo-Code/benchmark/src
+// <...>/thea-code/benchmark/src
 
 const extensionDevelopmentPath = path.resolve(__dirname, "../../")
 const extensionTestsPath = path.resolve(__dirname, "../out/runExercise")

@@ -1,4 +1,4 @@
-import { TokenUsage } from "../exports/roo-code"
+import { TokenUsage } from "../exports/thea-code"
 
 import { ClineMessage } from "./ExtensionMessage"
 

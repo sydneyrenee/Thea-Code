@@ -35,7 +35,7 @@ export async function addCustomInstructions(
 	globalCustomInstructions: string,
 	cwd: string,
 	mode: string,
-	options: { language?: string; rooIgnoreInstructions?: string } = {},
+	options: { language?: string; theaIgnoreInstructions?: string } = {},
 ): Promise<string> {
 	const sections = []
 
@@ -73,8 +73,8 @@ export async function addCustomInstructions(
 		rules.push(`# Rules from ${modeRuleFile}:\n${modeRuleContent}`)
 	}
 
-	if (options.rooIgnoreInstructions) {
-		rules.push(options.rooIgnoreInstructions)
+	if (options.theaIgnoreInstructions) {
+		rules.push(options.theaIgnoreInstructions)
 	}
 
 	// Add generic rules

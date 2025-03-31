@@ -1,7 +1,9 @@
 import * as assert from "assert"
 import * as vscode from "vscode"
+import { COMMANDS } from "../../../dist/thea-config";
 
-suite("Roo Code Extension", () => {
+
+suite("Thea Code Extension", () => {
 	test("OPENROUTER_API_KEY environment variable is set", () => {
 		if (!process.env.OPENROUTER_API_KEY) {
 			assert.fail("OPENROUTER_API_KEY environment variable is not set")
@@ -10,15 +12,15 @@ suite("Roo Code Extension", () => {
 
 	test("Commands should be registered", async () => {
 		const expectedCommands = [
-			"roo-cline.plusButtonClicked",
-			"roo-cline.mcpButtonClicked",
-			"roo-cline.historyButtonClicked",
-			"roo-cline.popoutButtonClicked",
-			"roo-cline.settingsButtonClicked",
-			"roo-cline.openInNewTab",
-			"roo-cline.explainCode",
-			"roo-cline.fixCode",
-			"roo-cline.improveCode",
+			COMMANDS.PLUS_BUTTON,
+			COMMANDS.MCP_BUTTON,
+			COMMANDS.HISTORY_BUTTON,
+			COMMANDS.POPOUT_BUTTON,
+			COMMANDS.SETTINGS_BUTTON,
+			COMMANDS.OPEN_NEW_TAB,
+			COMMANDS.EXPLAIN_CODE,
+			COMMANDS.FIX_CODE,
+			COMMANDS.IMPROVE_CODE,
 		]
 
 		const commands = await vscode.commands.getCommands(true)

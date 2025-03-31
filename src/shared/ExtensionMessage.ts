@@ -7,7 +7,7 @@ import { CustomSupportPrompts } from "./support-prompt"
 import { ExperimentId } from "./experiments"
 import { CheckpointStorage } from "./checkpoints"
 import { TelemetrySetting } from "./TelemetrySetting"
-import type { ClineMessage, ClineAsk, ClineSay } from "../exports/roo-code"
+import type { ClineMessage, ClineAsk, ClineSay } from "../exports/thea-code"
 
 export interface LanguageModelChatSelector {
 	vendor?: string
@@ -180,7 +180,7 @@ export interface ExtensionState {
 	telemetrySetting: TelemetrySetting
 	telemetryKey?: string
 	machineId?: string
-	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	showTheaCodeIgnoredFiles: boolean // Renamed - Whether to show .thea_ignore'd files in listings
 	renderContext: "sidebar" | "editor"
 	pinnedApiConfigs?: Record<string, boolean> // Map of API config names to pinned state
 	maxReadFileLine: number // Maximum number of lines to read from a file before truncating

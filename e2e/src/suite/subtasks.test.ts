@@ -2,7 +2,7 @@ import * as assert from "assert"
 
 import { sleep, waitFor, getMessage, waitForCompletion } from "./utils"
 
-suite("Roo Code Subtasks", () => {
+suite("Thea Code Subtasks", () => {
 	test("Should handle subtask cancellation and resumption correctly", async function () {
 		const api = globalThis.api
 

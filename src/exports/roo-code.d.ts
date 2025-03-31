@@ -9,7 +9,7 @@ export interface TokenUsage {
 	contextTokens: number
 }
 
-export interface RooCodeEvents {
+export interface TheaCodeEvents { // Renamed
 	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
 	taskCreated: [taskId: string]
 	taskStarted: [taskId: string]
@@ -21,8 +21,8 @@ export interface RooCodeEvents {
 	taskCompleted: [taskId: string, usage: TokenUsage]
 	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
-
-export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
+ 
+export interface TheaCodeAPI extends EventEmitter<TheaCodeEvents> { // Renamed API
 	/**
 	 * Starts a new task with an optional initial message and images.
 	 * @param task Optional initial task message.
@@ -134,7 +134,7 @@ export type ClineSay =
 	| "new_task_started"
 	| "new_task"
 	| "checkpoint_saved"
-	| "rooignore_error"
+	| "theaignore_error"
 
 export interface ClineMessage {
 	ts: number
@@ -254,7 +254,7 @@ export type GlobalStateKey =
 	| "lmStudioSpeculativeDecodingEnabled"
 	| "lmStudioDraftModelId"
 	| "telemetrySetting"
-	| "showRooIgnoredFiles"
+	| "showTheaCodeIgnoredFiles" // Renamed setting key
 	| "remoteBrowserEnabled"
 	| "language"
 	| "maxReadFileLine"

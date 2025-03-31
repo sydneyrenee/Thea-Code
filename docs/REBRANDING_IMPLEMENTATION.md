@@ -1,6 +1,6 @@
 # Rebranding Implementation Details
 
-This document explains the specific implementation details of the rebranding process from "Roo Code" to "Thea Code".
+This document explains the specific implementation details of the rebranding process from "Thea Code" to "Thea Code".
 
 ## Overview
 
@@ -21,8 +21,8 @@ The original file exported a `defaultHeaders` constant that contained branding i
 ```typescript
 // Original code (simplified)
 export const defaultHeaders = {
-  "HTTP-Referer": "https://github.com/RooVetGit/Roo-Code",
-  "X-Title": "Roo Code"
+  "HTTP-Referer": "https://github.com/sydneyrenee/Thea-Code",
+  "X-Title": "Thea Code"
 }
 ```
 
@@ -91,7 +91,7 @@ Many configuration values referenced the old name:
 
 ```typescript
 // Original code (simplified)
-const config = vscode.workspace.getConfiguration("roo-code");
+const config = vscode.workspace.getConfiguration("thea-code");
 ```
 
 These were updated to use the configSection helper function:

@@ -1,5 +1,5 @@
 ---
-"roo-cline": patch
+"thea-code": patch
 ---
 
 Show openrouter key balance on the settings screen

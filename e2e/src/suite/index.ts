@@ -3,16 +3,18 @@ import Mocha from "mocha"
 import { glob } from "glob"
 import * as vscode from "vscode"
 
-import { RooCodeAPI } from "../../../src/exports/roo-code"
+import { TheaCodeAPI } from "../../../src/exports/thea-code" // Renamed type
+import { EXTENSION_ID } from "../../../dist/thea-config" // Import EXTENSION_ID
 
 import { waitUntilReady } from "./utils"
 
 declare global {
-	var api: RooCodeAPI
+	var api: TheaCodeAPI // Use renamed type
 }
 
 export async function run() {
-	const extension = vscode.extensions.getExtension<RooCodeAPI>("RooVeterinaryInc.roo-cline")
+	// Use imported EXTENSION_ID and renamed type
+	const extension = vscode.extensions.getExtension<TheaCodeAPI>(EXTENSION_ID)
 
 	if (!extension) {
 		throw new Error("Extension not found")

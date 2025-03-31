@@ -6,6 +6,7 @@ import { ApiConfiguration, ApiProvider, API_CONFIG_KEYS } from "../../../shared/
 import { Mode, defaultModeSlug, ModeConfig } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
 import { formatLanguage } from "../../../shared/language"
+import { SETTING_KEYS } from "../../../../dist/thea-config"; // Corrected import path
 import { ContextProxy } from "../../contextProxy"
 import { TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../../integrations/terminal/Terminal"
 
@@ -135,7 +136,8 @@ export class ClineStateManager {
                 openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
                 browserToolEnabled: stateValues.browserToolEnabled ?? true,
                 telemetrySetting: stateValues.telemetrySetting || "unset",
-                showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
+                // Use 'any' cast to bypass strict index signature check for this dynamic key
+                [SETTING_KEYS.SHOW_IGNORED_FILES]: (stateValues as any)[SETTING_KEYS.SHOW_IGNORED_FILES] ?? true,
                 maxReadFileLine: stateValues.maxReadFileLine ?? 500,
             }
         } catch (error) {

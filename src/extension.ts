@@ -116,14 +116,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	registerCodeActions(context)
 	registerTerminalActions(context)
-
-	// Implements the `RooCodeAPI` interface.
+	
+	// Implements the `TheaCodeAPI` interface. // Updated comment
 	return new API(outputChannel, provider)
 }
 
 // This method is called when your extension is deactivated
 export async function deactivate() {
-	outputChannel.appendLine("Roo-Code extension deactivated")
+	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension deactivated`) // Use constant
 	// Clean up MCP server manager
 	await McpServerManager.cleanup(extensionContext)
 	telemetryService.shutdown()

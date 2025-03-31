@@ -1,7 +1,7 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import * as path from "path"
 import * as diff from "diff"
-import { RooIgnoreController, LOCK_TEXT_SYMBOL } from "../ignore/RooIgnoreController"
+import { TheaIgnoreController, LOCK_TEXT_SYMBOL } from "../ignore/TheaIgnoreController"
 
 export const formatResponse = {
 	toolDenied: () => `The user denied this operation.`,
@@ -14,8 +14,8 @@ export const formatResponse = {
 
 	toolError: (error?: string) => `The tool execution failed with the following error:\n<error>\n${error}\n</error>`,
 
-	rooIgnoreError: (path: string) =>
-		`Access to ${path} is blocked by the .rooignore file settings. You must try to continue in the task without using this file, or ask the user to update the .rooignore file.`,
+	theaIgnoreError: (path: string) =>
+		`Access to ${path} is blocked by the .thea_ignore file settings. You must try to continue in the task without using this file, or ask the user to update the .thea_ignore file.`,
 
 	noToolsUsed: () =>
 		`[ERROR] You did not use a tool in your previous response! Please retry with a tool use.
@@ -60,7 +60,7 @@ Otherwise, if you have not completed the task and do not need additional informa
 		absolutePath: string,
 		files: string[],
 		didHitLimit: boolean,
-		rooIgnoreController: RooIgnoreController | undefined,
+		theaIgnoreController: TheaIgnoreController | undefined,
 		showRooIgnoredFiles: boolean,
 	): string => {
 		const sorted = files
@@ -93,14 +93,14 @@ Otherwise, if you have not completed the task and do not need additional informa
 
 		let rooIgnoreParsed: string[] = sorted
 
-		if (rooIgnoreController) {
+		if (theaIgnoreController) {
 			rooIgnoreParsed = []
 			for (const filePath of sorted) {
 				// path is relative to absolute path, not cwd
 				// validateAccess expects either path relative to cwd or absolute path
 				// otherwise, for validating against ignore patterns like "assets/icons", we would end up with just "icons", which would result in the path not being ignored.
 				const absoluteFilePath = path.resolve(absolutePath, filePath)
-				const isIgnored = !rooIgnoreController.validateAccess(absoluteFilePath)
+				const isIgnored = !theaIgnoreController.validateAccess(absoluteFilePath)
 
 				if (isIgnored) {
 					// If file is ignored and we're not showing ignored files, skip it
@@ -168,3 +168,4 @@ I have completed the task...
 </attempt_completion>
 
 Always adhere to this format for all tool uses to ensure proper parsing and execution.`
+

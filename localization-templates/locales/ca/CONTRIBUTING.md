@@ -1,36 +1,36 @@
-# Contribuir a Roo Code
+# Contribuir a Thea Code
 
-Estem entusiasmats que estigueu interessats en contribuir a Roo Code. Ja sigui arreglant un error, afegint una funcionalitat o millorant la nostra documentació, cada contribució fa que Roo Code sigui més intel·ligent! Per mantenir la nostra comunitat vibrant i acollidora, tots els membres han de complir el nostre [Codi de Conducta](CODE_OF_CONDUCT.md).
+Estem entusiasmats que estigueu interessats en contribuir a Thea Code. Ja sigui arreglant un error, afegint una funcionalitat o millorant la nostra documentació, cada contribució fa que Thea Code sigui més intel·ligent! Per mantenir la nostra comunitat vibrant i acollidora, tots els membres han de complir el nostre [Codi de Conducta](CODE_OF_CONDUCT.md).
 
 ## Uniu-vos a la nostra comunitat
 
-Encoratgem fortament a tots els col·laboradors a unir-se a la nostra [comunitat de Discord](https://discord.gg/roocode)! Formar part del nostre servidor de Discord us ajuda a:
+Encoratgem fortament a tots els col·laboradors a unir-se a la nostra [comunitat de Discord](https://discord.gg/your-discord-invite-code)! Formar part del nostre servidor de Discord us ajuda a: <!-- Replace with actual invite code -->
 
 - Obtenir ajuda i orientació en temps real sobre les vostres contribucions
 - Connectar amb altres col·laboradors i membres de l'equip principal
 - Mantenir-vos al dia sobre els desenvolupaments i prioritats del projecte
-- Participar en discussions que configuren el futur de Roo Code
+- Participar en discussions que configuren el futur de Thea Code
 - Trobar oportunitats de col·laboració amb altres desenvolupadors
 
 ## Informar d'errors o problemes
 
-Els informes d'errors ajuden a millorar Roo Code per a tothom! Abans de crear un nou informe, si us plau [cerqueu entre els existents](https://github.com/RooVetGit/Roo-Code/issues) per evitar duplicats. Quan estigueu a punt per informar d'un error, dirigiu-vos a la nostra [pàgina d'incidències](https://github.com/RooVetGit/Roo-Code/issues/new/choose) on trobareu una plantilla per ajudar-vos a completar la informació rellevant.
+Els informes d'errors ajuden a millorar Thea Code per a tothom! Abans de crear un nou informe, si us plau [cerqueu entre els existents](https://github.com/sydneyrenee/Thea-Code/issues) per evitar duplicats. Quan estigueu a punt per informar d'un error, dirigiu-vos a la nostra [pàgina d'incidències](https://github.com/sydneyrenee/Thea-Code/issues/new/choose) on trobareu una plantilla per ajudar-vos a completar la informació rellevant.
 
 <blockquote class='warning-note'>
-     🔐 <b>Important:</b> Si descobriu una vulnerabilitat de seguretat, utilitzeu l'<a href="https://github.com/RooVetGit/Roo-Code/security/advisories/new">eina de seguretat de Github per informar-ne privadament</a>.
+     🔐 <b>Important:</b> Si descobriu una vulnerabilitat de seguretat, utilitzeu l'<a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">eina de seguretat de Github per informar-ne privadament</a>.
 </blockquote>
 
 ## Decidir en què treballar
 
-Buscant una bona primera contribució? Consulteu les incidències a la secció "Issue [Unassigned]" del nostre [Projecte de Github de Roo Code](https://github.com/orgs/RooVetGit/projects/1). Aquestes estan específicament seleccionades per a nous col·laboradors i àrees on ens encantaria rebre ajuda!
+Buscant una bona primera contribució? Consulteu les incidències etiquetades com a "good first issue" als nostres [GitHub Issues](https://github.com/sydneyrenee/Thea-Code/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22). Aquestes estan específicament seleccionades per a nous col·laboradors i àrees on ens encantaria rebre ajuda!
 
-També donem la benvinguda a contribucions a la nostra [documentació](https://docs.roocode.com/)! Ja sigui corregint errors tipogràfics, millorant guies existents o creant nou contingut educatiu - ens encantaria construir un repositori de recursos impulsat per la comunitat que ajudi a tothom a aprofitar al màxim Roo Code. Podeu fer clic a "Editar aquesta pàgina" a qualsevol pàgina per arribar ràpidament al lloc correcte a Github per editar el fitxer, o podeu anar directament a https://github.com/RooVetGit/Roo-Code-Docs.
+També donem la benvinguda a contribucions a la nostra documentació (actualment dins d'aquest repositori)! Ja sigui corregint errors tipogràfics, millorant guies existents o creant nou contingut educatiu - ens encantaria construir un repositori de recursos impulsat per la comunitat que ajudi a tothom a aprofitar al màxim Thea Code.
 
-Si esteu planejant treballar en una funcionalitat més gran, si us plau creeu primer una [sol·licitud de funcionalitat](https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) perquè puguem discutir si s'alinea amb la visió de Roo Code. També podeu consultar el nostre [Full de Ruta del Projecte](#full-de-ruta-del-projecte) a continuació per veure si la vostra idea s'ajusta a la nostra direcció estratègica.
+Si esteu planejant treballar en una funcionalitat més gran, si us plau creeu primer un [informe](https://github.com/sydneyrenee/Thea-Code/issues/new?assignees=&labels=enhancement&template=feature_request.yml&title=%5BFeature%5D%3A+) perquè puguem discutir si s'alinea amb la visió de Thea Code. També podeu consultar el nostre [Full de Ruta del Projecte](#full-de-ruta-del-projecte) a continuació per veure si la vostra idea s'ajusta a la nostra direcció estratègica.
 
 ## Full de Ruta del Projecte
 
-Roo Code té un full de ruta de desenvolupament clar que guia les nostres prioritats i direcció futura. Entendre el nostre full de ruta us pot ajudar a:
+Thea Code té un full de ruta de desenvolupament clar que guia les nostres prioritats i direcció futura. Entendre el nostre full de ruta us pot ajudar a:
 
 - Alinear les vostres contribucions amb els objectius del projecte
 - Identificar àrees on la vostra experiència seria més valuosa
@@ -49,14 +49,14 @@ Aspirem a donar suport a tants proveïdors com sigui possible:
 
 ### Suport de Models
 
-Volem que Roo funcioni tan bé com sigui possible amb tants models com sigui possible, inclosos els models locals:
+Volem que Thea funcioni tan bé com sigui possible amb tants models com sigui possible, inclosos els models locals:
 
 - Suport de models locals a través de prompts de sistema personalitzats i fluxos de treball
 - Avaluacions de rendiment i casos de prova
 
 ### Suport de Sistemes
 
-Volem que Roo funcioni bé a l'ordinador de tothom:
+Volem que Thea funcioni bé a l'ordinador de tothom:
 
 - Integració de terminal multiplataforma
 - Suport sòlid i consistent per a Mac, Windows i Linux
@@ -80,12 +80,12 @@ Volem reduir significativament el nombre d'errors i augmentar les proves automat
 
 ### Internacionalització
 
-Volem que Roo parli l'idioma de tothom:
+Volem que Thea parli l'idioma de tothom:
 
-- 我们希望 Roo Code 说每个人的语言
-- Queremos que Roo Code hable el idioma de todos
-- हम चाहते हैं कि Roo Code हर किसी की भाषा बोले
-- نريد أن يتحدث Roo Code لغة الجميع
+- 我们希望 Thea Code 说每个人的语言
+- Queremos que Thea Code hable el idioma de todos
+- हम चाहते हैं कि Thea Code हर किसी की भाषा बोले
+- نريد أن يتحدث Thea Code لغة الجميع
 
 Donem especialment la benvinguda a contribucions que avancin els nostres objectius del full de ruta. Si esteu treballant en alguna cosa que s'alinea amb aquests pilars, si us plau mencioneu-ho a la descripció del vostre PR.
 
@@ -94,7 +94,7 @@ Donem especialment la benvinguda a contribucions que avancin els nostres objecti
 1. **Cloneu** el repositori:
 
 ```sh
-git clone https://github.com/RooVetGit/Roo-Code.git
+git clone https://github.com/sydneyrenee/Thea-Code.git
 ```
 
 2. **Instal·leu les dependències**:
@@ -110,7 +110,7 @@ npm run dev
 ```
 
 4. **Depuració**:
-   Premeu `F5` (o **Execució** → **Inicia la depuració**) a VSCode per obrir una nova sessió amb Roo Code carregat.
+   Premeu `F5` (o **Execució** → **Inicia la depuració**) a VSCode per obrir una nova sessió amb Thea Code carregat.
 
 Els canvis a la vista web apareixeran immediatament. Els canvis a l'extensió principal requeriran reiniciar l'amfitrió de l'extensió.
 
@@ -123,12 +123,12 @@ npm run build
 Apareixerà un fitxer `.vsix` al directori `bin/` que es pot instal·lar amb:
 
 ```sh
-code --install-extension bin/roo-cline-<version>.vsix
+code --install-extension bin/thea-code-<version>.vsix
 ```
 
 ## Escriure i enviar codi
 
-Qualsevol persona pot contribuir amb codi a Roo Code, però us demanem que seguiu aquestes directrius per assegurar que les vostres contribucions puguin ser integrades sense problemes:
+Qualsevol persona pot contribuir amb codi a Thea Code, però us demanem que seguiu aquestes directrius per assegurar que les vostres contribucions puguin ser integrades sense problemes:
 
 1. **Mantingueu les Pull Requests enfocades**
 

@@ -2,6 +2,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import * as path from "path"
 import * as diff from "diff"
 import { TheaIgnoreController, LOCK_TEXT_SYMBOL } from "../ignore/TheaIgnoreController"
+import { GLOBAL_FILENAMES } from "../../../dist/thea-config"
 
 export const formatResponse = {
 	toolDenied: () => `The user denied this operation.`,
@@ -15,7 +16,7 @@ export const formatResponse = {
 	toolError: (error?: string) => `The tool execution failed with the following error:\n<error>\n${error}\n</error>`,
 
 	theaIgnoreError: (path: string) =>
-		`Access to ${path} is blocked by the .theaignore file settings. You must try to continue in the task without using this file, or ask the user to update the .theaignore file.`,
+		`Access to ${path} is blocked by the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file settings. You must try to continue in the task without using this file, or ask the user to update the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file.`,
 
 	noToolsUsed: () =>
 		`[ERROR] You did not use a tool in your previous response! Please retry with a tool use.

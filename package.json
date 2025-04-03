@@ -19,9 +19,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sydneyrenee/Thea-Code"
+    "url": "https://github.com/SolaceHarmony/Thea-Code"
   },
-  "homepage": "https://github.com/sydneyrenee/Thea-Code",
+  "homepage": "https://github.com/SolaceHarmony/Thea-Code",
   "categories": [
     "AI",
     "Chat",
@@ -309,7 +309,7 @@
     }
   },
   "scripts": {
-    "build": "npm run vsix",
+    "build": "node scripts/apply-thea-branding.js && npm run vsix",
     "build:webview": "cd webview-ui && npm run build",
     "build:esbuild": "node esbuild.js --production",
     "compile": "tsc -p . --outDir out && node esbuild.js",

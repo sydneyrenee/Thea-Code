@@ -14,19 +14,19 @@ Encoratgem fortament a tots els col·laboradors a unir-se a la nostra [comunitat
 
 ## Informar d'errors o problemes
 
-Els informes d'errors ajuden a millorar Thea Code per a tothom! Abans de crear un nou informe, si us plau [cerqueu entre els existents](sydneyrenee/Thea-Code/issues) per evitar duplicats. Quan estigueu a punt per informar d'un error, dirigiu-vos a la nostra [pàgina d'incidències](sydneyrenee/Thea-Code/issues/new/choose) on trobareu una plantilla per ajudar-vos a completar la informació rellevant.
+Els informes d'errors ajuden a millorar Thea Code per a tothom! Abans de crear un nou informe, si us plau [cerqueu entre els existents](SolaceHarmony/Thea-Code/issues) per evitar duplicats. Quan estigueu a punt per informar d'un error, dirigiu-vos a la nostra [pàgina d'incidències](SolaceHarmony/Thea-Code/issues/new/choose) on trobareu una plantilla per ajudar-vos a completar la informació rellevant.
 
 <blockquote class='warning-note'>
-     🔐 <b>Important:</b> Si descobriu una vulnerabilitat de seguretat, utilitzeu l'<a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">eina de seguretat de Github per informar-ne privadament</a>.
+     🔐 <b>Important:</b> Si descobriu una vulnerabilitat de seguretat, utilitzeu l'<a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">eina de seguretat de Github per informar-ne privadament</a>.
 </blockquote>
 
 ## Decidir en què treballar
 
 Buscant una bona primera contribució? Consulteu les incidències a la secció "Issue [Unassigned]" del nostre [Projecte de Github de Thea Code](https://github.com/orgs/sydneyrenee/projects/1). Aquestes estan específicament seleccionades per a nous col·laboradors i àrees on ens encantaria rebre ajuda!
 
-També donem la benvinguda a contribucions a la nostra [documentació](https://docs.thea-placeholder.com/)! Ja sigui corregint errors tipogràfics, millorant guies existents o creant nou contingut educatiu - ens encantaria construir un repositori de recursos impulsat per la comunitat que ajudi a tothom a aprofitar al màxim Thea Code. Podeu fer clic a "Editar aquesta pàgina" a qualsevol pàgina per arribar ràpidament al lloc correcte a Github per editar el fitxer, o podeu anar directament a sydneyrenee/Thea-Code-Docs.
+També donem la benvinguda a contribucions a la nostra [documentació](https://docs.thea-placeholder.com/)! Ja sigui corregint errors tipogràfics, millorant guies existents o creant nou contingut educatiu - ens encantaria construir un repositori de recursos impulsat per la comunitat que ajudi a tothom a aprofitar al màxim Thea Code. Podeu fer clic a "Editar aquesta pàgina" a qualsevol pàgina per arribar ràpidament al lloc correcte a Github per editar el fitxer, o podeu anar directament a SolaceHarmony/Thea-Code-Docs.
 
-Si esteu planejant treballar en una funcionalitat més gran, si us plau creeu primer una [sol·licitud de funcionalitat](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) perquè puguem discutir si s'alinea amb la visió de Thea Code. També podeu consultar el nostre [Full de Ruta del Projecte](#full-de-ruta-del-projecte) a continuació per veure si la vostra idea s'ajusta a la nostra direcció estratègica.
+Si esteu planejant treballar en una funcionalitat més gran, si us plau creeu primer una [sol·licitud de funcionalitat](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) perquè puguem discutir si s'alinea amb la visió de Thea Code. També podeu consultar el nostre [Full de Ruta del Projecte](#full-de-ruta-del-projecte) a continuació per veure si la vostra idea s'ajusta a la nostra direcció estratègica.
 
 ## Full de Ruta del Projecte
 
@@ -94,7 +94,7 @@ Donem especialment la benvinguda a contribucions que avancin els nostres objecti
 1. **Cloneu** el repositori:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Instal·leu les dependències**:

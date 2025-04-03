@@ -14,19 +14,19 @@ Tüm katkıda bulunanları [Discord topluluğumuza](https://discord.gg/thea-plac
 
 ## Hataları veya Sorunları Bildirme
 
-Hata raporları Thea Code'u herkes için daha iyi hale getirmeye yardımcı olur! Yeni bir sorun oluşturmadan önce, lütfen yinelemeleri önlemek için [mevcut olanları arayın](sydneyrenee/Thea-Code/issues). Bir hatayı bildirmeye hazır olduğunuzda, ilgili bilgileri doldurmanıza yardımcı olacak bir şablon bulacağınız [sorunlar sayfamıza](sydneyrenee/Thea-Code/issues/new/choose) gidin.
+Hata raporları Thea Code'u herkes için daha iyi hale getirmeye yardımcı olur! Yeni bir sorun oluşturmadan önce, lütfen yinelemeleri önlemek için [mevcut olanları arayın](SolaceHarmony/Thea-Code/issues). Bir hatayı bildirmeye hazır olduğunuzda, ilgili bilgileri doldurmanıza yardımcı olacak bir şablon bulacağınız [sorunlar sayfamıza](SolaceHarmony/Thea-Code/issues/new/choose) gidin.
 
 <blockquote class='warning-note'>
-     🔐 <b>Önemli:</b> Bir güvenlik açığı keşfederseniz, lütfen <a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">özel olarak bildirmek için Github güvenlik aracını kullanın</a>.
+     🔐 <b>Önemli:</b> Bir güvenlik açığı keşfederseniz, lütfen <a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">özel olarak bildirmek için Github güvenlik aracını kullanın</a>.
 </blockquote>
 
 ## Ne Üzerinde Çalışacağınıza Karar Verme
 
 İyi bir ilk katkı mı arıyorsunuz? [Thea Code Sorunları](https://github.com/orgs/sydneyrenee/projects/1) Github Projemizin "Issue [Unassigned]" bölümündeki sorunları kontrol edin. Bunlar özellikle yeni katkıda bulunanlar ve biraz yardıma ihtiyaç duyduğumuz alanlar için seçilmiştir!
 
-[Belgelerimize](https://docs.thea-placeholder.com/) katkıları da memnuniyetle karşılıyoruz! İster yazım hatalarını düzeltmek, mevcut kılavuzları geliştirmek veya yeni eğitim içeriği oluşturmak olsun - herkesin Thea Code'dan en iyi şekilde yararlanmasına yardımcı olan topluluk odaklı bir kaynak deposu oluşturmak istiyoruz. Dosyayı düzenlemek için Github'daki doğru yere hızlıca gitmek için herhangi bir sayfada "Edit this page" düğmesine tıklayabilir veya doğrudan sydneyrenee/Thea-Code-Docs adresine dalabilirsiniz.
+[Belgelerimize](https://docs.thea-placeholder.com/) katkıları da memnuniyetle karşılıyoruz! İster yazım hatalarını düzeltmek, mevcut kılavuzları geliştirmek veya yeni eğitim içeriği oluşturmak olsun - herkesin Thea Code'dan en iyi şekilde yararlanmasına yardımcı olan topluluk odaklı bir kaynak deposu oluşturmak istiyoruz. Dosyayı düzenlemek için Github'daki doğru yere hızlıca gitmek için herhangi bir sayfada "Edit this page" düğmesine tıklayabilir veya doğrudan SolaceHarmony/Thea-Code-Docs adresine dalabilirsiniz.
 
-Daha büyük bir özellik üzerinde çalışmayı planlıyorsanız, lütfen önce bir [özellik isteği](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) oluşturun, böylece Thea Code'un vizyonuyla uyumlu olup olmadığını tartışabiliriz. Ayrıca, fikrinizin stratejik yönümüze uyup uymadığını görmek için aşağıdaki [Proje Yol Haritası](#proje-yol-haritası)'nı kontrol edebilirsiniz.
+Daha büyük bir özellik üzerinde çalışmayı planlıyorsanız, lütfen önce bir [özellik isteği](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) oluşturun, böylece Thea Code'un vizyonuyla uyumlu olup olmadığını tartışabiliriz. Ayrıca, fikrinizin stratejik yönümüze uyup uymadığını görmek için aşağıdaki [Proje Yol Haritası](#proje-yol-haritası)'nı kontrol edebilirsiniz.
 
 ## Proje Yol Haritası
 
@@ -94,7 +94,7 @@ Thea'nun herkesin dilini konuşmasını istiyoruz:
 1. Depoyu **klonlayın**:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Bağımlılıkları yükleyin**:

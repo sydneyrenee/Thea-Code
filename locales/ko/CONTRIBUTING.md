@@ -14,10 +14,10 @@ Thea Code에 기여하는 데 관심을 가져주셔서 기쁩니다. 버그를 
 
 ## 버그 또는 이슈 보고하기
 
-버그 보고는 모두를 위해 Thea Code를 더 좋게 만드는 데 도움이 됩니다! 새 이슈를 만들기 전에, 중복을 피하기 위해 [기존 이슈 검색](sydneyrenee/Thea-Code/issues)을 해주세요. 버그를 보고할 준비가 되면, 관련 정보를 작성하는 데 도움이 되는 템플릿이 있는 [이슈 페이지](sydneyrenee/Thea-Code/issues/new/choose)로 이동하세요.
+버그 보고는 모두를 위해 Thea Code를 더 좋게 만드는 데 도움이 됩니다! 새 이슈를 만들기 전에, 중복을 피하기 위해 [기존 이슈 검색](SolaceHarmony/Thea-Code/issues)을 해주세요. 버그를 보고할 준비가 되면, 관련 정보를 작성하는 데 도움이 되는 템플릿이 있는 [이슈 페이지](SolaceHarmony/Thea-Code/issues/new/choose)로 이동하세요.
 
 <blockquote class='warning-note'>
-     🔐 <b>중요:</b> 보안 취약점을 발견한 경우, <a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">비공개로 보고하기 위해 Github 보안 도구를 사용하세요</a>.
+     🔐 <b>중요:</b> 보안 취약점을 발견한 경우, <a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">비공개로 보고하기 위해 Github 보안 도구를 사용하세요</a>.
 </blockquote>
 
 ## 작업할 내용 결정하기
@@ -25,9 +25,9 @@ Thea Code에 기여하는 데 관심을 가져주셔서 기쁩니다. 버그를 
 첫 기여를 위한 좋은 시작점을 찾고 계신가요? 우리의 [Thea Code 이슈](https://github.com/orgs/sydneyrenee/projects/1) Github 프로젝트의 "Issue [Unassigned]" 섹션에서 이슈를 확인하세요. 이러한 이슈들은 새로운 기여자와 우리가 도움을 필요로 하는 영역을 위해 특별히 선별되었습니다!
 
 우리는 [문서](https://docs.thea-placeholder.com/)에 대한 기여도 환영합니다! 오타 수정, 기존 가이드 개선 또는 새로운 교육 콘텐츠 생성 등 - 모든 사람이 Thea Code를 최대한 활용할 수 있도록 도와주는 커뮤니티 기반 리소스 저장소를 구축하고 싶습니다. 모든
-페이지에서 "Edit this page"를 클릭하여 파일을 편집할 수 있는 Github의 적절한 위치로 빠르게 이동하거나, sydneyrenee/Thea-Code-Docs에 직접 접근할 수 있습니다.
+페이지에서 "Edit this page"를 클릭하여 파일을 편집할 수 있는 Github의 적절한 위치로 빠르게 이동하거나, SolaceHarmony/Thea-Code-Docs에 직접 접근할 수 있습니다.
 
-더 큰 기능 작업을 계획하고 있다면, Thea Code의 비전과 일치하는지 논의할 수 있도록 먼저 [기능 요청](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)을 생성해주세요. 또한 아이디어가 우리의 전략적 방향과 일치하는지 확인하기 위해 아래의 [프로젝트 로드맵](#프로젝트-로드맵)을 확인할 수도 있습니다.
+더 큰 기능 작업을 계획하고 있다면, Thea Code의 비전과 일치하는지 논의할 수 있도록 먼저 [기능 요청](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)을 생성해주세요. 또한 아이디어가 우리의 전략적 방향과 일치하는지 확인하기 위해 아래의 [프로젝트 로드맵](#프로젝트-로드맵)을 확인할 수도 있습니다.
 
 ## 프로젝트 로드맵
 
@@ -95,7 +95,7 @@ Thea가 모든 사람의 언어를 말하기를 원합니다:
 1. 저장소 **클론**:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **의존성 설치**:

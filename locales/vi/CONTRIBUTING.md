@@ -14,19 +14,19 @@ Chúng tôi mạnh mẽ khuyến khích tất cả người đóng góp tham gia
 
 ## Báo Cáo Lỗi hoặc Vấn Đề
 
-Báo cáo lỗi giúp cải thiện Thea Code cho mọi người! Trước khi tạo một vấn đề mới, vui lòng [tìm kiếm những vấn đề hiện có](sydneyrenee/Thea-Code/issues) để tránh trùng lặp. Khi bạn đã sẵn sàng báo cáo lỗi, hãy truy cập [trang vấn đề](sydneyrenee/Thea-Code/issues/new/choose) của chúng tôi, nơi bạn sẽ tìm thấy một mẫu để giúp bạn điền thông tin liên quan.
+Báo cáo lỗi giúp cải thiện Thea Code cho mọi người! Trước khi tạo một vấn đề mới, vui lòng [tìm kiếm những vấn đề hiện có](SolaceHarmony/Thea-Code/issues) để tránh trùng lặp. Khi bạn đã sẵn sàng báo cáo lỗi, hãy truy cập [trang vấn đề](SolaceHarmony/Thea-Code/issues/new/choose) của chúng tôi, nơi bạn sẽ tìm thấy một mẫu để giúp bạn điền thông tin liên quan.
 
 <blockquote class='warning-note'>
-     🔐 <b>Quan trọng:</b> Nếu bạn phát hiện lỗ hổng bảo mật, vui lòng sử dụng <a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">công cụ bảo mật Github để báo cáo riêng tư</a>.
+     🔐 <b>Quan trọng:</b> Nếu bạn phát hiện lỗ hổng bảo mật, vui lòng sử dụng <a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">công cụ bảo mật Github để báo cáo riêng tư</a>.
 </blockquote>
 
 ## Quyết Định Làm Việc trên Cái Gì
 
 Tìm kiếm đóng góp đầu tiên tốt? Kiểm tra các vấn đề trong phần "Issue [Unassigned]" của [Dự án Github Thea Code](https://github.com/orgs/sydneyrenee/projects/1) của chúng tôi. Những vấn đề này được chọn lọc đặc biệt cho người đóng góp mới và các lĩnh vực mà chúng tôi muốn nhận được sự giúp đỡ!
 
-Chúng tôi cũng hoan nghênh đóng góp cho [tài liệu](https://docs.thea-placeholder.com/) của chúng tôi! Dù là sửa lỗi chính tả, cải thiện hướng dẫn hiện có, hay tạo nội dung giáo dục mới - chúng tôi muốn xây dựng một kho tài nguyên do cộng đồng thúc đẩy giúp mọi người tận dụng tối đa Thea Code. Bạn có thể nhấp vào "Edit this page" trên bất kỳ trang nào để nhanh chóng đến đúng vị trí trong Github để chỉnh sửa tệp, hoặc bạn có thể đi trực tiếp vào sydneyrenee/Thea-Code-Docs.
+Chúng tôi cũng hoan nghênh đóng góp cho [tài liệu](https://docs.thea-placeholder.com/) của chúng tôi! Dù là sửa lỗi chính tả, cải thiện hướng dẫn hiện có, hay tạo nội dung giáo dục mới - chúng tôi muốn xây dựng một kho tài nguyên do cộng đồng thúc đẩy giúp mọi người tận dụng tối đa Thea Code. Bạn có thể nhấp vào "Edit this page" trên bất kỳ trang nào để nhanh chóng đến đúng vị trí trong Github để chỉnh sửa tệp, hoặc bạn có thể đi trực tiếp vào SolaceHarmony/Thea-Code-Docs.
 
-Nếu bạn đang lên kế hoạch làm việc trên một tính năng lớn hơn, vui lòng tạo [yêu cầu tính năng](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) trước để chúng tôi có thể thảo luận xem nó có phù hợp với tầm nhìn của Thea Code không. Bạn cũng có thể kiểm tra [Lộ Trình Dự Án](#lộ-trình-dự-án) bên dưới để xem liệu ý tưởng của bạn có phù hợp với định hướng chiến lược của chúng tôi không.
+Nếu bạn đang lên kế hoạch làm việc trên một tính năng lớn hơn, vui lòng tạo [yêu cầu tính năng](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) trước để chúng tôi có thể thảo luận xem nó có phù hợp với tầm nhìn của Thea Code không. Bạn cũng có thể kiểm tra [Lộ Trình Dự Án](#lộ-trình-dự-án) bên dưới để xem liệu ý tưởng của bạn có phù hợp với định hướng chiến lược của chúng tôi không.
 
 ## Lộ Trình Dự Án
 
@@ -94,7 +94,7 @@ Chúng tôi đặc biệt hoan nghênh những đóng góp thúc đẩy mục ti
 1. **Clone** kho lưu trữ:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Cài đặt các phụ thuộc**:

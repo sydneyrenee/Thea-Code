@@ -14,19 +14,19 @@
 
 ## 报告错误或问题
 
-错误报告有助于使 Thea Code 对每个人都更好！在创建新问题之前，请[搜索现有问题](sydneyrenee/Thea-Code/issues)以避免重复。当您准备报告错误时，前往我们的[问题页面](sydneyrenee/Thea-Code/issues/new/choose)，那里有模板可以帮助您填写相关信息。
+错误报告有助于使 Thea Code 对每个人都更好！在创建新问题之前，请[搜索现有问题](SolaceHarmony/Thea-Code/issues)以避免重复。当您准备报告错误时，前往我们的[问题页面](SolaceHarmony/Thea-Code/issues/new/choose)，那里有模板可以帮助您填写相关信息。
 
 <blockquote class='warning-note'>
-     🔐 <b>重要提示：</b>如果您发现安全漏洞，请使用 <a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">Github 安全工具私下报告它</a>。
+     🔐 <b>重要提示：</b>如果您发现安全漏洞，请使用 <a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">Github 安全工具私下报告它</a>。
 </blockquote>
 
 ## 决定做什么
 
 寻找一个好的首次贡献？查看我们 [Thea Code Issues](https://github.com/orgs/sydneyrenee/projects/1) Github 项目中"Issue [Unassigned]"部分的问题。这些是专门为新贡献者精心挑选的，也是我们希望得到一些帮助的领域！
 
-我们也欢迎对我们的[文档](https://docs.thea-placeholder.com/)做贡献！无论是修复错别字、改进现有指南，还是创建新的教育内容 - 我们希望建立一个由社区驱动的资源库，帮助每个人充分利用 Thea Code。您可以点击任何页面上的"Edit this page"快速进入 Github 中编辑文件的正确位置，或者直接访问 sydneyrenee/Thea-Code-Docs。
+我们也欢迎对我们的[文档](https://docs.thea-placeholder.com/)做贡献！无论是修复错别字、改进现有指南，还是创建新的教育内容 - 我们希望建立一个由社区驱动的资源库，帮助每个人充分利用 Thea Code。您可以点击任何页面上的"Edit this page"快速进入 Github 中编辑文件的正确位置，或者直接访问 SolaceHarmony/Thea-Code-Docs。
 
-如果您计划处理更大的功能，请先创建一个[功能请求](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)，以便我们讨论它是否符合 Thea Code 的愿景。您还可以查看下面的[项目路线图](#项目路线图)，看看您的想法是否符合我们的战略方向。
+如果您计划处理更大的功能，请先创建一个[功能请求](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)，以便我们讨论它是否符合 Thea Code 的愿景。您还可以查看下面的[项目路线图](#项目路线图)，看看您的想法是否符合我们的战略方向。
 
 ## 项目路线图
 
@@ -94,7 +94,7 @@ Thea Code 有一个明确的开发路线图，指导我们的优先事项和未�
 1. **克隆**仓库：
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **安装依赖**：

@@ -26,7 +26,7 @@
 <h1>Thea Code (이전 Thea Cline)</h1>
 
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code" target="_blank"><img src="https://img.shields.io/badge/VS%20Marketplace에서%20다운로드-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="VS Marketplace에서 다운로드"></a>
-<a href="sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/기능%20요청-yellow?style=for-the-badge" alt="기능 요청"></a>
+<a href="SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/기능%20요청-yellow?style=for-the-badge" alt="기능 요청"></a>
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/평가%20%26%20리뷰-green?style=for-the-badge" alt="평가 & 리뷰"></a>
 <a href="https://docs.thea-placeholder.com" target="_blank"><img src="https://img.shields.io/badge/문서-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="문서"></a>
 
@@ -118,7 +118,7 @@ MCP는 무제한 커스텀 도구를 추가할 수 있게 하여 Thea Code의 �
 
 - **Discord:** 실시간 도움과 토론을 위한 [Discord 서버 참여](https://discord.gg/thea-placeholder)
 - **Reddit:** 경험과 팁을 공유하는 [서브레딧 방문](https://www.reddit.com/r/thea-placeholder)
-- **GitHub:** [문제 보고](sydneyrenee/Thea-Code/issues) 또는 [기능 요청](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** [문제 보고](SolaceHarmony/Thea-Code/issues) 또는 [기능 요청](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 
@@ -127,7 +127,7 @@ MCP는 무제한 커스텀 도구를 추가할 수 있게 하여 Thea Code의 �
 1. 저장소 **클론**:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **의존성 설치**:

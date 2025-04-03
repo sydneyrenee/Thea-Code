@@ -26,7 +26,7 @@
 <h1>Thea Code (önceki adıyla Thea Cline)</h1>
 
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code" target="_blank"><img src="https://img.shields.io/badge/VS%20Marketplace%27den%20İndir-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="VS Marketplace'den İndir"></a>
-<a href="sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Özellik%20İstekleri-yellow?style=for-the-badge" alt="Özellik İstekleri"></a>
+<a href="SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Özellik%20İstekleri-yellow?style=for-the-badge" alt="Özellik İstekleri"></a>
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/Değerlendir%20%26%20İnceleme-green?style=for-the-badge" alt="Değerlendir & İnceleme"></a>
 <a href="https://docs.thea-placeholder.com" target="_blank"><img src="https://img.shields.io/badge/Dokümantasyon-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Dokümantasyon"></a>
 
@@ -118,7 +118,7 @@ Thea Code'u kendi tarzınıza göre çalıştırın:
 
 - **Discord:** Gerçek zamanlı yardım ve tartışmalar için [Discord sunucumuza katılın](https://discord.gg/thea-placeholder)
 - **Reddit:** Deneyimlerinizi ve ipuçlarınızı paylaşmak için [subreddit'imizi ziyaret edin](https://www.reddit.com/r/thea-placeholder)
-- **GitHub:** [Sorunları bildirin](sydneyrenee/Thea-Code/issues) veya [özellik talep edin](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** [Sorunları bildirin](SolaceHarmony/Thea-Code/issues) veya [özellik talep edin](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 
@@ -127,7 +127,7 @@ Thea Code'u kendi tarzınıza göre çalıştırın:
 1. Depoyu **klonlayın**:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Bağımlılıkları yükleyin**:

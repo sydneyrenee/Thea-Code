@@ -14,19 +14,19 @@
 
 ## 報告錯誤或問題
 
-錯誤報告有助於為每個人改進 Thea Code！在創建新問題之前，請[搜索現有問題](sydneyrenee/Thea-Code/issues)以避免重複。當您準備報告錯誤時，請前往我們的[問題頁面](sydneyrenee/Thea-Code/issues/new/choose)，在那裡您會找到幫助您填寫相關信息的模板。
+錯誤報告有助於為每個人改進 Thea Code！在創建新問題之前，請[搜索現有問題](SolaceHarmony/Thea-Code/issues)以避免重複。當您準備報告錯誤時，請前往我們的[問題頁面](SolaceHarmony/Thea-Code/issues/new/choose)，在那裡您會找到幫助您填寫相關信息的模板。
 
 <blockquote class='warning-note'>
-     🔐 <b>重要：</b> 如果您發現安全漏洞，請使用 <a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">Github 安全工具私下報告</a>。
+     🔐 <b>重要：</b> 如果您發現安全漏洞，請使用 <a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">Github 安全工具私下報告</a>。
 </blockquote>
 
 ## 決定從事何種工作
 
 尋找一個良好的首次貢獻機會？查看我們 [Thea Code Issues](https://github.com/orgs/sydneyrenee/projects/1) Github 專案中 "Issue [Unassigned]" 部分的問題。這些專門為新貢獻者及我們需要一些幫助的領域精心挑選！
 
-我們也歡迎對我們的[文檔](https://docs.thea-placeholder.com/)進行貢獻！無論是修正錯別字、改進現有指南，還是創建新的教育內容 - 我們希望建立一個社區驅動的資源庫，幫助每個人充分利用 Thea Code。您可以點擊任何頁面上的 "Edit this page" 快速進入 Github 中編輯文件的正確位置，或者您可以直接進入 sydneyrenee/Thea-Code-Docs。
+我們也歡迎對我們的[文檔](https://docs.thea-placeholder.com/)進行貢獻！無論是修正錯別字、改進現有指南，還是創建新的教育內容 - 我們希望建立一個社區驅動的資源庫，幫助每個人充分利用 Thea Code。您可以點擊任何頁面上的 "Edit this page" 快速進入 Github 中編輯文件的正確位置，或者您可以直接進入 SolaceHarmony/Thea-Code-Docs。
 
-如果您計劃從事更大的功能開發，請先創建一個[功能請求](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)，這樣我們可以討論它是否符合 Thea Code 的願景。您也可以查看下方的[專案路線圖](#專案路線圖)，看看您的想法是否符合我們的策略方向。
+如果您計劃從事更大的功能開發，請先創建一個[功能請求](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)，這樣我們可以討論它是否符合 Thea Code 的願景。您也可以查看下方的[專案路線圖](#專案路線圖)，看看您的想法是否符合我們的策略方向。
 
 ## 專案路線圖
 
@@ -94,7 +94,7 @@ Thea Code 有一個明確的開發路線圖，指導我們的優先事項和未�
 1. **克隆**存儲庫：
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **安裝依賴項**：

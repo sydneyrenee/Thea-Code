@@ -14,19 +14,19 @@ Estamos encantados de que estés interesado en contribuir a Thea Code. Ya sea qu
 
 ## Reportar errores o problemas
 
-¡Los informes de errores ayudan a mejorar Thea Code para todos! Antes de crear un nuevo issue, por favor [busca entre los existentes](sydneyrenee/Thea-Code/issues) para evitar duplicados. Cuando estés listo para reportar un error, dirígete a nuestra [página de issues](sydneyrenee/Thea-Code/issues/new/choose) donde encontrarás una plantilla para ayudarte a completar la información relevante.
+¡Los informes de errores ayudan a mejorar Thea Code para todos! Antes de crear un nuevo issue, por favor [busca entre los existentes](SolaceHarmony/Thea-Code/issues) para evitar duplicados. Cuando estés listo para reportar un error, dirígete a nuestra [página de issues](SolaceHarmony/Thea-Code/issues/new/choose) donde encontrarás una plantilla para ayudarte a completar la información relevante.
 
 <blockquote class='warning-note'>
-     🔐 <b>Importante:</b> Si descubres una vulnerabilidad de seguridad, por favor utiliza la <a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">herramienta de seguridad de GitHub para reportarla de forma privada</a>.
+     🔐 <b>Importante:</b> Si descubres una vulnerabilidad de seguridad, por favor utiliza la <a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">herramienta de seguridad de GitHub para reportarla de forma privada</a>.
 </blockquote>
 
 ## Decidir en qué trabajar
 
 ¿Buscas una buena primera contribución? Revisa los issues en la sección "Issue [Unassigned]" de nuestro [Proyecto GitHub de Thea Code](https://github.com/orgs/sydneyrenee/projects/1). ¡Estos están específicamente seleccionados para nuevos colaboradores y áreas donde nos encantaría recibir ayuda!
 
-¡También damos la bienvenida a contribuciones a nuestra [documentación](https://docs.thea-placeholder.com/)! Ya sea arreglando errores tipográficos, mejorando guías existentes o creando nuevo contenido educativo - nos encantaría construir un repositorio de recursos impulsado por la comunidad que ayude a todos a sacar el máximo provecho de Thea Code. Puedes hacer clic en "Edit this page" en cualquier página para llegar rápidamente al lugar correcto en Github para editar el archivo, o puedes ir directamente a sydneyrenee/Thea-Code-Docs.
+¡También damos la bienvenida a contribuciones a nuestra [documentación](https://docs.thea-placeholder.com/)! Ya sea arreglando errores tipográficos, mejorando guías existentes o creando nuevo contenido educativo - nos encantaría construir un repositorio de recursos impulsado por la comunidad que ayude a todos a sacar el máximo provecho de Thea Code. Puedes hacer clic en "Edit this page" en cualquier página para llegar rápidamente al lugar correcto en Github para editar el archivo, o puedes ir directamente a SolaceHarmony/Thea-Code-Docs.
 
-Si estás planeando trabajar en una función más grande, por favor crea una [solicitud de función](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) primero para que podamos discutir si se alinea con la visión de Thea Code. También puedes consultar nuestra [Hoja de Ruta del Proyecto](#hoja-de-ruta-del-proyecto) a continuación para ver si tu idea encaja con nuestra dirección estratégica.
+Si estás planeando trabajar en una función más grande, por favor crea una [solicitud de función](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) primero para que podamos discutir si se alinea con la visión de Thea Code. También puedes consultar nuestra [Hoja de Ruta del Proyecto](#hoja-de-ruta-del-proyecto) a continuación para ver si tu idea encaja con nuestra dirección estratégica.
 
 ## Hoja de Ruta del Proyecto
 
@@ -94,7 +94,7 @@ Damos especialmente la bienvenida a contribuciones que avancen nuestros objetivo
 1. **Clona** el repositorio:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Instala dependencias**:

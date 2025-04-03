@@ -377,7 +377,7 @@
     "useCustomModel": "カスタムを使用: {{modelId}}"
   },
   "footer": {
-    "feedback": "質問やフィードバックがある場合は、<githubLink>github.com/sydneyrenee/Thea-Code</githubLink>で問題を開くか、<redditLink>https://reddit.com/r/thea-placeholder</redditLink>や<discordLink>https://discord.gg/thea-placeholder</discordLink>に参加してください",
+    "feedback": "質問やフィードバックがある場合は、<githubLink>github.com/SolaceHarmony/Thea-Code</githubLink>で問題を開くか、<redditLink>https://reddit.com/r/thea-placeholder</redditLink>や<discordLink>https://discord.gg/thea-placeholder</discordLink>に参加してください",
     "version": "Thea Code v{{version}}",
     "telemetry": {
       "label": "匿名のエラーと使用状況レポートを許可",

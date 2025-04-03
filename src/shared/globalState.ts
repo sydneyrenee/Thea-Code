@@ -119,7 +119,7 @@ export const GLOBAL_STATE_KEYS = [
 	"lmStudioSpeculativeDecodingEnabled",
 	"lmStudioDraftModelId",
 	"telemetrySetting",
-	"showTheaCodeIgnoredFiles",
+	"showTheaIgnoredFiles",
 	"remoteBrowserEnabled",
 	"language",
 	"maxWorkspaceFiles",

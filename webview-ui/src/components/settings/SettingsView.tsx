@@ -462,7 +462,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 					<ContextManagementSettings
 						maxOpenTabsContext={maxOpenTabsContext}
 						maxWorkspaceFiles={maxWorkspaceFiles ?? 200}
-						showTheaCodeIgnoredFiles={showTheaIgnoredFiles}
+						showTheaIgnoredFiles={showTheaIgnoredFiles}
 						maxReadFileLine={maxReadFileLine}
 						setCachedStateField={setCachedStateField}
 					/>

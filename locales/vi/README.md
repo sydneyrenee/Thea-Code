@@ -26,7 +26,7 @@
 <h1>Thea Code (trước đây là Thea Cline)</h1>
 
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code" target="_blank"><img src="https://img.shields.io/badge/Tải%20từ%20VS%20Marketplace-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Tải từ VS Marketplace"></a>
-<a href="sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Yêu%20cầu%20tính%20năng-yellow?style=for-the-badge" alt="Yêu cầu tính năng"></a>
+<a href="SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Yêu%20cầu%20tính%20năng-yellow?style=for-the-badge" alt="Yêu cầu tính năng"></a>
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/Đánh%20giá%20%26%20Nhận%20xét-green?style=for-the-badge" alt="Đánh giá & Nhận xét"></a>
 <a href="https://docs.thea-placeholder.com" target="_blank"><img src="https://img.shields.io/badge/Tài%20liệu-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Tài liệu"></a>
 
@@ -118,7 +118,7 @@ Làm cho Thea Code hoạt động theo cách của bạn với:
 
 - **Discord:** [Tham gia máy chủ Discord của chúng tôi](https://discord.gg/thea-placeholder) để được trợ giúp và thảo luận trong thời gian thực
 - **Reddit:** [Ghé thăm subreddit của chúng tôi](https://www.reddit.com/r/thea-placeholder) để chia sẻ kinh nghiệm và mẹo
-- **GitHub:** [Báo cáo vấn đề](sydneyrenee/Thea-Code/issues) hoặc [yêu cầu tính năng](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** [Báo cáo vấn đề](SolaceHarmony/Thea-Code/issues) hoặc [yêu cầu tính năng](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 
@@ -127,7 +127,7 @@ Làm cho Thea Code hoạt động theo cách của bạn với:
 1. **Clone** kho lưu trữ:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Cài đặt các phụ thuộc**:

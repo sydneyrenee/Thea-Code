@@ -28,7 +28,7 @@ describe("ContextManagementSettings", () => {
 	const defaultProps = {
 		maxOpenTabsContext: 20,
 		maxWorkspaceFiles: 200,
-		showTheaCodeIgnoredFiles: false,
+		showTheaIgnoredFiles: false,
 		setCachedStateField: jest.fn(),
 	}
 
@@ -48,8 +48,8 @@ describe("ContextManagementSettings", () => {
 		expect(workspaceFilesSlider).toBeInTheDocument()
 
 		// Show .thea_ignore'd files
-		const showTheaCodeIgnoredFilesCheckbox = screen.getByTestId("show-theaignored-files-checkbox")
-		expect(showTheaCodeIgnoredFilesCheckbox).toBeInTheDocument()
+		const showTheaIgnoredFilesCheckbox = screen.getByTestId("show-theaignored-files-checkbox")
+		expect(showTheaIgnoredFilesCheckbox).toBeInTheDocument()
 		expect(screen.getByTestId("show-theaignored-files-checkbox")).not.toBeChecked()
 	})
 
@@ -77,6 +77,6 @@ describe("ContextManagementSettings", () => {
 		const checkbox = screen.getByTestId("show-theaignored-files-checkbox")
 		fireEvent.click(checkbox)
 
-		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("showTheaCodeIgnoredFiles", true)
+		expect(defaultProps.setCachedStateField).toHaveBeenCalledWith("showTheaIgnoredFiles", true)
 	})
 })

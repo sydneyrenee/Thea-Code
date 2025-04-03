@@ -377,7 +377,7 @@
     "useCustomModel": "Utilitzar personalitzat: {{modelId}}"
   },
   "footer": {
-    "feedback": "Si teniu qualsevol pregunta o comentari, no dubteu a obrir un issue a <githubLink>github.com/sydneyrenee/Thea-Code</githubLink> o unir-vos a <redditLink>https://reddit.com/r/thea-placeholder</redditLink> o <discordLink>https://discord.gg/thea-placeholder</discordLink>",
+    "feedback": "Si teniu qualsevol pregunta o comentari, no dubteu a obrir un issue a <githubLink>github.com/SolaceHarmony/Thea-Code</githubLink> o unir-vos a <redditLink>https://reddit.com/r/thea-placeholder</redditLink> o <discordLink>https://discord.gg/thea-placeholder</discordLink>",
     "version": "Thea Code v{{version}}",
     "telemetry": {
       "label": "Permetre informes anònims d'errors i ús",

@@ -26,7 +26,7 @@
 <h1>Thea Code (antes Thea Cline)</h1>
 
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code" target="_blank"><img src="https://img.shields.io/badge/Descargar%20en%20VS%20Marketplace-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Descargar en VS Marketplace"></a>
-<a href="sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Solicitudes%20de%20Funciones-yellow?style=for-the-badge" alt="Solicitudes de Funciones"></a>
+<a href="SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Solicitudes%20de%20Funciones-yellow?style=for-the-badge" alt="Solicitudes de Funciones"></a>
 <a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/Valorar%20%26%20Opinar-green?style=for-the-badge" alt="Valorar & Opinar"></a>
 <a href="https://docs.thea-placeholder.com" target="_blank"><img src="https://img.shields.io/badge/Documentaci%C3%B3n-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentación"></a>
 
@@ -118,7 +118,7 @@ Haz que Thea Code funcione a tu manera con:
 
 - **Discord:** [Únete a nuestro servidor de Discord](https://discord.gg/thea-placeholder) para ayuda en tiempo real y discusiones
 - **Reddit:** [Visita nuestro subreddit](https://www.reddit.com/r/thea-placeholder) para compartir experiencias y consejos
-- **GitHub:** Reporta [problemas](sydneyrenee/Thea-Code/issues) o solicita [funciones](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **GitHub:** Reporta [problemas](SolaceHarmony/Thea-Code/issues) o solicita [funciones](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 
@@ -127,7 +127,7 @@ Haz que Thea Code funcione a tu manera con:
 1. **Clona** el repositorio:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Instala dependencias**:

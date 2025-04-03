@@ -14,19 +14,19 @@ Incentivamos fortemente todos os colaboradores a se juntarem à nossa [comunidad
 
 ## Relatando Bugs ou Problemas
 
-Relatórios de bugs ajudam a tornar o Thea Code melhor para todos! Antes de criar uma nova issue, por favor [pesquise as existentes](sydneyrenee/Thea-Code/issues) para evitar duplicatas. Quando estiver pronto para relatar um bug, vá para nossa [página de issues](sydneyrenee/Thea-Code/issues/new/choose) onde você encontrará um modelo para ajudá-lo a preencher as informações relevantes.
+Relatórios de bugs ajudam a tornar o Thea Code melhor para todos! Antes de criar uma nova issue, por favor [pesquise as existentes](SolaceHarmony/Thea-Code/issues) para evitar duplicatas. Quando estiver pronto para relatar um bug, vá para nossa [página de issues](SolaceHarmony/Thea-Code/issues/new/choose) onde você encontrará um modelo para ajudá-lo a preencher as informações relevantes.
 
 <blockquote class='warning-note'>
-     🔐 <b>Importante:</b> Se você descobrir uma vulnerabilidade de segurança, por favor use a <a href="https://github.com/sydneyrenee/Thea-Code/security/advisories/new">ferramenta de segurança do Github para relatá-la de forma privada</a>.
+     🔐 <b>Importante:</b> Se você descobrir uma vulnerabilidade de segurança, por favor use a <a href="https://github.com/SolaceHarmony/Thea-Code/security/advisories/new">ferramenta de segurança do Github para relatá-la de forma privada</a>.
 </blockquote>
 
 ## Decidindo no que Trabalhar
 
 Procurando uma boa primeira contribuição? Verifique as issues na seção "Issue [Unassigned]" do nosso [Projeto Github Thea Code](https://github.com/orgs/sydneyrenee/projects/1). Estas são especialmente selecionadas para novos colaboradores e áreas onde gostaríamos de ter alguma ajuda!
 
-Também damos as boas-vindas a contribuições para nossa [documentação](https://docs.thea-placeholder.com/)! Seja corrigindo erros de digitação, melhorando guias existentes ou criando novo conteúdo educacional - adoraríamos construir um repositório de recursos impulsionado pela comunidade que ajude todos a obter o máximo do Thea Code. Você pode clicar em "Edit this page" em qualquer página para ir rapidamente ao local certo no Github para editar o arquivo, ou pode mergulhar diretamente em sydneyrenee/Thea-Code-Docs.
+Também damos as boas-vindas a contribuições para nossa [documentação](https://docs.thea-placeholder.com/)! Seja corrigindo erros de digitação, melhorando guias existentes ou criando novo conteúdo educacional - adoraríamos construir um repositório de recursos impulsionado pela comunidade que ajude todos a obter o máximo do Thea Code. Você pode clicar em "Edit this page" em qualquer página para ir rapidamente ao local certo no Github para editar o arquivo, ou pode mergulhar diretamente em SolaceHarmony/Thea-Code-Docs.
 
-Se você está planejando trabalhar em um recurso maior, por favor crie primeiro uma [solicitação de recurso](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) para que possamos discutir se está alinhado com a visão do Thea Code. Você também pode verificar nosso [Roteiro do Projeto](#roteiro-do-projeto) abaixo para ver se sua ideia se encaixa em nossa direção estratégica.
+Se você está planejando trabalhar em um recurso maior, por favor crie primeiro uma [solicitação de recurso](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop) para que possamos discutir se está alinhado com a visão do Thea Code. Você também pode verificar nosso [Roteiro do Projeto](#roteiro-do-projeto) abaixo para ver se sua ideia se encaixa em nossa direção estratégica.
 
 ## Roteiro do Projeto
 
@@ -94,7 +94,7 @@ Damos especialmente as boas-vindas a contribuições que avançam os objetivos d
 1. **Clone** o repositório:
 
 ```sh
-git clone https://github.com/sydneyrenee/Thea-Code.git
+git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
 2. **Instale as dependências**:

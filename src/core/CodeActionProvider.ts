@@ -2,20 +2,20 @@ import * as vscode from "vscode"
 import { EditorUtils } from "./EditorUtils"
 import { EXTENSION_DISPLAY_NAME, COMMANDS } from "../../dist/thea-config" // Import branded constants
 export const ACTION_NAMES = {
-	EXPLAIN: `${EXTENSION_DISPLAY_NAME}: Explain Code`, // Use constant
-	FIX: `${EXTENSION_DISPLAY_NAME}: Fix Code`, // Use constant
-	FIX_LOGIC: `${EXTENSION_DISPLAY_NAME}: Fix Logic`, // Use constant
-	IMPROVE: `${EXTENSION_DISPLAY_NAME}: Improve Code`, // Use constant
-	ADD_TO_CONTEXT: `${EXTENSION_DISPLAY_NAME}: Add to Context`, // Use constant
-	NEW_TASK: `${EXTENSION_DISPLAY_NAME}: New Task`, // Use constant
+	EXPLAIN: `${EXTENSION_DISPLAY_NAME}: Explain Code`, 
+	FIX: `${EXTENSION_DISPLAY_NAME}: Fix Code`, 
+	FIX_LOGIC: `${EXTENSION_DISPLAY_NAME}: Fix Logic`, 
+	IMPROVE: `${EXTENSION_DISPLAY_NAME}: Improve Code`, 
+	ADD_TO_CONTEXT: `${EXTENSION_DISPLAY_NAME}: Add to Context`, 
+	NEW_TASK: `${EXTENSION_DISPLAY_NAME}: New Task`, 
 } as const
 
 export const COMMAND_IDS = {
-	EXPLAIN: COMMANDS.EXPLAIN_CODE, // Use constant
-	FIX: COMMANDS.FIX_CODE, // Use constant
-	IMPROVE: COMMANDS.IMPROVE_CODE, // Use constant
-	ADD_TO_CONTEXT: COMMANDS.ADD_TO_CONTEXT, // Use constant
-	NEW_TASK: COMMANDS.NEW_TASK, // Use constant
+	EXPLAIN: COMMANDS.EXPLAIN_CODE, 
+	FIX: COMMANDS.FIX_CODE, 
+	IMPROVE: COMMANDS.IMPROVE_CODE, 
+	ADD_TO_CONTEXT: COMMANDS.ADD_TO_CONTEXT, 
+	NEW_TASK: COMMANDS.NEW_TASK, 
 } as const
 
 export class CodeActionProvider implements vscode.CodeActionProvider {

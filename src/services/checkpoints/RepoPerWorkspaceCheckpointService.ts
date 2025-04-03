@@ -10,7 +10,7 @@ export class RepoPerWorkspaceCheckpointService extends ShadowCheckpointService {
 		}
 
 		const startTime = Date.now()
-		const branch = `${BRANCH_PREFIX}${this.taskId}` // Use constant
+		const branch = `${BRANCH_PREFIX}${this.taskId}` 
 		const currentBranch = await this.git.revparse(["--abbrev-ref", "HEAD"])
 
 		if (currentBranch === branch) {

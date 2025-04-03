@@ -65,8 +65,8 @@ export type ClineProviderEvents = {
 }
 
 export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
-	public static readonly sideBarId = VIEWS.SIDEBAR // Use constant
-	public static readonly tabPanelId = VIEWS.TAB_PANEL // Use constant
+	public static readonly sideBarId = VIEWS.SIDEBAR 
+	public static readonly tabPanelId = VIEWS.TAB_PANEL 
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	// not private, so it can be accessed from webviewMessageHandler
@@ -241,7 +241,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// If no visible provider, try to show the sidebar view
 		if (!visibleProvider) {
-			await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) // Use constant
+			await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) 
 			// Wait briefly for the view to become visible
 			await delay(100)
 			visibleProvider = ClineProvider.getVisibleInstance()
@@ -627,7 +627,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					<script nonce="${nonce}">
 						window.IMAGES_BASE_URI = "${imagesUri}"
 					</script>
-					<title>${EXTENSION_DISPLAY_NAME}</title> // Use constant
+					<title>${EXTENSION_DISPLAY_NAME}</title> 
 				</head>
 				<body>
 					<div id="root"></div>
@@ -712,7 +712,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			<script nonce="${nonce}">
 				window.IMAGES_BASE_URI = "${imagesUri}"
 			</script>
-            <title>${EXTENSION_DISPLAY_NAME}</title> // Use constant
+            <title>${EXTENSION_DISPLAY_NAME}</title> 
           </head>
           <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -866,14 +866,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Get platform-specific application data directory
 		let mcpServersDir: string
 		if (process.platform === "win32") {
-			// Windows: %APPDATA%\\${EXTENSION_DISPLAY_NAME}\\MCP // Use constant
-			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", EXTENSION_DISPLAY_NAME, "MCP") // Use constant
+			// Windows: %APPDATA%\\${EXTENSION_DISPLAY_NAME}\\MCP 
+			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", EXTENSION_DISPLAY_NAME, "MCP") 
 		} else if (process.platform === "darwin") {
-			// macOS: ~/Documents/{EXTENSION_DISPLAY_NAME}/MCP // Use constant (Note: Original was Cline, now using Display Name)
-			mcpServersDir = path.join(os.homedir(), "Documents", EXTENSION_DISPLAY_NAME, "MCP") // Use constant
+			// macOS: ~/Documents/{EXTENSION_DISPLAY_NAME}/MCP  (Note: Original was Cline, now using Display Name)
+			mcpServersDir = path.join(os.homedir(), "Documents", EXTENSION_DISPLAY_NAME, "MCP") 
 		} else {
-			// Linux: ~/.local/share/{EXTENSION_DISPLAY_NAME}/MCP // Use constant (Note: Original was Cline, now using Display Name)
-			mcpServersDir = path.join(os.homedir(), ".local", "share", EXTENSION_DISPLAY_NAME, "MCP") // Use constant
+			// Linux: ~/.local/share/{EXTENSION_DISPLAY_NAME}/MCP  (Note: Original was Cline, now using Display Name)
+			mcpServersDir = path.join(os.homedir(), ".local", "share", EXTENSION_DISPLAY_NAME, "MCP") 
 		}
 
 		try {
@@ -881,7 +881,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		} catch (error) {
 			// Fallback to a relative path if directory creation fails
 			// Fallback to using EXTENSION_CONFIG_DIR
-			return path.join(os.homedir(), EXTENSION_CONFIG_DIR, "mcp") // Use constant
+			return path.join(os.homedir(), EXTENSION_CONFIG_DIR, "mcp") 
 		}
 		return mcpServersDir
 	}

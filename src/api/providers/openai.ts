@@ -20,8 +20,8 @@ import { API_REFERENCES } from "../../../dist/thea-config"; // Import branded co
 const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
 export const defaultHeaders = {
-	"HTTP-Referer": API_REFERENCES.HOMEPAGE, // Use constant
-	"X-Title": API_REFERENCES.APP_TITLE, // Use constant
+	"HTTP-Referer": API_REFERENCES.HOMEPAGE, 
+	"X-Title": API_REFERENCES.APP_TITLE, 
 }
 
 export interface OpenAiHandlerOptions extends ApiHandlerOptions {}

@@ -64,7 +64,7 @@ export class Terminal {
 			if (!this.process) {
 				this.running = false
 				console.warn(
-					`[Terminal ${this.id}] process is undefined, so cannot set terminal stream (probably user-initiated non-${EXTENSION_DISPLAY_NAME} command)`, // Use constant
+					`[Terminal ${this.id}] process is undefined, so cannot set terminal stream (probably user-initiated non-${EXTENSION_DISPLAY_NAME} command)`, 
 				)
 				return
 			}

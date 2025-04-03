@@ -413,7 +413,7 @@ export class McpHub {
 		try {
 			const client = new Client(
 				{
-					name: EXTENSION_DISPLAY_NAME, // Use constant
+					name: EXTENSION_DISPLAY_NAME, 
 					version: this.providerRef.deref()?.context.extension?.packageJSON?.version ?? "1.0.0",
 				},
 				{

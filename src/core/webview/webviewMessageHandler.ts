@@ -510,7 +510,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.context.globalState.update("allowedCommands", message.commands)
 			// Also update workspace settings
 			await vscode.workspace
-				.getConfiguration(configSection()) // Use constant
+				.getConfiguration(configSection()) 
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 			break
 		case "openMcpSettings": {
@@ -527,7 +527,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			}
 
 			const workspaceFolder = vscode.workspace.workspaceFolders[0]
-			const configDir = path.join(workspaceFolder.uri.fsPath, EXTENSION_CONFIG_DIR) // Use constant
+			const configDir = path.join(workspaceFolder.uri.fsPath, EXTENSION_CONFIG_DIR) 
 			const mcpPath = path.join(configDir, "mcp.json") // Use renamed variable
 
 			try {
@@ -1314,7 +1314,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "humanRelayResponse":
 			if (message.requestId && message.text) {
-				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { // Use constant
+				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { 
 					requestId: message.requestId,
 					text: message.text,
 					cancelled: false,
@@ -1324,7 +1324,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 		case "humanRelayCancel":
 			if (message.requestId) {
-				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { // Use constant
+				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { 
 					requestId: message.requestId,
 					cancelled: true,
 				})

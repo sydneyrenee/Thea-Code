@@ -51,9 +51,9 @@ describe("TheaIgnore Response Formatting", () => {
 			const errorMessage = formatResponse.theaIgnoreError("secrets/api-keys.json")
 
 			// Verify error message format
-			expect(errorMessage).toContain(`Access to secrets/api-keys.json is blocked by the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file settings`) // Use constant
+			expect(errorMessage).toContain(`Access to secrets/api-keys.json is blocked by the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file settings`) 
 			expect(errorMessage).toContain("continue in the task without using this file")
-			expect(errorMessage).toContain(`ask the user to update the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file`) // Use constant
+			expect(errorMessage).toContain(`ask the user to update the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file`) 
 		})
 
 		/**
@@ -217,7 +217,7 @@ describe("TheaIgnore Response Formatting", () => {
 			const instructions = controller.getInstructions()
 
 			// Verify format and content
-			expect(instructions).toContain(`# ${GLOBAL_FILENAMES.IGNORE_FILENAME}`) // Use constant
+			expect(instructions).toContain(`# ${GLOBAL_FILENAMES.IGNORE_FILENAME}`) 
 			expect(instructions).toContain(LOCK_TEXT_SYMBOL)
 			expect(instructions).toContain("node_modules")
 			expect(instructions).toContain(".git")
@@ -232,7 +232,7 @@ describe("TheaIgnore Response Formatting", () => {
 		/**
 		 * Tests null/undefined case when ignore file doesn't exist
 		 */
-		it(`should return undefined when no ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => { // Use constant
+		it(`should return undefined when no ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => { 
 			// Set up no .theaignore
 			mockFileExists.mockResolvedValue(false) // Mock file not existing
 

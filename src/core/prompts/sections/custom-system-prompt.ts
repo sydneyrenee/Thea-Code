@@ -25,7 +25,7 @@ async function safeReadFile(filePath: string): Promise<string> {
  * Get the path to a system prompt file for a specific mode
  */
 export function getSystemPromptFilePath(cwd: string, mode: Mode): string {
-	return path.join(cwd, EXTENSION_CONFIG_DIR, `system-prompt-${mode}`) // Use constant
+	return path.join(cwd, EXTENSION_CONFIG_DIR, `system-prompt-${mode}`) 
 }
 
 /**
@@ -41,7 +41,7 @@ export async function loadSystemPromptFile(cwd: string, mode: Mode): Promise<str
  * Ensures the .thea directory exists, creating it if necessary
  */
 export async function ensureConfigDirectory(cwd: string): Promise<void> { // Rename function
-	const configDir = path.join(cwd, EXTENSION_CONFIG_DIR) // Use constant
+	const configDir = path.join(cwd, EXTENSION_CONFIG_DIR) 
 
 	// Check if directory already exists
 	if (await fileExistsAtPath(configDir)) {

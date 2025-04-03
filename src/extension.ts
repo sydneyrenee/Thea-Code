@@ -43,9 +43,9 @@ let extensionContext: vscode.ExtensionContext
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
-	outputChannel = vscode.window.createOutputChannel(EXTENSION_DISPLAY_NAME) // Use constant
+	outputChannel = vscode.window.createOutputChannel(EXTENSION_DISPLAY_NAME) 
 	context.subscriptions.push(outputChannel)
-	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension activated`) // Use constant
+	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension activated`) 
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
@@ -60,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	TerminalRegistry.initialize()
 
 	// Get default commands from configuration.
-	const defaultCommands = vscode.workspace.getConfiguration(configSection()).get<string[]>("allowedCommands") || [] // Use constant
+	const defaultCommands = vscode.workspace.getConfiguration(configSection()).get<string[]>("allowedCommands") || [] 
 
 	// Initialize global state if not already set.
 	if (!context.globalState.get("allowedCommands")) {
@@ -117,7 +117,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerTerminalActions(context)
 
 	// Allows other extensions to activate once Thea is ready.
-	vscode.commands.executeCommand(`${EXTENSION_NAME}.activationCompleted`); // Use constant
+	vscode.commands.executeCommand(`${EXTENSION_NAME}.activationCompleted`); 
 
 	// Implements the `TheaCodeAPI` interface.
 	return new API(outputChannel, provider)
@@ -125,7 +125,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export async function deactivate() {
-	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension deactivated`) // Use constant
+	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension deactivated`) 
 	// Clean up MCP server manager
 	await McpServerManager.cleanup(extensionContext)
 	telemetryService.shutdown()

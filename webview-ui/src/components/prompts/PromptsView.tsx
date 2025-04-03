@@ -448,7 +448,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 												e.preventDefault() // Prevent blur
 												vscode.postMessage({
 													type: "openFile",
-													text: `./${GLOBAL_FILENAMES.MODES_FILENAME}`, // Use constant
+													text: `./${GLOBAL_FILENAMES.MODES_FILENAME}`, 
 													values: {
 														create: true,
 														content: JSON.stringify({ customModes: [] }, null, 2),
@@ -875,7 +875,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 													vscode.postMessage({
 														type: "openFile",
-														text: `./${CONFIG_DIR_NAME}/system-prompt-${currentMode.slug}`, // Use constant
+														text: `./${CONFIG_DIR_NAME}/system-prompt-${currentMode.slug}`, 
 														values: {
 															create: true,
 															content: "",

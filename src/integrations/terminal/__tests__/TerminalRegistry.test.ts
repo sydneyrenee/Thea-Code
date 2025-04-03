@@ -28,7 +28,7 @@ describe("TerminalRegistry", () => {
 
 			expect(mockCreateTerminal).toHaveBeenCalledWith({
 				cwd: "/test/path",
-				name: EXTENSION_DISPLAY_NAME, // Use constant
+				name: EXTENSION_DISPLAY_NAME, 
 				iconPath: expect.any(Object),
 				env: {
 					PAGER: "cat",

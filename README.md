@@ -9,14 +9,17 @@ English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) 
 [日本語](locales/ja/README.md) • [한국어](locales/ko/README.md) • [Polski](locales/pl/README.md) • [Português (BR)](locales/pt-BR/README.md) • [Türkçe](locales/tr/README.md) • [Tiếng Việt](locales/vi/README.md) • [简体中文](locales/zh-CN/README.md) • [繁體中文](locales/zh-TW/README.md)
 
 </sub>
+<h3>Welcome to Thea Code - A Community of Innovators</h3>
 </div>
+<p>Thea Code is not just an AI tool; it's a dynamic platform powered by the creativity and collaboration of its community. Whether you're a seasoned developer or just starting, your contributions help shape the future of AI-driven coding tools.</p>
 <br>
 
 <div align="center">
   <h2>Join the Thea Code Community</h2>
+<p>By joining the Thea Code community, you become part of a global network of innovators. Share your ideas, contribute code, and explore the vast possibilities of AI-enhanced development.</p>
   <p>Connect with developers, contribute ideas, and stay ahead with the latest AI-powered coding tools.</p>
   
-  <a href="https://discord.gg/thea-placeholder" target="_blank"><img src="https://img.shields.io/badge/Join%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord"></a>
+  <a href="https://discord.gg/EmberHarmony" target="_blank"><img src="https://img.shields.io/badge/Join%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord"></a>
   <a href="https://www.reddit.com/r/thea-placeholder/" target="_blank"><img src="https://img.shields.io/badge/Join%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Join Reddit"></a>
   
 </div>
@@ -45,6 +48,8 @@ English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) 
 Whether you’re seeking a flexible coding partner, a system architect, or specialized roles like a QA engineer or product manager, Thea Code can help you build software more efficiently.
 
 Check out the [CHANGELOG](CHANGELOG.md) for detailed updates and fixes.
+
+> **Note**: Thea Code is a fork of Roo Code. We'd like to express our special thanks to the Roo Code team for their excellent work which served as the foundation for this project.
 
 ---
 
@@ -117,7 +122,7 @@ Make Thea Code work your way with:
 
 ### Community
 
-- **Discord:** [Join our Discord server](https://discord.gg/thea-placeholder) for real-time help and discussions
+- **Discord:** [Join our Discord server](https://discord.gg/EmberHarmony) for real-time help and discussions
 - **Reddit:** [Visit our subreddit](https://www.reddit.com/r/thea-placeholder) to share experiences and tips
 - **GitHub:** Report [issues](sydneyrenee/Thea-Code/issues) or request [features](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
@@ -211,4 +216,4 @@ Thanks to all our contributors who have helped make Thea Code better!
 
 ---
 
-**Enjoy Thea Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/thea-placeholder/) or [Discord](https://discord.gg/thea-placeholder). Happy coding!
+**Enjoy Thea Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/thea-placeholder/) or [Discord](https://discord.gg/EmberHarmony). Happy coding!

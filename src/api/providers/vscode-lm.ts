@@ -66,7 +66,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			this.dispose()
 
 			throw new Error(
-				`${TEXT_PATTERNS.logPrefix()} Failed to initialize handler: ${error instanceof Error ? error.message : "Unknown error"}`, // Use constant
+				`${TEXT_PATTERNS.logPrefix()} Failed to initialize handler: ${error instanceof Error ? error.message : "Unknown error"}`, 
 			)
 		}
 	}
@@ -116,7 +116,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : "Unknown error"
-			throw new Error(`${TEXT_PATTERNS.logPrefix()} Failed to select model: ${errorMessage}`) // Use constant
+			throw new Error(`${TEXT_PATTERNS.logPrefix()} Failed to select model: ${errorMessage}`) 
 		}
 	}
 
@@ -176,18 +176,18 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	private async internalCountTokens(text: string | vscode.LanguageModelChatMessage): Promise<number> {
 		// Check for required dependencies
 		if (!this.client) {
-			console.warn(`${TEXT_PATTERNS.logPrefix()} No client available for token counting`) // Use constant
+			console.warn(`${TEXT_PATTERNS.logPrefix()} No client available for token counting`) 
 			return 0
 		}
 
 		if (!this.currentRequestCancellation) {
-			console.warn(`${TEXT_PATTERNS.logPrefix()} No cancellation token available for token counting`) // Use constant
+			console.warn(`${TEXT_PATTERNS.logPrefix()} No cancellation token available for token counting`) 
 			return 0
 		}
 
 		// Validate input
 		if (!text) {
-			console.debug(`${TEXT_PATTERNS.logPrefix()} Empty text provided for token counting`) // Use constant
+			console.debug(`${TEXT_PATTERNS.logPrefix()} Empty text provided for token counting`) 
 			return 0
 		}
 
@@ -200,23 +200,23 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			} else if (text instanceof vscode.LanguageModelChatMessage) {
 				// For chat messages, ensure we have content
 				if (!text.content || (Array.isArray(text.content) && text.content.length === 0)) {
-					console.debug(`${TEXT_PATTERNS.logPrefix()} Empty chat message content`) // Use constant
+					console.debug(`${TEXT_PATTERNS.logPrefix()} Empty chat message content`) 
 					return 0
 				}
 				tokenCount = await this.client.countTokens(text, this.currentRequestCancellation.token)
 			} else {
-				console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid input type for token counting`) // Use constant
+				console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid input type for token counting`) 
 				return 0
 			}
 
 			// Validate the result
 			if (typeof tokenCount !== "number") {
-				console.warn(`${TEXT_PATTERNS.logPrefix()} Non-numeric token count received:`, tokenCount) // Use constant
+				console.warn(`${TEXT_PATTERNS.logPrefix()} Non-numeric token count received:`, tokenCount) 
 				return 0
 			}
 
 			if (tokenCount < 0) {
-				console.warn(`${TEXT_PATTERNS.logPrefix()} Negative token count received:`, tokenCount) // Use constant
+				console.warn(`${TEXT_PATTERNS.logPrefix()} Negative token count received:`, tokenCount) 
 				return 0
 			}
 
@@ -224,12 +224,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		} catch (error) {
 			// Handle specific error types
 			if (error instanceof vscode.CancellationError) {
-				console.debug(`${TEXT_PATTERNS.logPrefix()} Token counting cancelled by user`) // Use constant
+				console.debug(`${TEXT_PATTERNS.logPrefix()} Token counting cancelled by user`) 
 				return 0
 			}
 
 			const errorMessage = error instanceof Error ? error.message : "Unknown error"
-			console.warn(`${TEXT_PATTERNS.logPrefix()} Token counting failed:`, errorMessage) // Use constant
+			console.warn(`${TEXT_PATTERNS.logPrefix()} Token counting failed:`, errorMessage) 
 
 			// Log additional error details if available
 			if (error instanceof Error && error.stack) {
@@ -261,7 +261,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 	private async getClient(): Promise<vscode.LanguageModelChat> {
 		if (!this.client) {
-			console.debug(`${TEXT_PATTERNS.logPrefix()} Getting client with options:`, { // Use constant
+			console.debug(`${TEXT_PATTERNS.logPrefix()} Getting client with options:`, { 
 				vsCodeLmModelSelector: this.options.vsCodeLmModelSelector,
 				hasOptions: !!this.options,
 				selectorKeys: this.options.vsCodeLmModelSelector ? Object.keys(this.options.vsCodeLmModelSelector) : [],
@@ -270,12 +270,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			try {
 				// Use default empty selector if none provided to get all available models
 				const selector = this.options?.vsCodeLmModelSelector || {}
-				console.debug(`${TEXT_PATTERNS.logPrefix()} Creating client with selector:`, selector) // Use constant
+				console.debug(`${TEXT_PATTERNS.logPrefix()} Creating client with selector:`, selector) 
 				this.client = await this.createClient(selector)
 			} catch (error) {
 				const message = error instanceof Error ? error.message : "Unknown error"
-				console.error(`${TEXT_PATTERNS.logPrefix()} Client creation failed:`, message) // Use constant
-				throw new Error(`${TEXT_PATTERNS.logPrefix()} Failed to create client: ${message}`) // Use constant
+				console.error(`${TEXT_PATTERNS.logPrefix()} Client creation failed:`, message) 
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Failed to create client: ${message}`) 
 			}
 		}
 
@@ -377,7 +377,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		try {
 			// Create the response stream with minimal required options
 			const requestOptions: vscode.LanguageModelChatRequestOptions = {
-				justification: `${EXTENSION_DISPLAY_NAME} would like to use '${client.name}' from '${client.vendor}', Click 'Allow' to proceed.`, // Use constant
+				justification: `${EXTENSION_DISPLAY_NAME} would like to use '${client.name}' from '${client.vendor}', Click 'Allow' to proceed.`, 
 			}
 
 			// Note: Tool support is currently provided by the VSCode Language Model API directly
@@ -394,7 +394,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				if (chunk instanceof vscode.LanguageModelTextPart) {
 					// Validate text part value
 					if (typeof chunk.value !== "string") {
-						console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid text part value received:`, chunk.value) // Use constant
+						console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid text part value received:`, chunk.value) 
 						continue
 					}
 
@@ -407,18 +407,18 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 					try {
 						// Validate tool call parameters
 						if (!chunk.name || typeof chunk.name !== "string") {
-							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool name received:`, chunk.name) // Use constant
+							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool name received:`, chunk.name) 
 							continue
 						}
 
 						if (!chunk.callId || typeof chunk.callId !== "string") {
-							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool callId received:`, chunk.callId) // Use constant
+							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool callId received:`, chunk.callId) 
 							continue
 						}
 
 						// Ensure input is a valid object
 						if (!chunk.input || typeof chunk.input !== "object") {
-							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool input received:`, chunk.input) // Use constant
+							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool input received:`, chunk.input) 
 							continue
 						}
 
@@ -434,7 +434,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 						accumulatedText += toolCallText
 
 						// Log tool call for debugging
-						console.debug(`${TEXT_PATTERNS.logPrefix()} Processing tool call:`, { // Use constant
+						console.debug(`${TEXT_PATTERNS.logPrefix()} Processing tool call:`, { 
 							name: chunk.name,
 							callId: chunk.callId,
 							inputSize: JSON.stringify(chunk.input).length,
@@ -445,12 +445,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 							text: toolCallText,
 						}
 					} catch (error) {
-						console.error(`${TEXT_PATTERNS.logPrefix()} Failed to process tool call:`, error) // Use constant
+						console.error(`${TEXT_PATTERNS.logPrefix()} Failed to process tool call:`, error) 
 						// Continue processing other chunks even if one fails
 						continue
 					}
 				} else {
-					console.warn(`${TEXT_PATTERNS.logPrefix()} Unknown chunk type received:`, chunk) // Use constant
+					console.warn(`${TEXT_PATTERNS.logPrefix()} Unknown chunk type received:`, chunk) 
 				}
 			}
 
@@ -468,11 +468,11 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			this.ensureCleanState()
 
 			if (error instanceof vscode.CancellationError) {
-				throw new Error(`${TEXT_PATTERNS.logPrefix()} Request cancelled by user`) // Use constant
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Request cancelled by user`) 
 			}
 
 			if (error instanceof Error) {
-				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error details:`, { // Use constant
+				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error details:`, { 
 					message: error.message,
 					stack: error.stack,
 					name: error.name,
@@ -483,13 +483,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			} else if (typeof error === "object" && error !== null) {
 				// Handle error-like objects
 				const errorDetails = JSON.stringify(error, null, 2)
-				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error object:`, errorDetails) // Use constant
-				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorDetails}`) // Use constant
+				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error object:`, errorDetails) 
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorDetails}`) 
 			} else {
 				// Fallback for unknown error types
 				const errorMessage = String(error)
-				console.error(`${TEXT_PATTERNS.logPrefix()} Unknown stream error:`, errorMessage) // Use constant
-				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorMessage}`) // Use constant
+				console.error(`${TEXT_PATTERNS.logPrefix()} Unknown stream error:`, errorMessage) 
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorMessage}`) 
 			}
 		}
 	}
@@ -509,7 +509,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			// Log any missing properties for debugging
 			for (const [prop, value] of Object.entries(requiredProps)) {
 				if (!value && value !== 0) {
-					console.warn(`${TEXT_PATTERNS.logPrefix()} Client missing ${prop} property`) // Use constant
+					console.warn(`${TEXT_PATTERNS.logPrefix()} Client missing ${prop} property`) 
 				}
 			}
 
@@ -540,7 +540,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			? stringifyVsCodeLmModelSelector(this.options.vsCodeLmModelSelector)
 			: "vscode-lm"
 
-		console.debug(`${TEXT_PATTERNS.logPrefix()} No client available, using fallback model info`) // Use constant
+		console.debug(`${TEXT_PATTERNS.logPrefix()} No client available, using fallback model info`) 
 
 		return {
 			id: fallbackId,

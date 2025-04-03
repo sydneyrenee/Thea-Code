@@ -21,8 +21,8 @@ const tmpDir = path.join(os.tmpdir(), "CheckpointService")
 
 const initWorkspaceRepo = async ({
 	workspaceDir,
-	userName = EXTENSION_DISPLAY_NAME, // Use constant
-	userEmail = AUTHOR_EMAIL, // Use constant
+	userName = EXTENSION_DISPLAY_NAME, 
+	userEmail = AUTHOR_EMAIL, 
 	testFileName = "test.txt",
 	textFileContent = "Hello, world!",
 }: {
@@ -397,7 +397,7 @@ describe.each([
 			const mainGit = simpleGit(workspaceDir)
 			await mainGit.init()
 			await mainGit.addConfig("user.name", EXTENSION_DISPLAY_NAME)
-			await mainGit.addConfig("user.email", AUTHOR_EMAIL) // Use constant
+			await mainGit.addConfig("user.email", AUTHOR_EMAIL) 
 
 			// Create a nested repo inside the workspace.
 			const nestedRepoPath = path.join(workspaceDir, "nested-project")
@@ -405,7 +405,7 @@ describe.each([
 			const nestedGit = simpleGit(nestedRepoPath)
 			await nestedGit.init()
 			await nestedGit.addConfig("user.name", EXTENSION_DISPLAY_NAME)
-			await nestedGit.addConfig("user.email", AUTHOR_EMAIL) // Use constant
+			await nestedGit.addConfig("user.email", AUTHOR_EMAIL) 
 
 			// Add a file to the nested repo.
 			const nestedFile = path.join(nestedRepoPath, "nested-file.txt")
@@ -710,8 +710,8 @@ describe("ShadowCheckpointService", () => {
 			// Create git repo without adding the specific branch
 			const git = simpleGit(workspaceRepoDir)
 			await git.init()
-			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME) // Use constant
-			await git.addConfig("user.email", AUTHOR_EMAIL) // Use constant
+			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME) 
+			await git.addConfig("user.email", AUTHOR_EMAIL) 
 
 			// We need to create a commit, but we won't create the specific branch
 			const testFile = path.join(workspaceRepoDir, "test.txt")

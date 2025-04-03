@@ -11,9 +11,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sydneyrenee/Thea-Code"
+    "url": "https://github.com/SolaceHarmony/Thea-Code"
   },
-  "homepage": "https://github.com/sydneyrenee/Thea-Code",
+  "homepage": "https://github.com/SolaceHarmony/Thea-Code",
   "keywords": [
     "thea",
     "solace",
@@ -42,6 +42,6 @@
   "apiTypeName": "TheaCodeAPI",
   "eventsTypeName": "TheaCodeEvents",
   "portalName": "thea-portal",
-  "discordUrl": "https://discord.gg/thea-placeholder",
-  "redditUrl": "https://reddit.com/r/thea-placeholder"
+  "discordUrl": "https://discord.gg/EmberHarmony",
+  "redditUrl": "https://reddit.com/r/SolaceHarmony"
 }

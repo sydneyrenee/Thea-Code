@@ -54,7 +54,7 @@ export class CustomModesManager {
 			return undefined
 		}
 		const workspaceRoot = getWorkspacePath()
-		const projectModesPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) // Use constant
+		const projectModesPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) 
 		const exists = await fileExistsAtPath(projectModesPath)
 		return exists ? projectModesPath : undefined
 	}
@@ -69,7 +69,7 @@ export class CustomModesManager {
 			}
 
 			// Determine source based on file path
-			const isTheamodes = filePath.endsWith(BRANDED_FILENAMES.MODES_FILENAME) // Use constant
+			const isTheamodes = filePath.endsWith(BRANDED_FILENAMES.MODES_FILENAME) 
 			const source = isTheamodes ? ("project" as const) : ("global" as const)
 
 			// Add source to each mode
@@ -230,9 +230,9 @@ export class CustomModesManager {
 					throw new Error("No workspace folder found for project-specific mode")
 				}
 				const workspaceRoot = getWorkspacePath()
-				targetPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) // Use constant
+				targetPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) 
 				const exists = await fileExistsAtPath(targetPath)
-				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${BRANDED_FILENAMES.MODES_FILENAME}`, { // Use constant
+				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${BRANDED_FILENAMES.MODES_FILENAME}`, { 
 					slug,
 					workspace: workspaceRoot,
 				})

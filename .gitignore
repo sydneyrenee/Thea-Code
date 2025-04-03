@@ -33,3 +33,4 @@ docs/_site/
 #Logging
 logs
 package.json.bak*
+.thea_modes

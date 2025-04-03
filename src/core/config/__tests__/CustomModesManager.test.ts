@@ -23,7 +23,7 @@ describe("CustomModesManager", () => {
 	// Use path.sep to ensure correct path separators for the current platform
 	const mockStoragePath = `${path.sep}mock${path.sep}settings`
 	const mockSettingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
-	const mockProjectModesPath = `${path.sep}mock${path.sep}workspace${path.sep}.${BRANDED_FILENAMES.MODES_FILENAME}` // Use constant
+	const mockProjectModesPath = `${path.sep}mock${path.sep}workspace${path.sep}.${BRANDED_FILENAMES.MODES_FILENAME}` 
 
 	beforeEach(() => {
 		mockOnUpdate = jest.fn()

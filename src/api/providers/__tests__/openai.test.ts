@@ -99,8 +99,8 @@ describe("OpenAiHandler", () => {
 				baseURL: expect.any(String),
 				apiKey: expect.any(String),
 				defaultHeaders: {
-					"HTTP-Referer": API_REFERENCES.HOMEPAGE, // Use constant
-					"X-Title": API_REFERENCES.APP_TITLE, // Use constant
+					"HTTP-Referer": API_REFERENCES.HOMEPAGE, 
+					"X-Title": API_REFERENCES.APP_TITLE, 
 				},
 			})
 		})

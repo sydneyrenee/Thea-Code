@@ -14,7 +14,7 @@ export default defineConfig({
 		timeout: 60000,
 	},
 	launchArgs: [
-		`--enable-proposed-api=${EXTENSION_ID}`, // Use constant
+		`--enable-proposed-api=${EXTENSION_ID}`, 
 		'--disable-extensions'
 	]
 });

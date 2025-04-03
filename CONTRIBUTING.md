@@ -4,7 +4,7 @@ We're thrilled you're interested in contributing to Thea Code. Whether you're fi
 
 ## Join Our Community
 
-We strongly encourage all contributors to join our [Discord community](https://discord.gg/thea-placeholder)! Being part of our Discord server helps you:
+We strongly encourage all contributors to join our [Discord community](https://discord.gg/EmberHarmony)! Being part of our Discord server helps you:
 
 - Get real-time help and guidance on your contributions
 - Connect with other contributors and core team members
@@ -49,14 +49,14 @@ We aim to support as many providers well as we can:
 
 ### Model Support
 
-We want Roo to work as well on as many models as possible, including local models:
+We want Thea Code to work as well on as many models as possible, including local models:
 
 - Local model support through custom system prompting and workflows
 - Benchmarking evals and test cases
 
 ### System Support
 
-We want Roo to run well on everyone's computer:
+We want Thea Code to run well on everyone's computer:
 
 - Cross platform terminal integration
 - Strong and consistent support for Mac, Windows, and Linux
@@ -80,7 +80,7 @@ We want to significantly decrease the number of bugs and increase automated test
 
 ### Internationalization
 
-We want Roo to speak everyone's language:
+We want Thea Code to speak everyone's language:
 
 - 我们希望 Thea Code 说每个人的语言
 - Queremos que Thea Code hable el idioma de todos

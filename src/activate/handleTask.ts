@@ -13,7 +13,7 @@ export const handleNewTask = async (params: { prompt?: string } | null | undefin
 		})
 	}
 	if (!prompt) {
-		await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) // Use constant
+		await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) 
 		return
 	}
 

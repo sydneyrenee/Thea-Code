@@ -53,27 +53,27 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	return {
 		// Construct internal command ID using EXTENSION_NAME
 		[`${EXTENSION_NAME}.activationCompleted`]: () => {},
-		[COMMANDS.PLUS_BUTTON]: async () => { // Use constant
+		[COMMANDS.PLUS_BUTTON]: async () => { 
 			await provider.removeClineFromStack()
 			await provider.postStateToWebview()
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
-		[COMMANDS.MCP_BUTTON]: () => { // Use constant
+		[COMMANDS.MCP_BUTTON]: () => { 
 			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
-		[COMMANDS.PROMPTS_BUTTON]: () => { // Use constant
+		[COMMANDS.PROMPTS_BUTTON]: () => { 
 			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
-		[COMMANDS.POPOUT_BUTTON]: () => openClineInNewTab({ context, outputChannel }), // Use constant
-		[COMMANDS.OPEN_NEW_TAB]: () => openClineInNewTab({ context, outputChannel }), // Use constant
-		[COMMANDS.SETTINGS_BUTTON]: () => { // Use constant
+		[COMMANDS.POPOUT_BUTTON]: () => openClineInNewTab({ context, outputChannel }), 
+		[COMMANDS.OPEN_NEW_TAB]: () => openClineInNewTab({ context, outputChannel }), 
+		[COMMANDS.SETTINGS_BUTTON]: () => { 
 			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
-		[COMMANDS.HISTORY_BUTTON]: () => { // Use constant
+		[COMMANDS.HISTORY_BUTTON]: () => { 
 			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
-		[COMMANDS.HELP_BUTTON]: () => { // Use constant
-			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL)) // Use constant
+		[COMMANDS.HELP_BUTTON]: () => { 
+			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL)) 
 		},
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.showHumanRelayDialog`]: (params: { requestId: string; promptText: string }) => {
@@ -93,7 +93,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		[`${EXTENSION_NAME}.unregisterHumanRelayCallback`]: unregisterHumanRelayCallback,
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.handleHumanRelayResponse`]: handleHumanRelayResponse,
-		[COMMANDS.NEW_TASK]: handleNewTask, // Use constant
+		[COMMANDS.NEW_TASK]: handleNewTask, 
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.setCustomStoragePath`]: async () => {
 			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
@@ -120,7 +120,7 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 
 	const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
 
-	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, EXTENSION_DISPLAY_NAME, targetCol, { // Use constant
+	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, EXTENSION_DISPLAY_NAME, targetCol, { 
 		enableScripts: true,
 		retainContextWhenHidden: true,
 		localResourceRoots: [context.extensionUri],

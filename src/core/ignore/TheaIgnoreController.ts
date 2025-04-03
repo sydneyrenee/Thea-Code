@@ -38,7 +38,7 @@ export class TheaIgnoreController { // Rename class
 	 * Set up the file watcher for .theaignore changes
 	 */
 	private setupFileWatcher(): void {
-		const ignorePattern = new vscode.RelativePattern(this.cwd, GLOBAL_FILENAMES.IGNORE_FILENAME) // Use constant
+		const ignorePattern = new vscode.RelativePattern(this.cwd, GLOBAL_FILENAMES.IGNORE_FILENAME) 
 		const fileWatcher = vscode.workspace.createFileSystemWatcher(ignorePattern)
 
 		// Watch for changes and updates
@@ -65,18 +65,18 @@ export class TheaIgnoreController { // Rename class
 		try {
 			// Reset ignore instance to prevent duplicate patterns
 			this.ignoreInstance = ignore()
-			const ignorePath = path.join(this.cwd, GLOBAL_FILENAMES.IGNORE_FILENAME) // Use constant
+			const ignorePath = path.join(this.cwd, GLOBAL_FILENAMES.IGNORE_FILENAME) 
 			if (await fileExistsAtPath(ignorePath)) {
 				const content = await fs.readFile(ignorePath, "utf8")
 				this.theaIgnoreContent = content
 				this.ignoreInstance.add(content) // Add content from ignore file
-				this.ignoreInstance.add(GLOBAL_FILENAMES.IGNORE_FILENAME) // Use constant
+				this.ignoreInstance.add(GLOBAL_FILENAMES.IGNORE_FILENAME) 
 			} else {
 				this.theaIgnoreContent = undefined
 			}
 		} catch (error) {
 			// Should never happen: reading file failed even though it exists
-			console.error(`Unexpected error loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}:`, error) // Use constant
+			console.error(`Unexpected error loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}:`, error) 
 		}
 	}
 
@@ -197,6 +197,6 @@ export class TheaIgnoreController { // Rename class
 			return undefined
 		}
 
-		return `# ${GLOBAL_FILENAMES.IGNORE_FILENAME}\n\n(The following is provided by a root-level ${GLOBAL_FILENAMES.IGNORE_FILENAME} file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)\n\n${this.theaIgnoreContent}\n${GLOBAL_FILENAMES.IGNORE_FILENAME}` // Use constant
+		return `# ${GLOBAL_FILENAMES.IGNORE_FILENAME}\n\n(The following is provided by a root-level ${GLOBAL_FILENAMES.IGNORE_FILENAME} file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)\n\n${this.theaIgnoreContent}\n${GLOBAL_FILENAMES.IGNORE_FILENAME}` 
 	}
 }

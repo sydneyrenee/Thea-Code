@@ -2010,7 +2010,7 @@ describe("Project MCP Settings", () => {
 
 		// Verify directory was created
 		expect(fs.mkdir).toHaveBeenCalledWith(
-			expect.stringContaining(EXTENSION_CONFIG_DIR), // Use constant
+			expect.stringContaining(EXTENSION_CONFIG_DIR), 
 			expect.objectContaining({ recursive: true }),
 		)
 
@@ -2053,7 +2053,7 @@ describe("Project MCP Settings", () => {
 
 		// Verify error message was shown
 		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-			expect.stringContaining(`Failed to create or open ${EXTENSION_CONFIG_DIR}/mcp.json`), // Use constant
+			expect.stringContaining(`Failed to create or open ${EXTENSION_CONFIG_DIR}/mcp.json`), 
 		)
 	})
 })

@@ -4,12 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
+import { SPECIFIC_STRINGS } from "../../../../dist/thea-config"; // Adjust path as needed
 import {
 	ClineAsk,
 	ClineMessage,
 	ClineSayBrowserAction,
 	ClineSayTool,
 	ExtensionMessage,
+
 } from "../../../../src/shared/ExtensionMessage"
 import { McpServer, McpTool } from "../../../../src/shared/mcp"
 import { findLast } from "../../../../src/shared/array"
@@ -1362,7 +1364,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				modeShortcutText={modeShortcutText}
 			/>
 
-			<div id="roo-portal" />
+			<div id={SPECIFIC_STRINGS.PORTAL_NAME} />
 		</div>
 	)
 }

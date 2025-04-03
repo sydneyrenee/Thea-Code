@@ -13,8 +13,8 @@ import { ClineProvider } from "../webview/ClineProvider"
 import { ApiConfiguration, ModelInfo } from "../../shared/api"
 import { ApiStreamChunk } from "../../api/transform/stream"
 
-// Mock RooIgnoreController
-jest.mock("../ignore/RooIgnoreController")
+// Mock TheaIgnoreController
+jest.mock("../ignore/TheaIgnoreController")
 
 // Mock fileExistsAtPath
 jest.mock("../../utils/fs", () => ({

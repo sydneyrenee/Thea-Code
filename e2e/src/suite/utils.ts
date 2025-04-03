@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 
-import { RooCodeAPI } from "../../../src/exports/roo-code"
+import { EXTENSION_NAME } from "../../../dist/thea-config"; // Import branded constant
+import { TheaCodeAPI } from "../../../src/exports/thea-code"
 
 type WaitForOptions = {
 	timeout?: number
@@ -42,16 +43,16 @@ export const waitFor = (
 }
 
 type WaitUntilReadyOptions = WaitForOptions & {
-	api: RooCodeAPI
+	api: TheaCodeAPI
 }
 
 export const waitUntilReady = async ({ api, ...options }: WaitUntilReadyOptions) => {
-	await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+	await vscode.commands.executeCommand(`${EXTENSION_NAME}.SidebarProvider.focus`)
 	await waitFor(() => api.isReady(), options)
 }
 
 type WaitUntilAbortedOptions = WaitForOptions & {
-	api: RooCodeAPI
+	api: TheaCodeAPI
 	taskId: string
 }
 
@@ -69,7 +70,7 @@ export const waitForCompletion = async ({
 	taskId: string
 }) => waitFor(() => !!getCompletion({ api, taskId }), options)
 
-export const getCompletion = ({ api, taskId }: { api: RooCodeAPI; taskId: string }) =>
+export const getCompletion = ({ api, taskId }: { api: TheaCodeAPI; taskId: string }) =>
 	api.getMessages(taskId).find(({ say, partial }) => say === "completion_result" && partial === false)
 
 type WaitForMessageOptions = WaitUntilReadyOptions & {
@@ -82,7 +83,7 @@ export const waitForMessage = async ({ api, taskId, include, exclude, ...options
 	waitFor(() => !!getMessage({ api, taskId, include, exclude }), options)
 
 type GetMessageOptions = {
-	api: RooCodeAPI
+	api: TheaCodeAPI
 	taskId: string
 	include: string
 	exclude?: string

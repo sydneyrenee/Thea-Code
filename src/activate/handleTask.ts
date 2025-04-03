@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import { COMMAND_IDS } from "../core/CodeActionProvider"
 import { ClineProvider } from "../core/webview/ClineProvider"
 import { t } from "../i18n"
+import { VIEWS } from "../../dist/thea-config" // Import branded constants
 
 export const handleNewTask = async (params: { prompt?: string } | null | undefined) => {
 	let prompt = params?.prompt
@@ -12,7 +13,7 @@ export const handleNewTask = async (params: { prompt?: string } | null | undefin
 		})
 	}
 	if (!prompt) {
-		await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+		await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) // Use constant
 		return
 	}
 

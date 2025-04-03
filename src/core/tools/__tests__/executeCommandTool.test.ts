@@ -37,7 +37,7 @@ describe("executeCommandTool", () => {
 			executeCommandTool: jest.fn().mockResolvedValue([false, "Command executed"]),
 			consecutiveMistakeCount: 0,
 			didRejectTool: false,
-			rooIgnoreController: {
+			theaIgnoreController: {
 				// @ts-expect-error - Jest mock function type issues
 				validateCommand: jest.fn().mockReturnValue(null),
 			},
@@ -232,18 +232,18 @@ describe("executeCommandTool", () => {
 			expect(mockPushToolResult).not.toHaveBeenCalled()
 		})
 
-		it("should handle rooignore validation failures", async () => {
+		it("should handle theaignore validation failures", async () => {
 			// Setup
 			mockToolUse.params.command = "cat .env"
 			// Override the validateCommand mock to return a filename
 			const validateCommandMock = jest.fn().mockReturnValue(".env")
-			mockCline.rooIgnoreController = {
+			mockCline.theaIgnoreController = {
 				// @ts-expect-error - Jest mock function type issues
 				validateCommand: validateCommandMock,
 			}
 
-			const mockRooIgnoreError = "RooIgnore error"
-			;(formatResponse.rooIgnoreError as jest.Mock).mockReturnValue(mockRooIgnoreError)
+			const mockTheaIgnoreError = "TheaIgnore error"
+			;(formatResponse.theaIgnoreError as jest.Mock).mockReturnValue(mockTheaIgnoreError)
 			;(formatResponse.toolError as jest.Mock).mockReturnValue("Tool error")
 
 			// Execute
@@ -258,9 +258,9 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			expect(validateCommandMock).toHaveBeenCalledWith("cat .env")
-			expect(mockCline.say).toHaveBeenCalledWith("rooignore_error", ".env")
-			expect(formatResponse.rooIgnoreError).toHaveBeenCalledWith(".env")
-			expect(formatResponse.toolError).toHaveBeenCalledWith(mockRooIgnoreError)
+			expect(mockCline.say).toHaveBeenCalledWith("theaignore_error", ".env")
+			expect(formatResponse.theaIgnoreError).toHaveBeenCalledWith(".env")
+			expect(formatResponse.toolError).toHaveBeenCalledWith(mockTheaIgnoreError)
 			expect(mockPushToolResult).toHaveBeenCalled()
 			expect(mockAskApproval).not.toHaveBeenCalled()
 			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()

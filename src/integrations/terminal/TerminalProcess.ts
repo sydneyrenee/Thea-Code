@@ -285,7 +285,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 					(defaultWindowsShellProfile as string)?.toLowerCase().includes("powershell"))
 			if (isPowerShell) {
 				terminal.shellIntegration.executeCommand(
-					`${command} ; "(Roo/PS Workaround: ${this.terminalInfo.cmdCounter++})" > $null; start-sleep -milliseconds 150`,
+					`${command} ; "(Thea/PS Workaround: ${this.terminalInfo.cmdCounter++})" > $null; start-sleep -milliseconds 150`,
 				)
 			} else {
 				terminal.shellIntegration.executeCommand(command)

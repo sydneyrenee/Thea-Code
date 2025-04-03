@@ -5,6 +5,7 @@ import * as vscode from "vscode"
 import { TerminalProcess, mergePromise } from "../TerminalProcess"
 import { Terminal } from "../Terminal"
 import { TerminalRegistry } from "../TerminalRegistry"
+import { EXTENSION_DISPLAY_NAME } from "../../../../dist/thea-config" // Import branded constant
 
 // Mock vscode.window.createTerminal
 const mockCreateTerminal = jest.fn()
@@ -45,7 +46,7 @@ describe("TerminalProcess", () => {
 			shellIntegration: {
 				executeCommand: jest.fn(),
 			},
-			name: "Roo Code",
+			name: EXTENSION_DISPLAY_NAME, // Use constant
 			processId: Promise.resolve(123),
 			creationOptions: {},
 			exitStatus: undefined,

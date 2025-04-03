@@ -1,18 +1,19 @@
 import * as path from "path"
 import Mocha from "mocha"
+import { EXTENSION_ID } from "../../../dist/thea-config"; // Import branded constant
 import { glob } from "glob"
 import * as vscode from "vscode"
 
-import { RooCodeAPI } from "../../../src/exports/roo-code"
+import { TheaCodeAPI } from "../../../src/exports/thea-code"
 
 import { waitUntilReady } from "./utils"
 
 declare global {
-	var api: RooCodeAPI
+	var api: TheaCodeAPI
 }
 
 export async function run() {
-	const extension = vscode.extensions.getExtension<RooCodeAPI>("RooVeterinaryInc.roo-cline")
+	const extension = vscode.extensions.getExtension<TheaCodeAPI>(EXTENSION_ID)
 
 	if (!extension) {
 		throw new Error("Extension not found")

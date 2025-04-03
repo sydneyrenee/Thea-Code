@@ -3,7 +3,7 @@
 // can run `npm run generate-types`.
 
 import { z } from "zod"
-
+import { SETTING_KEYS } from "../../dist/thea-config"; // Import branded constant
 import { Equals, Keys, AssertEqual } from "../utils/type-fu"
 
 /**
@@ -523,7 +523,7 @@ export const globalSettingsSchema = z.object({
 
 	maxOpenTabsContext: z.number().optional(),
 	maxWorkspaceFiles: z.number().optional(),
-	showRooIgnoredFiles: z.boolean().optional(),
+	showTheaIgnoredFiles: z.boolean().optional(), // Revert to static key
 	maxReadFileLine: z.number().optional(),
 
 	terminalOutputLineLimit: z.number().optional(),
@@ -593,7 +593,7 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 
 	maxOpenTabsContext: undefined,
 	maxWorkspaceFiles: undefined,
-	showRooIgnoredFiles: undefined,
+	showTheaIgnoredFiles: undefined, // Revert to static key
 	maxReadFileLine: undefined,
 
 	terminalOutputLineLimit: undefined,
@@ -623,10 +623,10 @@ const globalSettingsRecord: GlobalSettingsRecord = {
 export const GLOBAL_SETTINGS_KEYS = Object.keys(globalSettingsRecord) as Keys<GlobalSettings>[]
 
 /**
- * RooCodeSettings
+ * TheaCodeSettings
  */
 
-export type RooCodeSettings = GlobalSettings & ProviderSettings
+export type TheaCodeSettings = GlobalSettings & ProviderSettings
 
 /**
  * SecretState
@@ -676,10 +676,10 @@ export const isSecretStateKey = (key: string): key is Keys<SecretState> =>
  * GlobalState
  */
 
-export type GlobalState = Omit<RooCodeSettings, Keys<SecretState>>
+export type GlobalState = Omit<TheaCodeSettings, Keys<SecretState>>
 
 export const GLOBAL_STATE_KEYS = [...GLOBAL_SETTINGS_KEYS, ...PROVIDER_SETTINGS_KEYS].filter(
-	(key: Keys<RooCodeSettings>) => !SECRET_STATE_KEYS.includes(key as Keys<SecretState>),
+	(key: Keys<TheaCodeSettings>) => !SECRET_STATE_KEYS.includes(key as Keys<SecretState>),
 ) as Keys<GlobalState>[]
 
 export const isGlobalStateKey = (key: string): key is Keys<GlobalState> =>
@@ -734,7 +734,7 @@ export const clineSays = [
 	"new_task_started",
 	"new_task",
 	"checkpoint_saved",
-	"rooignore_error",
+	"theaignore_error",
 ] as const
 
 export const clineSaySchema = z.enum(clineSays)

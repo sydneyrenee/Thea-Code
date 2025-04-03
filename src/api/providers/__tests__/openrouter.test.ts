@@ -6,7 +6,7 @@ import OpenAI from "openai"
 
 import { OpenRouterHandler } from "../openrouter"
 import { ApiHandlerOptions, ModelInfo } from "../../../shared/api"
-
+import { API_REFERENCES } from "../../../../dist/thea-config"; // Import branded constants
 // Mock dependencies
 jest.mock("openai")
 jest.mock("axios")
@@ -38,8 +38,8 @@ describe("OpenRouterHandler", () => {
 			baseURL: "https://openrouter.ai/api/v1",
 			apiKey: mockOptions.openRouterApiKey,
 			defaultHeaders: {
-				"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-				"X-Title": "Roo Code",
+				"HTTP-Referer": API_REFERENCES.HOMEPAGE, // Use constant
+				"X-Title": API_REFERENCES.APP_TITLE, // Use constant
 			},
 		})
 	})

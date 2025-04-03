@@ -1,4 +1,4 @@
-// filepath: e:\Project\Roo-Code\src\api\providers\human-relay.ts
+// filepath: e:\Project\Thea-Code\src\api\providers\human-relay.ts
 import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
 import { ApiHandler, SingleCompletionHandler } from "../index"
@@ -6,7 +6,7 @@ import { ApiStream } from "../transform/stream"
 import * as vscode from "vscode"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
 import { getPanel } from "../../activate/registerCommands" // Import the getPanel function
-
+import { EXTENSION_NAME } from "../../../dist/thea-config" // Import branded constant
 /**
  * Human Relay API processor
  * This processor does not directly call the API, but interacts with the model through human operations copy and paste.
@@ -123,7 +123,7 @@ async function showHumanRelayDialog(promptText: string): Promise<string | undefi
 
 		// Register a global callback function
 		vscode.commands.executeCommand(
-			"roo-cline.registerHumanRelayCallback",
+			`${EXTENSION_NAME}.registerHumanRelayCallback`, // Use constant
 			requestId,
 			(response: string | undefined) => {
 				resolve(response)
@@ -131,7 +131,7 @@ async function showHumanRelayDialog(promptText: string): Promise<string | undefi
 		)
 
 		// Open the dialog box directly using the current panel
-		vscode.commands.executeCommand("roo-cline.showHumanRelayDialog", {
+		vscode.commands.executeCommand(`${EXTENSION_NAME}.showHumanRelayDialog`, { // Use constant
 			requestId,
 			promptText,
 		})

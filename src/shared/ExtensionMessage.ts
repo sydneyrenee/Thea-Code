@@ -13,6 +13,7 @@ import {
 	ToolProgressStatus,
 	ClineMessage,
 } from "../schemas"
+import { SETTING_KEYS } from "../../dist/thea-config"; // Import branded constant
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
 import { Mode } from "./modes"
@@ -148,7 +149,7 @@ export type ExtensionState = Pick<
 	| "soundVolume"
 	// | "maxOpenTabsContext" // Optional in GlobalSettings, required here.
 	// | "maxWorkspaceFiles" // Optional in GlobalSettings, required here.
-	// | "showRooIgnoredFiles" // Optional in GlobalSettings, required here.
+	// | "showTheaIgnoredFiles" // Optional in GlobalSettings, required here.
 	// | "maxReadFileLine" // Optional in GlobalSettings, required here.
 	| "terminalOutputLineLimit"
 	| "terminalShellIntegrationTimeout"
@@ -184,7 +185,7 @@ export type ExtensionState = Pick<
 	checkpointStorage: CheckpointStorage
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
 	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
-	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
+	showTheaIgnoredFiles: boolean // Whether to show ignored files in listings
 	maxReadFileLine: number // Maximum number of lines to read from a file before truncating
 
 	rateLimitSeconds: number // Minimum time between successive requests (0 = disabled).

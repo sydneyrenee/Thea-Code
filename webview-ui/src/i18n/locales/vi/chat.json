@@ -1,247 +1,247 @@
 {
-	"greeting": "Roo có thể giúp gì cho bạn?",
-	"task": {
-		"title": "Nhiệm vụ",
-		"seeMore": "Xem thêm",
-		"seeLess": "Thu gọn",
-		"tokens": "Tokens:",
-		"cache": "Bộ nhớ đệm:",
-		"apiCost": "Chi phí API:",
-		"contextWindow": "Cửa sổ ngữ cảnh:",
-		"closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
-		"export": "Xuất lịch sử nhiệm vụ",
-		"delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
-	},
-	"unpin": "Bỏ ghim khỏi đầu",
-	"pin": "Ghim lên đầu",
-	"tokenProgress": {
-		"availableSpace": "Không gian khả dụng: {{amount}} tokens",
-		"tokensUsed": "Tokens đã sử dụng: {{used}} trong {{total}}",
-		"reservedForResponse": "Dành riêng cho phản hồi mô hình: {{amount}} tokens"
-	},
-	"retry": {
-		"title": "Thử lại",
-		"tooltip": "Thử lại thao tác"
-	},
-	"startNewTask": {
-		"title": "Bắt đầu nhiệm vụ mới",
-		"tooltip": "Bắt đầu một nhiệm vụ mới"
-	},
-	"proceedAnyways": {
-		"title": "Vẫn tiếp tục",
-		"tooltip": "Tiếp tục trong khi lệnh đang chạy"
-	},
-	"save": {
-		"title": "Lưu",
-		"tooltip": "Lưu các thay đổi tệp"
-	},
-	"reject": {
-		"title": "Từ chối",
-		"tooltip": "Từ chối hành động này"
-	},
-	"completeSubtaskAndReturn": "Hoàn thành nhiệm vụ phụ và quay lại",
-	"approve": {
-		"title": "Phê duyệt",
-		"tooltip": "Phê duyệt hành động này"
-	},
-	"runCommand": {
-		"title": "Chạy lệnh",
-		"tooltip": "Thực thi lệnh này"
-	},
-	"proceedWhileRunning": {
-		"title": "Tiếp tục trong khi chạy",
-		"tooltip": "Tiếp tục bất chấp cảnh báo"
-	},
-	"resumeTask": {
-		"title": "Tiếp tục nhiệm vụ",
-		"tooltip": "Tiếp tục nhiệm vụ hiện tại"
-	},
-	"terminate": {
-		"title": "Kết thúc",
-		"tooltip": "Kết thúc nhiệm vụ hiện tại"
-	},
-	"cancel": {
-		"title": "Hủy",
-		"tooltip": "Hủy thao tác hiện tại"
-	},
-	"scrollToBottom": "Cuộn xuống cuối cuộc trò chuyện",
-	"aboutMe": "Nhờ những đột phá mới nhất trong khả năng lập trình tác nhân, tôi có thể xử lý các nhiệm vụ phát triển phần mềm phức tạp từng bước một. Với các công cụ cho phép tôi tạo và chỉnh sửa tệp, khám phá các dự án phức tạp, sử dụng trình duyệt và thực thi lệnh terminal (sau khi bạn cấp quyền), tôi có thể hỗ trợ bạn theo cách vượt xa việc hoàn thành mã hoặc hỗ trợ kỹ thuật. Tôi thậm chí có thể sử dụng MCP để tạo các công cụ mới và mở rộng khả năng của mình.",
-	"selectMode": "Chọn chế độ tương tác",
-	"selectApiConfig": "Chọn cấu hình API",
-	"enhancePrompt": "Nâng cao yêu cầu với ngữ cảnh bổ sung",
-	"addImages": "Thêm hình ảnh vào tin nhắn",
-	"sendMessage": "Gửi tin nhắn",
-	"typeMessage": "Nhập tin nhắn...",
-	"typeTask": "Nhập nhiệm vụ của bạn tại đây...",
-	"addContext": "@ để thêm ngữ cảnh, / để chuyển chế độ",
-	"dragFiles": "giữ shift để kéo tệp",
-	"dragFilesImages": "giữ shift để kéo tệp/hình ảnh",
-	"enhancePromptDescription": "Nút 'Nâng cao yêu cầu' giúp cải thiện yêu cầu của bạn bằng cách cung cấp ngữ cảnh bổ sung, làm rõ hoặc diễn đạt lại. Hãy thử nhập yêu cầu tại đây và nhấp vào nút một lần nữa để xem cách thức hoạt động.",
-	"errorReadingFile": "Lỗi khi đọc tệp:",
-	"noValidImages": "Không có hình ảnh hợp lệ nào được xử lý",
-	"separator": "Dấu phân cách",
-	"edit": "Chỉnh sửa...",
-	"forNextMode": "cho chế độ tiếp theo",
-	"error": "Lỗi",
-	"troubleMessage": "Roo đang gặp sự cố...",
-	"apiRequest": {
-		"title": "Yêu cầu API",
-		"failed": "Yêu cầu API thất bại",
-		"streaming": "Yêu cầu API...",
-		"cancelled": "Yêu cầu API đã hủy",
-		"streamingFailed": "Streaming API thất bại"
-	},
-	"checkpoint": {
-		"initial": "Điểm kiểm tra ban đầu",
-		"regular": "Điểm kiểm tra",
-		"menu": {
-			"viewDiff": "Xem khác biệt",
-			"restore": "Khôi phục điểm kiểm tra",
-			"restoreFiles": "Khôi phục tệp",
-			"restoreFilesDescription": "Khôi phục các tệp dự án của bạn về bản chụp được thực hiện tại thời điểm này.",
-			"restoreFilesAndTask": "Khôi phục tệp & nhiệm vụ",
-			"confirm": "Xác nhận",
-			"cancel": "Hủy",
-			"cannotUndo": "Hành động này không thể hoàn tác.",
-			"restoreFilesAndTaskDescription": "Khôi phục các tệp dự án của bạn về bản chụp được thực hiện tại thời điểm này và xóa tất cả tin nhắn sau điểm này."
-		},
-		"current": "Hiện tại"
-	},
-	"instructions": {
-		"wantsToFetch": "Roo muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại"
-	},
-	"fileOperations": {
-		"wantsToRead": "Roo muốn đọc tệp này:",
-		"wantsToReadOutsideWorkspace": "Roo muốn đọc tệp này bên ngoài không gian làm việc:",
-		"didRead": "Roo đã đọc tệp này:",
-		"wantsToEdit": "Roo muốn chỉnh sửa tệp này:",
-		"wantsToEditOutsideWorkspace": "Roo muốn chỉnh sửa tệp này bên ngoài không gian làm việc:",
-		"wantsToCreate": "Roo muốn tạo một tệp mới:"
-	},
-	"directoryOperations": {
-		"wantsToViewTopLevel": "Roo muốn xem các tệp cấp cao nhất trong thư mục này:",
-		"didViewTopLevel": "Roo đã xem các tệp cấp cao nhất trong thư mục này:",
-		"wantsToViewRecursive": "Roo muốn xem đệ quy tất cả các tệp trong thư mục này:",
-		"didViewRecursive": "Roo đã xem đệ quy tất cả các tệp trong thư mục này:",
-		"wantsToViewDefinitions": "Roo muốn xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
-		"didViewDefinitions": "Roo đã xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
-		"wantsToSearch": "Roo muốn tìm kiếm trong thư mục này cho <code>{{regex}}</code>:",
-		"didSearch": "Roo đã tìm kiếm trong thư mục này cho <code>{{regex}}</code>:"
-	},
-	"commandOutput": "Kết quả lệnh",
-	"response": "Phản hồi",
-	"arguments": "Tham số",
-	"mcp": {
-		"wantsToUseTool": "Roo muốn sử dụng một công cụ trên máy chủ MCP {{serverName}}:",
-		"wantsToAccessResource": "Roo muốn truy cập một tài nguyên trên máy chủ MCP {{serverName}}:"
-	},
-	"modes": {
-		"wantsToSwitch": "Roo muốn chuyển sang chế độ <code>{{mode}}</code>",
-		"wantsToSwitchWithReason": "Roo muốn chuyển sang chế độ <code>{{mode}}</code> vì: {{reason}}",
-		"didSwitch": "Roo đã chuyển sang chế độ <code>{{mode}}</code>",
-		"didSwitchWithReason": "Roo đã chuyển sang chế độ <code>{{mode}}</code> vì: {{reason}}"
-	},
-	"subtasks": {
-		"wantsToCreate": "Roo muốn tạo một nhiệm vụ phụ mới trong chế độ <code>{{mode}}</code>:",
-		"wantsToFinish": "Roo muốn hoàn thành nhiệm vụ phụ này"
-	},
-	"questions": {
-		"hasQuestion": "Roo có một câu hỏi:"
-	},
-	"taskCompleted": "Nhiệm vụ hoàn thành",
-	"shellIntegration": {
-		"unavailable": "Tích hợp shell không khả dụng",
-		"troubleshooting": "Vẫn gặp vấn đề?"
-	},
-	"powershell": {
-		"issues": "Có vẻ như bạn đang gặp vấn đề với Windows PowerShell, vui lòng xem"
-	},
-	"autoApprove": {
-		"title": "Tự động phê duyệt:",
-		"none": "Không",
-		"description": "Tự động phê duyệt cho phép Roo Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>.",
-		"actions": {
-			"readFiles": {
-				"label": "Đọc tệp và thư mục",
-				"shortName": "Đọc",
-				"description": "Cho phép truy cập để đọc bất kỳ tệp nào trên máy tính của bạn."
-			},
-			"editFiles": {
-				"label": "Chỉnh sửa tệp",
-				"shortName": "Chỉnh sửa",
-				"description": "Cho phép chỉnh sửa bất kỳ tệp nào trên máy tính của bạn."
-			},
-			"executeCommands": {
-				"label": "Thực thi lệnh đã phê duyệt",
-				"shortName": "Lệnh",
-				"description": "Cho phép thực thi lệnh terminal đã được phê duyệt. Bạn có thể cấu hình điều này trong bảng cài đặt."
-			},
-			"useBrowser": {
-				"label": "Sử dụng trình duyệt",
-				"shortName": "Trình duyệt",
-				"description": "Cho phép khả năng khởi chạy và tương tác với bất kỳ trang web nào trong trình duyệt không giao diện."
-			},
-			"useMcp": {
-				"label": "Sử dụng máy chủ MCP",
-				"shortName": "MCP",
-				"description": "Cho phép sử dụng máy chủ MCP đã cấu hình có thể sửa đổi hệ thống tệp hoặc tương tác với API."
-			},
-			"switchModes": {
-				"label": "Chuyển đổi chế độ",
-				"shortName": "Chế độ",
-				"description": "Cho phép tự động chuyển đổi giữa các chế độ khác nhau mà không cần phê duyệt."
-			},
-			"subtasks": {
-				"label": "Tạo & hoàn thành nhiệm vụ phụ",
-				"shortName": "Nhiệm vụ phụ",
-				"description": "Cho phép tạo và hoàn thành các nhiệm vụ phụ mà không cần phê duyệt."
-			},
-			"retryRequests": {
-				"label": "Thử lại yêu cầu thất bại",
-				"shortName": "Thử lại",
-				"description": "Tự động thử lại các yêu cầu API thất bại khi nhà cung cấp trả về phản hồi lỗi."
-			}
-		}
-	},
-	"reasoning": {
-		"thinking": "Đang suy nghĩ",
-		"seconds": "{{count}} giây"
-	},
-	"followUpSuggest": {
-		"copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
-	},
-	"announcement": {
-		"title": "🎉 Roo Code 3.11 Đã phát hành",
-		"description": "Roo Code 3.11 mang đến những cải tiến hiệu suất đáng kể và các tính năng mới!",
-		"whatsNew": "Có gì mới",
-		"feature1": "Chỉnh sửa nhanh - Các chỉnh sửa giờ đây được áp dụng nhanh hơn nhiều. Ít thời gian chờ đợi, nhiều thời gian lập trình.",
-		"feature2": "Số dư khóa API - Xem số dư OpenRouter và Requesty của bạn trong cài đặt.",
-		"feature3": "Cấu hình MCP cấp dự án - Giờ đây bạn có thể cấu hình theo từng dự án/không gian làm việc.",
-		"feature4": "Hỗ trợ Gemini được cải thiện - Thử lại thông minh hơn, sửa lỗi escape, thêm vào nhà cung cấp Vertex.",
-		"feature5": "Nhập/Xuất cài đặt - Dễ dàng sao lưu hoặc chia sẻ cấu hình của bạn giữa các môi trường khác nhau.",
-		"hideButton": "Ẩn thông báo",
-		"detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
-	},
-	"browser": {
-		"rooWantsToUse": "Roo muốn sử dụng trình duyệt:",
-		"consoleLogs": "Nhật ký bảng điều khiển",
-		"noNewLogs": "(Không có nhật ký mới)",
-		"screenshot": "Ảnh chụp màn hình trình duyệt",
-		"cursor": "con trỏ",
-		"navigation": {
-			"step": "Bước {{current}} / {{total}}",
-			"previous": "Trước",
-			"next": "Tiếp"
-		},
-		"sessionStarted": "Phiên trình duyệt đã bắt đầu",
-		"actions": {
-			"title": "Hành động trình duyệt: ",
-			"launch": "Khởi chạy trình duyệt tại {{url}}",
-			"click": "Nhấp ({{coordinate}})",
-			"type": "Gõ \"{{text}}\"",
-			"scrollDown": "Cuộn xuống",
-			"scrollUp": "Cuộn lên",
-			"close": "Đóng trình duyệt"
-		}
-	}
+  "greeting": "Thea có thể giúp gì cho bạn?",
+  "task": {
+    "title": "Nhiệm vụ",
+    "seeMore": "Xem thêm",
+    "seeLess": "Thu gọn",
+    "tokens": "Tokens:",
+    "cache": "Bộ nhớ đệm:",
+    "apiCost": "Chi phí API:",
+    "contextWindow": "Cửa sổ ngữ cảnh:",
+    "closeAndStart": "Đóng nhiệm vụ và bắt đầu nhiệm vụ mới",
+    "export": "Xuất lịch sử nhiệm vụ",
+    "delete": "Xóa nhiệm vụ (Shift + Click để bỏ qua xác nhận)"
+  },
+  "unpin": "Bỏ ghim khỏi đầu",
+  "pin": "Ghim lên đầu",
+  "tokenProgress": {
+    "availableSpace": "Không gian khả dụng: {{amount}} tokens",
+    "tokensUsed": "Tokens đã sử dụng: {{used}} trong {{total}}",
+    "reservedForResponse": "Dành riêng cho phản hồi mô hình: {{amount}} tokens"
+  },
+  "retry": {
+    "title": "Thử lại",
+    "tooltip": "Thử lại thao tác"
+  },
+  "startNewTask": {
+    "title": "Bắt đầu nhiệm vụ mới",
+    "tooltip": "Bắt đầu một nhiệm vụ mới"
+  },
+  "proceedAnyways": {
+    "title": "Vẫn tiếp tục",
+    "tooltip": "Tiếp tục trong khi lệnh đang chạy"
+  },
+  "save": {
+    "title": "Lưu",
+    "tooltip": "Lưu các thay đổi tệp"
+  },
+  "reject": {
+    "title": "Từ chối",
+    "tooltip": "Từ chối hành động này"
+  },
+  "completeSubtaskAndReturn": "Hoàn thành nhiệm vụ phụ và quay lại",
+  "approve": {
+    "title": "Phê duyệt",
+    "tooltip": "Phê duyệt hành động này"
+  },
+  "runCommand": {
+    "title": "Chạy lệnh",
+    "tooltip": "Thực thi lệnh này"
+  },
+  "proceedWhileRunning": {
+    "title": "Tiếp tục trong khi chạy",
+    "tooltip": "Tiếp tục bất chấp cảnh báo"
+  },
+  "resumeTask": {
+    "title": "Tiếp tục nhiệm vụ",
+    "tooltip": "Tiếp tục nhiệm vụ hiện tại"
+  },
+  "terminate": {
+    "title": "Kết thúc",
+    "tooltip": "Kết thúc nhiệm vụ hiện tại"
+  },
+  "cancel": {
+    "title": "Hủy",
+    "tooltip": "Hủy thao tác hiện tại"
+  },
+  "scrollToBottom": "Cuộn xuống cuối cuộc trò chuyện",
+  "aboutMe": "Nhờ những đột phá mới nhất trong khả năng lập trình tác nhân, tôi có thể xử lý các nhiệm vụ phát triển phần mềm phức tạp từng bước một. Với các công cụ cho phép tôi tạo và chỉnh sửa tệp, khám phá các dự án phức tạp, sử dụng trình duyệt và thực thi lệnh terminal (sau khi bạn cấp quyền), tôi có thể hỗ trợ bạn theo cách vượt xa việc hoàn thành mã hoặc hỗ trợ kỹ thuật. Tôi thậm chí có thể sử dụng MCP để tạo các công cụ mới và mở rộng khả năng của mình.",
+  "selectMode": "Chọn chế độ tương tác",
+  "selectApiConfig": "Chọn cấu hình API",
+  "enhancePrompt": "Nâng cao yêu cầu với ngữ cảnh bổ sung",
+  "addImages": "Thêm hình ảnh vào tin nhắn",
+  "sendMessage": "Gửi tin nhắn",
+  "typeMessage": "Nhập tin nhắn...",
+  "typeTask": "Nhập nhiệm vụ của bạn tại đây...",
+  "addContext": "@ để thêm ngữ cảnh, / để chuyển chế độ",
+  "dragFiles": "giữ shift để kéo tệp",
+  "dragFilesImages": "giữ shift để kéo tệp/hình ảnh",
+  "enhancePromptDescription": "Nút 'Nâng cao yêu cầu' giúp cải thiện yêu cầu của bạn bằng cách cung cấp ngữ cảnh bổ sung, làm rõ hoặc diễn đạt lại. Hãy thử nhập yêu cầu tại đây và nhấp vào nút một lần nữa để xem cách thức hoạt động.",
+  "errorReadingFile": "Lỗi khi đọc tệp:",
+  "noValidImages": "Không có hình ảnh hợp lệ nào được xử lý",
+  "separator": "Dấu phân cách",
+  "edit": "Chỉnh sửa...",
+  "forNextMode": "cho chế độ tiếp theo",
+  "error": "Lỗi",
+  "troubleMessage": "Thea đang gặp sự cố...",
+  "apiRequest": {
+    "title": "Yêu cầu API",
+    "failed": "Yêu cầu API thất bại",
+    "streaming": "Yêu cầu API...",
+    "cancelled": "Yêu cầu API đã hủy",
+    "streamingFailed": "Streaming API thất bại"
+  },
+  "checkpoint": {
+    "initial": "Điểm kiểm tra ban đầu",
+    "regular": "Điểm kiểm tra",
+    "menu": {
+      "viewDiff": "Xem khác biệt",
+      "restore": "Khôi phục điểm kiểm tra",
+      "restoreFiles": "Khôi phục tệp",
+      "restoreFilesDescription": "Khôi phục các tệp dự án của bạn về bản chụp được thực hiện tại thời điểm này.",
+      "restoreFilesAndTask": "Khôi phục tệp & nhiệm vụ",
+      "confirm": "Xác nhận",
+      "cancel": "Hủy",
+      "cannotUndo": "Hành động này không thể hoàn tác.",
+      "restoreFilesAndTaskDescription": "Khôi phục các tệp dự án của bạn về bản chụp được thực hiện tại thời điểm này và xóa tất cả tin nhắn sau điểm này."
+    },
+    "current": "Hiện tại"
+  },
+  "instructions": {
+    "wantsToFetch": "Thea muốn lấy hướng dẫn chi tiết để hỗ trợ nhiệm vụ hiện tại"
+  },
+  "fileOperations": {
+    "wantsToRead": "Thea muốn đọc tệp này:",
+    "wantsToReadOutsideWorkspace": "Thea muốn đọc tệp này bên ngoài không gian làm việc:",
+    "didRead": "Thea đã đọc tệp này:",
+    "wantsToEdit": "Thea muốn chỉnh sửa tệp này:",
+    "wantsToEditOutsideWorkspace": "Thea muốn chỉnh sửa tệp này bên ngoài không gian làm việc:",
+    "wantsToCreate": "Thea muốn tạo một tệp mới:"
+  },
+  "directoryOperations": {
+    "wantsToViewTopLevel": "Thea muốn xem các tệp cấp cao nhất trong thư mục này:",
+    "didViewTopLevel": "Thea đã xem các tệp cấp cao nhất trong thư mục này:",
+    "wantsToViewRecursive": "Thea muốn xem đệ quy tất cả các tệp trong thư mục này:",
+    "didViewRecursive": "Thea đã xem đệ quy tất cả các tệp trong thư mục này:",
+    "wantsToViewDefinitions": "Thea muốn xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
+    "didViewDefinitions": "Thea đã xem tên định nghĩa mã nguồn được sử dụng trong thư mục này:",
+    "wantsToSearch": "Thea muốn tìm kiếm trong thư mục này cho <code>{{regex}}</code>:",
+    "didSearch": "Thea đã tìm kiếm trong thư mục này cho <code>{{regex}}</code>:"
+  },
+  "commandOutput": "Kết quả lệnh",
+  "response": "Phản hồi",
+  "arguments": "Tham số",
+  "mcp": {
+    "wantsToUseTool": "Thea muốn sử dụng một công cụ trên máy chủ MCP {{serverName}}:",
+    "wantsToAccessResource": "Thea muốn truy cập một tài nguyên trên máy chủ MCP {{serverName}}:"
+  },
+  "modes": {
+    "wantsToSwitch": "Thea muốn chuyển sang chế độ <code>{{mode}}</code>",
+    "wantsToSwitchWithReason": "Thea muốn chuyển sang chế độ <code>{{mode}}</code> vì: {{reason}}",
+    "didSwitch": "Thea đã chuyển sang chế độ <code>{{mode}}</code>",
+    "didSwitchWithReason": "Thea đã chuyển sang chế độ <code>{{mode}}</code> vì: {{reason}}"
+  },
+  "subtasks": {
+    "wantsToCreate": "Thea muốn tạo một nhiệm vụ phụ mới trong chế độ <code>{{mode}}</code>:",
+    "wantsToFinish": "Thea muốn hoàn thành nhiệm vụ phụ này"
+  },
+  "questions": {
+    "hasQuestion": "Thea có một câu hỏi:"
+  },
+  "taskCompleted": "Nhiệm vụ hoàn thành",
+  "shellIntegration": {
+    "unavailable": "Tích hợp shell không khả dụng",
+    "troubleshooting": "Vẫn gặp vấn đề?"
+  },
+  "powershell": {
+    "issues": "Có vẻ như bạn đang gặp vấn đề với Windows PowerShell, vui lòng xem"
+  },
+  "autoApprove": {
+    "title": "Tự động phê duyệt:",
+    "none": "Không",
+    "description": "Tự động phê duyệt cho phép Thea Code thực hiện hành động mà không cần xin phép. Chỉ bật cho các hành động bạn hoàn toàn tin tưởng. Cấu hình chi tiết hơn có sẵn trong <settingsLink>Cài đặt</settingsLink>.",
+    "actions": {
+      "readFiles": {
+        "label": "Đọc tệp và thư mục",
+        "shortName": "Đọc",
+        "description": "Cho phép truy cập để đọc bất kỳ tệp nào trên máy tính của bạn."
+      },
+      "editFiles": {
+        "label": "Chỉnh sửa tệp",
+        "shortName": "Chỉnh sửa",
+        "description": "Cho phép chỉnh sửa bất kỳ tệp nào trên máy tính của bạn."
+      },
+      "executeCommands": {
+        "label": "Thực thi lệnh đã phê duyệt",
+        "shortName": "Lệnh",
+        "description": "Cho phép thực thi lệnh terminal đã được phê duyệt. Bạn có thể cấu hình điều này trong bảng cài đặt."
+      },
+      "useBrowser": {
+        "label": "Sử dụng trình duyệt",
+        "shortName": "Trình duyệt",
+        "description": "Cho phép khả năng khởi chạy và tương tác với bất kỳ trang web nào trong trình duyệt không giao diện."
+      },
+      "useMcp": {
+        "label": "Sử dụng máy chủ MCP",
+        "shortName": "MCP",
+        "description": "Cho phép sử dụng máy chủ MCP đã cấu hình có thể sửa đổi hệ thống tệp hoặc tương tác với API."
+      },
+      "switchModes": {
+        "label": "Chuyển đổi chế độ",
+        "shortName": "Chế độ",
+        "description": "Cho phép tự động chuyển đổi giữa các chế độ khác nhau mà không cần phê duyệt."
+      },
+      "subtasks": {
+        "label": "Tạo & hoàn thành nhiệm vụ phụ",
+        "shortName": "Nhiệm vụ phụ",
+        "description": "Cho phép tạo và hoàn thành các nhiệm vụ phụ mà không cần phê duyệt."
+      },
+      "retryRequests": {
+        "label": "Thử lại yêu cầu thất bại",
+        "shortName": "Thử lại",
+        "description": "Tự động thử lại các yêu cầu API thất bại khi nhà cung cấp trả về phản hồi lỗi."
+      }
+    }
+  },
+  "reasoning": {
+    "thinking": "Đang suy nghĩ",
+    "seconds": "{{count}} giây"
+  },
+  "followUpSuggest": {
+    "copyToInput": "Sao chép vào ô nhập liệu (hoặc Shift + nhấp chuột)"
+  },
+  "announcement": {
+    "title": "🎉 Thea Code 3.11 Đã phát hành",
+    "description": "Thea Code 3.11 mang đến những cải tiến hiệu suất đáng kể và các tính năng mới!",
+    "whatsNew": "Có gì mới",
+    "feature1": "Chỉnh sửa nhanh - Các chỉnh sửa giờ đây được áp dụng nhanh hơn nhiều. Ít thời gian chờ đợi, nhiều thời gian lập trình.",
+    "feature2": "Số dư khóa API - Xem số dư OpenRouter và Requesty của bạn trong cài đặt.",
+    "feature3": "Cấu hình MCP cấp dự án - Giờ đây bạn có thể cấu hình theo từng dự án/không gian làm việc.",
+    "feature4": "Hỗ trợ Gemini được cải thiện - Thử lại thông minh hơn, sửa lỗi escape, thêm vào nhà cung cấp Vertex.",
+    "feature5": "Nhập/Xuất cài đặt - Dễ dàng sao lưu hoặc chia sẻ cấu hình của bạn giữa các môi trường khác nhau.",
+    "hideButton": "Ẩn thông báo",
+    "detailsDiscussLinks": "Nhận thêm chi tiết và thảo luận tại <discordLink>Discord</discordLink> và <redditLink>Reddit</redditLink> 🚀"
+  },
+  "browser": {
+    "aiWantsToUse": "Thea muốn sử dụng trình duyệt:",
+    "consoleLogs": "Nhật ký bảng điều khiển",
+    "noNewLogs": "(Không có nhật ký mới)",
+    "screenshot": "Ảnh chụp màn hình trình duyệt",
+    "cursor": "con trỏ",
+    "navigation": {
+      "step": "Bước {{current}} / {{total}}",
+      "previous": "Trước",
+      "next": "Tiếp"
+    },
+    "sessionStarted": "Phiên trình duyệt đã bắt đầu",
+    "actions": {
+      "title": "Hành động trình duyệt: ",
+      "launch": "Khởi chạy trình duyệt tại {{url}}",
+      "click": "Nhấp ({{coordinate}})",
+      "type": "Gõ \"{{text}}\"",
+      "scrollDown": "Cuộn xuống",
+      "scrollUp": "Cuộn lên",
+      "close": "Đóng trình duyệt"
+    }
+  }
 }

@@ -13,8 +13,8 @@ jest.mock("../../integrations/misc/read-lines")
 jest.mock("../../integrations/misc/extract-text")
 jest.mock("../../services/tree-sitter")
 jest.mock("isbinaryfile")
-jest.mock("../ignore/RooIgnoreController", () => ({
-	RooIgnoreController: class {
+jest.mock("../ignore/TheaIgnoreController", () => ({
+	TheaIgnoreController: class {
 		initialize() {
 			return Promise.resolve()
 		}
@@ -90,7 +90,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		mockCline.cwd = "/"
 		mockCline.task = "Test"
 		mockCline.providerRef = mockProvider
-		mockCline.rooIgnoreController = {
+		mockCline.theaIgnoreController = {
 			validateAccess: jest.fn().mockReturnValue(true),
 		}
 		mockCline.say = jest.fn().mockResolvedValue(undefined)
@@ -164,7 +164,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedReadLines).not.toHaveBeenCalled() // Per implementation line 141
 			expect(mockedParseSourceCodeDefinitionsForFile).toHaveBeenCalledWith(
 				absoluteFilePath,
-				mockCline.rooIgnoreController,
+				mockCline.theaIgnoreController,
 			)
 			expect(result).toContain("[Showing only 0 of 5 total lines")
 			expect(result).toContain(sourceCodeDef)
@@ -186,7 +186,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedReadLines).toHaveBeenCalled()
 			expect(mockedParseSourceCodeDefinitionsForFile).toHaveBeenCalledWith(
 				absoluteFilePath,
-				mockCline.rooIgnoreController,
+				mockCline.theaIgnoreController,
 			)
 			expect(result).toContain("1 | Line 1")
 			expect(result).toContain("2 | Line 2")

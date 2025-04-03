@@ -1,0 +1,47 @@
+{
+  "name": "thea-code",
+  "displayName": "Thea Code",
+  "description": "A whole dev team of AI agents in your editor.",
+  "publisher": "SolaceHarmony",
+  "extensionSecretsPrefix": "thea_code_config_",
+  "icon": "assets/icons/feather.png",
+  "author": {
+    "name": "Sydney Renee",
+    "email": "sydney@solace.ofharmony.ai"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sydneyrenee/Thea-Code"
+  },
+  "homepage": "https://github.com/sydneyrenee/Thea-Code",
+  "keywords": [
+    "thea",
+    "solace",
+    "claude",
+    "ember",
+    "dev",
+    "mcp",
+    "openrouter",
+    "coding",
+    "agent",
+    "autonomous",
+    "chatgpt",
+    "ai"
+  ],
+  "ignoreFileName": ".thea_ignore",
+  "modesFileName": ".thea_modes",
+  "aiIdentityName": "Thea",
+  "branchPrefix": "thea-",
+  "configDirName": ".thea",
+  "aiIdentityNameLowercase": "thea",
+  "ignoreErrorIdentifier": "theaignore_error",
+  "ignoreContentVarName": "theaIgnoreContent",
+  "ignoreParsedVarName": "theaIgnoreParsed",
+  "ignoreControllerClassName": "TheaIgnoreController",
+  "settingsFileName": "thea-code-settings.json",
+  "apiTypeName": "TheaCodeAPI",
+  "eventsTypeName": "TheaCodeEvents",
+  "portalName": "thea-portal",
+  "discordUrl": "https://discord.gg/thea-placeholder",
+  "redditUrl": "https://reddit.com/r/thea-placeholder"
+}

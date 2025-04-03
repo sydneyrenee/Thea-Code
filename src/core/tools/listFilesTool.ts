@@ -52,13 +52,13 @@ export async function listFilesTool(
 			cline.consecutiveMistakeCount = 0
 			const absolutePath = path.resolve(cline.cwd, relDirPath)
 			const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
-			const { showRooIgnoredFiles = true } = (await cline.providerRef.deref()?.getState()) ?? {}
+			const { showTheaIgnoredFiles = true } = (await cline.providerRef.deref()?.getState()) ?? {}
 			const result = formatResponse.formatFilesList(
 				absolutePath,
 				files,
 				didHitLimit,
-				cline.rooIgnoreController,
-				showRooIgnoredFiles,
+				cline.theaIgnoreController,
+				showTheaIgnoredFiles,
 			)
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,

@@ -14,6 +14,7 @@ import { CheckpointStorage } from "../../shared/checkpoints"
 import { GIT_DISABLED_SUFFIX } from "./constants"
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
+import { EXTENSION_DISPLAY_NAME, BRANCH_PREFIX, AUTHOR_NAME, AUTHOR_EMAIL } from "../../../dist/thea-config" // Import branded constants
 
 export abstract class ShadowCheckpointService extends EventEmitter {
 	public readonly taskId: string
@@ -91,8 +92,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.init()
 			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
-			await git.addConfig("user.name", "Roo Code")
-			await git.addConfig("user.email", "noreply@example.com")
+			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME) // Use constant
+			await git.addConfig("user.email", AUTHOR_EMAIL) // Use constant
 			await this.writeExcludeFile()
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
@@ -370,7 +371,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		const git = simpleGit(workspaceRepoDir)
 		const branches = await git.branchLocal()
 
-		if (branches.all.includes(`roo-${taskId}`)) {
+		if (branches.all.includes(`${BRANCH_PREFIX}${taskId}`)) { // Use constant
 			return "workspace"
 		}
 
@@ -394,7 +395,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			console.log(`[${this.name}#deleteTask.${taskId}] removed ${taskRepoDir}`)
 		} else if (storage === "workspace") {
 			const workspaceRepoDir = this.workspaceRepoDir({ globalStorageDir, workspaceDir })
-			const branchName = `roo-${taskId}`
+			const branchName = `${BRANCH_PREFIX}${taskId}` // Use constant
 			const git = simpleGit(workspaceRepoDir)
 			const success = await this.deleteBranch(git, branchName)
 

@@ -6,7 +6,7 @@ import os from "os"
 import { EventEmitter } from "events"
 
 import { simpleGit, SimpleGit } from "simple-git"
-
+import { EXTENSION_DISPLAY_NAME, AUTHOR_EMAIL } from "../../../../dist/thea-config"; // Import branded constants
 import { fileExistsAtPath } from "../../../utils/fs"
 
 import { ShadowCheckpointService } from "../ShadowCheckpointService"
@@ -21,8 +21,8 @@ const tmpDir = path.join(os.tmpdir(), "CheckpointService")
 
 const initWorkspaceRepo = async ({
 	workspaceDir,
-	userName = "Roo Code",
-	userEmail = "support@roocode.com",
+	userName = EXTENSION_DISPLAY_NAME, // Use constant
+	userEmail = AUTHOR_EMAIL, // Use constant
 	testFileName = "test.txt",
 	textFileContent = "Hello, world!",
 }: {
@@ -396,16 +396,16 @@ describe.each([
 			await fs.mkdir(workspaceDir, { recursive: true })
 			const mainGit = simpleGit(workspaceDir)
 			await mainGit.init()
-			await mainGit.addConfig("user.name", "Roo Code")
-			await mainGit.addConfig("user.email", "support@roocode.com")
+			await mainGit.addConfig("user.name", EXTENSION_DISPLAY_NAME)
+			await mainGit.addConfig("user.email", AUTHOR_EMAIL) // Use constant
 
 			// Create a nested repo inside the workspace.
 			const nestedRepoPath = path.join(workspaceDir, "nested-project")
 			await fs.mkdir(nestedRepoPath, { recursive: true })
 			const nestedGit = simpleGit(nestedRepoPath)
 			await nestedGit.init()
-			await nestedGit.addConfig("user.name", "Roo Code")
-			await nestedGit.addConfig("user.email", "support@roocode.com")
+			await nestedGit.addConfig("user.name", EXTENSION_DISPLAY_NAME)
+			await nestedGit.addConfig("user.email", AUTHOR_EMAIL) // Use constant
 
 			// Add a file to the nested repo.
 			const nestedFile = path.join(nestedRepoPath, "nested-file.txt")
@@ -710,8 +710,8 @@ describe("ShadowCheckpointService", () => {
 			// Create git repo without adding the specific branch
 			const git = simpleGit(workspaceRepoDir)
 			await git.init()
-			await git.addConfig("user.name", "Roo Code")
-			await git.addConfig("user.email", "noreply@example.com")
+			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME) // Use constant
+			await git.addConfig("user.email", AUTHOR_EMAIL) // Use constant
 
 			// We need to create a commit, but we won't create the specific branch
 			const testFile = path.join(workspaceRepoDir, "test.txt")

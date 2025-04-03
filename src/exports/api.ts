@@ -3,10 +3,10 @@ import * as vscode from "vscode"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
 
-import { RooCodeAPI, RooCodeEvents, TokenUsage, RooCodeSettings } from "./roo-code"
+import { TheaCodeAPI, TheaCodeEvents, TokenUsage, TheaCodeSettings } from "./thea-code"
 import { MessageHistory } from "./message-history"
 
-export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
+export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI {
 	private readonly outputChannel: vscode.OutputChannel
 	private readonly provider: ClineProvider
 	private readonly history: MessageHistory
@@ -82,15 +82,15 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return this.provider.getValues()
 	}
 
-	public getConfigurationValue<K extends keyof RooCodeSettings>(key: K) {
+	public getConfigurationValue<K extends keyof TheaCodeSettings>(key: K) {
 		return this.provider.getValue(key)
 	}
 
-	public async setConfiguration(values: RooCodeSettings) {
+	public async setConfiguration(values: TheaCodeSettings) {
 		await this.provider.setValues(values)
 	}
 
-	public async setConfigurationValue<K extends keyof RooCodeSettings>(key: K, value: RooCodeSettings[K]) {
+	public async setConfigurationValue<K extends keyof TheaCodeSettings>(key: K, value: TheaCodeSettings[K]) {
 		await this.provider.setValue(key, value)
 	}
 

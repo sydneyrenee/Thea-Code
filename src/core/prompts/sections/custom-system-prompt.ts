@@ -2,6 +2,7 @@ import fs from "fs/promises"
 import path from "path"
 import { Mode } from "../../../shared/modes"
 import { fileExistsAtPath } from "../../../utils/fs"
+import { EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config"; // Import branded constant
 
 /**
  * Safely reads a file, returning an empty string if the file doesn't exist
@@ -24,11 +25,11 @@ async function safeReadFile(filePath: string): Promise<string> {
  * Get the path to a system prompt file for a specific mode
  */
 export function getSystemPromptFilePath(cwd: string, mode: Mode): string {
-	return path.join(cwd, ".roo", `system-prompt-${mode}`)
+	return path.join(cwd, EXTENSION_CONFIG_DIR, `system-prompt-${mode}`) // Use constant
 }
 
 /**
- * Loads custom system prompt from a file at .roo/system-prompt-[mode slug]
+ * Loads custom system prompt from a file at .thea/system-prompt-[mode slug]
  * If the file doesn't exist, returns an empty string
  */
 export async function loadSystemPromptFile(cwd: string, mode: Mode): Promise<string> {
@@ -37,19 +38,19 @@ export async function loadSystemPromptFile(cwd: string, mode: Mode): Promise<str
 }
 
 /**
- * Ensures the .roo directory exists, creating it if necessary
+ * Ensures the .thea directory exists, creating it if necessary
  */
-export async function ensureRooDirectory(cwd: string): Promise<void> {
-	const rooDir = path.join(cwd, ".roo")
+export async function ensureConfigDirectory(cwd: string): Promise<void> { // Rename function
+	const configDir = path.join(cwd, EXTENSION_CONFIG_DIR) // Use constant
 
 	// Check if directory already exists
-	if (await fileExistsAtPath(rooDir)) {
+	if (await fileExistsAtPath(configDir)) {
 		return
 	}
 
 	// Create the directory
 	try {
-		await fs.mkdir(rooDir, { recursive: true })
+		await fs.mkdir(configDir, { recursive: true })
 	} catch (err) {
 		// If directory already exists (race condition), ignore the error
 		const errorCode = (err as NodeJS.ErrnoException).code

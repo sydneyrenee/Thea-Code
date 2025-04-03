@@ -8,7 +8,7 @@ import { ModeConfig } from "../../../shared/modes"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { getWorkspacePath, arePathsEqual } from "../../../utils/path"
 import { GlobalFileNames } from "../../../shared/globalFileNames"
-
+import { GLOBAL_FILENAMES as BRANDED_FILENAMES } from "../../../../dist/thea-config"; // Import branded constant
 jest.mock("vscode")
 jest.mock("fs/promises")
 jest.mock("../../../utils/fs")
@@ -23,7 +23,7 @@ describe("CustomModesManager", () => {
 	// Use path.sep to ensure correct path separators for the current platform
 	const mockStoragePath = `${path.sep}mock${path.sep}settings`
 	const mockSettingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
-	const mockRoomodes = `${path.sep}mock${path.sep}workspace${path.sep}.roomodes`
+	const mockProjectModesPath = `${path.sep}mock${path.sep}workspace${path.sep}.${BRANDED_FILENAMES.MODES_FILENAME}` // Use constant
 
 	beforeEach(() => {
 		mockOnUpdate = jest.fn()
@@ -42,7 +42,7 @@ describe("CustomModesManager", () => {
 		;(vscode.workspace.onDidSaveTextDocument as jest.Mock).mockReturnValue({ dispose: jest.fn() })
 		;(getWorkspacePath as jest.Mock).mockReturnValue("/mock/workspace")
 		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
-			return path === mockSettingsPath || path === mockRoomodes
+			return path === mockSettingsPath || path === mockProjectModesPath
 		})
 		;(fs.mkdir as jest.Mock).mockResolvedValue(undefined)
 		;(fs.readFile as jest.Mock).mockImplementation(async (path: string) => {
@@ -66,7 +66,7 @@ describe("CustomModesManager", () => {
 				{ slug: "mode2", name: "Mode 2", roleDefinition: "Role 2", groups: ["read"] },
 			]
 
-			const roomodesModes = [
+			const projectModes = [
 				{ slug: "mode2", name: "Mode 2 Override", roleDefinition: "Role 2 Override", groups: ["read"] },
 				{ slug: "mode3", name: "Mode 3", roleDefinition: "Role 3", groups: ["read"] },
 			]
@@ -75,8 +75,8 @@ describe("CustomModesManager", () => {
 				if (path === mockSettingsPath) {
 					return JSON.stringify({ customModes: settingsModes })
 				}
-				if (path === mockRoomodes) {
-					return JSON.stringify({ customModes: roomodesModes })
+				if (path === mockProjectModesPath) {
+					return JSON.stringify({ customModes: projectModes })
 				}
 				throw new Error("File not found")
 			})
@@ -119,7 +119,7 @@ describe("CustomModesManager", () => {
 				if (path === mockSettingsPath) {
 					return JSON.stringify({ customModes: settingsModes })
 				}
-				if (path === mockRoomodes) {
+				if (path === mockProjectModesPath) {
 					return "invalid json"
 				}
 				throw new Error("File not found")
@@ -143,10 +143,10 @@ describe("CustomModesManager", () => {
 				source: "global",
 			}
 
-			const roomodesModes = [
+			const projectModes = [
 				{
 					slug: "mode1",
-					name: "Roomodes Mode 1",
+					name: "Theamodes Mode 1",
 					roleDefinition: "Role 1",
 					groups: ["read"],
 					source: "project",
@@ -158,10 +158,10 @@ describe("CustomModesManager", () => {
 			]
 
 			let settingsContent = { customModes: existingModes }
-			let roomodesContent = { customModes: roomodesModes }
+			let roomodesContent = { customModes: projectModes }
 
 			;(fs.readFile as jest.Mock).mockImplementation(async (path: string) => {
-				if (path === mockRoomodes) {
+				if (path === mockProjectModesPath) {
 					return JSON.stringify(roomodesContent)
 				}
 				if (path === mockSettingsPath) {
@@ -174,7 +174,7 @@ describe("CustomModesManager", () => {
 					if (path === mockSettingsPath) {
 						settingsContent = JSON.parse(content)
 					}
-					if (path === mockRoomodes) {
+					if (path === mockProjectModesPath) {
 						roomodesContent = JSON.parse(content)
 					}
 					return Promise.resolve()
@@ -204,7 +204,7 @@ describe("CustomModesManager", () => {
 				expect.arrayContaining([
 					expect.objectContaining({
 						slug: "mode1",
-						name: "Roomodes Mode 1", // .roomodes version should take precedence
+						name: "Theamodes Mode 1", // .roomodes version should take precedence
 						source: "project",
 					}),
 				]),
@@ -232,7 +232,7 @@ describe("CustomModesManager", () => {
 				if (path === mockSettingsPath) {
 					return JSON.stringify({ customModes: [] })
 				}
-				if (path === mockRoomodes) {
+				if (path === mockProjectModesPath) {
 					if (!roomodesContent) {
 						throw new Error("File not found")
 					}
@@ -241,7 +241,7 @@ describe("CustomModesManager", () => {
 				throw new Error("File not found")
 			})
 			;(fs.writeFile as jest.Mock).mockImplementation(async (path: string, content: string) => {
-				if (path === mockRoomodes) {
+				if (path === mockProjectModesPath) {
 					roomodesContent = JSON.parse(content)
 				}
 				return Promise.resolve()
@@ -258,7 +258,7 @@ describe("CustomModesManager", () => {
 
 			// Verify the path is correct regardless of separators
 			const writeCall = (fs.writeFile as jest.Mock).mock.calls[0]
-			expect(path.normalize(writeCall[0])).toBe(path.normalize(mockRoomodes))
+			expect(path.normalize(writeCall[0])).toBe(path.normalize(mockProjectModesPath))
 
 			// Verify the content written to .roomodes
 			expect(roomodesContent).toEqual({

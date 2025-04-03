@@ -113,7 +113,7 @@ export interface WebviewMessage {
 		| "humanRelayCancel"
 		| "browserToolEnabled"
 		| "telemetrySetting"
-		| "showRooIgnoredFiles"
+		| "showTheaIgnoredFiles" // Rename message type
 		| "testBrowserConnection"
 		| "browserConnectionResult"
 		| "remoteBrowserEnabled"

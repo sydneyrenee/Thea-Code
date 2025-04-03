@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import { t } from "../i18n"
+import { configSection } from '../../dist/thea-config'; // Import configSection
 
 /**
  * Gets the base storage path for conversations
@@ -14,7 +15,7 @@ export async function getStorageBasePath(defaultPath: string): Promise<string> {
 
 	try {
 		// This is the line causing the error in tests
-		const config = vscode.workspace.getConfiguration("roo-cline")
+		const config = vscode.workspace.getConfiguration(configSection()) // Use constant
 		customStoragePath = config.get<string>("customStoragePath", "")
 	} catch (error) {
 		console.warn("Could not access VSCode configuration - using default path")
@@ -88,7 +89,7 @@ export async function promptForCustomStoragePath(): Promise<void> {
 
 	let currentPath = ""
 	try {
-		const currentConfig = vscode.workspace.getConfiguration("roo-cline")
+		const currentConfig = vscode.workspace.getConfiguration(configSection()) // Use constant
 		currentPath = currentConfig.get<string>("customStoragePath", "")
 	} catch (error) {
 		console.error("Could not access configuration")
@@ -123,7 +124,7 @@ export async function promptForCustomStoragePath(): Promise<void> {
 	// If user canceled the operation, result will be undefined
 	if (result !== undefined) {
 		try {
-			const currentConfig = vscode.workspace.getConfiguration("roo-cline")
+			const currentConfig = vscode.workspace.getConfiguration(configSection()) // Use constant
 			await currentConfig.update("customStoragePath", result, vscode.ConfigurationTarget.Global)
 
 			if (result) {

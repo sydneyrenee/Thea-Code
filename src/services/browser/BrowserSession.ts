@@ -10,6 +10,7 @@ import axios from "axios"
 import { fileExistsAtPath } from "../../utils/fs"
 import { BrowserActionResult } from "../../shared/ExtensionMessage"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "./browserDiscovery"
+import { EXTENSION_CONFIG_DIR } from "../../../dist/thea-config" // Correct import path
 
 interface PCRStats {
 	puppeteer: { launch: typeof launch }

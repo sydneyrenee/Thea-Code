@@ -2,11 +2,11 @@ import { EventEmitter } from "events"
 
 import type { ProviderSettings, GlobalSettings, ClineMessage, TokenUsage } from "./types"
 
-type RooCodeSettings = GlobalSettings & ProviderSettings
+type TheaCodeSettings = GlobalSettings & ProviderSettings
 
-export type { RooCodeSettings, ProviderSettings, GlobalSettings, ClineMessage, TokenUsage }
+export type { TheaCodeSettings, ProviderSettings, GlobalSettings, ClineMessage, TokenUsage }
 
-export interface RooCodeEvents {
+export interface TheaCodeEvents {
 	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
 	taskCreated: [taskId: string]
 	taskStarted: [taskId: string]
@@ -19,7 +19,7 @@ export interface RooCodeEvents {
 	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
 
-export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
+export interface TheaCodeAPI extends EventEmitter<TheaCodeEvents> {
 	/**
 	 * Starts a new task with an optional initial message and images.
 	 * @param task Optional initial task message.
@@ -65,27 +65,27 @@ export interface RooCodeAPI extends EventEmitter<RooCodeEvents> {
 	 * Returns the current configuration.
 	 * @returns The current configuration.
 	 */
-	getConfiguration(): RooCodeSettings
+	getConfiguration(): TheaCodeSettings
 
 	/**
 	 * Returns the value of a configuration key.
 	 * @param key The key of the configuration value to return.
 	 * @returns The value of the configuration key.
 	 */
-	getConfigurationValue<K extends keyof RooCodeSettings>(key: K): RooCodeSettings[K]
+	getConfigurationValue<K extends keyof TheaCodeSettings>(key: K): TheaCodeSettings[K]
 
 	/**
 	 * Sets the configuration for the current task.
 	 * @param values An object containing key-value pairs to set.
 	 */
-	setConfiguration(values: RooCodeSettings): Promise<void>
+	setConfiguration(values: TheaCodeSettings): Promise<void>
 
 	/**
 	 * Sets the value of a configuration key.
 	 * @param key The key of the configuration value to set.
 	 * @param value The value to set.
 	 */
-	setConfigurationValue<K extends keyof RooCodeSettings>(key: K, value: RooCodeSettings[K]): Promise<void>
+	setConfigurationValue<K extends keyof TheaCodeSettings>(key: K, value: TheaCodeSettings[K]): Promise<void>
 
 	/**
 	 * Returns true if the API is ready to use.

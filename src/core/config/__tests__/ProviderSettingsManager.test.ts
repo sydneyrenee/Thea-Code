@@ -1,6 +1,7 @@
 // npx jest src/core/config/__tests__/ProviderSettingsManager.test.ts
 
 import { ExtensionContext } from "vscode"
+import { EXTENSION_SECRETS_PREFIX } from "../../../../dist/thea-config"; // Import branded constant
 
 import { ProviderSettings } from "../../../schemas"
 import { ProviderSettingsManager, ProviderProfiles } from "../ProviderSettingsManager"
@@ -186,7 +187,7 @@ describe("ProviderSettingsManager", () => {
 			}
 
 			expect(mockSecrets.store).toHaveBeenCalledWith(
-				"roo_cline_config_api_config",
+				`${EXTENSION_SECRETS_PREFIX}api_config`,
 				JSON.stringify(expectedConfig, null, 2),
 			)
 		})
@@ -224,7 +225,7 @@ describe("ProviderSettingsManager", () => {
 			}
 
 			expect(mockSecrets.store).toHaveBeenCalledWith(
-				"roo_cline_config_api_config",
+				`${EXTENSION_SECRETS_PREFIX}api_config`,
 				JSON.stringify(expectedConfig, null, 2),
 			)
 		})
@@ -392,7 +393,7 @@ describe("ProviderSettingsManager", () => {
 			await providerSettingsManager.resetAllConfigs()
 
 			// Should have called delete with the correct config key
-			expect(mockSecrets.delete).toHaveBeenCalledWith("roo_cline_config_api_config")
+			expect(mockSecrets.delete).toHaveBeenCalledWith(`${EXTENSION_SECRETS_PREFIX}api_config`)
 		})
 	})
 

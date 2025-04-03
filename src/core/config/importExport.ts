@@ -5,6 +5,7 @@ import fs from "fs/promises"
 import * as vscode from "vscode"
 import { z } from "zod"
 
+import { SPECIFIC_STRINGS } from "../../../dist/thea-config"; // Import branded constant
 import { globalSettingsSchema } from "../../schemas"
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
@@ -63,7 +64,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy }: 
 export const exportSettings = async ({ providerSettingsManager, contextProxy }: ImportExportOptions) => {
 	const uri = await vscode.window.showSaveDialog({
 		filters: { JSON: ["json"] },
-		defaultUri: vscode.Uri.file(path.join(os.homedir(), "Documents", "roo-code-settings.json")),
+		defaultUri: vscode.Uri.file(path.join(os.homedir(), "Documents", SPECIFIC_STRINGS.SETTINGS_FILE_NAME)),
 	})
 
 	if (!uri) {

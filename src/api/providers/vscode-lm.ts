@@ -8,7 +8,7 @@ import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
 import { SELECTOR_SEPARATOR, stringifyVsCodeLmModelSelector } from "../../shared/vsCodeSelectorUtils"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
 import { BaseProvider } from "./base-provider"
-
+import { TEXT_PATTERNS, EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config"; // Import branded constants
 /**
  * Handles interaction with VS Code's Language Model API for chat-based operations.
  * This handler extends BaseProvider to provide VS Code LM specific functionality.
@@ -66,7 +66,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			this.dispose()
 
 			throw new Error(
-				`Roo Code <Language Model API>: Failed to initialize handler: ${error instanceof Error ? error.message : "Unknown error"}`,
+				`${TEXT_PATTERNS.logPrefix()} Failed to initialize handler: ${error instanceof Error ? error.message : "Unknown error"}`, // Use constant
 			)
 		}
 	}
@@ -116,7 +116,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : "Unknown error"
-			throw new Error(`Roo Code <Language Model API>: Failed to select model: ${errorMessage}`)
+			throw new Error(`${TEXT_PATTERNS.logPrefix()} Failed to select model: ${errorMessage}`) // Use constant
 		}
 	}
 
@@ -176,18 +176,18 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	private async internalCountTokens(text: string | vscode.LanguageModelChatMessage): Promise<number> {
 		// Check for required dependencies
 		if (!this.client) {
-			console.warn("Roo Code <Language Model API>: No client available for token counting")
+			console.warn(`${TEXT_PATTERNS.logPrefix()} No client available for token counting`) // Use constant
 			return 0
 		}
 
 		if (!this.currentRequestCancellation) {
-			console.warn("Roo Code <Language Model API>: No cancellation token available for token counting")
+			console.warn(`${TEXT_PATTERNS.logPrefix()} No cancellation token available for token counting`) // Use constant
 			return 0
 		}
 
 		// Validate input
 		if (!text) {
-			console.debug("Roo Code <Language Model API>: Empty text provided for token counting")
+			console.debug(`${TEXT_PATTERNS.logPrefix()} Empty text provided for token counting`) // Use constant
 			return 0
 		}
 
@@ -200,23 +200,23 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			} else if (text instanceof vscode.LanguageModelChatMessage) {
 				// For chat messages, ensure we have content
 				if (!text.content || (Array.isArray(text.content) && text.content.length === 0)) {
-					console.debug("Roo Code <Language Model API>: Empty chat message content")
+					console.debug(`${TEXT_PATTERNS.logPrefix()} Empty chat message content`) // Use constant
 					return 0
 				}
 				tokenCount = await this.client.countTokens(text, this.currentRequestCancellation.token)
 			} else {
-				console.warn("Roo Code <Language Model API>: Invalid input type for token counting")
+				console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid input type for token counting`) // Use constant
 				return 0
 			}
 
 			// Validate the result
 			if (typeof tokenCount !== "number") {
-				console.warn("Roo Code <Language Model API>: Non-numeric token count received:", tokenCount)
+				console.warn(`${TEXT_PATTERNS.logPrefix()} Non-numeric token count received:`, tokenCount) // Use constant
 				return 0
 			}
 
 			if (tokenCount < 0) {
-				console.warn("Roo Code <Language Model API>: Negative token count received:", tokenCount)
+				console.warn(`${TEXT_PATTERNS.logPrefix()} Negative token count received:`, tokenCount) // Use constant
 				return 0
 			}
 
@@ -224,12 +224,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		} catch (error) {
 			// Handle specific error types
 			if (error instanceof vscode.CancellationError) {
-				console.debug("Roo Code <Language Model API>: Token counting cancelled by user")
+				console.debug(`${TEXT_PATTERNS.logPrefix()} Token counting cancelled by user`) // Use constant
 				return 0
 			}
 
 			const errorMessage = error instanceof Error ? error.message : "Unknown error"
-			console.warn("Roo Code <Language Model API>: Token counting failed:", errorMessage)
+			console.warn(`${TEXT_PATTERNS.logPrefix()} Token counting failed:`, errorMessage) // Use constant
 
 			// Log additional error details if available
 			if (error instanceof Error && error.stack) {
@@ -261,7 +261,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 	private async getClient(): Promise<vscode.LanguageModelChat> {
 		if (!this.client) {
-			console.debug("Roo Code <Language Model API>: Getting client with options:", {
+			console.debug(`${TEXT_PATTERNS.logPrefix()} Getting client with options:`, { // Use constant
 				vsCodeLmModelSelector: this.options.vsCodeLmModelSelector,
 				hasOptions: !!this.options,
 				selectorKeys: this.options.vsCodeLmModelSelector ? Object.keys(this.options.vsCodeLmModelSelector) : [],
@@ -270,12 +270,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			try {
 				// Use default empty selector if none provided to get all available models
 				const selector = this.options?.vsCodeLmModelSelector || {}
-				console.debug("Roo Code <Language Model API>: Creating client with selector:", selector)
+				console.debug(`${TEXT_PATTERNS.logPrefix()} Creating client with selector:`, selector) // Use constant
 				this.client = await this.createClient(selector)
 			} catch (error) {
 				const message = error instanceof Error ? error.message : "Unknown error"
-				console.error("Roo Code <Language Model API>: Client creation failed:", message)
-				throw new Error(`Roo Code <Language Model API>: Failed to create client: ${message}`)
+				console.error(`${TEXT_PATTERNS.logPrefix()} Client creation failed:`, message) // Use constant
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Failed to create client: ${message}`) // Use constant
 			}
 		}
 
@@ -377,7 +377,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		try {
 			// Create the response stream with minimal required options
 			const requestOptions: vscode.LanguageModelChatRequestOptions = {
-				justification: `Roo Code would like to use '${client.name}' from '${client.vendor}', Click 'Allow' to proceed.`,
+				justification: `${EXTENSION_DISPLAY_NAME} would like to use '${client.name}' from '${client.vendor}', Click 'Allow' to proceed.`, // Use constant
 			}
 
 			// Note: Tool support is currently provided by the VSCode Language Model API directly
@@ -394,7 +394,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				if (chunk instanceof vscode.LanguageModelTextPart) {
 					// Validate text part value
 					if (typeof chunk.value !== "string") {
-						console.warn("Roo Code <Language Model API>: Invalid text part value received:", chunk.value)
+						console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid text part value received:`, chunk.value) // Use constant
 						continue
 					}
 
@@ -407,18 +407,18 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 					try {
 						// Validate tool call parameters
 						if (!chunk.name || typeof chunk.name !== "string") {
-							console.warn("Roo Code <Language Model API>: Invalid tool name received:", chunk.name)
+							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool name received:`, chunk.name) // Use constant
 							continue
 						}
 
 						if (!chunk.callId || typeof chunk.callId !== "string") {
-							console.warn("Roo Code <Language Model API>: Invalid tool callId received:", chunk.callId)
+							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool callId received:`, chunk.callId) // Use constant
 							continue
 						}
 
 						// Ensure input is a valid object
 						if (!chunk.input || typeof chunk.input !== "object") {
-							console.warn("Roo Code <Language Model API>: Invalid tool input received:", chunk.input)
+							console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid tool input received:`, chunk.input) // Use constant
 							continue
 						}
 
@@ -434,7 +434,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 						accumulatedText += toolCallText
 
 						// Log tool call for debugging
-						console.debug("Roo Code <Language Model API>: Processing tool call:", {
+						console.debug(`${TEXT_PATTERNS.logPrefix()} Processing tool call:`, { // Use constant
 							name: chunk.name,
 							callId: chunk.callId,
 							inputSize: JSON.stringify(chunk.input).length,
@@ -445,12 +445,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 							text: toolCallText,
 						}
 					} catch (error) {
-						console.error("Roo Code <Language Model API>: Failed to process tool call:", error)
+						console.error(`${TEXT_PATTERNS.logPrefix()} Failed to process tool call:`, error) // Use constant
 						// Continue processing other chunks even if one fails
 						continue
 					}
 				} else {
-					console.warn("Roo Code <Language Model API>: Unknown chunk type received:", chunk)
+					console.warn(`${TEXT_PATTERNS.logPrefix()} Unknown chunk type received:`, chunk) // Use constant
 				}
 			}
 
@@ -468,11 +468,11 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			this.ensureCleanState()
 
 			if (error instanceof vscode.CancellationError) {
-				throw new Error("Roo Code <Language Model API>: Request cancelled by user")
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Request cancelled by user`) // Use constant
 			}
 
 			if (error instanceof Error) {
-				console.error("Roo Code <Language Model API>: Stream error details:", {
+				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error details:`, { // Use constant
 					message: error.message,
 					stack: error.stack,
 					name: error.name,
@@ -483,13 +483,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			} else if (typeof error === "object" && error !== null) {
 				// Handle error-like objects
 				const errorDetails = JSON.stringify(error, null, 2)
-				console.error("Roo Code <Language Model API>: Stream error object:", errorDetails)
-				throw new Error(`Roo Code <Language Model API>: Response stream error: ${errorDetails}`)
+				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error object:`, errorDetails) // Use constant
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorDetails}`) // Use constant
 			} else {
 				// Fallback for unknown error types
 				const errorMessage = String(error)
-				console.error("Roo Code <Language Model API>: Unknown stream error:", errorMessage)
-				throw new Error(`Roo Code <Language Model API>: Response stream error: ${errorMessage}`)
+				console.error(`${TEXT_PATTERNS.logPrefix()} Unknown stream error:`, errorMessage) // Use constant
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorMessage}`) // Use constant
 			}
 		}
 	}
@@ -509,7 +509,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			// Log any missing properties for debugging
 			for (const [prop, value] of Object.entries(requiredProps)) {
 				if (!value && value !== 0) {
-					console.warn(`Roo Code <Language Model API>: Client missing ${prop} property`)
+					console.warn(`${TEXT_PATTERNS.logPrefix()} Client missing ${prop} property`) // Use constant
 				}
 			}
 
@@ -540,7 +540,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			? stringifyVsCodeLmModelSelector(this.options.vsCodeLmModelSelector)
 			: "vscode-lm"
 
-		console.debug("Roo Code <Language Model API>: No client available, using fallback model info")
+		console.debug(`${TEXT_PATTERNS.logPrefix()} No client available, using fallback model info`) // Use constant
 
 		return {
 			id: fallbackId,

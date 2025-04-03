@@ -13,17 +13,17 @@ import { Section } from "./Section"
 type ContextManagementSettingsProps = HTMLAttributes<HTMLDivElement> & {
 	maxOpenTabsContext: number
 	maxWorkspaceFiles: number
-	showRooIgnoredFiles?: boolean
+	showTheaCodeIgnoredFiles?: boolean
 	maxReadFileLine?: number
 	setCachedStateField: SetCachedStateField<
-		"maxOpenTabsContext" | "maxWorkspaceFiles" | "showRooIgnoredFiles" | "maxReadFileLine"
+		"maxOpenTabsContext" | "maxWorkspaceFiles" | "showTheaIgnoredFiles" | "maxReadFileLine"
 	>
 }
 
 export const ContextManagementSettings = ({
 	maxOpenTabsContext,
 	maxWorkspaceFiles,
-	showRooIgnoredFiles,
+	showTheaCodeIgnoredFiles,
 	setCachedStateField,
 	maxReadFileLine,
 	className,
@@ -80,15 +80,15 @@ export const ContextManagementSettings = ({
 
 				<div>
 					<VSCodeCheckbox
-						checked={showRooIgnoredFiles}
-						onChange={(e: any) => setCachedStateField("showRooIgnoredFiles", e.target.checked)}
-						data-testid="show-rooignored-files-checkbox">
+						checked={showTheaCodeIgnoredFiles}
+						onChange={(e: any) => setCachedStateField("showTheaIgnoredFiles", e.target.checked)}
+						data-testid="show-theaignored-files-checkbox">
 						<label className="block font-medium mb-1">
-							{t("settings:contextManagement.rooignore.label")}
+							{t("settings:contextManagement.ignoreFileSetting.label")}
 						</label>
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
-						{t("settings:contextManagement.rooignore.description")}
+						{t("settings:contextManagement.ignoreFileSetting.description")}
 					</div>
 				</div>
 

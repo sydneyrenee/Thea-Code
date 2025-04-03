@@ -15,12 +15,13 @@ import { convertToSimpleMessages } from "../transform/simple-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
+import { API_REFERENCES } from "../../../dist/thea-config"; // Import branded constants
 
 const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
 export const defaultHeaders = {
-	"HTTP-Referer": "https://github.com/RooVetGit/Roo-Cline",
-	"X-Title": "Roo Code",
+	"HTTP-Referer": API_REFERENCES.HOMEPAGE, // Use constant
+	"X-Title": API_REFERENCES.APP_TITLE, // Use constant
 }
 
 export interface OpenAiHandlerOptions extends ApiHandlerOptions {}

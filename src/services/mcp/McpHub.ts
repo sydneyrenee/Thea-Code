@@ -17,7 +17,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { z } from "zod"
 import { t } from "../../i18n"
-
+import { EXTENSION_DISPLAY_NAME, CONFIG_DIR_NAME } from "../../../dist/thea-config" // Import branded constants
 import { ClineProvider } from "../../core/webview/ClineProvider"
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import {
@@ -386,7 +386,7 @@ export class McpHub {
 		}
 
 		const workspaceFolder = vscode.workspace.workspaceFolders[0]
-		const projectMcpDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+		const projectMcpDir = path.join(workspaceFolder.uri.fsPath, CONFIG_DIR_NAME)
 		const projectMcpPath = path.join(projectMcpDir, "mcp.json")
 
 		try {
@@ -413,7 +413,7 @@ export class McpHub {
 		try {
 			const client = new Client(
 				{
-					name: "Roo Code",
+					name: EXTENSION_DISPLAY_NAME, // Use constant
 					version: this.providerRef.deref()?.context.extension?.packageJSON?.version ?? "1.0.0",
 				},
 				{

@@ -41,6 +41,8 @@ import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } f
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
+import { EXTENSION_CONFIG_DIR, GLOBAL_FILENAMES as BRANDED_FILENAMES, configSection, EXTENSION_NAME } from "../../../dist/thea-config"; // Import branded constants
+import { SETTING_KEYS } from "../../../dist/thea-config"; // Import branded constant
 
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	switch (message.type) {
@@ -508,7 +510,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.context.globalState.update("allowedCommands", message.commands)
 			// Also update workspace settings
 			await vscode.workspace
-				.getConfiguration("roo-cline")
+				.getConfiguration(configSection()) // Use constant
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 			break
 		case "openMcpSettings": {
@@ -525,18 +527,18 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			}
 
 			const workspaceFolder = vscode.workspace.workspaceFolders[0]
-			const rooDir = path.join(workspaceFolder.uri.fsPath, ".roo")
-			const mcpPath = path.join(rooDir, "mcp.json")
+			const configDir = path.join(workspaceFolder.uri.fsPath, EXTENSION_CONFIG_DIR) // Use constant
+			const mcpPath = path.join(configDir, "mcp.json") // Use renamed variable
 
 			try {
-				await fs.mkdir(rooDir, { recursive: true })
+				await fs.mkdir(configDir, { recursive: true })
 				const exists = await fileExistsAtPath(mcpPath)
 				if (!exists) {
 					await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
 				}
 				await openFile(mcpPath)
 			} catch (error) {
-				vscode.window.showErrorMessage(t("common:errors.create_mcp_json", { error: `${error}` }))
+				vscode.window.showErrorMessage(t("common:errors.create_mcp_json", { error: `${error}` })) // Keep mcp.json filename for now, dir updated
 			}
 			break
 		}
@@ -931,8 +933,8 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.updateGlobalState("language", message.text as Language)
 			await provider.postStateToWebview()
 			break
-		case "showRooIgnoredFiles":
-			await provider.updateGlobalState("showRooIgnoredFiles", message.bool ?? true)
+		case "showTheaIgnoredFiles": // Rename message type
+			await provider.updateGlobalState("showTheaIgnoredFiles", message.bool ?? true) // Use new setting key
 			await provider.postStateToWebview()
 			break
 		case "maxReadFileLine":
@@ -1312,7 +1314,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "humanRelayResponse":
 			if (message.requestId && message.text) {
-				vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { // Use constant
 					requestId: message.requestId,
 					text: message.text,
 					cancelled: false,
@@ -1322,7 +1324,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 		case "humanRelayCancel":
 			if (message.requestId) {
-				vscode.commands.executeCommand("roo-cline.handleHumanRelayResponse", {
+				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { // Use constant
 					requestId: message.requestId,
 					cancelled: true,
 				})
@@ -1367,7 +1369,7 @@ const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMes
 	const mode = message.mode ?? defaultModeSlug
 	const customModes = await provider.customModesManager.getCustomModes()
 
-	const rooIgnoreInstructions = provider.getCurrentCline()?.rooIgnoreController?.getInstructions()
+	const theaIgnoreInstructions = provider.getCurrentCline()?.theaIgnoreController?.getInstructions()
 
 	// Determine if browser tools can be used based on model support, mode, and user settings
 	let modelSupportsComputerUse = false
@@ -1404,7 +1406,7 @@ const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMes
 		experiments,
 		enableMcpServerCreation,
 		language,
-		rooIgnoreInstructions,
+		theaIgnoreInstructions,
 	)
 	return systemPrompt
 }

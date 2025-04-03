@@ -244,7 +244,7 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 						style={{ color: "var(--vscode-foreground)", marginBottom: "-1.5px" }}></span>
 				)}
 				<span style={{ fontWeight: "bold" }}>
-					<>{t("chat:browser.rooWantsToUse")}</>
+					<>{t("chat:browser.aiWantsToUse")}</>
 				</span>
 			</div>
 			<div

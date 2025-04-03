@@ -1,4 +1,4 @@
-import { ClineMessage } from "./roo-code"
+import { ClineMessage } from "./thea-code"
 
 export class MessageHistory {
 	private readonly messages: Record<string, Record<number, ClineMessage>>

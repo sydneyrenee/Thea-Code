@@ -88,10 +88,10 @@ export async function readFileTool(
 				endLine -= 1
 			}
 
-			const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+			const accessAllowed = cline.theaIgnoreController?.validateAccess(relPath)
 			if (!accessAllowed) {
-				await cline.say("rooignore_error", relPath)
-				pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+				await cline.say("theaignore_error", relPath)
+				pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 				return
 			}
@@ -153,7 +153,7 @@ export async function readFileTool(
 
 				const res = await Promise.all([
 					maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
-					parseSourceCodeDefinitionsForFile(absolutePath, cline.rooIgnoreController),
+					parseSourceCodeDefinitionsForFile(absolutePath, cline.theaIgnoreController),
 				])
 
 				content = res[0].length > 0 ? addLineNumbers(res[0]) : ""

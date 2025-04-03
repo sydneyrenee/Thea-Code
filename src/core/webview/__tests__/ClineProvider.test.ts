@@ -9,7 +9,7 @@ import { setSoundEnabled } from "../../../utils/sound"
 import { setTtsEnabled } from "../../../utils/tts"
 import { defaultModeSlug } from "../../../shared/modes"
 import { experimentDefault } from "../../../shared/experiments"
-
+import { EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config" // Import branded constants
 // Mock setup must come before imports
 jest.mock("../../prompts/sections/custom-instructions")
 
@@ -386,6 +386,7 @@ describe("ClineProvider", () => {
 	test("postMessageToWebview sends message to webview", async () => {
 		await provider.resolveWebviewView(mockWebviewView)
 
+		// Define the mock state with all required properties of ExtensionState
 		const mockState: ExtensionState = {
 			version: "1.0.0",
 			osInfo: "unix",
@@ -423,7 +424,7 @@ describe("ClineProvider", () => {
 			maxWorkspaceFiles: 200,
 			browserToolEnabled: true,
 			telemetrySetting: "unset",
-			showRooIgnoredFiles: true,
+			showTheaIgnoredFiles: true, // Use correct property name
 			renderContext: "sidebar",
 			maxReadFileLine: 500,
 		}
@@ -710,24 +711,24 @@ describe("ClineProvider", () => {
 		expect(state.browserToolEnabled).toBe(true) // Default value should be true
 	})
 
-	test("handles showRooIgnoredFiles setting", async () => {
+	test("handles showTheaIgnoredFiles setting", async () => { // Use correct property name
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as jest.Mock).mock.calls[0][0]
 
 		// Default value should be true
-		expect((await provider.getState()).showRooIgnoredFiles).toBe(true)
+		expect((await provider.getState()).showTheaIgnoredFiles).toBe(true) // Access property directly
 
-		// Test showRooIgnoredFiles with true
-		await messageHandler({ type: "showRooIgnoredFiles", bool: true })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("showRooIgnoredFiles", true)
+		// Test showTheaIgnoredFiles with true
+		await messageHandler({ type: "showTheaIgnoredFiles", bool: true }) // Use correct message type
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("showTheaIgnoredFiles", true) // Use correct state key
 		expect(mockPostMessage).toHaveBeenCalled()
-		expect((await provider.getState()).showRooIgnoredFiles).toBe(true)
+		expect((await provider.getState()).showTheaIgnoredFiles).toBe(true) // Access property directly
 
-		// Test showRooIgnoredFiles with false
-		await messageHandler({ type: "showRooIgnoredFiles", bool: false })
-		expect(mockContext.globalState.update).toHaveBeenCalledWith("showRooIgnoredFiles", false)
+		// Test showTheaIgnoredFiles with false
+		await messageHandler({ type: "showTheaIgnoredFiles", bool: false }) // Use correct message type
+		expect(mockContext.globalState.update).toHaveBeenCalledWith("showTheaIgnoredFiles", false) // Use correct state key
 		expect(mockPostMessage).toHaveBeenCalled()
-		expect((await provider.getState()).showRooIgnoredFiles).toBe(false)
+		expect((await provider.getState()).showTheaIgnoredFiles).toBe(false) // Access property directly
 	})
 
 	test("handles request delay settings messages", async () => {
@@ -2009,7 +2010,7 @@ describe("Project MCP Settings", () => {
 
 		// Verify directory was created
 		expect(fs.mkdir).toHaveBeenCalledWith(
-			expect.stringContaining(".roo"),
+			expect.stringContaining(EXTENSION_CONFIG_DIR), // Use constant
 			expect.objectContaining({ recursive: true }),
 		)
 
@@ -2052,7 +2053,7 @@ describe("Project MCP Settings", () => {
 
 		// Verify error message was shown
 		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-			expect.stringContaining("Failed to create or open .roo/mcp.json"),
+			expect.stringContaining(`Failed to create or open ${EXTENSION_CONFIG_DIR}/mcp.json`), // Use constant
 		)
 	})
 })

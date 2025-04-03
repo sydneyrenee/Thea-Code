@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import delay from "delay"
 
 import { ClineProvider } from "../core/webview/ClineProvider"
+import { EXTENSION_NAME, EXTENSION_DISPLAY_NAME, HOMEPAGE_URL, COMMANDS } from "../../dist/thea-config" // Import branded constants
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
@@ -50,30 +51,32 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions) => {
 	return {
-		"roo-cline.activationCompleted": () => {},
-		"roo-cline.plusButtonClicked": async () => {
+		// Construct internal command ID using EXTENSION_NAME
+		[`${EXTENSION_NAME}.activationCompleted`]: () => {},
+		[COMMANDS.PLUS_BUTTON]: async () => { // Use constant
 			await provider.removeClineFromStack()
 			await provider.postStateToWebview()
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
-		"roo-cline.mcpButtonClicked": () => {
+		[COMMANDS.MCP_BUTTON]: () => { // Use constant
 			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
-		"roo-cline.promptsButtonClicked": () => {
+		[COMMANDS.PROMPTS_BUTTON]: () => { // Use constant
 			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
-		"roo-cline.popoutButtonClicked": () => openClineInNewTab({ context, outputChannel }),
-		"roo-cline.openInNewTab": () => openClineInNewTab({ context, outputChannel }),
-		"roo-cline.settingsButtonClicked": () => {
+		[COMMANDS.POPOUT_BUTTON]: () => openClineInNewTab({ context, outputChannel }), // Use constant
+		[COMMANDS.OPEN_NEW_TAB]: () => openClineInNewTab({ context, outputChannel }), // Use constant
+		[COMMANDS.SETTINGS_BUTTON]: () => { // Use constant
 			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
-		"roo-cline.historyButtonClicked": () => {
+		[COMMANDS.HISTORY_BUTTON]: () => { // Use constant
 			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
-		"roo-cline.helpButtonClicked": () => {
-			vscode.env.openExternal(vscode.Uri.parse("https://docs.roocode.com"))
+		[COMMANDS.HELP_BUTTON]: () => { // Use constant
+			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL)) // Use constant
 		},
-		"roo-cline.showHumanRelayDialog": (params: { requestId: string; promptText: string }) => {
+		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
+		[`${EXTENSION_NAME}.showHumanRelayDialog`]: (params: { requestId: string; promptText: string }) => {
 			const panel = getPanel()
 
 			if (panel) {
@@ -84,11 +87,15 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 				})
 			}
 		},
-		"roo-cline.registerHumanRelayCallback": registerHumanRelayCallback,
-		"roo-cline.unregisterHumanRelayCallback": unregisterHumanRelayCallback,
-		"roo-cline.handleHumanRelayResponse": handleHumanRelayResponse,
-		"roo-cline.newTask": handleNewTask,
-		"roo-cline.setCustomStoragePath": async () => {
+		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
+		[`${EXTENSION_NAME}.registerHumanRelayCallback`]: registerHumanRelayCallback,
+		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
+		[`${EXTENSION_NAME}.unregisterHumanRelayCallback`]: unregisterHumanRelayCallback,
+		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
+		[`${EXTENSION_NAME}.handleHumanRelayResponse`]: handleHumanRelayResponse,
+		[COMMANDS.NEW_TASK]: handleNewTask, // Use constant
+		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
+		[`${EXTENSION_NAME}.setCustomStoragePath`]: async () => {
 			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
 			await promptForCustomStoragePath()
 		},
@@ -113,7 +120,7 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 
 	const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
 
-	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, "Roo Code", targetCol, {
+	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, EXTENSION_DISPLAY_NAME, targetCol, { // Use constant
 		enableScripts: true,
 		retainContextWhenHidden: true,
 		localResourceRoots: [context.extensionUri],

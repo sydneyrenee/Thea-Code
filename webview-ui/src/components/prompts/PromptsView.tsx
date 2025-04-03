@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { GLOBAL_FILENAMES } from "../../../../dist/thea-config"; // Import branded constant
+import { CONFIG_DIR_NAME } from "../../../../dist/thea-config"; // Import branded constant
 import {
 	VSCodeButton,
 	VSCodeTextArea,
@@ -446,7 +448,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 												e.preventDefault() // Prevent blur
 												vscode.postMessage({
 													type: "openFile",
-													text: "./.roomodes",
+													text: `./${GLOBAL_FILENAMES.MODES_FILENAME}`, // Use constant
 													values: {
 														create: true,
 														content: JSON.stringify({ customModes: [] }, null, 2),
@@ -873,7 +875,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 													vscode.postMessage({
 														type: "openFile",
-														text: `./.roo/system-prompt-${currentMode.slug}`,
+														text: `./${CONFIG_DIR_NAME}/system-prompt-${currentMode.slug}`, // Use constant
 														values: {
 															create: true,
 															content: "",

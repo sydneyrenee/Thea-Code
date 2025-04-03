@@ -1,6 +1,7 @@
 import { UnboundHandler } from "../unbound"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Anthropic } from "@anthropic-ai/sdk"
+import { EXTENSION_NAME } from "../../../../dist/thea-config" // Import branded constant
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -155,7 +156,7 @@ describe("UnboundHandler", () => {
 				}),
 				expect.objectContaining({
 					headers: {
-						"X-Unbound-Metadata": expect.stringContaining("roo-code"),
+						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // Use constant
 					},
 				}),
 			)
@@ -194,7 +195,7 @@ describe("UnboundHandler", () => {
 				}),
 				expect.objectContaining({
 					headers: expect.objectContaining({
-						"X-Unbound-Metadata": expect.stringContaining("roo-code"),
+						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // Use constant
 					}),
 				}),
 			)
@@ -240,7 +241,7 @@ describe("UnboundHandler", () => {
 				}),
 				expect.objectContaining({
 					headers: expect.objectContaining({
-						"X-Unbound-Metadata": expect.stringContaining("roo-code"),
+						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // Use constant
 					}),
 				}),
 			)
@@ -272,7 +273,7 @@ describe("UnboundHandler", () => {
 				}),
 				expect.objectContaining({
 					headers: expect.objectContaining({
-						"X-Unbound-Metadata": expect.stringContaining("roo-code"),
+						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // Use constant
 					}),
 				}),
 			)

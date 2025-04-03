@@ -1,9 +1,10 @@
 import * as fs from "fs/promises"
 import * as path from "path"
 
+import { EXTENSION_ID, CONFIG } from "../../dist/thea-config"; // Import branded constants
 import * as vscode from "vscode"
 
-import { RooCodeAPI, TokenUsage } from "../../src/exports/roo-code"
+import { TheaCodeAPI, TokenUsage } from "../../src/exports/thea-code"
 
 import { waitUntilReady, waitUntilCompleted, sleep } from "./utils"
 
@@ -28,7 +29,7 @@ export async function run() {
 	 * Activate the extension.
 	 */
 
-	const extension = vscode.extensions.getExtension<RooCodeAPI>("RooVeterinaryInc.roo-cline")
+	const extension = vscode.extensions.getExtension<TheaCodeAPI>(EXTENSION_ID)
 
 	if (!extension) {
 		throw new Error("Extension not found.")
@@ -67,7 +68,7 @@ export async function run() {
 	})
 
 	await vscode.workspace
-		.getConfiguration("roo-cline")
+		.getConfiguration(CONFIG.SECTION)
 		.update("allowedCommands", ["*"], vscode.ConfigurationTarget.Global)
 
 	await sleep(2_000)

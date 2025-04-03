@@ -246,7 +246,7 @@ type GlobalSettings = {
 	soundVolume?: number | undefined
 	maxOpenTabsContext?: number | undefined
 	maxWorkspaceFiles?: number | undefined
-	showRooIgnoredFiles?: boolean | undefined
+	showTheaIgnoredFiles?: boolean | undefined
 	maxReadFileLine?: number | undefined
 	terminalOutputLineLimit?: number | undefined
 	terminalShellIntegrationTimeout?: number | undefined
@@ -372,7 +372,7 @@ type ClineMessage = {
 				| "new_task_started"
 				| "new_task"
 				| "checkpoint_saved"
-				| "rooignore_error"
+				| "theaignore_error"
 		  )
 		| undefined
 	text?: string | undefined

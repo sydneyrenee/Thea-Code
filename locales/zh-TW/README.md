@@ -12,27 +12,27 @@
 </div>
 <br>
 <div align="center">
-  <h2>加入 Roo Code 社群</h2>
+  <h2>加入 Thea Code 社群</h2>
   <p>與開發者連結，貢獻想法，並了解最新的 AI 驅動的編碼工具。</p>
   
-  <a href="https://discord.gg/roocode" target="_blank"><img src="https://img.shields.io/badge/加入%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="加入 Discord"></a>
-  <a href="https://www.reddit.com/r/RooCode/" target="_blank"><img src="https://img.shields.io/badge/加入%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="加入 Reddit"></a>
+  <a href="https://discord.gg/thea-placeholder" target="_blank"><img src="https://img.shields.io/badge/加入%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="加入 Discord"></a>
+  <a href="https://www.reddit.com/r/thea-placeholder/" target="_blank"><img src="https://img.shields.io/badge/加入%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="加入 Reddit"></a>
   
 </div>
 <br>
 <br>
 
 <div align="center">
-<h1>Roo Code（前身為 Roo Cline）</h1>
+<h1>Thea Code（前身為 Thea Cline）</h1>
 
-<a href="https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline" target="_blank"><img src="https://img.shields.io/badge/從%20VS%20Marketplace%20下載-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="從 VS Marketplace 下載"></a>
-<a href="https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/功能請求-yellow?style=for-the-badge" alt="功能請求"></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/評分%20%26%20評論-green?style=for-the-badge" alt="評分 & 評論"></a>
-<a href="https://docs.roocode.com" target="_blank"><img src="https://img.shields.io/badge/文檔-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="文檔"></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code" target="_blank"><img src="https://img.shields.io/badge/從%20VS%20Marketplace%20下載-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="從 VS Marketplace 下載"></a>
+<a href="sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/功能請求-yellow?style=for-the-badge" alt="功能請求"></a>
+<a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/評分%20%26%20評論-green?style=for-the-badge" alt="評分 & 評論"></a>
+<a href="https://docs.thea-placeholder.com" target="_blank"><img src="https://img.shields.io/badge/文檔-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="文檔"></a>
 
 </div>
 
-**Roo Code** 是一個存在於您編輯器中的 AI 驅動的**自主編碼代理**。它可以：
+**Thea Code** 是一個存在於您編輯器中的 AI 驅動的**自主編碼代理**。它可以：
 
 - 使用自然語言溝通
 - 直接在您的工作區讀寫文件
@@ -41,15 +41,15 @@
 - 與任何 OpenAI 兼容或自定義的 API/模型整合
 - 通過**自定義模式**調整其"個性"和能力
 
-無論您是尋找一個靈活的編碼夥伴、系統架構師，還是專業角色如 QA 工程師或產品經理，Roo Code 都能幫助您更高效地構建軟件。
+無論您是尋找一個靈活的編碼夥伴、系統架構師，還是專業角色如 QA 工程師或產品經理，Thea Code 都能幫助您更高效地構建軟件。
 
 查看 [CHANGELOG](../CHANGELOG.md) 了解詳細更新和修復。
 
 ---
 
-## 🎉 Roo Code 3.11 已發布
+## 🎉 Thea Code 3.11 已發布
 
-Roo Code 3.11 帶來顯著的效能改進和新功能！
+Thea Code 3.11 帶來顯著的效能改進和新功能！
 
 - 快速編輯 - 編輯現在套用得更快。減少等待，增加編碼。
 - API金鑰餘額 - 在設定中查看您的OpenRouter和Requesty餘額。
@@ -59,7 +59,7 @@ Roo Code 3.11 帶來顯著的效能改進和新功能！
 
 ---
 
-## Roo Code 能做什麼？
+## Thea Code 能做什麼？
 
 - 🚀 從自然語言描述**生成代碼**
 - 🔧 **重構和調試**現有代碼
@@ -70,55 +70,55 @@ Roo Code 3.11 帶來顯著的效能改進和新功能！
 
 ## 快速開始
 
-1. [安裝 Roo Code](https://docs.roocode.com/getting-started/installing)
-2. [連接您的 AI 提供者](https://docs.roocode.com/getting-started/connecting-api-provider)
-3. [嘗試您的第一個任務](https://docs.roocode.com/getting-started/your-first-task)
+1. [安裝 Thea Code](https://docs.thea-placeholder.com/getting-started/installing)
+2. [連接您的 AI 提供者](https://docs.thea-placeholder.com/getting-started/connecting-api-provider)
+3. [嘗試您的第一個任務](https://docs.thea-placeholder.com/getting-started/your-first-task)
 
 ## 主要特點
 
 ### 多種模式
 
-Roo Code 通過專業化的[模式](https://docs.roocode.com/basic-usage/using-modes)適應您的需求：
+Thea Code 通過專業化的[模式](https://docs.thea-placeholder.com/basic-usage/using-modes)適應您的需求：
 
 - **代碼模式：** 用於通用編碼任務
 - **架構師模式：** 用於規劃和技術領導
 - **詢問模式：** 用於回答問題和提供信息
 - **調試模式：** 用於系統性問題診斷
-- **[自定義模式](https://docs.roocode.com/advanced-usage/custom-modes)：** 創建無限的專業角色，用於安全審計、性能優化、文檔或任何其他任務
+- **[自定義模式](https://docs.thea-placeholder.com/advanced-usage/custom-modes)：** 創建無限的專業角色，用於安全審計、性能優化、文檔或任何其他任務
 
 ### 智能工具
 
-Roo Code 配備強大的[工具](https://docs.roocode.com/basic-usage/how-tools-work)，可以：
+Thea Code 配備強大的[工具](https://docs.thea-placeholder.com/basic-usage/how-tools-work)，可以：
 
 - 讀寫您項目中的文件
 - 在您的 VS Code 終端中執行命令
 - 控制網頁瀏覽器
-- 通過 [MCP (Model Context Protocol)](https://docs.roocode.com/advanced-usage/mcp) 使用外部工具
+- 通過 [MCP (Model Context Protocol)](https://docs.thea-placeholder.com/advanced-usage/mcp) 使用外部工具
 
-MCP 擴展了 Roo Code 的能力，允許您添加無限的自定義工具。與外部 API 整合，連接到數據庫，或創建專業開發工具 - MCP 提供了擴展 Roo Code 功能以滿足您特定需求的框架。
+MCP 擴展了 Thea Code 的能力，允許您添加無限的自定義工具。與外部 API 整合，連接到數據庫，或創建專業開發工具 - MCP 提供了擴展 Thea Code 功能以滿足您特定需求的框架。
 
 ### 自定義
 
-讓 Roo Code 按照您的方式工作：
+讓 Thea Code 按照您的方式工作：
 
-- [自定義指令](https://docs.roocode.com/advanced-usage/custom-instructions)用於個性化行為
-- [自定義模式](https://docs.roocode.com/advanced-usage/custom-modes)用於專業任務
-- [本地模型](https://docs.roocode.com/advanced-usage/local-models)用於離線使用
-- [自動批准設置](https://docs.roocode.com/advanced-usage/auto-approving-actions)用於更快的工作流程
+- [自定義指令](https://docs.thea-placeholder.com/advanced-usage/custom-instructions)用於個性化行為
+- [自定義模式](https://docs.thea-placeholder.com/advanced-usage/custom-modes)用於專業任務
+- [本地模型](https://docs.thea-placeholder.com/advanced-usage/local-models)用於離線使用
+- [自動批准設置](https://docs.thea-placeholder.com/advanced-usage/auto-approving-actions)用於更快的工作流程
 
 ## 資源
 
 ### 文檔
 
-- [基本使用指南](https://docs.roocode.com/basic-usage/the-chat-interface)
-- [進階功能](https://docs.roocode.com/advanced-usage/auto-approving-actions)
-- [常見問題](https://docs.roocode.com/faq)
+- [基本使用指南](https://docs.thea-placeholder.com/basic-usage/the-chat-interface)
+- [進階功能](https://docs.thea-placeholder.com/advanced-usage/auto-approving-actions)
+- [常見問題](https://docs.thea-placeholder.com/faq)
 
 ### 社群
 
-- **Discord：** [加入我們的 Discord 服務器](https://discord.gg/roocode)獲取實時幫助和討論
-- **Reddit：** [訪問我們的 subreddit](https://www.reddit.com/r/RooCode)分享經驗和技巧
-- **GitHub：** [報告問題](https://github.com/RooVetGit/Roo-Code/issues)或[請求功能](https://github.com/RooVetGit/Roo-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **Discord：** [加入我們的 Discord 服務器](https://discord.gg/thea-placeholder)獲取實時幫助和討論
+- **Reddit：** [訪問我們的 subreddit](https://www.reddit.com/r/thea-placeholder)分享經驗和技巧
+- **GitHub：** [報告問題](sydneyrenee/Thea-Code/issues)或[請求功能](sydneyrenee/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 
@@ -127,7 +127,7 @@ MCP 擴展了 Roo Code 的能力，允許您添加無限的自定義工具。與
 1. **克隆**存儲庫：
 
 ```sh
-git clone https://github.com/RooVetGit/Roo-Code.git
+git clone https://github.com/sydneyrenee/Thea-Code.git
 ```
 
 2. **安裝依賴**：
@@ -143,7 +143,7 @@ npm run dev
 ```
 
 4. **調試**：
-   在 VSCode 中按 `F5`（或**運行** → **開始調試**）打開一個加載了 Roo Code 的新會話。
+   在 VSCode 中按 `F5`（或**運行** → **開始調試**）打開一個加載了 Thea Code 的新會話。
 
 網頁視圖的更改將立即顯示。核心擴展的更改將需要重新啟動擴展主機。
 
@@ -156,7 +156,7 @@ npm run build
 一個 `.vsix` 文件將出現在 `bin/` 目錄中，可以使用以下命令安裝：
 
 ```sh
-code --install-extension bin/roo-cline-<version>.vsix
+code --install-extension bin/thea-code-<version>.vsix
 ```
 
 我們使用 [changesets](https://github.com/changesets/changesets) 進行版本控制和發布。查看我們的 `CHANGELOG.md` 獲取發布說明。
@@ -165,7 +165,7 @@ code --install-extension bin/roo-cline-<version>.vsix
 
 ## 免責聲明
 
-**請注意**，Roo Veterinary, Inc **不**對與 Roo Code 相關的任何代碼、模型或其他工具，任何相關的第三方工具，或任何產生的輸出做出任何陳述或保證。您承擔使用此類工具或輸出的**所有風險**；這些工具按**"原樣"**和**"可用性"**提供。這些風險可能包括但不限於智慧財產侵權、網絡漏洞或攻擊、偏見、不準確、錯誤、缺陷、病毒、停機時間、財產損失或損壞和/或人身傷害。您對這些工具或輸出的使用（包括但不限於其合法性、適當性和結果）完全負責。
+**請注意**，Solace Project**不**對與 Thea Code 相關的任何代碼、模型或其他工具，任何相關的第三方工具，或任何產生的輸出做出任何陳述或保證。您承擔使用此類工具或輸出的**所有風險**；這些工具按**"原樣"**和**"可用性"**提供。這些風險可能包括但不限於智慧財產侵權、網絡漏洞或攻擊、偏見、不準確、錯誤、缺陷、病毒、停機時間、財產損失或損壞和/或人身傷害。您對這些工具或輸出的使用（包括但不限於其合法性、適當性和結果）完全負責。
 
 ---
 
@@ -177,7 +177,7 @@ code --install-extension bin/roo-cline-<version>.vsix
 
 ## 貢獻者
 
-感謝所有幫助改進 Roo Code 的貢獻者！
+感謝所有幫助改進 Thea Code 的貢獻者！
 
 <!-- START CONTRIBUTORS SECTION - AUTO-GENERATED, DO NOT EDIT MANUALLY -->
 
@@ -206,8 +206,8 @@ code --install-extension bin/roo-cline-<version>.vsix
 
 ## 許可證
 
-[Apache 2.0 © 2025 Roo Veterinary, Inc.](../LICENSE)
+[Apache 2.0 © 2025 Solace Project](../LICENSE)
 
 ---
 
-**享受 Roo Code！** 無論您是將它拴在短繩上還是讓它自主漫遊，我們迫不及待地想看看您會構建什麼。如果您有問題或功能想法，請訪問我們的 [Reddit 社區](https://www.reddit.com/r/RooCode/)或 [Discord](https://discord.gg/roocode)。祝您編碼愉快！
+**享受 Thea Code！** 無論您是將它拴在短繩上還是讓它自主漫遊，我們迫不及待地想看看您會構建什麼。如果您有問題或功能想法，請訪問我們的 [Reddit 社區](https://www.reddit.com/r/thea-placeholder/)或 [Discord](https://discord.gg/thea-placeholder)。祝您編碼愉快！

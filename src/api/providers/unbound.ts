@@ -7,6 +7,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
+import { EXTENSION_NAME } from "../../../dist/thea-config" // Import branded constant
 
 interface UnboundUsage extends OpenAI.CompletionUsage {
 	cache_creation_input_tokens?: number
@@ -100,7 +101,7 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 						labels: [
 							{
 								key: "app",
-								value: "roo-code",
+								value: EXTENSION_NAME, // Use constant
 							},
 						],
 					}),
@@ -172,7 +173,7 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 						labels: [
 							{
 								key: "app",
-								value: "roo-code",
+								value: EXTENSION_NAME, // Use constant
 							},
 						],
 					}),

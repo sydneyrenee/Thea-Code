@@ -48,7 +48,7 @@ export async function useMcpToolTool(
 					parsedArguments = JSON.parse(mcp_arguments)
 				} catch (error) {
 					cline.consecutiveMistakeCount++
-					await cline.say("error", `Roo tried to use ${tool_name} with an invalid JSON argument. Retrying...`)
+					await cline.say("error", `Thea tried to use ${tool_name} with an invalid JSON argument. Retrying...`)
 					pushToolResult(
 						formatResponse.toolError(formatResponse.invalidMcpToolArgumentError(server_name, tool_name)),
 					)

@@ -4,6 +4,7 @@ import { Trans } from "react-i18next"
 import { Info, Download, Upload, TriangleAlert } from "lucide-react"
 
 import { VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+import { API_REFERENCES } from "../../../../dist/thea-config"; // Import branded constants
 
 import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
 
@@ -51,9 +52,9 @@ export const About = ({ version, telemetrySetting, setTelemetrySetting, classNam
 					<Trans
 						i18nKey="settings:footer.feedback"
 						components={{
-							githubLink: <VSCodeLink href="https://github.com/RooVetGit/Roo-Code" />,
-							redditLink: <VSCodeLink href="https://reddit.com/r/RooCode" />,
-							discordLink: <VSCodeLink href="https://discord.gg/roocode" />,
+							githubLink: <VSCodeLink href={API_REFERENCES.REPO_URL} />,
+							redditLink: <VSCodeLink href={API_REFERENCES.REDDIT_URL} />,
+							discordLink: <VSCodeLink href={API_REFERENCES.DISCORD_URL} />,
 						}}
 					/>
 				</div>

@@ -4,6 +4,7 @@ import { z, ZodError } from "zod"
 import { providerSettingsSchema, ApiConfigMeta } from "../../schemas"
 import { Mode, modes } from "../../shared/modes"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
+import { EXTENSION_SECRETS_PREFIX } from "../../../dist/thea-config" // Import branded constant
 
 const providerSettingsWithIdSchema = providerSettingsSchema.extend({ id: z.string().optional() })
 
@@ -18,7 +19,7 @@ export const providerProfilesSchema = z.object({
 export type ProviderProfiles = z.infer<typeof providerProfilesSchema>
 
 export class ProviderSettingsManager {
-	private static readonly SCOPE_PREFIX = "roo_cline_config_"
+	private static readonly SCOPE_PREFIX = EXTENSION_SECRETS_PREFIX // Use constant
 	private readonly defaultConfigId = this.generateId()
 
 	private readonly defaultModeApiConfigs: Record<string, string> = Object.fromEntries(

@@ -3,6 +3,7 @@ import { defaultModeSlug, modes } from "../../../shared/modes"
 import * as vscode from "vscode"
 import * as fs from "fs/promises"
 import { toPosix } from "./utils"
+import { EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config"; // Import branded constant
 
 // Mock the fs/promises module
 jest.mock("fs/promises", () => ({
@@ -90,7 +91,7 @@ describe("File-Based Custom System Prompt", () => {
 		const fileCustomSystemPrompt = "Custom system prompt from file"
 		// When called with utf-8 encoding, return a string
 		mockedFs.readFile.mockImplementation((filePath, options) => {
-			if (toPosix(filePath).includes(`.roo/system-prompt-${defaultModeSlug}`) && options === "utf-8") {
+			if (toPosix(filePath).includes(`${EXTENSION_CONFIG_DIR}/system-prompt-${defaultModeSlug}`) && options === "utf-8") { // Use constant
 				return Promise.resolve(fileCustomSystemPrompt)
 			}
 			return Promise.reject({ code: "ENOENT" })
@@ -125,7 +126,7 @@ describe("File-Based Custom System Prompt", () => {
 		// Mock the readFile to return content from a file
 		const fileCustomSystemPrompt = "Custom system prompt from file"
 		mockedFs.readFile.mockImplementation((filePath, options) => {
-			if (toPosix(filePath).includes(`.roo/system-prompt-${defaultModeSlug}`) && options === "utf-8") {
+			if (toPosix(filePath).includes(`${EXTENSION_CONFIG_DIR}/system-prompt-${defaultModeSlug}`) && options === "utf-8") { // Use constant
 				return Promise.resolve(fileCustomSystemPrompt)
 			}
 			return Promise.reject({ code: "ENOENT" })

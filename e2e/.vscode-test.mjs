@@ -3,6 +3,7 @@
  */
 
 import { defineConfig } from '@vscode/test-cli';
+import { EXTENSION_ID } from "../dist/thea-config.js"; // Import branded constant
 
 export default defineConfig({
 	label: 'integrationTest',
@@ -13,7 +14,7 @@ export default defineConfig({
 		timeout: 60000,
 	},
 	launchArgs: [
-		'--enable-proposed-api=RooVeterinaryInc.roo-cline',
+		`--enable-proposed-api=${EXTENSION_ID}`, // Use constant
 		'--disable-extensions'
 	]
 });

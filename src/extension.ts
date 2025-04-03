@@ -26,6 +26,7 @@ import { migrateSettings } from "./utils/migrateSettings"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
+import { EXTENSION_DISPLAY_NAME, EXTENSION_NAME, configSection } from "../dist/thea-config"; // Import branded constants
 
 /**
  * Built using https://github.com/microsoft/vscode-webview-ui-toolkit
@@ -42,9 +43,9 @@ let extensionContext: vscode.ExtensionContext
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
-	outputChannel = vscode.window.createOutputChannel("Roo-Code")
+	outputChannel = vscode.window.createOutputChannel(EXTENSION_DISPLAY_NAME) // Use constant
 	context.subscriptions.push(outputChannel)
-	outputChannel.appendLine("Roo-Code extension activated")
+	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension activated`) // Use constant
 
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
@@ -59,7 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	TerminalRegistry.initialize()
 
 	// Get default commands from configuration.
-	const defaultCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+	const defaultCommands = vscode.workspace.getConfiguration(configSection()).get<string[]>("allowedCommands") || [] // Use constant
 
 	// Initialize global state if not already set.
 	if (!context.globalState.get("allowedCommands")) {
@@ -115,16 +116,16 @@ export async function activate(context: vscode.ExtensionContext) {
 	registerCodeActions(context)
 	registerTerminalActions(context)
 
-	// Allows other extensions to activate once Roo is ready.
-	vscode.commands.executeCommand('roo-cline.activationCompleted');
+	// Allows other extensions to activate once Thea is ready.
+	vscode.commands.executeCommand(`${EXTENSION_NAME}.activationCompleted`); // Use constant
 
-	// Implements the `RooCodeAPI` interface.
+	// Implements the `TheaCodeAPI` interface.
 	return new API(outputChannel, provider)
 }
 
 // This method is called when your extension is deactivated
 export async function deactivate() {
-	outputChannel.appendLine("Roo-Code extension deactivated")
+	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension deactivated`) // Use constant
 	// Clean up MCP server manager
 	await McpServerManager.cleanup(extensionContext)
 	telemetryService.shutdown()

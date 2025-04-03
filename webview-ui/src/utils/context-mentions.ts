@@ -1,7 +1,7 @@
 import { mentionRegex } from "../../../src/shared/context-mentions"
 import { Fzf } from "fzf"
 import { ModeConfig } from "../../../src/shared/modes"
-import * as path from "path"
+// Removed: import * as path from "path"
 import { formatPath } from "../../../src/shared/formatPath"
 
 export interface SearchResult {
@@ -83,13 +83,20 @@ export interface ContextMenuQueryItem {
 	icon?: string
 }
 
+// Browser-compatible basename function
+function getBasenameBrowser(p: string): string {
+  p = p.replace(/[\\/]+$/, ''); // Remove trailing slashes (fixed regex)
+  const lastSlashIndex = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
+  return lastSlashIndex === -1 ? p : p.slice(lastSlashIndex + 1);
+}
+
 function mapSearchResult(result: SearchResult, os?: string): ContextMenuQueryItem {
 	const formattedPath = formatPath(result.path, os)
 
 	return {
 		type: result.type === "folder" ? ContextMenuOptionType.Folder : ContextMenuOptionType.File,
 		value: formattedPath,
-		label: result.label || path.basename(result.path),
+		label: result.label || getBasenameBrowser(result.path), // Use browser-compatible basename
 		description: formattedPath,
 	}
 }

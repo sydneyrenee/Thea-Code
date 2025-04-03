@@ -1,6 +1,7 @@
 // npx jest src/integrations/terminal/__tests__/TerminalRegistry.test.ts
 
 import { TerminalRegistry } from "../TerminalRegistry"
+import { EXTENSION_DISPLAY_NAME } from "../../../../dist/thea-config" // Import branded constant
 
 // Mock vscode.window.createTerminal
 const mockCreateTerminal = jest.fn()
@@ -27,7 +28,7 @@ describe("TerminalRegistry", () => {
 
 			expect(mockCreateTerminal).toHaveBeenCalledWith({
 				cwd: "/test/path",
-				name: "Roo Code",
+				name: EXTENSION_DISPLAY_NAME, // Use constant
 				iconPath: expect.any(Object),
 				env: {
 					PAGER: "cat",

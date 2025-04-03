@@ -80,6 +80,13 @@ function normalizePath(p: string): string {
 	return normalized
 }
 
+// Browser-compatible basename function (moved here for better locality)
+function getBasenameBrowser(p: string): string {
+  p = p.replace(/[\\\/]+$/, ''); // Remove trailing slashes
+  const lastSlashIndex = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
+  return lastSlashIndex === -1 ? p : p.slice(lastSlashIndex + 1);
+}
+
 export function getReadablePath(cwd: string, relPath?: string): string {
 	relPath = relPath || ""
 	// path.resolve is flexible in that it will resolve relative paths like '../../' to the cwd and even ignore the cwd if the relPath is actually an absolute path
@@ -89,7 +96,7 @@ export function getReadablePath(cwd: string, relPath?: string): string {
 		return absolutePath.toPosix()
 	}
 	if (arePathsEqual(path.normalize(absolutePath), path.normalize(cwd))) {
-		return path.basename(absolutePath).toPosix()
+		return getBasenameBrowser(absolutePath).toPosix() // Use browser-compatible basename
 	} else {
 		// show the relative path to the cwd
 		const normalizedRelPath = path.relative(cwd, absolutePath)

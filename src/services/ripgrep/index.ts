@@ -3,7 +3,7 @@ import * as childProcess from "child_process"
 import * as path from "path"
 import * as fs from "fs"
 import * as readline from "readline"
-import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
+import { TheaIgnoreController } from "../../core/ignore/TheaIgnoreController"
 import { fileExistsAtPath } from "../../utils/fs"
 /*
 This file provides functionality to perform regex searches on files using ripgrep.
@@ -140,7 +140,7 @@ export async function regexSearchFiles(
 	directoryPath: string,
 	regex: string,
 	filePattern?: string,
-	rooIgnoreController?: RooIgnoreController,
+	theaIgnoreController?: TheaIgnoreController,
 ): Promise<string> {
 	const vscodeAppRoot = vscode.env.appRoot
 	const rgPath = await getBinPath(vscodeAppRoot)
@@ -212,9 +212,9 @@ export async function regexSearchFiles(
 
 	// console.log(results)
 
-	// Filter results using RooIgnoreController if provided
-	const filteredResults = rooIgnoreController
-		? results.filter((result) => rooIgnoreController.validateAccess(result.file))
+	// Filter results using TheaIgnoreController if provided
+	const filteredResults = theaIgnoreController
+		? results.filter((result) => theaIgnoreController.validateAccess(result.file))
 		: results
 
 	return formatResults(filteredResults, cwd)

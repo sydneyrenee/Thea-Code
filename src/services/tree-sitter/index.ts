@@ -3,7 +3,7 @@ import * as path from "path"
 import { listFiles } from "../glob/list-files"
 import { LanguageParser, loadRequiredLanguageParsers } from "./languageParser"
 import { fileExistsAtPath } from "../../utils/fs"
-import { RooIgnoreController } from "../../core/ignore/RooIgnoreController"
+import { TheaIgnoreController } from "../../core/ignore/TheaIgnoreController"
 
 const extensions = [
 	"js",
@@ -34,7 +34,7 @@ const extensions = [
 
 export async function parseSourceCodeDefinitionsForFile(
 	filePath: string,
-	rooIgnoreController?: RooIgnoreController,
+	theaIgnoreController?: TheaIgnoreController,
 ): Promise<string | undefined> {
 	// check if the file exists
 	const fileExists = await fileExistsAtPath(path.resolve(filePath))
@@ -53,7 +53,7 @@ export async function parseSourceCodeDefinitionsForFile(
 	const languageParsers = await loadRequiredLanguageParsers([filePath])
 
 	// Parse the file if we have a parser for it
-	const definitions = await parseFile(filePath, languageParsers, rooIgnoreController)
+	const definitions = await parseFile(filePath, languageParsers, theaIgnoreController)
 	if (definitions) {
 		return `# ${path.basename(filePath)}\n${definitions}`
 	}
@@ -64,7 +64,7 @@ export async function parseSourceCodeDefinitionsForFile(
 // TODO: implement caching behavior to avoid having to keep analyzing project for new tasks.
 export async function parseSourceCodeForDefinitionsTopLevel(
 	dirPath: string,
-	rooIgnoreController?: RooIgnoreController,
+	theaIgnoreController?: TheaIgnoreController,
 ): Promise<string> {
 	// check if the path exists
 	const dirExists = await fileExistsAtPath(path.resolve(dirPath))
@@ -83,12 +83,12 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 	const languageParsers = await loadRequiredLanguageParsers(filesToParse)
 
 	// Filter filepaths for access if controller is provided
-	const allowedFilesToParse = rooIgnoreController ? rooIgnoreController.filterPaths(filesToParse) : filesToParse
+	const allowedFilesToParse = theaIgnoreController ? theaIgnoreController.filterPaths(filesToParse) : filesToParse
 
 	// Parse specific files we have language parsers for
 	// const filesWithoutDefinitions: string[] = []
 	for (const file of allowedFilesToParse) {
-		const definitions = await parseFile(file, languageParsers, rooIgnoreController)
+		const definitions = await parseFile(file, languageParsers, theaIgnoreController)
 		if (definitions) {
 			result += `# ${path.relative(dirPath, file).toPosix()}\n${definitions}\n`
 		}
@@ -140,16 +140,16 @@ This approach allows us to focus on the most relevant parts of the code (defined
  *
  * @param filePath - Path to the file to parse
  * @param languageParsers - Map of language parsers
- * @param rooIgnoreController - Optional controller to check file access permissions
+ * @param theaIgnoreController - Optional controller to check file access permissions
  * @returns A formatted string with code definitions or null if no definitions found
  */
 async function parseFile(
 	filePath: string,
 	languageParsers: LanguageParser,
-	rooIgnoreController?: RooIgnoreController,
+	theaIgnoreController?: TheaIgnoreController,
 ): Promise<string | null> {
 	// Check if we have permission to access this file
-	if (rooIgnoreController && !rooIgnoreController.validateAccess(filePath)) {
+	if (theaIgnoreController && !theaIgnoreController.validateAccess(filePath)) {
 		return null
 	}
 

@@ -3,13 +3,14 @@ import * as vscode from "vscode"
 import { ACTION_NAMES, COMMAND_IDS } from "../core/CodeActionProvider"
 import { EditorUtils } from "../core/EditorUtils"
 import { ClineProvider } from "../core/webview/ClineProvider"
+import { AI_IDENTITY_NAME } from "../../dist/thea-config" // Import branded constant
 
 export const registerCodeActions = (context: vscode.ExtensionContext) => {
 	registerCodeActionPair(
 		context,
 		COMMAND_IDS.EXPLAIN,
 		"EXPLAIN",
-		"What would you like Roo to explain?",
+		`What would you like ${AI_IDENTITY_NAME} to explain?`, // Use constant
 		"E.g. How does the error handling work?",
 	)
 
@@ -17,7 +18,7 @@ export const registerCodeActions = (context: vscode.ExtensionContext) => {
 		context,
 		COMMAND_IDS.FIX,
 		"FIX",
-		"What would you like Roo to fix?",
+		`What would you like ${AI_IDENTITY_NAME} to fix?`, // Use constant
 		"E.g. Maintain backward compatibility",
 	)
 
@@ -25,7 +26,7 @@ export const registerCodeActions = (context: vscode.ExtensionContext) => {
 		context,
 		COMMAND_IDS.IMPROVE,
 		"IMPROVE",
-		"What would you like Roo to improve?",
+		`What would you like ${AI_IDENTITY_NAME} to improve?`, // Use constant
 		"E.g. Focus on performance optimization",
 	)
 

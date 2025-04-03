@@ -50,10 +50,10 @@ export async function applyDiffTool(
 				return
 			}
 
-			const accessAllowed = cline.rooIgnoreController?.validateAccess(relPath)
+			const accessAllowed = cline.theaIgnoreController?.validateAccess(relPath)
 			if (!accessAllowed) {
-				await cline.say("rooignore_error", relPath)
-				pushToolResult(formatResponse.toolError(formatResponse.rooIgnoreError(relPath)))
+				await cline.say("theaignore_error", relPath)
+				pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 				return
 			}

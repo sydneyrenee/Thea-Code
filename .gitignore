@@ -9,7 +9,7 @@ coverage/
 
 # Builds
 bin/
-roo-cline-*.vsix
+thea-code-*.vsix
 
 # Local prompts and rules
 /local-prompts
@@ -32,3 +32,4 @@ docs/_site/
 
 #Logging
 logs
+package.json.bak*

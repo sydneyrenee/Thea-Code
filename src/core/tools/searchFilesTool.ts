@@ -49,7 +49,7 @@ export async function searchFilesTool(
 				absolutePath,
 				regex,
 				filePattern,
-				cline.rooIgnoreController,
+				cline.theaIgnoreController,
 			)
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,

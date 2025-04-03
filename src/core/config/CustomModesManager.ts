@@ -7,8 +7,8 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
+import { GLOBAL_FILENAMES as BRANDED_FILENAMES } from "../../../dist/thea-config"; // Import branded constant
 
-const ROOMODES_FILENAME = ".roomodes"
 
 export class CustomModesManager {
 	private disposables: vscode.Disposable[] = []
@@ -48,15 +48,15 @@ export class CustomModesManager {
 		}
 	}
 
-	private async getWorkspaceRoomodes(): Promise<string | undefined> {
+	private async getWorkspaceProjectModesPath(): Promise<string | undefined> {
 		const workspaceFolders = vscode.workspace.workspaceFolders
 		if (!workspaceFolders || workspaceFolders.length === 0) {
 			return undefined
 		}
 		const workspaceRoot = getWorkspacePath()
-		const roomodesPath = path.join(workspaceRoot, ROOMODES_FILENAME)
-		const exists = await fileExistsAtPath(roomodesPath)
-		return exists ? roomodesPath : undefined
+		const projectModesPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) // Use constant
+		const exists = await fileExistsAtPath(projectModesPath)
+		return exists ? projectModesPath : undefined
 	}
 
 	private async loadModesFromFile(filePath: string): Promise<ModeConfig[]> {
@@ -69,8 +69,8 @@ export class CustomModesManager {
 			}
 
 			// Determine source based on file path
-			const isRoomodes = filePath.endsWith(ROOMODES_FILENAME)
-			const source = isRoomodes ? ("project" as const) : ("global" as const)
+			const isTheamodes = filePath.endsWith(BRANDED_FILENAMES.MODES_FILENAME) // Use constant
+			const source = isTheamodes ? ("project" as const) : ("global" as const)
 
 			// Add source to each mode
 			return result.data.customModes.map((mode) => ({
@@ -153,11 +153,11 @@ export class CustomModesManager {
 					}
 
 					// Get modes from .roomodes if it exists (takes precedence)
-					const roomodesPath = await this.getWorkspaceRoomodes()
-					const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
+					const projectModesPath = await this.getWorkspaceProjectModesPath() // Uses internal helper which uses constant
+					const projectmodesModes = projectModesPath ? await this.loadModesFromFile(projectModesPath) : []
 
 					// Merge modes from both sources (.roomodes takes precedence)
-					const mergedModes = await this.mergeCustomModes(roomodesModes, result.data.customModes)
+					const mergedModes = await this.mergeCustomModes(projectmodesModes, result.data.customModes)
 					await this.context.globalState.update("customModes", mergedModes)
 					await this.onUpdate()
 				}
@@ -165,15 +165,15 @@ export class CustomModesManager {
 		)
 
 		// Watch .roomodes file if it exists
-		const roomodesPath = await this.getWorkspaceRoomodes()
-		if (roomodesPath) {
+		const projectModesPath = await this.getWorkspaceProjectModesPath() // Uses internal helper which uses constant
+		if (projectModesPath) {
 			this.disposables.push(
 				vscode.workspace.onDidSaveTextDocument(async (document) => {
-					if (arePathsEqual(document.uri.fsPath, roomodesPath)) {
+					if (arePathsEqual(document.uri.fsPath, projectModesPath)) {
 						const settingsModes = await this.loadModesFromFile(settingsPath)
-						const roomodesModes = await this.loadModesFromFile(roomodesPath)
+						const projectmodesModes = await this.loadModesFromFile(projectModesPath)
 						// .roomodes takes precedence
-						const mergedModes = await this.mergeCustomModes(roomodesModes, settingsModes)
+						const mergedModes = await this.mergeCustomModes(projectmodesModes, settingsModes)
 						await this.context.globalState.update("customModes", mergedModes)
 						await this.onUpdate()
 					}
@@ -188,15 +188,15 @@ export class CustomModesManager {
 		const settingsModes = await this.loadModesFromFile(settingsPath)
 
 		// Get modes from .roomodes if it exists
-		const roomodesPath = await this.getWorkspaceRoomodes()
-		const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
+		const projectModesPath = await this.getWorkspaceProjectModesPath() // Uses internal helper which uses constant
+		const projectmodesModes = projectModesPath ? await this.loadModesFromFile(projectModesPath) : []
 
 		// Create maps to store modes by source
 		const projectModes = new Map<string, ModeConfig>()
 		const globalModes = new Map<string, ModeConfig>()
 
 		// Add project modes (they take precedence)
-		for (const mode of roomodesModes) {
+		for (const mode of projectmodesModes) {
 			projectModes.set(mode.slug, { ...mode, source: "project" as const })
 		}
 
@@ -209,7 +209,7 @@ export class CustomModesManager {
 
 		// Combine modes in the correct order: project modes first, then global modes
 		const mergedModes = [
-			...roomodesModes.map((mode) => ({ ...mode, source: "project" as const })),
+			...projectmodesModes.map((mode) => ({ ...mode, source: "project" as const })),
 			...settingsModes
 				.filter((mode) => !projectModes.has(mode.slug))
 				.map((mode) => ({ ...mode, source: "global" as const })),
@@ -230,9 +230,9 @@ export class CustomModesManager {
 					throw new Error("No workspace folder found for project-specific mode")
 				}
 				const workspaceRoot = getWorkspacePath()
-				targetPath = path.join(workspaceRoot, ROOMODES_FILENAME)
+				targetPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) // Use constant
 				const exists = await fileExistsAtPath(targetPath)
-				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${ROOMODES_FILENAME}`, {
+				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${BRANDED_FILENAMES.MODES_FILENAME}`, { // Use constant
 					slug,
 					workspace: workspaceRoot,
 				})
@@ -283,11 +283,11 @@ export class CustomModesManager {
 
 	private async refreshMergedState(): Promise<void> {
 		const settingsPath = await this.getCustomModesFilePath()
-		const roomodesPath = await this.getWorkspaceRoomodes()
+		const projectModesPath = await this.getWorkspaceProjectModesPath() // Uses internal helper which uses constant
 
 		const settingsModes = await this.loadModesFromFile(settingsPath)
-		const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
-		const mergedModes = await this.mergeCustomModes(roomodesModes, settingsModes)
+		const projectmodesModes = projectModesPath ? await this.loadModesFromFile(projectModesPath) : []
+		const mergedModes = await this.mergeCustomModes(projectmodesModes, settingsModes)
 
 		await this.context.globalState.update("customModes", mergedModes)
 		await this.onUpdate()
@@ -296,13 +296,13 @@ export class CustomModesManager {
 	async deleteCustomMode(slug: string): Promise<void> {
 		try {
 			const settingsPath = await this.getCustomModesFilePath()
-			const roomodesPath = await this.getWorkspaceRoomodes()
+			const projectModesPath = await this.getWorkspaceProjectModesPath()
 
 			const settingsModes = await this.loadModesFromFile(settingsPath)
-			const roomodesModes = roomodesPath ? await this.loadModesFromFile(roomodesPath) : []
+			const projectmodesModes = projectModesPath ? await this.loadModesFromFile(projectModesPath) : []
 
 			// Find the mode in either file
-			const projectMode = roomodesModes.find((m) => m.slug === slug)
+			const projectMode = projectmodesModes.find((m) => m.slug === slug)
 			const globalMode = settingsModes.find((m) => m.slug === slug)
 
 			if (!projectMode && !globalMode) {
@@ -311,8 +311,8 @@ export class CustomModesManager {
 
 			await this.queueWrite(async () => {
 				// Delete from project first if it exists there
-				if (projectMode && roomodesPath) {
-					await this.updateModesInFile(roomodesPath, (modes) => modes.filter((m) => m.slug !== slug))
+				if (projectMode && projectModesPath) {
+					await this.updateModesInFile(projectModesPath, (modes) => modes.filter((m) => m.slug !== slug))
 				}
 
 				// Delete from global settings if it exists there

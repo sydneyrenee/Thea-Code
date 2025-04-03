@@ -13,7 +13,8 @@ import { convertToR1Format } from "../transform/r1-format"
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { getModelParams, SingleCompletionHandler } from ".."
 import { BaseProvider } from "./base-provider"
-import { defaultHeaders } from "./openai"
+// Removed import of defaultHeaders from openai.ts
+import { API_REFERENCES } from "../../../dist/thea-config" // Import API_REFERENCES
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -35,7 +36,15 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
 		const apiKey = this.options.openRouterApiKey ?? "not-provided"
 
-		this.client = new OpenAI({ baseURL, apiKey, defaultHeaders })
+		// Define headers directly using API_REFERENCES
+		this.client = new OpenAI({
+			baseURL,
+			apiKey,
+			defaultHeaders: {
+				"HTTP-Referer": API_REFERENCES.HOMEPAGE,
+				"X-Title": API_REFERENCES.APP_TITLE,
+			},
+		})
 	}
 
 	override async *createMessage(

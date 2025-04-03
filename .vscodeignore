@@ -1,3 +1,5 @@
+.rooignore
+.thea_ignore
 # Default
 .github/**
 .husky/**

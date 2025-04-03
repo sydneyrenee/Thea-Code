@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
 import { ExitCodeDetails, mergePromise, TerminalProcess, TerminalProcessResultPromise } from "./TerminalProcess"
 import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
+import { EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config" // Import branded constant
 
 export const TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5000
 
@@ -63,7 +64,7 @@ export class Terminal {
 			if (!this.process) {
 				this.running = false
 				console.warn(
-					`[Terminal ${this.id}] process is undefined, so cannot set terminal stream (probably user-initiated non-Roo command)`,
+					`[Terminal ${this.id}] process is undefined, so cannot set terminal stream (probably user-initiated non-${EXTENSION_DISPLAY_NAME} command)`, // Use constant
 				)
 				return
 			}

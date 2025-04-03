@@ -1,9 +1,10 @@
 import * as React from "react"
 import { CaretUpIcon } from "@radix-ui/react-icons"
+import { SPECIFIC_STRINGS } from "../../../../dist/thea-config"; // Adjust path as needed
 
 import { cn } from "@/lib/utils"
 
-import { useRooPortal } from "./hooks/useRooPortal"
+import { useTheaPortal } from "./hooks/useTheaPortal"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -64,7 +65,7 @@ export const SelectDropdown = React.forwardRef<React.ElementRef<typeof DropdownM
 		ref,
 	) => {
 		const [open, setOpen] = React.useState(false)
-		const portalContainer = useRooPortal("roo-portal")
+		const portalContainer = useTheaPortal(SPECIFIC_STRINGS.PORTAL_NAME)
 
 		// If the selected option isn't in the list yet, but we have a placeholder, prioritize showing the placeholder
 		const selectedOption = options.find((option) => option.value === value)

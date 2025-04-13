@@ -9,7 +9,7 @@ import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { GlobalState, ProviderSettings, TheaCodeSettings } from "../../schemas"
+import { GlobalState, ProviderSettings, RooCodeSettings } from "../../schemas"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
@@ -53,7 +53,6 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
-import { EXTENSION_DISPLAY_NAME, EXTENSION_NAME, COMMANDS, VIEWS, HOMEPAGE_URL, configSection, EXTENSION_CONFIG_DIR, CONFIG } from "../../../dist/thea-config"; // Correct import path and add EXTENSION_CONFIG_DIR, CONFIG
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -65,8 +64,8 @@ export type ClineProviderEvents = {
 }
 
 export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
-	public static readonly sideBarId = VIEWS.SIDEBAR 
-	public static readonly tabPanelId = VIEWS.TAB_PANEL 
+	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
+	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	// not private, so it can be accessed from webviewMessageHandler
@@ -241,7 +240,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// If no visible provider, try to show the sidebar view
 		if (!visibleProvider) {
-			await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) 
+			await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
 			// Wait briefly for the view to become visible
 			await delay(100)
 			visibleProvider = ClineProvider.getVisibleInstance()
@@ -627,7 +626,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					<script nonce="${nonce}">
 						window.IMAGES_BASE_URI = "${imagesUri}"
 					</script>
-					<title>${EXTENSION_DISPLAY_NAME}</title> 
+					<title>Roo Code</title>
 				</head>
 				<body>
 					<div id="root"></div>
@@ -712,7 +711,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			<script nonce="${nonce}">
 				window.IMAGES_BASE_URI = "${imagesUri}"
 			</script>
-            <title>${EXTENSION_DISPLAY_NAME}</title> 
+            <title>Roo Code</title>
           </head>
           <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -751,7 +750,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// Load the saved API config for the new mode if it exists
 		const savedConfigId = await this.providerSettingsManager.getModeConfigId(newMode)
-		const listApiConfig = await this.providerSettingsManager.listConfig() // No change needed here, already correct
+		const listApiConfig = await this.providerSettingsManager.listConfig()
 
 		// Update listApiConfigMeta first to ensure UI has latest data
 		await this.updateGlobalState("listApiConfigMeta", listApiConfig)
@@ -761,7 +760,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			const config = listApiConfig?.find((c) => c.id === savedConfigId)
 
 			if (config?.name) {
-				const apiConfig = await this.providerSettingsManager.loadConfig(config.name) // No change needed here, already correct
+				const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
 
 				await Promise.all([
 					this.updateGlobalState("currentApiConfigName", config.name),
@@ -866,22 +865,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		// Get platform-specific application data directory
 		let mcpServersDir: string
 		if (process.platform === "win32") {
-			// Windows: %APPDATA%\\${EXTENSION_DISPLAY_NAME}\\MCP 
-			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", EXTENSION_DISPLAY_NAME, "MCP") 
+			// Windows: %APPDATA%\Roo-Code\MCP
+			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", "Roo-Code", "MCP")
 		} else if (process.platform === "darwin") {
-			// macOS: ~/Documents/{EXTENSION_DISPLAY_NAME}/MCP  (Note: Original was Cline, now using Display Name)
-			mcpServersDir = path.join(os.homedir(), "Documents", EXTENSION_DISPLAY_NAME, "MCP") 
+			// macOS: ~/Documents/Cline/MCP
+			mcpServersDir = path.join(os.homedir(), "Documents", "Cline", "MCP")
 		} else {
-			// Linux: ~/.local/share/{EXTENSION_DISPLAY_NAME}/MCP  (Note: Original was Cline, now using Display Name)
-			mcpServersDir = path.join(os.homedir(), ".local", "share", EXTENSION_DISPLAY_NAME, "MCP") 
+			// Linux: ~/.local/share/Cline/MCP
+			mcpServersDir = path.join(os.homedir(), ".local", "share", "Roo-Code", "MCP")
 		}
 
 		try {
 			await fs.mkdir(mcpServersDir, { recursive: true })
 		} catch (error) {
 			// Fallback to a relative path if directory creation fails
-			// Fallback to using EXTENSION_CONFIG_DIR
-			return path.join(os.homedir(), EXTENSION_CONFIG_DIR, "mcp") 
+			return path.join(os.homedir(), ".roo-code", "mcp")
 		}
 		return mcpServersDir
 	}
@@ -1178,14 +1176,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxWorkspaceFiles,
 			browserToolEnabled,
 			telemetrySetting,
-			showTheaIgnoredFiles, // Correct destructured variable name
+			showRooIgnoredFiles,
 			language,
 			maxReadFileLine,
 		} = await this.getState()
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-		const allowedCommands = vscode.workspace.getConfiguration(CONFIG.SECTION).get<string[]>("allowedCommands") || []
+		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
 		return {
@@ -1252,7 +1250,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting,
 			telemetryKey,
 			machineId,
-			showTheaIgnoredFiles: showTheaIgnoredFiles ?? true, // Use correctly destructured variable
+			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
 			language,
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
@@ -1338,7 +1336,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
 			browserToolEnabled: stateValues.browserToolEnabled ?? true,
 			telemetrySetting: stateValues.telemetrySetting || "unset",
-			showTheaIgnoredFiles: stateValues.showTheaIgnoredFiles ?? true, // Read correct key from stateValues
+			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
 			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
 		}
 	}
@@ -1371,11 +1369,11 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this.contextProxy.getValue(key)
 	}
 
-	public async setValue<K extends keyof TheaCodeSettings>(key: K, value: TheaCodeSettings[K]) {
+	public async setValue<K extends keyof RooCodeSettings>(key: K, value: RooCodeSettings[K]) {
 		await this.contextProxy.setValue(key, value)
 	}
 
-	public getValue<K extends keyof TheaCodeSettings>(key: K) {
+	public getValue<K extends keyof RooCodeSettings>(key: K) {
 		return this.contextProxy.getValue(key)
 	}
 
@@ -1383,7 +1381,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		return this.contextProxy.getValues()
 	}
 
-	public async setValues(values: TheaCodeSettings) {
+	public async setValues(values: RooCodeSettings) {
 		await this.contextProxy.setValues(values)
 	}
 
@@ -1407,7 +1405,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		await this.contextProxy.resetAllState()
-		await this.providerSettingsManager.resetAllConfigs() // No change needed here, already correct
+		await this.providerSettingsManager.resetAllConfigs()
 		await this.customModesManager.resetCustomModes()
 		await this.removeClineFromStack()
 		await this.postStateToWebview()

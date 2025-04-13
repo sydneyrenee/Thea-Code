@@ -381,7 +381,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				)
 			}
 
-			await this.providerRef.deref()?.updateTaskHistory({
+			await this.providerRef.deref()?.clineTaskHistoryManagerInstance.updateTaskHistory({ // Use manager instance
 				id: this.taskId,
 				number: this.taskNumber,
 				ts: lastRelevantMessage.ts,
@@ -978,7 +978,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			}
 		}
 
-		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.getState()) ?? {}
+		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance
 
 		process.on("line", (line) => {
 			if (!didContinue) {
@@ -1075,7 +1075,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		let mcpHub: McpHub | undefined
 
 		const { mcpEnabled, alwaysApproveResubmit, requestDelaySeconds, rateLimitSeconds } =
-			(await this.providerRef.deref()?.getState()) ?? {}
+			(await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance getter
 
 		let rateLimitDelay = 0
 
@@ -1101,7 +1101,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		this.lastApiRequestTime = Date.now()
 
 		if (mcpEnabled ?? true) {
-			mcpHub = this.providerRef.deref()?.getMcpHub()
+			mcpHub = this.providerRef.deref()?.clineMcpManagerInstance.getMcpHub() // Use manager instance method
 			if (!mcpHub) {
 				throw new Error("MCP hub not available")
 			}
@@ -1121,8 +1121,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 			enableMcpServerCreation,
 			browserToolEnabled,
 			language,
-		} = (await this.providerRef.deref()?.getState()) ?? {}
-		const { customModes } = (await this.providerRef.deref()?.getState()) ?? {}
+		} = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance
+		const { customModes } = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance
 		const systemPrompt = await (async () => {
 			const provider = this.providerRef.deref()
 			if (!provider) {
@@ -1540,7 +1540,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 				}
 
 				// Validate tool use before execution
-				const { mode, customModes } = (await this.providerRef.deref()?.getState()) ?? {}
+				const { mode, customModes } = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance getter
 				try {
 					validateToolUse(
 						block.name as ToolName,
@@ -1751,11 +1751,11 @@ export class Cline extends EventEmitter<ClineEvents> {
 			provider.log(`[subtasks] paused ${this.taskId}.${this.instanceId}`)
 			await this.waitForResume()
 			provider.log(`[subtasks] resumed ${this.taskId}.${this.instanceId}`)
-			const currentMode = (await provider.getState())?.mode ?? defaultModeSlug
+			const currentMode = (await provider.clineStateManagerInstance.getState())?.mode ?? defaultModeSlug // Use manager instance getter
 
 			if (currentMode !== this.pausedModeSlug) {
 				// The mode has changed, we need to switch back to the paused mode.
-				await provider.handleModeSwitch(this.pausedModeSlug)
+				await provider.handleModeSwitchAndUpdateCline(this.pausedModeSlug) // Use wrapper method
 
 				// Delay to allow mode change to take effect before next tool is executed.
 				await delay(500)
@@ -1955,8 +1955,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 						"streaming_failed",
 						error.message ?? JSON.stringify(serializeError(error), null, 2),
 					)
+const history = await this.providerRef.deref()?.clineTaskHistoryManagerInstance.getTaskWithId(this.taskId)
 
-					const history = await this.providerRef.deref()?.getTaskWithId(this.taskId)
 
 					if (history) {
 						await this.providerRef.deref()?.initClineWithHistoryItem(history.historyItem)
@@ -2049,7 +2049,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			// 2. ToolResultBlockParam's content/context text arrays if it contains "<feedback>" (see formatToolDeniedFeedback, attemptCompletion, executeCommand, and consecutiveMistakeCount >= 3) or "<answer>" (see askFollowupQuestion), we place all user generated content in these tags so they can effectively be used as markers for when we should parse mentions)
 			Promise.all(
 				userContent.map(async (block) => {
-					const { osInfo } = (await this.providerRef.deref()?.getState()) || { osInfo: "unix" }
+					const { osInfo } = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) || { osInfo: "unix" } // Use manager instance getter
 
 					const shouldProcessMentions = (text: string) =>
 						text.includes("<task>") || text.includes("<feedback>")
@@ -2111,7 +2111,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		let details = ""
 
 		const { terminalOutputLineLimit = 500, maxWorkspaceFiles = 200 } =
-			(await this.providerRef.deref()?.getState()) ?? {}
+			(await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance getter
 
 		// It could be useful for cline to know if the user went from one or no file to another between messages, so we always include this context
 		details += "\n\n# VSCode Visible Files"
@@ -2133,7 +2133,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		}
 
 		details += "\n\n# VSCode Open Tabs"
-		const { maxOpenTabsContext } = (await this.providerRef.deref()?.getState()) ?? {}
+		const { maxOpenTabsContext } = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance getter
 		const maxTabs = maxOpenTabsContext ?? 20
 		const openTabPaths = vscode.window.tabGroups.all
 			.flatMap((group) => group.tabs)
@@ -2293,7 +2293,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			experiments = {} as Record<ExperimentId, boolean>,
 			customInstructions: globalCustomInstructions,
 			language,
-		} = (await this.providerRef.deref()?.getState()) ?? {}
+		} = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance
 		const currentMode = mode ?? defaultModeSlug
 		const modeDetails = await getFullModeDetails(currentMode, customModes, customModePrompts, {
 			cwd: this.cwd,
@@ -2331,7 +2331,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 			} else {
 				const maxFiles = maxWorkspaceFiles ?? 200
 				const [files, didHitLimit] = await listFiles(this.cwd, true, maxFiles)
-				const { showTheaIgnoredFiles = true } = (await this.providerRef.deref()?.getState()) ?? {}
+				const { showTheaIgnoredFiles = true } = (await this.providerRef.deref()?.clineStateManagerInstance.getState()) ?? {} // Use manager instance
 				const result = formatResponse.formatFilesList(
 					this.cwd,
 					files,

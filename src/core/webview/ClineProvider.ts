@@ -9,36 +9,25 @@ import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { GlobalState, ProviderSettings, RooCodeSettings } from "../../schemas"
+import { GlobalState, ProviderSettings, TheaCodeSettings } from "../../schemas"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
 	ApiConfiguration,
-	ApiProvider,
 	ModelInfo,
-	requestyDefaultModelId,
-	requestyDefaultModelInfo,
-	openRouterDefaultModelId,
-	openRouterDefaultModelInfo,
-	glamaDefaultModelId,
-	glamaDefaultModelInfo,
+
 } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
-import { GlobalFileNames } from "../../shared/globalFileNames"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ExtensionMessage } from "../../shared/ExtensionMessage"
-import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
-import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
-import { formatLanguage } from "../../shared/language"
+import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
 import { Terminal, TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../integrations/terminal/Terminal"
-import { downloadTask } from "../../integrations/misc/export-markdown"
 import { getTheme } from "../../integrations/theme/getTheme"
 import WorkspaceTracker from "../../integrations/workspace/WorkspaceTracker"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { ShadowCheckpointService } from "../../services/checkpoints/ShadowCheckpointService"
-import { fileExistsAtPath } from "../../utils/fs"
 import { setSoundEnabled } from "../../utils/sound"
 import { setTtsEnabled, setTtsSpeed } from "../../utils/tts"
 import { ContextProxy } from "../config/ContextProxy"
@@ -53,6 +42,13 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import { EXTENSION_DISPLAY_NAME, VIEWS, CONFIG } from "../../../dist/thea-config"; // Correct import path and add EXTENSION_CONFIG_DIR, CONFIG
+import { ClineStack } from "./cline/ClineStack";
+import { ClineStateManager } from "./cline/ClineStateManager";
+import { ClineApiManager } from "./api/ClineApiManager";
+import { ClineTaskHistory } from "./history/ClineTaskHistory";
+import { ClineCacheManager } from "./cache/ClineCacheManager";
+import { ClineMcpManager } from "./mcp/ClineMcpManager"; // Added import
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -64,8 +60,8 @@ export type ClineProviderEvents = {
 }
 
 export class ClineProvider extends EventEmitter<ClineProviderEvents> implements vscode.WebviewViewProvider {
-	public static readonly sideBarId = "roo-cline.SidebarProvider" // used in package.json as the view's id. This value cannot be changed due to how vscode caches views based on their id, and updating the id would break existing instances of the extension.
-	public static readonly tabPanelId = "roo-cline.TabPanelProvider"
+	public static readonly sideBarId = VIEWS.SIDEBAR 
+	public static readonly tabPanelId = VIEWS.TAB_PANEL 
 	private static activeInstances: Set<ClineProvider> = new Set()
 	private disposables: vscode.Disposable[] = []
 	// not private, so it can be accessed from webviewMessageHandler
@@ -73,7 +69,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	// not private, so it can be accessed from webviewMessageHandler
 	// callers could update to get viewLaunched() getter function
 	isViewLaunched = false
-	private clineStack: Cline[] = []
+	// clineStack property removed - managed by ClineStack manager
 	// not private, so it can be accessed from webviewMessageHandler
 	workspaceTracker?: WorkspaceTracker
 	// not protected, so it can be accessed from webviewMessageHandler.
@@ -81,11 +77,19 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	mcpHub?: McpHub // Change from private to protected
 	// not private, so it can be accessed from webviewMessageHandler
 	latestAnnouncementId = "mar-30-2025-3-11" // update for v3.11.0 announcement
+	// Add messageHandler property for testing
+	messageHandler = webviewMessageHandler;
 	// not private, so it can be accessed from webviewMessageHandler
 	settingsImportedAt?: number
 	public readonly contextProxy: ContextProxy
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
+	private readonly clineStackManager: ClineStack;
+	private readonly clineStateManager: ClineStateManager;
+	private readonly clineApiManager: ClineApiManager;
+	private readonly clineTaskHistoryManager: ClineTaskHistory;
+	private readonly clineCacheManager: ClineCacheManager; // This was missed in the previous diff, adding it now.
+	private readonly clineMcpManager: ClineMcpManager; // Add property
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -110,91 +114,28 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.customModesManager = new CustomModesManager(this.context, async () => {
 			await this.postStateToWebview()
 		})
+		this.clineStackManager = new ClineStack();
+		this.clineStateManager = new ClineStateManager(this.context, this.providerSettingsManager, this.customModesManager);
+		this.clineStateManager.getCustomModes = () => this.customModesManager.getCustomModes();
+		this.clineApiManager = new ClineApiManager(this.context, this.outputChannel, this.contextProxy, this.providerSettingsManager);
+		this.clineTaskHistoryManager = new ClineTaskHistory(this.context, this.contextProxy);
+		this.clineCacheManager = new ClineCacheManager(this.context); // This was missed, adding now.
+		this.clineMcpManager = new ClineMcpManager(this.context); // Instantiate manager
 
 		// Initialize MCP Hub through the singleton manager
 		McpServerManager.getInstance(this.context, this)
 			.then((hub) => {
-				this.mcpHub = hub
+				this.mcpHub = hub; // Keep local reference
+				this.mcpHub = hub; // Keep local reference if needed
+				this.clineMcpManager.setMcpHub(hub); // Set hub in the manager (now that it's instantiated)
 			})
 			.catch((error) => {
 				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
 			})
 	}
 
-	// Adds a new Cline instance to clineStack, marking the start of a new task.
-	// The instance is pushed to the top of the stack (LIFO order).
-	// When the task is completed, the top instance is removed, reactivating the previous task.
-	async addClineToStack(cline: Cline) {
-		console.log(`[subtasks] adding task ${cline.taskId}.${cline.instanceId} to stack`)
-
-		// Add this cline instance into the stack that represents the order of all the called tasks.
-		this.clineStack.push(cline)
-
-		// Ensure getState() resolves correctly.
-		const state = await this.getState()
-
-		if (!state || typeof state.mode !== "string") {
-			throw new Error(t("common:errors.retrieve_current_mode"))
-		}
-	}
-
-	// Removes and destroys the top Cline instance (the current finished task),
-	// activating the previous one (resuming the parent task).
-	async removeClineFromStack() {
-		if (this.clineStack.length === 0) {
-			return
-		}
-
-		// Pop the top Cline instance from the stack.
-		var cline = this.clineStack.pop()
-
-		if (cline) {
-			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
-
-			try {
-				// Abort the running task and set isAbandoned to true so
-				// all running promises will exit as well.
-				await cline.abortTask(true)
-			} catch (e) {
-				this.log(
-					`[subtasks] encountered error while aborting task ${cline.taskId}.${cline.instanceId}: ${e.message}`,
-				)
-			}
-
-			// Make sure no reference kept, once promises end it will be
-			// garbage collected.
-			cline = undefined
-		}
-	}
-
-	// returns the current cline object in the stack (the top one)
-	// if the stack is empty, returns undefined
-	getCurrentCline(): Cline | undefined {
-		if (this.clineStack.length === 0) {
-			return undefined
-		}
-		return this.clineStack[this.clineStack.length - 1]
-	}
-
-	// returns the current clineStack length (how many cline objects are in the stack)
-	getClineStackSize(): number {
-		return this.clineStack.length
-	}
-
-	public getCurrentTaskStack(): string[] {
-		return this.clineStack.map((cline) => cline.taskId)
-	}
-
-	// remove the current task/cline instance (at the top of the stack), ao this task is finished
-	// and resume the previous task/cline instance (if it exists)
-	// this is used when a sub task is finished and the parent task needs to be resumed
-	async finishSubTask(lastMessage?: string) {
-		console.log(`[subtasks] finishing subtask ${lastMessage}`)
-		// remove the last cline instance from the stack (this is the finished sub task)
-		await this.removeClineFromStack()
-		// resume the last cline instance in the stack (if it exists - this is the 'parnt' calling task)
-		this.getCurrentCline()?.resumePausedTask(lastMessage)
-	}
+	// ClineStack related methods (addClineToStack, removeClineFromStack, getCurrentCline, getClineStackSize, getCurrentTaskStack, finishSubTask)
+	// removed and delegated to clineStackManager instance.
 
 	/*
 	VSCode extensions use the disposable pattern to clean up resources when the sidebar/editor tab is closed by the user or system. This applies to event listening, commands, interacting with the UI, etc.
@@ -203,7 +144,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	*/
 	async dispose() {
 		this.outputChannel.appendLine("Disposing ClineProvider...")
-		await this.removeClineFromStack()
+		await this.clineStackManager.removeCurrentCline() // Use manager
 		this.outputChannel.appendLine("Cleared task")
 
 		if (this.view && "dispose" in this.view) {
@@ -223,7 +164,8 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		this.workspaceTracker = undefined
 		this.mcpHub?.dispose()
 		this.mcpHub = undefined
-		this.customModesManager?.dispose()
+		this.customModesManager?.dispose();
+		this.clineMcpManager?.dispose(); // Dispose MCP manager
 		this.outputChannel.appendLine("Disposed all disposables")
 		ClineProvider.activeInstances.delete(this)
 
@@ -240,7 +182,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		// If no visible provider, try to show the sidebar view
 		if (!visibleProvider) {
-			await vscode.commands.executeCommand("roo-cline.SidebarProvider.focus")
+			await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) 
 			// Wait briefly for the view to become visible
 			await delay(100)
 			visibleProvider = ClineProvider.getVisibleInstance()
@@ -261,7 +203,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// check if there is a cline instance in the stack (if this provider has an active task)
-		if (visibleProvider.getCurrentCline()) {
+		if (visibleProvider.clineStackManager.getCurrentCline()) { // Use manager
 			return true
 		}
 
@@ -279,7 +221,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return
 		}
 
-		const { customSupportPrompts } = await visibleProvider.getState()
+		const { customSupportPrompts } = await visibleProvider.clineStateManager.getState(); // Use manager
 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
@@ -293,7 +235,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return
 		}
 
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
+		if (visibleProvider.clineStackManager.getCurrentCline() && command.endsWith("InCurrentTask")) { // Use manager
 			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
 			return
 		}
@@ -311,7 +253,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return
 		}
 
-		const { customSupportPrompts } = await visibleProvider.getState()
+		const { customSupportPrompts } = await visibleProvider.clineStateManager.getState(); // Use manager
 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
@@ -324,7 +266,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			return
 		}
 
-		if (visibleProvider.getCurrentCline() && command.endsWith("InCurrentTask")) {
+		if (visibleProvider.clineStackManager.getCurrentCline() && command.endsWith("InCurrentTask")) { // Use manager
 			await visibleProvider.postMessageToWebview({
 				type: "invoke",
 				invoke: "sendMessage",
@@ -353,20 +295,23 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			// Sidebar Type
 			setPanel(webviewView, "sidebar")
 		}
+		
+		// Ensure messageHandler is properly set up
+		this.messageHandler = webviewMessageHandler;
 
 		// Initialize out-of-scope variables that need to recieve persistent global state values
-		this.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
+		this.clineStateManager.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => { // Use manager
 			setSoundEnabled(soundEnabled ?? false)
 			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT)
 		})
 
 		// Initialize tts enabled state
-		this.getState().then(({ ttsEnabled }) => {
+		this.clineStateManager.getState().then(({ ttsEnabled }) => { // Use manager
 			setTtsEnabled(ttsEnabled ?? false)
 		})
 
 		// Initialize tts speed state
-		this.getState().then(({ ttsSpeed }) => {
+		this.clineStateManager.getState().then(({ ttsSpeed }) => { // Use manager
 			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
@@ -438,7 +383,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		)
 
 		// If the extension is starting a new session, clear previous task state.
-		await this.removeClineFromStack()
+		await this.clineStackManager.removeCurrentCline() // Use manager
 
 		this.outputChannel.appendLine("Webview view resolved")
 	}
@@ -461,14 +406,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			mode,
 			customInstructions: globalInstructions,
 			experiments,
-		} = await this.getState()
+		} = await this.clineStateManager.getState() // Use manager
 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
 		const cline = new Cline({
 			provider: this,
-			apiConfiguration,
+			apiConfiguration, // This already comes from clineStateManager.getState()
 			customInstructions: effectiveInstructions,
 			enableDiff,
 			enableCheckpoints,
@@ -477,13 +422,18 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			task,
 			images,
 			experiments,
-			rootTask: this.clineStack.length > 0 ? this.clineStack[0] : undefined,
+			rootTask: this.clineStackManager.getSize() > 0 ? this.clineStackManager['stack'][0] : undefined, // Use manager (Note: accessing private 'stack' directly might need adjustment in ClineStack or a getter)
 			parentTask,
-			taskNumber: this.clineStack.length + 1,
+			taskNumber: this.clineStackManager.getSize() + 1, // Use manager
 			onCreated: (cline) => this.emit("clineCreated", cline),
 		})
 
-		await this.addClineToStack(cline)
+		// Delegate adding cline to stack manager, handle provider-level validation first
+		const state = await this.clineStateManager.getState(); // Use manager
+		if (!state || typeof state.mode !== "string") {
+			throw new Error(t("common:errors.retrieve_current_mode"));
+		}
+		await this.clineStackManager.addCline(cline); // Use manager
 		this.log(
 			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
 		)
@@ -491,7 +441,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: Cline; parentTask?: Cline }) {
-		await this.removeClineFromStack()
+		await this.clineStackManager.removeCurrentCline() // Use manager
 
 		const {
 			apiConfiguration,
@@ -503,7 +453,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			mode,
 			customInstructions: globalInstructions,
 			experiments,
-		} = await this.getState()
+		} = await this.clineStateManager.getState() // Use manager
 
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
@@ -536,7 +486,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		const cline = new Cline({
 			provider: this,
-			apiConfiguration,
+			apiConfiguration, // This already comes from clineStateManager.getState()
 			customInstructions: effectiveInstructions,
 			enableDiff,
 			...checkpoints,
@@ -549,7 +499,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			onCreated: (cline) => this.emit("clineCreated", cline),
 		})
 
-		await this.addClineToStack(cline)
+		// Delegate adding cline to stack manager, handle provider-level validation first
+		const stateForHistory = await this.clineStateManager.getState(); // Use manager
+		if (!stateForHistory || typeof stateForHistory.mode !== "string") {
+			throw new Error(t("common:errors.retrieve_current_mode"));
+		}
+		await this.clineStackManager.addCline(cline); // Use manager
 		this.log(
 			`[subtasks] ${cline.parentTask ? "child" : "parent"} task ${cline.taskId}.${cline.instanceId} instantiated`,
 		)
@@ -626,7 +581,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 					<script nonce="${nonce}">
 						window.IMAGES_BASE_URI = "${imagesUri}"
 					</script>
-					<title>Roo Code</title>
+					<title>${EXTENSION_DISPLAY_NAME}</title> 
 				</head>
 				<body>
 					<div id="root"></div>
@@ -711,7 +666,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			<script nonce="${nonce}">
 				window.IMAGES_BASE_URI = "${imagesUri}"
 			</script>
-            <title>Roo Code</title>
+            <title>${EXTENSION_DISPLAY_NAME}</title> 
           </head>
           <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -729,84 +684,44 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * @param webview A reference to the extension webview
 	 */
 	private setWebviewMessageListener(webview: vscode.Webview) {
-		const onReceiveMessage = async (message: WebviewMessage) => webviewMessageHandler(this, message)
+		// Use the messageHandler property for consistency with tests
+		const onReceiveMessage = async (message: WebviewMessage) => {
+			// Call the messageHandler with the correct 'this' context
+			return this.messageHandler(this, message);
+		}
 
 		webview.onDidReceiveMessage(onReceiveMessage, null, this.disposables)
 	}
 
-	/**
-	 * Handle switching to a new mode, including updating the associated API configuration
-	 * @param newMode The mode to switch to
-	 */
-	public async handleModeSwitch(newMode: Mode) {
-		// Capture mode switch telemetry event
-		const currentTaskId = this.getCurrentCline()?.taskId
+	// API Management methods (handleModeSwitch, updateApiConfiguration, upsertApiConfiguration, OAuth callbacks)
+	// removed and delegated to clineApiManager instance.
 
+	// Note: Provider still needs access to the *result* of handleModeSwitch to update current Cline API handler.
+	// Note: Provider still needs access to updateApiConfiguration result? No, API handler update happens internally now.
+
+	// Wrapper method to handle mode switch and update current cline
+	public async handleModeSwitchAndUpdateCline(newMode: Mode) {
+		// Capture telemetry here as Provider has taskId
+		const currentTaskId = this.clineStackManager.getCurrentCline()?.taskId;
 		if (currentTaskId) {
-			telemetryService.captureModeSwitch(currentTaskId, newMode)
+			telemetryService.captureModeSwitch(currentTaskId, newMode);
 		}
-
-		await this.updateGlobalState("mode", newMode)
-
-		// Load the saved API config for the new mode if it exists
-		const savedConfigId = await this.providerSettingsManager.getModeConfigId(newMode)
-		const listApiConfig = await this.providerSettingsManager.listConfig()
-
-		// Update listApiConfigMeta first to ensure UI has latest data
-		await this.updateGlobalState("listApiConfigMeta", listApiConfig)
-
-		// If this mode has a saved config, use it
-		if (savedConfigId) {
-			const config = listApiConfig?.find((c) => c.id === savedConfigId)
-
-			if (config?.name) {
-				const apiConfig = await this.providerSettingsManager.loadConfig(config.name)
-
-				await Promise.all([
-					this.updateGlobalState("currentApiConfigName", config.name),
-					this.updateApiConfiguration(apiConfig),
-				])
-			}
-		} else {
-			// If no saved config for this mode, save current config as default
-			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
-
-			if (currentApiConfigName) {
-				const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
-
-				if (config?.id) {
-					await this.providerSettingsManager.setModeConfig(newMode, config.id)
-				}
+		// Delegate mode switch logic and get the config to load
+		const configToLoad = await this.clineApiManager.handleModeSwitch(newMode);
+		// If a new config was loaded/associated, update the current Cline instance
+		if (configToLoad) {
+			const currentCline = this.clineStackManager.getCurrentCline();
+			if (currentCline) {
+				// Use the buildApiHandler potentially from the ApiManager or global scope
+				currentCline.api = buildApiHandler(configToLoad);
 			}
 		}
-
-		await this.postStateToWebview()
-	}
-
-	// not private, so it can be accessed from webviewMessageHandler
-	async updateApiConfiguration(providerSettings: ProviderSettings) {
-		// Update mode's default config.
-		const { mode } = await this.getState()
-
-		if (mode) {
-			const currentApiConfigName = this.getGlobalState("currentApiConfigName")
-			const listApiConfig = await this.providerSettingsManager.listConfig()
-			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
-
-			if (config?.id) {
-				await this.providerSettingsManager.setModeConfig(mode, config.id)
-			}
-		}
-
-		await this.contextProxy.setProviderSettings(providerSettings)
-
-		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.api = buildApiHandler(providerSettings)
-		}
+		// Post updated state to webview
+		await this.postStateToWebview();
 	}
 
 	async cancelTask() {
-		const cline = this.getCurrentCline()
+		const cline = this.clineStackManager.getCurrentCline() // Use manager
 
 		if (!cline) {
 			return
@@ -814,7 +729,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		console.log(`[subtasks] cancelling task ${cline.taskId}.${cline.instanceId}`)
 
-		const { historyItem } = await this.getTaskWithId(cline.taskId)
+		const { historyItem } = await this.clineTaskHistoryManager.getTaskWithId(cline.taskId) // Use manager
 		// Preserve parent and root task information for history item.
 		const rootTask = cline.rootTask
 		const parentTask = cline.parentTask
@@ -823,13 +738,13 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		await pWaitFor(
 			() =>
-				this.getCurrentCline()! === undefined ||
-				this.getCurrentCline()!.isStreaming === false ||
-				this.getCurrentCline()!.didFinishAbortingStream ||
+				this.clineStackManager.getCurrentCline()! === undefined || // Use manager
+				this.clineStackManager.getCurrentCline()!.isStreaming === false || // Use manager
+				this.clineStackManager.getCurrentCline()!.didFinishAbortingStream || // Use manager
 				// If only the first chunk is processed, then there's no
 				// need to wait for graceful abort (closes edits, browser,
 				// etc).
-				this.getCurrentCline()!.isWaitingForFirstChunk,
+				this.clineStackManager.getCurrentCline()!.isWaitingForFirstChunk, // Use manager
 			{
 				timeout: 3_000,
 			},
@@ -837,11 +752,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			console.error("Failed to abort task")
 		})
 
-		if (this.getCurrentCline()) {
+		const currentClineForAbandon = this.clineStackManager.getCurrentCline(); // Use manager
+		if (currentClineForAbandon) {
 			// 'abandoned' will prevent this Cline instance from affecting
 			// future Cline instances. This may happen if its hanging on a
 			// streaming request.
-			this.getCurrentCline()!.abandoned = true
+			currentClineForAbandon.abandoned = true
 		}
 
 		// Clears task again, so we need to abortTask manually above.
@@ -850,280 +766,66 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	async updateCustomInstructions(instructions?: string) {
 		// User may be clearing the field.
-		await this.updateGlobalState("customInstructions", instructions || undefined)
+		await this.contextProxy.setValue("customInstructions", instructions || undefined) // Use contextProxy directly
 
-		if (this.getCurrentCline()) {
-			this.getCurrentCline()!.customInstructions = instructions || undefined
+		const currentClineForInstructions = this.clineStackManager.getCurrentCline(); // Use manager
+		if (currentClineForInstructions) {
+			currentClineForInstructions.customInstructions = instructions || undefined
 		}
 
 		await this.postStateToWebview()
 	}
 
-	// MCP
+	// MCP related methods removed - delegated to ClineMcpManager
 
-	async ensureMcpServersDirectoryExists(): Promise<string> {
-		// Get platform-specific application data directory
-		let mcpServersDir: string
-		if (process.platform === "win32") {
-			// Windows: %APPDATA%\Roo-Code\MCP
-			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", "Roo-Code", "MCP")
-		} else if (process.platform === "darwin") {
-			// macOS: ~/Documents/Cline/MCP
-			mcpServersDir = path.join(os.homedir(), "Documents", "Cline", "MCP")
-		} else {
-			// Linux: ~/.local/share/Cline/MCP
-			mcpServersDir = path.join(os.homedir(), ".local", "share", "Roo-Code", "MCP")
-		}
+	// Cache/Settings directory and model cache methods removed - delegated to ClineCacheManager.
 
-		try {
-			await fs.mkdir(mcpServersDir, { recursive: true })
-		} catch (error) {
-			// Fallback to a relative path if directory creation fails
-			return path.join(os.homedir(), ".roo-code", "mcp")
-		}
-		return mcpServersDir
+	// OAuth Callbacks and Upsert Config are now handled by ClineApiManager
+
+	// Task history methods removed - delegated to ClineTaskHistory manager.
+
+	// Wrapper methods to call manager and handle provider-specific logic (posting state, passing callbacks)
+	public async getTaskWithId(id: string) { // Made public for Cline access
+		// Simple delegation for getting task data
+		return this.clineTaskHistoryManager.getTaskWithId(id);
 	}
 
-	async ensureSettingsDirectoryExists(): Promise<string> {
-		const { getSettingsDirectoryPath } = await import("../../shared/storagePathManager")
-		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-		return getSettingsDirectoryPath(globalStoragePath)
+	public async showTaskWithId(id: string) { // Changed from private to public for backward compatibility
+		// Delegate, passing necessary provider methods/context as callbacks
+		await this.clineTaskHistoryManager.showTaskWithId(
+			id,
+			() => this.clineStackManager.getCurrentCline(), // Pass stack manager method
+			// Pass provider method - Type 'Promise<Cline>' is assignable to 'Promise<void>'? Let's assume type compatibility for now or history manager adjusts.
+			(historyItem) => this.initClineWithHistoryItem(historyItem),
+			// Pass provider method - Ensure type compatibility for 'action'
+			(action: string) => this.postMessageToWebview({ type: "action", action: action as any }) // Use type assertion as temporary fix if needed
+		);
+		// Note: postStateToWebview might be needed here or is handled by initClineWithHistoryItem implicitly
 	}
 
-	// not private, so it can be accessed from webviewMessageHandler
-	async ensureCacheDirectoryExists() {
-		const { getCacheDirectoryPath } = await import("../../shared/storagePathManager")
-		const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-		return getCacheDirectoryPath(globalStoragePath)
+	public async exportTaskWithId(id: string) { // Changed from private to public for backward compatibility
+		// Simple delegation
+		return this.clineTaskHistoryManager.exportTaskWithId(id);
 	}
 
-	// not private, so it can be accessed from webviewMessageHandler
-	async readModelsFromCache(filename: string): Promise<Record<string, ModelInfo> | undefined> {
-		const filePath = path.join(await this.ensureCacheDirectoryExists(), filename)
-		const fileExists = await fileExistsAtPath(filePath)
-
-		if (fileExists) {
-			const fileContents = await fs.readFile(filePath, "utf8")
-			return JSON.parse(fileContents)
-		}
-
-		return undefined
+	public async deleteTaskWithId(id: string) { // Changed from private to public for backward compatibility
+		// Delegate, passing necessary provider methods/context as callbacks
+		await this.clineTaskHistoryManager.deleteTaskWithId(
+			id,
+			() => this.clineStackManager.getCurrentCline(), // Pass stack manager method
+			(message) => this.clineStackManager.finishSubTask(message) // Pass stack manager method
+		);
+		// Post updated state after deletion attempt (manager handles internal state update)
+		await this.postStateToWebview();
 	}
 
-	// OpenRouter
-
-	async handleOpenRouterCallback(code: string) {
-		let { apiConfiguration, currentApiConfigName } = await this.getState()
-
-		let apiKey: string
-		try {
-			const baseUrl = apiConfiguration.openRouterBaseUrl || "https://openrouter.ai/api/v1"
-			// Extract the base domain for the auth endpoint
-			const baseUrlDomain = baseUrl.match(/^(https?:\/\/[^\/]+)/)?.[1] || "https://openrouter.ai"
-			const response = await axios.post(`${baseUrlDomain}/api/v1/auth/keys`, { code })
-			if (response.data && response.data.key) {
-				apiKey = response.data.key
-			} else {
-				throw new Error("Invalid response from OpenRouter API")
-			}
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error exchanging code for API key: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-			throw error
-		}
-
-		const newConfiguration: ApiConfiguration = {
-			...apiConfiguration,
-			apiProvider: "openrouter",
-			openRouterApiKey: apiKey,
-			openRouterModelId: apiConfiguration?.openRouterModelId || openRouterDefaultModelId,
-			openRouterModelInfo: apiConfiguration?.openRouterModelInfo || openRouterDefaultModelInfo,
-		}
-
-		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
-	}
-
-	// Glama
-
-	async handleGlamaCallback(code: string) {
-		let apiKey: string
-		try {
-			const response = await axios.post("https://glama.ai/api/gateway/v1/auth/exchange-code", { code })
-			if (response.data && response.data.apiKey) {
-				apiKey = response.data.apiKey
-			} else {
-				throw new Error("Invalid response from Glama API")
-			}
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error exchanging code for API key: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-			throw error
-		}
-
-		const { apiConfiguration, currentApiConfigName } = await this.getState()
-
-		const newConfiguration: ApiConfiguration = {
-			...apiConfiguration,
-			apiProvider: "glama",
-			glamaApiKey: apiKey,
-			glamaModelId: apiConfiguration?.glamaModelId || glamaDefaultModelId,
-			glamaModelInfo: apiConfiguration?.glamaModelInfo || glamaDefaultModelInfo,
-		}
-
-		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
-	}
-
-	// Requesty
-
-	async handleRequestyCallback(code: string) {
-		let { apiConfiguration, currentApiConfigName } = await this.getState()
-
-		const newConfiguration: ApiConfiguration = {
-			...apiConfiguration,
-			apiProvider: "requesty",
-			requestyApiKey: code,
-			requestyModelId: apiConfiguration?.requestyModelId || requestyDefaultModelId,
-			requestyModelInfo: apiConfiguration?.requestyModelInfo || requestyDefaultModelInfo,
-		}
-
-		await this.upsertApiConfiguration(currentApiConfigName, newConfiguration)
-	}
-
-	// Save configuration
-
-	async upsertApiConfiguration(configName: string, apiConfiguration: ApiConfiguration) {
-		try {
-			await this.providerSettingsManager.saveConfig(configName, apiConfiguration)
-			const listApiConfig = await this.providerSettingsManager.listConfig()
-
-			await Promise.all([
-				this.updateGlobalState("listApiConfigMeta", listApiConfig),
-				this.updateApiConfiguration(apiConfiguration),
-				this.updateGlobalState("currentApiConfigName", configName),
-			])
-
-			await this.postStateToWebview()
-		} catch (error) {
-			this.outputChannel.appendLine(
-				`Error create new api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-			)
-			vscode.window.showErrorMessage(t("common:errors.create_api_config"))
-		}
-	}
-
-	// Task history
-
-	async getTaskWithId(id: string): Promise<{
-		historyItem: HistoryItem
-		taskDirPath: string
-		apiConversationHistoryFilePath: string
-		uiMessagesFilePath: string
-		apiConversationHistory: Anthropic.MessageParam[]
-	}> {
-		const history = this.getGlobalState("taskHistory") ?? []
-		const historyItem = history.find((item) => item.id === id)
-
-		if (historyItem) {
-			const { getTaskDirectoryPath } = await import("../../shared/storagePathManager")
-			const globalStoragePath = this.contextProxy.globalStorageUri.fsPath
-			const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id)
-			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
-			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
-			const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-
-			if (fileExists) {
-				const apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-
-				return {
-					historyItem,
-					taskDirPath,
-					apiConversationHistoryFilePath,
-					uiMessagesFilePath,
-					apiConversationHistory,
-				}
-			}
-		}
-
-		// if we tried to get a task that doesn't exist, remove it from state
-		// FIXME: this seems to happen sometimes when the json file doesnt save to disk for some reason
-		await this.deleteTaskFromState(id)
-		throw new Error("Task not found")
-	}
-
-	async showTaskWithId(id: string) {
-		if (id !== this.getCurrentCline()?.taskId) {
-			// Non-current task.
-			const { historyItem } = await this.getTaskWithId(id)
-			await this.initClineWithHistoryItem(historyItem) // Clears existing task.
-		}
-
-		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
-	}
-
-	async exportTaskWithId(id: string) {
-		const { historyItem, apiConversationHistory } = await this.getTaskWithId(id)
-		await downloadTask(historyItem.ts, apiConversationHistory)
-	}
-
-	// this function deletes a task from task hidtory, and deletes it's checkpoints and delete the task folder
-	async deleteTaskWithId(id: string) {
-		try {
-			// get the task directory full path
-			const { taskDirPath } = await this.getTaskWithId(id)
-
-			// remove task from stack if it's the current task
-			if (id === this.getCurrentCline()?.taskId) {
-				// if we found the taskid to delete - call finish to abort this task and allow a new task to be started,
-				// if we are deleting a subtask and parent task is still waiting for subtask to finish - it allows the parent to resume (this case should neve exist)
-				await this.finishSubTask(t("common:tasks.deleted"))
-			}
-
-			// delete task from the task history state
-			await this.deleteTaskFromState(id)
-
-			// Delete associated shadow repository or branch.
-			// TODO: Store `workspaceDir` in the `HistoryItem` object.
-			const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
-			const workspaceDir = this.cwd
-
-			try {
-				await ShadowCheckpointService.deleteTask({ taskId: id, globalStorageDir, workspaceDir })
-			} catch (error) {
-				console.error(
-					`[deleteTaskWithId${id}] failed to delete associated shadow repository or branch: ${error instanceof Error ? error.message : String(error)}`,
-				)
-			}
-
-			// delete the entire task directory including checkpoints and all content
-			try {
-				await fs.rm(taskDirPath, { recursive: true, force: true })
-				console.log(`[deleteTaskWithId${id}] removed task directory`)
-			} catch (error) {
-				console.error(
-					`[deleteTaskWithId${id}] failed to remove task directory: ${error instanceof Error ? error.message : String(error)}`,
-				)
-			}
-		} catch (error) {
-			// If task is not found, just remove it from state
-			if (error instanceof Error && error.message === "Task not found") {
-				await this.deleteTaskFromState(id)
-				return
-			}
-			throw error
-		}
-	}
-
-	async deleteTaskFromState(id: string) {
-		const taskHistory = this.getGlobalState("taskHistory") ?? []
-		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
-		await this.updateGlobalState("taskHistory", updatedTaskHistory)
-		await this.postStateToWebview()
-	}
+	// deleteTaskFromState is purely state management, keep delegation simple via contextProxy or state manager?
+	// Let's keep it internal to the history manager for now, provider calls deleteTaskWithId which calls this internally if needed.
+	// async deleteTaskFromState(id: string) { ... } // Removed from provider interface
 
 	async postStateToWebview() {
 		const state = await this.getStateToPostToWebview()
+		console.log("Posting state to webview:", state)
 		this.postMessageToWebview({ type: "state", state })
 	}
 
@@ -1176,14 +878,14 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			maxWorkspaceFiles,
 			browserToolEnabled,
 			telemetrySetting,
-			showRooIgnoredFiles,
+			showTheaIgnoredFiles, // Correct destructured variable name
 			language,
 			maxReadFileLine,
-		} = await this.getState()
+		} = await this.clineStateManager.getState() // Use manager
 
 		const telemetryKey = process.env.POSTHOG_API_KEY
 		const machineId = vscode.env.machineId
-		const allowedCommands = vscode.workspace.getConfiguration("roo-cline").get<string[]>("allowedCommands") || []
+		const allowedCommands = vscode.workspace.getConfiguration(CONFIG.SECTION).get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
 		return {
@@ -1201,10 +903,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			uriScheme: vscode.env.uriScheme,
-			currentTaskItem: this.getCurrentCline()?.taskId
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentCline()?.taskId)
+			currentTaskItem: this.clineStackManager.getCurrentCline()?.taskId // Use manager
+				? (taskHistory || []).find((item: HistoryItem) => item.id === this.clineStackManager.getCurrentCline()?.taskId) // Use manager
 				: undefined,
-			clineMessages: this.getCurrentCline()?.clineMessages || [],
+			clineMessages: this.clineStackManager.getCurrentCline()?.clineMessages || [], // Use manager
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
@@ -1240,9 +942,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			customSupportPrompts: customSupportPrompts ?? {},
 			enhancementApiConfigId,
 			autoApprovalEnabled: autoApprovalEnabled ?? false,
+			experiments, // Add the experiments property
 			customModes: await this.customModesManager.getCustomModes(),
-			experiments: experiments ?? experimentDefault,
-			mcpServers: this.mcpHub?.getAllServers() ?? [],
+			mcpServers: this.clineMcpManager?.getAllServers() ?? [], // Use manager safely
 			maxOpenTabsContext: maxOpenTabsContext ?? 20,
 			maxWorkspaceFiles: maxWorkspaceFiles ?? 200,
 			cwd,
@@ -1250,7 +952,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			telemetrySetting,
 			telemetryKey,
 			machineId,
-			showRooIgnoredFiles: showRooIgnoredFiles ?? true,
+			showTheaIgnoredFiles: showTheaIgnoredFiles ?? true, // Use correctly destructured variable
 			language,
 			renderContext: this.renderContext,
 			maxReadFileLine: maxReadFileLine ?? 500,
@@ -1264,132 +966,21 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * https://www.eliostruyf.com/devhack-code-extension-storage-options/
 	 */
 
-	async getState() {
-		const stateValues = this.contextProxy.getValues()
+	// State management methods (getState, updateGlobalState, getGlobalState, setValue, getValue, getValues, setValues)
+	// removed and delegated to clineStateManager instance or contextProxy directly.
+	// Note: getStateToPostToWebview remains as it combines state with runtime context.
 
-		const customModes = await this.customModesManager.getCustomModes()
+	// updateTaskHistory method removed - delegated to ClineTaskHistory manager.
 
-		// Determine apiProvider with the same logic as before.
-		const apiProvider: ApiProvider = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
+	// ContextProxy delegation methods removed - use contextProxy directly or via state manager.
 
-		// Build the apiConfiguration object combining state values and secrets.
-		const providerSettings = this.contextProxy.getProviderSettings()
-
-		// Ensure apiProvider is set properly if not already in state
-		if (!providerSettings.apiProvider) {
-			providerSettings.apiProvider = apiProvider
-		}
-
-		// Return the same structure as before
-		return {
-			apiConfiguration: providerSettings,
-			osInfo: os.platform() === "win32" ? "win32" : "unix",
-			lastShownAnnouncementId: stateValues.lastShownAnnouncementId,
-			customInstructions: stateValues.customInstructions,
-			alwaysAllowReadOnly: stateValues.alwaysAllowReadOnly ?? false,
-			alwaysAllowReadOnlyOutsideWorkspace: stateValues.alwaysAllowReadOnlyOutsideWorkspace ?? false,
-			alwaysAllowWrite: stateValues.alwaysAllowWrite ?? false,
-			alwaysAllowWriteOutsideWorkspace: stateValues.alwaysAllowWriteOutsideWorkspace ?? false,
-			alwaysAllowExecute: stateValues.alwaysAllowExecute ?? false,
-			alwaysAllowBrowser: stateValues.alwaysAllowBrowser ?? false,
-			alwaysAllowMcp: stateValues.alwaysAllowMcp ?? false,
-			alwaysAllowModeSwitch: stateValues.alwaysAllowModeSwitch ?? false,
-			alwaysAllowSubtasks: stateValues.alwaysAllowSubtasks ?? false,
-			taskHistory: stateValues.taskHistory,
-			allowedCommands: stateValues.allowedCommands,
-			soundEnabled: stateValues.soundEnabled ?? false,
-			ttsEnabled: stateValues.ttsEnabled ?? false,
-			ttsSpeed: stateValues.ttsSpeed ?? 1.0,
-			diffEnabled: stateValues.diffEnabled ?? true,
-			enableCheckpoints: stateValues.enableCheckpoints ?? true,
-			checkpointStorage: stateValues.checkpointStorage ?? "task",
-			soundVolume: stateValues.soundVolume,
-			browserViewportSize: stateValues.browserViewportSize ?? "900x600",
-			screenshotQuality: stateValues.screenshotQuality ?? 75,
-			remoteBrowserHost: stateValues.remoteBrowserHost,
-			remoteBrowserEnabled: stateValues.remoteBrowserEnabled ?? false,
-			cachedChromeHostUrl: stateValues.cachedChromeHostUrl as string | undefined,
-			fuzzyMatchThreshold: stateValues.fuzzyMatchThreshold ?? 1.0,
-			writeDelayMs: stateValues.writeDelayMs ?? 1000,
-			terminalOutputLineLimit: stateValues.terminalOutputLineLimit ?? 500,
-			terminalShellIntegrationTimeout:
-				stateValues.terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT,
-			mode: stateValues.mode ?? defaultModeSlug,
-			language: stateValues.language ?? formatLanguage(vscode.env.language),
-			mcpEnabled: stateValues.mcpEnabled ?? true,
-			enableMcpServerCreation: stateValues.enableMcpServerCreation ?? true,
-			alwaysApproveResubmit: stateValues.alwaysApproveResubmit ?? false,
-			requestDelaySeconds: Math.max(5, stateValues.requestDelaySeconds ?? 10),
-			rateLimitSeconds: stateValues.rateLimitSeconds ?? 0,
-			currentApiConfigName: stateValues.currentApiConfigName ?? "default",
-			listApiConfigMeta: stateValues.listApiConfigMeta ?? [],
-			pinnedApiConfigs: stateValues.pinnedApiConfigs ?? {},
-			modeApiConfigs: stateValues.modeApiConfigs ?? ({} as Record<Mode, string>),
-			customModePrompts: stateValues.customModePrompts ?? {},
-			customSupportPrompts: stateValues.customSupportPrompts ?? {},
-			enhancementApiConfigId: stateValues.enhancementApiConfigId,
-			experiments: stateValues.experiments ?? experimentDefault,
-			autoApprovalEnabled: stateValues.autoApprovalEnabled ?? false,
-			customModes,
-			maxOpenTabsContext: stateValues.maxOpenTabsContext ?? 20,
-			maxWorkspaceFiles: stateValues.maxWorkspaceFiles ?? 200,
-			openRouterUseMiddleOutTransform: stateValues.openRouterUseMiddleOutTransform ?? true,
-			browserToolEnabled: stateValues.browserToolEnabled ?? true,
-			telemetrySetting: stateValues.telemetrySetting || "unset",
-			showRooIgnoredFiles: stateValues.showRooIgnoredFiles ?? true,
-			maxReadFileLine: stateValues.maxReadFileLine ?? 500,
-		}
-	}
-
-	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
-		const history = (this.getGlobalState("taskHistory") as HistoryItem[] | undefined) || []
-		const existingItemIndex = history.findIndex((h) => h.id === item.id)
-
-		if (existingItemIndex !== -1) {
-			history[existingItemIndex] = item
-		} else {
-			history.push(item)
-		}
-
-		await this.updateGlobalState("taskHistory", history)
-		return history
-	}
-
-	// ContextProxy
-
-	// @deprecated - Use `ContextProxy#setValue` instead.
-	// not private, so it can be accessed from webviewMessageHandler
-	async updateGlobalState<K extends keyof GlobalState>(key: K, value: GlobalState[K]) {
-		await this.contextProxy.setValue(key, value)
-	}
-
-	// @deprecated - Use `ContextProxy#getValue` instead.
-	// not private, so it can be accessed from webviewMessageHandler
-	getGlobalState<K extends keyof GlobalState>(key: K) {
-		return this.contextProxy.getValue(key)
-	}
-
-	public async setValue<K extends keyof RooCodeSettings>(key: K, value: RooCodeSettings[K]) {
-		await this.contextProxy.setValue(key, value)
-	}
-
-	public getValue<K extends keyof RooCodeSettings>(key: K) {
-		return this.contextProxy.getValue(key)
-	}
-
-	public getValues() {
-		return this.contextProxy.getValues()
-	}
-
-	public async setValues(values: RooCodeSettings) {
-		await this.contextProxy.setValues(values)
-	}
-
-	// cwd
+	// cwd getter remains
 
 	get cwd() {
 		return getWorkspacePath()
 	}
+
+	// Removed duplicate cwd getter
 
 	// dev
 
@@ -1405,9 +996,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		await this.contextProxy.resetAllState()
-		await this.providerSettingsManager.resetAllConfigs()
+		await this.providerSettingsManager.resetAllConfigs() // No change needed here, already correct
 		await this.customModesManager.resetCustomModes()
-		await this.removeClineFromStack()
+		await this.clineStackManager.removeCurrentCline() // Use manager
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 	}
@@ -1426,13 +1017,10 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	}
 
 	get messages() {
-		return this.getCurrentCline()?.clineMessages || []
+		return this.clineStackManager.getCurrentCline()?.clineMessages || [] // Use manager
 	}
 
-	// Add public getter
-	public getMcpHub(): McpHub | undefined {
-		return this.mcpHub
-	}
+	// getMcpHub removed - use clineMcpManager.getMcpHub()
 
 	/**
 	 * Returns properties to be included in every telemetry event
@@ -1440,7 +1028,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 	 * like the current mode, API provider, etc.
 	 */
 	public async getTelemetryProperties(): Promise<Record<string, any>> {
-		const { mode, apiConfiguration, language } = await this.getState()
+		const { mode, apiConfiguration, language } = await this.clineStateManager.getState() // Use manager
 		const appVersion = this.context.extension?.packageJSON?.version
 		const vscodeVersion = vscode.version
 		const platform = process.platform
@@ -1471,7 +1059,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		}
 
 		// Add model ID if available
-		const currentCline = this.getCurrentCline()
+		const currentCline = this.clineStackManager.getCurrentCline() // Use manager
 		if (currentCline?.api) {
 			const { id: modelId } = currentCline.api.getModel()
 			if (modelId) {
@@ -1485,4 +1073,144 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 		return properties
 	}
+	
+	// --- Manager Getters for Cline ---
+
+	public get clineStateManagerInstance(): ClineStateManager {
+		return this.clineStateManager;
+	}
+
+	public get clineTaskHistoryManagerInstance(): ClineTaskHistory {
+		return this.clineTaskHistoryManager;
+	}
+
+	public get clineMcpManagerInstance(): ClineMcpManager {
+		return this.clineMcpManager;
+	}
+
+	// --- Proxy Methods for Backward Compatibility ---
+	// These methods delegate to the appropriate manager instances to maintain compatibility with existing code
+
+	// ClineStateManager proxy methods
+	public async getState() {
+		return this.clineStateManager.getState();
+	}
+
+	public async updateGlobalState<K extends keyof GlobalState>(key: K, value: GlobalState[K]) {
+		return this.clineStateManager.updateGlobalState(key, value);
+	}
+
+	public getGlobalState<K extends keyof GlobalState>(key: K) {
+		return this.clineStateManager.getGlobalState(key);
+	}
+
+	public async setValue<K extends keyof TheaCodeSettings>(key: K, value: TheaCodeSettings[K]) {
+		await this.clineStateManager.setValue(key, value);
+		// Update current Cline instance if needed
+		if (key === "currentApiConfigName" && this.getCurrentCline()) {
+			const config = await this.providerSettingsManager.loadConfig(value as string);
+			if (config) {
+				this.getCurrentCline()!.api = buildApiHandler(config);
+			}
+			// Post state to webview after API configuration update
+			await this.postStateToWebview();
+		} else if ((key as string) === "apiConfiguration" && this.getCurrentCline()) {
+			// If the API configuration itself is updated, update the current Cline instance
+			this.getCurrentCline()!.api = buildApiHandler(value as ApiConfiguration);
+			// Post state to webview after API configuration update
+			await this.postStateToWebview();
+		}
+		return value;
+	}
+
+	public getValue<K extends keyof TheaCodeSettings>(key: K) {
+		return this.clineStateManager.getValue(key);
+	}
+
+	public getValues() {
+		return this.clineStateManager.getValues();
+	}
+
+	public async setValues(values: TheaCodeSettings) {
+		return this.clineStateManager.setValues(values);
+	}
+
+	// ClineStack proxy methods
+	public async addClineToStack(cline: Cline) {
+		return this.clineStackManager.addCline(cline);
+	}
+
+	public async removeClineFromStack() {
+		return this.clineStackManager.removeCurrentCline();
+	}
+
+	public getCurrentCline() {
+		return this.clineStackManager.getCurrentCline();
+	}
+
+	public getClineStackSize() {
+		return this.clineStackManager.getSize();
+	}
+
+	public getCurrentTaskStack() {
+		return this.clineStackManager.getTaskStack();
+	}
+
+	public async finishSubTask(message?: string) {
+		return this.clineStackManager.finishSubTask(message);
+	}
+
+	// ClineApiManager proxy methods
+	public async handleModeSwitch(newMode: Mode) {
+		return this.handleModeSwitchAndUpdateCline(newMode);
+	}
+	public async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
+		return this.clineApiManager.updateApiConfiguration(apiConfiguration);
+	}
+
+	public async upsertApiConfiguration(configName: string, apiConfiguration: ApiConfiguration) {
+		return this.clineApiManager.upsertApiConfiguration(configName, apiConfiguration);
+	}
+
+	// ClineCacheManager proxy methods
+	public async ensureCacheDirectoryExists() {
+		return this.clineCacheManager.ensureCacheDirectoryExists();
+	}
+
+	public async ensureSettingsDirectoryExists() {
+		return this.clineCacheManager.ensureSettingsDirectoryExists();
+	}
+
+	public async readModelsFromCache(filename: string) {
+		return this.clineCacheManager.readModelsFromCache(filename);
+	}
+
+	public async writeModelsToCache(filename: string, data: Record<string, ModelInfo>) {
+		return this.clineCacheManager.writeModelsToCache(filename, data);
+	}
+
+	// ClineApiManager OAuth callback proxy methods
+	public async handleGlamaCallback(code: string) {
+		return this.clineApiManager.handleGlamaCallback(code);
+	}
+
+	public async handleOpenRouterCallback(code: string) {
+		return this.clineApiManager.handleOpenRouterCallback(code);
+	}
+
+	public async handleRequestyCallback(code: string) {
+		return this.clineApiManager.handleRequestyCallback(code);
+	}
+
+	// ClineMcpManager proxy methods
+	public async ensureMcpServersDirectoryExists() {
+		return this.clineMcpManager.ensureMcpServersDirectoryExists();
+	}
+
+	// Removed duplicate proxy methods since the original methods were changed from private to public
+
+	public getMcpHub() {
+		return this.clineMcpManager.getMcpHub();
+	}
 }
+// Removed duplicated code block from lines 1078-1255

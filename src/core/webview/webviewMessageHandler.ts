@@ -44,6 +44,7 @@ import { buildApiHandler } from "../../api"
 import { EXTENSION_CONFIG_DIR, GLOBAL_FILENAMES as BRANDED_FILENAMES, configSection, EXTENSION_NAME } from "../../../dist/thea-config"; // Import branded constants
 import { SETTING_KEYS } from "../../../dist/thea-config"; // Import branded constant
 
+// Export for testing
 export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
 	switch (message.type) {
 		case "webviewDidLaunch":
@@ -255,8 +256,9 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 		case "apiConfiguration":
 			if (message.apiConfiguration) {
 				await provider.updateApiConfiguration(message.apiConfiguration)
+				// Make sure to post state to webview after successful API configuration update
+				await provider.postStateToWebview()
 			}
-			await provider.postStateToWebview()
 			break
 		case "customInstructions":
 			await provider.updateCustomInstructions(message.text)
@@ -1111,7 +1113,16 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			break
 		case "upsertApiConfiguration":
 			if (message.text && message.apiConfiguration) {
-				await provider.upsertApiConfiguration(message.text, message.apiConfiguration)
+				try {
+					await provider.upsertApiConfiguration(message.text, message.apiConfiguration);
+					// Make sure to post state to webview after successful API configuration update
+					await provider.postStateToWebview();
+				} catch (error) {
+					provider.outputChannel.appendLine(
+						`Error handling upsertApiConfiguration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`
+					);
+					// Error is already shown to user in upsertApiConfiguration
+				}
 			}
 			break
 		case "renameApiConfiguration":

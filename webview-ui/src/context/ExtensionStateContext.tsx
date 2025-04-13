@@ -178,6 +178,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 	const handleMessage = useCallback(
 		(event: MessageEvent) => {
 			const message: ExtensionMessage = event.data
+			console.log("Received message in webview:", message)
 			switch (message.type) {
 				case "state": {
 					const newState = message.state!

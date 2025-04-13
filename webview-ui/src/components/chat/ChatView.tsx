@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
-import { SPECIFIC_STRINGS } from "../../../../dist/thea-config"; // Adjust path as needed
+import { SPECIFIC_STRINGS } from "../../../../dist/thea-config";
 import {
 	ClineAsk,
 	ClineMessage,
@@ -32,7 +32,7 @@ import { AudioType } from "../../../../src/shared/WebviewMessage"
 import { validateCommand } from "../../utils/command-validation"
 import { getAllModes } from "../../../../src/shared/modes"
 import TelemetryBanner from "../common/TelemetryBanner"
-import { useAppTranslation } from "@/i18n/TranslationContext"
+import { useAppTranslation } from "../../i18n/TranslationContext"
 import removeMd from "remove-markdown"
 
 interface ChatViewProps {
@@ -334,9 +334,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		(text: string, images: string[]) => {
 			text = text.trim()
 			if (text || images.length > 0) {
-				if (messages.length === 0) {
-					vscode.postMessage({ type: "newTask", text, images })
-				} else if (clineAsk) {
+				vscode.postMessage({ type: "newTask", text, images })
+				if (clineAsk) {
 					switch (clineAsk) {
 						case "followup":
 						case "tool":
@@ -356,7 +355,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				handleChatReset()
 			}
 		},
-		[messages.length, clineAsk, handleChatReset],
+		[clineAsk, handleChatReset],
 	)
 
 	const handleSetChatBoxMessage = useCallback(

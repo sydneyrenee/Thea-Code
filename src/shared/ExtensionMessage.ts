@@ -8,10 +8,10 @@ import {
 	CheckpointStorage,
 	TelemetrySetting,
 	ExperimentId,
-	ClineAsk,
-	ClineSay,
+	TheaAsk, // Renamed
+	TheaSay, // Renamed
 	ToolProgressStatus,
-	ClineMessage,
+	TheaMessage, // Renamed
 } from "../schemas"
 import { SETTING_KEYS } from "../../dist/thea-config"; // Import branded constant
 import { McpServer } from "./mcp"
@@ -90,7 +90,7 @@ export interface ExtensionMessage {
 		isActive: boolean
 		path?: string
 	}>
-	partialMessage?: ClineMessage
+	partialMessage?: TheaMessage // Renamed type
 	openRouterModels?: Record<string, ModelInfo>
 	glamaModels?: Record<string, ModelInfo>
 	unboundModels?: Record<string, ModelInfo>
@@ -170,7 +170,7 @@ export type ExtensionState = Pick<
 > & {
 	version: string
 	osInfo: string
-	clineMessages: ClineMessage[]
+	clineMessages: TheaMessage[] // Renamed type
 	currentTaskItem?: HistoryItem
 	apiConfiguration?: ApiConfiguration
 	uriScheme?: string
@@ -207,9 +207,9 @@ export type ExtensionState = Pick<
 	settingsImportedAt?: number
 }
 
-export type { ClineMessage, ClineAsk, ClineSay }
+export type { TheaMessage, TheaAsk, TheaSay } // Renamed exports
 
-export interface ClineSayTool {
+export interface TheaSayTool { // Renamed interface
 	tool:
 		| "editedExistingFile"
 		| "appliedDiff"
@@ -238,7 +238,7 @@ export const browserActions = ["launch", "click", "hover", "type", "scroll_down"
 
 export type BrowserAction = (typeof browserActions)[number]
 
-export interface ClineSayBrowserAction {
+export interface TheaSayBrowserAction { // Renamed interface
 	action: BrowserAction
 	coordinate?: string
 	text?: string
@@ -251,7 +251,7 @@ export type BrowserActionResult = {
 	currentMousePosition?: string
 }
 
-export interface ClineAskUseMcpServer {
+export interface TheaAskUseMcpServer { // Renamed interface
 	serverName: string
 	type: "use_mcp_tool" | "access_mcp_resource"
 	toolName?: string
@@ -259,15 +259,15 @@ export interface ClineAskUseMcpServer {
 	uri?: string
 }
 
-export interface ClineApiReqInfo {
+export interface TheaApiReqInfo { // Renamed interface
 	request?: string
 	tokensIn?: number
 	tokensOut?: number
 	cacheWrites?: number
 	cacheReads?: number
 	cost?: number
-	cancelReason?: ClineApiReqCancelReason
+	cancelReason?: TheaApiReqCancelReason // Renamed type
 	streamingFailedMessage?: string
 }
 
-export type ClineApiReqCancelReason = "streaming_failed" | "user_cancelled"
+export type TheaApiReqCancelReason = "streaming_failed" | "user_cancelled" // Renamed type

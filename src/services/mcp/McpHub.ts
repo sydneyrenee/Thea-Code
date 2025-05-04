@@ -18,7 +18,7 @@ import * as vscode from "vscode"
 import { z } from "zod"
 import { t } from "../../i18n"
 import { EXTENSION_DISPLAY_NAME, CONFIG_DIR_NAME } from "../../../dist/thea-config" // Import branded constants
-import { ClineProvider } from "../../core/webview/ClineProvider"
+import { TheaProvider } from "../../core/webview/TheaProvider" // Renamed import
 import { GlobalFileNames } from "../../shared/globalFileNames"
 import {
 	McpResource,
@@ -100,7 +100,7 @@ const McpSettingsSchema = z.object({
 })
 
 export class McpHub {
-	private providerRef: WeakRef<ClineProvider>
+	private providerRef: WeakRef<TheaProvider> // Renamed type
 	private disposables: vscode.Disposable[] = []
 	private settingsWatcher?: vscode.FileSystemWatcher
 	private fileWatchers: Map<string, FSWatcher[]> = new Map()
@@ -109,7 +109,7 @@ export class McpHub {
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
 
-	constructor(provider: ClineProvider) {
+	constructor(provider: TheaProvider) { // Renamed type
 		this.providerRef = new WeakRef(provider)
 		this.watchMcpSettingsFile()
 		this.watchProjectMcpFile()

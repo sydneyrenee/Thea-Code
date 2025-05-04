@@ -5,7 +5,7 @@ import { ZodError } from "zod"
 import { logger } from "../../utils/logging"
 
 // This forward declaration is needed to avoid circular dependencies
-interface ClineProviderInterface {
+interface TheaProviderInterface { // Renamed interface
 	// Gets telemetry properties to attach to every event
 	getTelemetryProperties(): Promise<Record<string, any>>
 }
@@ -37,7 +37,7 @@ class PostHogClient {
 	private client: PostHog
 	private distinctId: string = vscode.env.machineId
 	private telemetryEnabled: boolean = false
-	private providerRef: WeakRef<ClineProviderInterface> | null = null
+	private providerRef: WeakRef<TheaProviderInterface> | null = null // Renamed type
 
 	private constructor() {
 		this.client = new PostHog(process.env.POSTHOG_API_KEY || "", {
@@ -82,12 +82,12 @@ class PostHogClient {
 	}
 
 	/**
-	 * Sets the ClineProvider reference to use for global properties
-	 * @param provider A ClineProvider instance to use
+	 * Sets the TheaProvider reference to use for global properties
+	 * @param provider A TheaProvider instance to use
 	 */
-	public setProvider(provider: ClineProviderInterface): void {
+	public setProvider(provider: TheaProviderInterface): void { // Renamed type
 		this.providerRef = new WeakRef(provider)
-		logger.debug("PostHogClient: ClineProvider reference set")
+		logger.debug("PostHogClient: TheaProvider reference set") // Updated log message
 	}
 
 	/**
@@ -97,7 +97,7 @@ class PostHogClient {
 	public async capture(event: { event: string; properties?: any }): Promise<void> {
 		// Only send events if telemetry is enabled
 		if (this.telemetryEnabled) {
-			// Get global properties from ClineProvider if available
+			// Get global properties from TheaProvider if available
 			let globalProperties: Record<string, any> = {}
 			const provider = this.providerRef?.deref()
 
@@ -151,7 +151,7 @@ class PostHogClient {
 class TelemetryService {
 	private client: PostHogClient | null = null
 	private initialized = false
-	private providerRef: WeakRef<ClineProviderInterface> | null = null
+	private providerRef: WeakRef<TheaProviderInterface> | null = null // Renamed type
 
 	/**
 	 * Initialize the telemetry service with the PostHog client
@@ -171,17 +171,17 @@ class TelemetryService {
 	}
 
 	/**
-	 * Sets the ClineProvider reference to use for global properties
-	 * @param provider A ClineProvider instance to use
+	 * Sets the TheaProvider reference to use for global properties
+	 * @param provider A TheaProvider instance to use
 	 */
-	public setProvider(provider: ClineProviderInterface): void {
+	public setProvider(provider: TheaProviderInterface): void { // Renamed type
 		// Keep a weak reference to avoid memory leaks
 		this.providerRef = new WeakRef(provider)
 		// If client is initialized, pass the provider reference
 		if (this.isReady()) {
 			this.client!.setProvider(provider)
 		}
-		logger.debug("TelemetryService: ClineProvider reference set")
+		logger.debug("TelemetryService: TheaProvider reference set") // Updated log message
 	}
 
 	/**

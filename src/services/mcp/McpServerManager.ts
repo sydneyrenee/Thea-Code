@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { McpHub } from "./McpHub"
-import { ClineProvider } from "../../core/webview/ClineProvider"
+import { TheaProvider } from "../../core/webview/TheaProvider" // Renamed import
 
 /**
  * Singleton manager for MCP server instances.
@@ -9,7 +9,7 @@ import { ClineProvider } from "../../core/webview/ClineProvider"
 export class McpServerManager {
 	private static instance: McpHub | null = null
 	private static readonly GLOBAL_STATE_KEY = "mcpHubInstanceId"
-	private static providers: Set<ClineProvider> = new Set()
+	private static providers: Set<TheaProvider> = new Set() // Renamed type
 	private static initializationPromise: Promise<McpHub> | null = null
 
 	/**
@@ -17,7 +17,7 @@ export class McpServerManager {
 	 * Creates a new instance if one doesn't exist.
 	 * Thread-safe implementation using a promise-based lock.
 	 */
-	static async getInstance(context: vscode.ExtensionContext, provider: ClineProvider): Promise<McpHub> {
+	static async getInstance(context: vscode.ExtensionContext, provider: TheaProvider): Promise<McpHub> { // Renamed type
 		// Register the provider
 		this.providers.add(provider)
 
@@ -54,7 +54,7 @@ export class McpServerManager {
 	 * Remove a provider from the tracked set.
 	 * This is called when a webview is disposed.
 	 */
-	static unregisterProvider(provider: ClineProvider): void {
+	static unregisterProvider(provider: TheaProvider): void { // Renamed type
 		this.providers.delete(provider)
 	}
 

@@ -5,8 +5,8 @@ import { useExtensionState } from "../../context/ExtensionStateContext"
 import {
 	BrowserAction,
 	BrowserActionResult,
-	ClineMessage,
-	ClineSayBrowserAction,
+	TheaMessage, // Renamed import
+	TheaSayBrowserAction, // Renamed import
 } from "../../../../src/shared/ExtensionMessage"
 import { vscode } from "../../utils/vscode"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "../common/CodeBlock"
@@ -15,10 +15,10 @@ import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
 import { useTranslation } from "react-i18next"
 
 interface BrowserSessionRowProps {
-	messages: ClineMessage[]
+	messages: TheaMessage[] // Renamed type
 	isExpanded: (messageTs: number) => boolean
 	onToggleExpand: (messageTs: number) => void
-	lastModifiedMessage?: ClineMessage
+	lastModifiedMessage?: TheaMessage // Renamed type
 	isLast: boolean
 	onHeightChange: (isTaller: boolean) => void
 	isStreaming: boolean
@@ -64,15 +64,15 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 				screenshot?: string
 				mousePosition?: string
 				consoleLogs?: string
-				messages: ClineMessage[] // messages up to and including the result
+				messages: TheaMessage[] // Renamed type
 			}
 			nextAction?: {
-				messages: ClineMessage[] // messages leading to next result
+				messages: TheaMessage[] // Renamed type
 			}
 		}[] = []
 
-		let currentStateMessages: ClineMessage[] = []
-		let nextActionMessages: ClineMessage[] = []
+		let currentStateMessages: TheaMessage[] = [] // Renamed type
+		let nextActionMessages: TheaMessage[] = [] // Renamed type
 
 		messages.forEach((message) => {
 			if (message.ask === "browser_action_launch") {
@@ -219,7 +219,7 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 		for (let i = actions.length - 1; i >= 0; i--) {
 			const message = actions[i]
 			if (message.say === "browser_action") {
-				const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
+				const browserAction = JSON.parse(message.text || "{}") as TheaSayBrowserAction // Renamed type
 				if (browserAction.action === "click" && browserAction.coordinate) {
 					return browserAction.coordinate
 				}
@@ -414,7 +414,7 @@ const BrowserSessionRow = memo((props: BrowserSessionRowProps) => {
 }, deepEqual)
 
 interface BrowserSessionRowContentProps extends Omit<BrowserSessionRowProps, "messages"> {
-	message: ClineMessage
+	message: TheaMessage // Renamed type
 	setMaxActionHeight: (height: number) => void
 	isStreaming: boolean
 }
@@ -460,7 +460,7 @@ const BrowserSessionRowContent = ({
 					)
 
 				case "browser_action":
-					const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
+					const browserAction = JSON.parse(message.text || "{}") as TheaSayBrowserAction // Renamed type
 					return (
 						<BrowserActionBox
 							action={browserAction.action}

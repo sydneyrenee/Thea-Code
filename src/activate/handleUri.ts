@@ -1,11 +1,11 @@
 import * as vscode from "vscode"
 
-import { ClineProvider } from "../core/webview/ClineProvider"
+import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 
 export const handleUri = async (uri: vscode.Uri) => {
 	const path = uri.path
 	const query = new URLSearchParams(uri.query.replace(/\+/g, "%2B"))
-	const visibleProvider = ClineProvider.getVisibleInstance()
+	const visibleProvider = TheaProvider.getVisibleInstance() // Renamed static method call
 	if (!visibleProvider) {
 		return
 	}

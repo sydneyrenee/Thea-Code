@@ -328,7 +328,7 @@ type GlobalSettings = {
 
 export type { GlobalSettings }
 
-type ClineMessage = {
+type TheaMessage = { // Renamed type
 	ts: number
 	type: "ask" | "say"
 	ask?:
@@ -393,7 +393,7 @@ type ClineMessage = {
 		| undefined
 }
 
-export type { ClineMessage }
+export type { TheaMessage } // Renamed export
 
 type TokenUsage = {
 	totalTokensIn: number

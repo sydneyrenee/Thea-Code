@@ -1,13 +1,13 @@
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
-import { ClineSayTool } from "../../shared/ExtensionMessage"
+import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { getReadablePath } from "../../utils/path"
 import path from "path"
 import { regexSearchFiles } from "../../services/ripgrep"
 
 export async function searchFilesTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -17,9 +17,9 @@ export async function searchFilesTool(
 	const relDirPath: string | undefined = block.params.path
 	const regex: string | undefined = block.params.regex
 	const filePattern: string | undefined = block.params.file_pattern
-	const sharedMessageProps: ClineSayTool = {
+	const sharedMessageProps: TheaSayTool = {
 		tool: "searchFiles",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relDirPath)),
+		path: getReadablePath(theaTask.cwd, removeClosingTag("path", relDirPath)),
 		regex: removeClosingTag("regex", regex),
 		filePattern: removeClosingTag("file_pattern", filePattern),
 	}
@@ -28,33 +28,33 @@ export async function searchFilesTool(
 			const partialMessage = JSON.stringify({
 				...sharedMessageProps,
 				content: "",
-			} satisfies ClineSayTool)
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			} satisfies TheaSayTool)
+			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!relDirPath) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("search_files", "path"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("search_files", "path"))
 				return
 			}
 			if (!regex) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("search_files", "regex"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("search_files", "regex"))
 				return
 			}
-			cline.consecutiveMistakeCount = 0
-			const absolutePath = path.resolve(cline.cwd, relDirPath)
+			theaTask.consecutiveMistakeCount = 0
+			const absolutePath = path.resolve(theaTask.cwd, relDirPath)
 			const results = await regexSearchFiles(
-				cline.cwd,
+				theaTask.cwd,
 				absolutePath,
 				regex,
 				filePattern,
-				cline.theaIgnoreController,
+				theaTask.theaIgnoreController,
 			)
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
 				content: results,
-			} satisfies ClineSayTool)
+			} satisfies TheaSayTool)
 			const didApprove = await askApproval("tool", completeMessage)
 			if (!didApprove) {
 				return

@@ -1,11 +1,11 @@
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import { formatResponse } from "../prompts/responses"
 import { parseXml } from "../../utils/xml"
 
 export async function askFollowupQuestionTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -16,12 +16,12 @@ export async function askFollowupQuestionTool(
 	const follow_up: string | undefined = block.params.follow_up
 	try {
 		if (block.partial) {
-			await cline.ask("followup", removeClosingTag("question", question), block.partial).catch(() => {})
+			await theaTask.webviewCommunicator.ask("followup", removeClosingTag("question", question), block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!question) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("ask_followup_question", "question"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("ask_followup_question", "question"))
 				return
 			}
 
@@ -44,8 +44,8 @@ export async function askFollowupQuestionTool(
 						suggest: Suggest[] | Suggest
 					}
 				} catch (error) {
-					cline.consecutiveMistakeCount++
-					await cline.say("error", `Failed to parse operations: ${error.message}`)
+					theaTask.consecutiveMistakeCount++
+					await theaTask.webviewCommunicator.say("error", `Failed to parse operations: ${error.message}`) // Use communicator
 					pushToolResult(formatResponse.toolError("Invalid operations xml format"))
 					return
 				}
@@ -57,10 +57,10 @@ export async function askFollowupQuestionTool(
 				follow_up_json.suggest = normalizedSuggest
 			}
 
-			cline.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCount = 0
 
-			const { text, images } = await cline.ask("followup", JSON.stringify(follow_up_json), false)
-			await cline.say("user_feedback", text ?? "", images)
+			const { text, images } = await theaTask.webviewCommunicator.ask("followup", JSON.stringify(follow_up_json), false) // Use communicator
+			await theaTask.webviewCommunicator.say("user_feedback", text ?? "", images) // Use communicator
 			pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
 			return
 		}

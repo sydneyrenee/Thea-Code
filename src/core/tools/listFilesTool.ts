@@ -1,6 +1,6 @@
 import * as path from "path"
-import { Cline } from "../Cline"
-import { ClineSayTool } from "../../shared/ExtensionMessage"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
+import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { ToolParamName, ToolUse } from "../assistant-message"
 import { formatResponse } from "../prompts/responses"
 import { listFiles } from "../../services/glob/list-files"
@@ -9,7 +9,7 @@ import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./ty
 /**
  * Implements the list_files tool.
  *
- * @param cline - The instance of Cline that is executing this tool.
+ * @param theaTask - The instance of TheaTask that is executing this tool.
  * @param block - The block of assistant message content that specifies the
  *   parameters for this tool.
  * @param askApproval - A function that asks the user for approval to show a
@@ -21,7 +21,7 @@ import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./ty
  * @param removeClosingTag - A function that removes a closing tag from a string.
  */
 export async function listFilesTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -31,39 +31,39 @@ export async function listFilesTool(
 	const relDirPath: string | undefined = block.params.path
 	const recursiveRaw: string | undefined = block.params.recursive
 	const recursive = recursiveRaw?.toLowerCase() === "true"
-	const sharedMessageProps: ClineSayTool = {
+	const sharedMessageProps: TheaSayTool = {
 		tool: !recursive ? "listFilesTopLevel" : "listFilesRecursive",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relDirPath)),
+		path: getReadablePath(theaTask.cwd, removeClosingTag("path", relDirPath)),
 	}
 	try {
 		if (block.partial) {
 			const partialMessage = JSON.stringify({
 				...sharedMessageProps,
 				content: "",
-			} satisfies ClineSayTool)
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			} satisfies TheaSayTool)
+			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!relDirPath) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("list_files", "path"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("list_files", "path"))
 				return
 			}
-			cline.consecutiveMistakeCount = 0
-			const absolutePath = path.resolve(cline.cwd, relDirPath)
+			theaTask.consecutiveMistakeCount = 0
+			const absolutePath = path.resolve(theaTask.cwd, relDirPath)
 			const [files, didHitLimit] = await listFiles(absolutePath, recursive, 200)
-			const { showTheaIgnoredFiles = true } = (await cline.providerRef.deref()?.getState()) ?? {}
+			const { showTheaIgnoredFiles = true } = (await theaTask.providerRef.deref()?.getState()) ?? {}
 			const result = formatResponse.formatFilesList(
 				absolutePath,
 				files,
 				didHitLimit,
-				cline.theaIgnoreController,
+				theaTask.theaIgnoreController,
 				showTheaIgnoredFiles,
 			)
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
 				content: result,
-			} satisfies ClineSayTool)
+			} satisfies TheaSayTool)
 			const didApprove = await askApproval("tool", completeMessage)
 			if (!didApprove) {
 				return

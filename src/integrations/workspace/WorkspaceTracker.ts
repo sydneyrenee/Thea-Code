@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import { listFiles } from "../../services/glob/list-files"
-import { ClineProvider } from "../../core/webview/ClineProvider"
+import { TheaProvider } from "../../core/webview/TheaProvider" // Renamed import
 import { toRelativePath } from "../../utils/path"
 import { getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
@@ -10,7 +10,7 @@ const MAX_INITIAL_FILES = 1_000
 
 // Note: this is not a drop-in replacement for listFiles at the start of tasks, since that will be done for Desktops when there is no workspace selected
 class WorkspaceTracker {
-	private providerRef: WeakRef<ClineProvider>
+	private providerRef: WeakRef<TheaProvider> // Renamed type
 	private disposables: vscode.Disposable[] = []
 	private filePaths: Set<string> = new Set()
 	private updateTimer: NodeJS.Timeout | null = null
@@ -20,7 +20,7 @@ class WorkspaceTracker {
 	get cwd() {
 		return getWorkspacePath()
 	}
-	constructor(provider: ClineProvider) {
+	constructor(provider: TheaProvider) { // Renamed type
 		this.providerRef = new WeakRef(provider)
 		this.registerListeners()
 	}

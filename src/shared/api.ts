@@ -6,6 +6,11 @@ export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
 
 export type ApiConfiguration = ProviderSettings
 
+// Neutral message type for providers expecting OpenAI format directly
+export type NeutralMessage = {
+	role: "user" | "assistant"
+	content: string // Assuming text content for simplicity, matching OllamaHandler's current capability
+}
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
 export type AnthropicModelId = keyof typeof anthropicModels

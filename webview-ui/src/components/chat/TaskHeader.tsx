@@ -9,7 +9,7 @@ import { formatLargeNumber } from "@/utils/format"
 import { calculateTokenDistribution, getMaxTokensForModel } from "@/utils/model-utils"
 import { Button } from "@/components/ui"
 
-import { ClineMessage } from "../../../../src/shared/ExtensionMessage"
+import { TheaMessage } from "../../../../src/shared/ExtensionMessage" // Renamed import
 import { mentionRegexGlobal } from "../../../../src/shared/context-mentions"
 import { HistoryItem } from "../../../../src/shared/HistoryItem"
 
@@ -19,7 +19,7 @@ import { normalizeApiConfiguration } from "../settings/ApiOptions"
 import { DeleteTaskDialog } from "../history/DeleteTaskDialog"
 
 interface TaskHeaderProps {
-	task: ClineMessage
+	task: TheaMessage // Renamed type
 	tokensIn: number
 	tokensOut: number
 	doesModelSupportPromptCache: boolean

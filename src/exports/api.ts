@@ -1,18 +1,18 @@
 import { EventEmitter } from "events"
 import * as vscode from "vscode"
 
-import { ClineProvider } from "../core/webview/ClineProvider"
+import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 
 import { TheaCodeAPI, TheaCodeEvents, TokenUsage, TheaCodeSettings } from "./thea-code"
 import { MessageHistory } from "./message-history"
 
 export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI {
 	private readonly outputChannel: vscode.OutputChannel
-	private readonly provider: ClineProvider
+	private readonly provider: TheaProvider // Renamed type
 	private readonly history: MessageHistory
 	private readonly tokenUsage: Record<string, TokenUsage>
 
-	constructor(outputChannel: vscode.OutputChannel, provider: ClineProvider) {
+	constructor(outputChannel: vscode.OutputChannel, provider: TheaProvider) { // Renamed type
 		super()
 
 		this.outputChannel = outputChannel
@@ -20,17 +20,17 @@ export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI {
 		this.history = new MessageHistory()
 		this.tokenUsage = {}
 
-		this.provider.on("clineCreated", (cline) => {
-			cline.on("message", (message) => this.emit("message", { taskId: cline.taskId, ...message }))
-			cline.on("taskStarted", () => this.emit("taskStarted", cline.taskId))
-			cline.on("taskPaused", () => this.emit("taskPaused", cline.taskId))
-			cline.on("taskUnpaused", () => this.emit("taskUnpaused", cline.taskId))
-			cline.on("taskAskResponded", () => this.emit("taskAskResponded", cline.taskId))
-			cline.on("taskAborted", () => this.emit("taskAborted", cline.taskId))
-			cline.on("taskSpawned", (childTaskId) => this.emit("taskSpawned", cline.taskId, childTaskId))
-			cline.on("taskCompleted", (_, usage) => this.emit("taskCompleted", cline.taskId, usage))
-			cline.on("taskTokenUsageUpdated", (_, usage) => this.emit("taskTokenUsageUpdated", cline.taskId, usage))
-			this.emit("taskCreated", cline.taskId)
+		this.provider.on("theaTaskCreated", (task) => { // Renamed event and parameter
+			task.on("message", (message) => this.emit("message", { ...message })) // Remove duplicate taskId
+			task.on("taskStarted", () => this.emit("taskStarted", task.taskId)) // Use renamed parameter
+			task.on("taskPaused", () => this.emit("taskPaused", task.taskId)) // Use renamed parameter
+			task.on("taskUnpaused", () => this.emit("taskUnpaused", task.taskId)) // Use renamed parameter
+			task.on("taskAskResponded", () => this.emit("taskAskResponded", task.taskId)) // Use renamed parameter
+			task.on("taskAborted", () => this.emit("taskAborted", task.taskId)) // Use renamed parameter
+			task.on("taskSpawned", (childTaskId) => this.emit("taskSpawned", task.taskId, childTaskId)) // Use renamed parameter
+			task.on("taskCompleted", (_, usage) => this.emit("taskCompleted", task.taskId, usage)) // Use renamed parameter
+			task.on("taskTokenUsageUpdated", (_, usage) => this.emit("taskTokenUsageUpdated", task.taskId, usage)) // Use renamed parameter
+			this.emit("taskCreated", task.taskId) // Use renamed parameter
 		})
 
 		this.on("message", ({ taskId, action, message }) => {
@@ -50,8 +50,9 @@ export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI {
 		await this.provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		await this.provider.postMessageToWebview({ type: "invoke", invoke: "newChat", text, images })
 
-		const cline = await this.provider.initClineWithTask(text, images)
-		return cline.taskId
+		const theaTask = await this.provider.initClineWithTask(text, images) // Renamed variable
+		return theaTask.taskId // Use renamed variable
+		return theaTask.taskId // Use renamed variable
 	}
 
 	public getCurrentTaskStack() {

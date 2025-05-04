@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 
 import { ACTION_NAMES, COMMAND_IDS } from "../core/CodeActionProvider"
 import { EditorUtils } from "../core/EditorUtils"
-import { ClineProvider } from "../core/webview/ClineProvider"
+import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { AI_IDENTITY_NAME } from "../../dist/thea-config" // Import branded constant
 
 export const registerCodeActions = (context: vscode.ExtensionContext) => {
@@ -76,7 +76,7 @@ const registerCodeAction = (
 				...(userInput ? { userInput } : {}),
 			}
 
-			await ClineProvider.handleCodeAction(command, promptType, params)
+			await TheaProvider.handleCodeAction(command, promptType, params) // Renamed static method call
 		}),
 	)
 }

@@ -1,7 +1,7 @@
-import { ClineMessage } from "./thea-code"
+import { TheaMessage } from "./thea-code" // Renamed import
 
 export class MessageHistory {
-	private readonly messages: Record<string, Record<number, ClineMessage>>
+	private readonly messages: Record<string, Record<number, TheaMessage>> // Renamed type
 	private readonly list: Record<string, number[]>
 
 	constructor() {
@@ -9,7 +9,7 @@ export class MessageHistory {
 		this.list = {}
 	}
 
-	public add(taskId: string, message: ClineMessage) {
+	public add(taskId: string, message: TheaMessage) { // Renamed type
 		if (!this.messages[taskId]) {
 			this.messages[taskId] = {}
 		}
@@ -23,7 +23,7 @@ export class MessageHistory {
 		this.list[taskId].push(message.ts)
 	}
 
-	public update(taskId: string, message: ClineMessage) {
+	public update(taskId: string, message: TheaMessage) { // Renamed type
 		if (this.messages[taskId][message.ts]) {
 			this.messages[taskId][message.ts] = message
 		}

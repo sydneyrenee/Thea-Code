@@ -1,5 +1,5 @@
 import type { McpHub as McpHubType } from "../McpHub"
-import type { ClineProvider } from "../../../core/webview/ClineProvider"
+import type { TheaProvider } from "../../../core/webview/TheaProvider" // Renamed import
 import type { ExtensionContext, Uri } from "vscode"
 import type { McpConnection } from "../McpHub"
 import { ServerConfigSchema } from "../McpHub"
@@ -29,11 +29,11 @@ jest.mock("vscode", () => ({
 	},
 }))
 jest.mock("fs/promises")
-jest.mock("../../../core/webview/ClineProvider")
+jest.mock("../../../core/webview/TheaProvider") // Updated mock path
 
 describe("McpHub", () => {
 	let mcpHub: McpHubType
-	let mockProvider: Partial<ClineProvider>
+	let mockProvider: Partial<TheaProvider> // Renamed type
 	const mockSettingsPath = "/mock/settings/path/mcp_settings.json"
 
 	beforeEach(() => {
@@ -100,7 +100,7 @@ describe("McpHub", () => {
 			}),
 		)
 
-		mcpHub = new McpHub(mockProvider as ClineProvider)
+		mcpHub = new McpHub(mockProvider as TheaProvider) // Renamed type assertion
 	})
 
 	describe("toggleToolAlwaysAllow", () => {

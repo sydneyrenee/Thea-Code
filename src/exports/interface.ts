@@ -1,13 +1,13 @@
 import { EventEmitter } from "events"
 
-import type { ProviderSettings, GlobalSettings, ClineMessage, TokenUsage } from "./types"
+import type { ProviderSettings, GlobalSettings, TheaMessage, TokenUsage } from "./types" // Renamed type
 
 type TheaCodeSettings = GlobalSettings & ProviderSettings
 
-export type { TheaCodeSettings, ProviderSettings, GlobalSettings, ClineMessage, TokenUsage }
+export type { TheaCodeSettings, ProviderSettings, GlobalSettings, TheaMessage, TokenUsage } // Renamed type
 
 export interface TheaCodeEvents {
-	message: [{ taskId: string; action: "created" | "updated"; message: ClineMessage }]
+	message: [{ taskId: string; action: "created" | "updated"; message: TheaMessage }] // Renamed type
 	taskCreated: [taskId: string]
 	taskStarted: [taskId: string]
 	taskPaused: [taskId: string]
@@ -95,9 +95,9 @@ export interface TheaCodeAPI extends EventEmitter<TheaCodeEvents> {
 	/**
 	 * Returns the messages for a given task.
 	 * @param taskId The ID of the task.
-	 * @returns An array of ClineMessage objects.
+	 * @returns An array of TheaMessage objects.
 	 */
-	getMessages(taskId: string): ClineMessage[]
+	getMessages(taskId: string): TheaMessage[] // Renamed return type
 
 	/**
 	 * Returns the token usage for a given task.

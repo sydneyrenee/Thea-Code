@@ -15,7 +15,7 @@ try {
 import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 
 import { initializeI18n } from "./i18n"
-import { ClineProvider } from "./core/webview/ClineProvider"
+import { TheaProvider } from "./core/webview/TheaProvider" // Renamed import
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { McpServerManager } from "./services/mcp/McpServerManager"
@@ -67,11 +67,11 @@ export async function activate(context: vscode.ExtensionContext) {
 		context.globalState.update("allowedCommands", defaultCommands)
 	}
 
-	const provider = new ClineProvider(context, outputChannel, "sidebar")
+	const provider = new TheaProvider(context, outputChannel, "sidebar") // Renamed constructor
 	telemetryService.setProvider(provider)
 
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {
+		vscode.window.registerWebviewViewProvider(TheaProvider.sideBarId, provider, { // Renamed static property access
 			webviewOptions: { retainContextWhenHidden: true },
 		}),
 	)

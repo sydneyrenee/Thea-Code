@@ -3,7 +3,7 @@
 
 	The Terminal classes are very sensitive to change, partially because of
 	the complicated way that shell integration works with VSCE, and
-	partially because of the way that Cline interacts with the Terminal*
+	partially because of the way that Thea interacts with the Terminal* // Renamed
 	class abstractions that make VSCE shell integration easier to work with.
 
 	At the point that PR#1365 is merged, it is unlikely that any Terminal*
@@ -63,8 +63,8 @@
 		  corner cases. See this ticket for more detail:
 			- https://github.com/microsoft/vscode/issues/237208
 
-		- The original Cline PR has quite a bit of information:
-			- https://github.com/cline/cline/pull/1089
+		- The original Thea PR has quite a bit of information: // Renamed
+			- https://github.com/thea-code/thea-code/pull/1089 // Updated URL (assuming repo rename)
 
 	Contact me if you have any questions:
 		- GitHub: KJ7LNW

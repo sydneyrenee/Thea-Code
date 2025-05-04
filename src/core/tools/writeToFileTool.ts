@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 
-import { Cline } from "../Cline"
-import { ClineSayTool } from "../../shared/ExtensionMessage"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
+import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { ToolUse } from "../assistant-message"
 import { formatResponse } from "../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
@@ -15,7 +15,7 @@ import delay from "delay"
 import { detectCodeOmission } from "../../integrations/editor/detect-omission"
 
 export async function writeToFileTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -31,9 +31,9 @@ export async function writeToFileTool(
 		return
 	}
 
-	const accessAllowed = cline.theaIgnoreController?.validateAccess(relPath)
+	const accessAllowed = theaTask.theaIgnoreController?.validateAccess(relPath)
 	if (!accessAllowed) {
-		await cline.say("theaignore_error", relPath)
+		await theaTask.webviewCommunicator.say("theaignore_error", relPath) // Use communicator
 		pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 		return
@@ -41,12 +41,12 @@ export async function writeToFileTool(
 
 	// Check if file exists using cached map or fs.access
 	let fileExists: boolean
-	if (cline.diffViewProvider.editType !== undefined) {
-		fileExists = cline.diffViewProvider.editType === "modify"
+	if (theaTask.diffViewProvider.editType !== undefined) {
+		fileExists = theaTask.diffViewProvider.editType === "modify"
 	} else {
-		const absolutePath = path.resolve(cline.cwd, relPath)
+		const absolutePath = path.resolve(theaTask.cwd, relPath)
 		fileExists = await fileExistsAtPath(absolutePath)
-		cline.diffViewProvider.editType = fileExists ? "modify" : "create"
+		theaTask.diffViewProvider.editType = fileExists ? "modify" : "create"
 	}
 
 	// pre-processing newContent for cases where weaker models might add artifacts like markdown codeblock markers (deepseek/llama) or extra escape characters (gemini)
@@ -58,7 +58,7 @@ export async function writeToFileTool(
 		newContent = newContent.split("\n").slice(0, -1).join("\n").trim()
 	}
 
-	if (!cline.api.getModel().id.includes("claude")) {
+	if (!theaTask.api.getModel().id.includes("claude")) {
 		// it seems not just llama models are doing cline, but also gemini and potentially others
 		if (newContent.includes("&gt;") || newContent.includes("&lt;") || newContent.includes("&quot;")) {
 			newContent = newContent
@@ -69,71 +69,71 @@ export async function writeToFileTool(
 	}
 
 	// Determine if the path is outside the workspace
-	const fullPath = relPath ? path.resolve(cline.cwd, removeClosingTag("path", relPath)) : ""
+	const fullPath = relPath ? path.resolve(theaTask.cwd, removeClosingTag("path", relPath)) : ""
 	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
 
-	const sharedMessageProps: ClineSayTool = {
+	const sharedMessageProps: TheaSayTool = { // Renamed type
 		tool: fileExists ? "editedExistingFile" : "newFileCreated",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
+		path: getReadablePath(theaTask.cwd, removeClosingTag("path", relPath)),
 		isOutsideWorkspace,
 	}
 	try {
 		if (block.partial) {
 			// update gui message
 			const partialMessage = JSON.stringify(sharedMessageProps)
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial).catch(() => {}) // Use communicator
 			// update editor
-			if (!cline.diffViewProvider.isEditing) {
+			if (!theaTask.diffViewProvider.isEditing) {
 				// open the editor and prepare to stream content in
-				await cline.diffViewProvider.open(relPath)
+				await theaTask.diffViewProvider.open(relPath)
 			}
 			// editor is open, stream content in
-			await cline.diffViewProvider.update(
+			await theaTask.diffViewProvider.update(
 				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
 				false,
 			)
 			return
 		} else {
 			if (!relPath) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "path"))
-				await cline.diffViewProvider.reset()
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("write_to_file", "path"))
+				await theaTask.diffViewProvider.reset()
 				return
 			}
 			if (!newContent) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "content"))
-				await cline.diffViewProvider.reset()
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("write_to_file", "content"))
+				await theaTask.diffViewProvider.reset()
 				return
 			}
 			if (!predictedLineCount) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("write_to_file", "line_count"))
-				await cline.diffViewProvider.reset()
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("write_to_file", "line_count"))
+				await theaTask.diffViewProvider.reset()
 				return
 			}
-			cline.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCount = 0
 
 			// if isEditingFile false, that means we have the full contents of the file already.
 			// it's important to note how cline function works, you can't make the assumption that the block.partial conditional will always be called since it may immediately get complete, non-partial data. So cline part of the logic will always be called.
 			// in other words, you must always repeat the block.partial logic here
-			if (!cline.diffViewProvider.isEditing) {
+			if (!theaTask.diffViewProvider.isEditing) {
 				// show gui message before showing edit animation
 				const partialMessage = JSON.stringify(sharedMessageProps)
-				await cline.ask("tool", partialMessage, true).catch(() => {}) // sending true for partial even though it's not a partial, cline shows the edit row before the content is streamed into the editor
-				await cline.diffViewProvider.open(relPath)
+				await theaTask.webviewCommunicator.ask("tool", partialMessage, true).catch(() => {}) // Use communicator
+				await theaTask.diffViewProvider.open(relPath)
 			}
-			await cline.diffViewProvider.update(
+			await theaTask.diffViewProvider.update(
 				everyLineHasLineNumbers(newContent) ? stripLineNumbers(newContent) : newContent,
 				true,
 			)
 			await delay(300) // wait for diff view to update
-			cline.diffViewProvider.scrollToFirstDiff()
+			theaTask.diffViewProvider.scrollToFirstDiff()
 
 			// Check for code omissions before proceeding
-			if (detectCodeOmission(cline.diffViewProvider.originalContent || "", newContent, predictedLineCount)) {
-				if (cline.diffStrategy) {
-					await cline.diffViewProvider.revertChanges()
+			if (detectCodeOmission(theaTask.diffViewProvider.originalContent || "", newContent, predictedLineCount)) {
+				if (theaTask.diffStrategy) {
+					await theaTask.diffViewProvider.revertChanges()
 					pushToolResult(
 						formatResponse.toolError(
 							`Content appears to be truncated (file has ${
@@ -164,24 +164,24 @@ export async function writeToFileTool(
 				...sharedMessageProps,
 				content: fileExists ? undefined : newContent,
 				diff: fileExists
-					? formatResponse.createPrettyPatch(relPath, cline.diffViewProvider.originalContent, newContent)
+					? formatResponse.createPrettyPatch(relPath, theaTask.diffViewProvider.originalContent, newContent)
 					: undefined,
-			} satisfies ClineSayTool)
+			} satisfies TheaSayTool) // Renamed type
 			const didApprove = await askApproval("tool", completeMessage)
 			if (!didApprove) {
-				await cline.diffViewProvider.revertChanges()
+				await theaTask.diffViewProvider.revertChanges()
 				return
 			}
-			const { newProblemsMessage, userEdits, finalContent } = await cline.diffViewProvider.saveChanges()
-			cline.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
+			const { newProblemsMessage, userEdits, finalContent } = await theaTask.diffViewProvider.saveChanges()
+			theaTask.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 			if (userEdits) {
-				await cline.say(
+				await theaTask.webviewCommunicator.say( // Use communicator
 					"user_feedback_diff",
 					JSON.stringify({
 						tool: fileExists ? "editedExistingFile" : "newFileCreated",
-						path: getReadablePath(cline.cwd, relPath),
+						path: getReadablePath(theaTask.cwd, relPath),
 						diff: userEdits,
-					} satisfies ClineSayTool),
+					} satisfies TheaSayTool), // Renamed type
 				)
 				pushToolResult(
 					`The user made the following updates to your content:\n\n${userEdits}\n\n` +
@@ -191,19 +191,19 @@ export async function writeToFileTool(
 						)}\n</final_file_content>\n\n` +
 						`Please note:\n` +
 						`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
-						`2. Proceed with the task using cline updated file content as the new baseline.\n` +
+						`2. Proceed with the task using the updated file content as the new baseline.\n` +
 						`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
 						`${newProblemsMessage}`,
 				)
 			} else {
 				pushToolResult(`The content was successfully saved to ${relPath.toPosix()}.${newProblemsMessage}`)
 			}
-			await cline.diffViewProvider.reset()
+			await theaTask.diffViewProvider.reset()
 			return
 		}
 	} catch (error) {
 		await handleError("writing file", error)
-		await cline.diffViewProvider.reset()
+		await theaTask.diffViewProvider.reset()
 		return
 	}
 }

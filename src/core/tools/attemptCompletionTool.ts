@@ -1,7 +1,7 @@
-import { ToolResponse } from "../Cline"
+import { ToolResponse } from "../TheaTask" // Renamed from Cline
 
 import { ToolUse } from "../assistant-message"
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import {
 	AskApproval,
 	HandleError,
@@ -15,7 +15,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import Anthropic from "@anthropic-ai/sdk"
 
 export async function attemptCompletionTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -27,7 +27,7 @@ export async function attemptCompletionTool(
 	const result: string | undefined = block.params.result
 	const command: string | undefined = block.params.command
 	try {
-		const lastMessage = cline.clineMessages.at(-1)
+		const lastMessage = theaTask.taskStateManager.clineMessages.at(-1) // Use state manager
 		if (block.partial) {
 			if (command) {
 				// the attempt_completion text is done, now we're getting command
@@ -36,39 +36,39 @@ export async function attemptCompletionTool(
 				// const secondLastMessage = cline.clineMessages.at(-2)
 				if (lastMessage && lastMessage.ask === "command") {
 					// update command
-					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
+					await theaTask.webviewCommunicator.ask("command", removeClosingTag("command", command), block.partial).catch(() => {}) // Use communicator
 				} else {
 					// last message is completion_result
 					// we have command string, which means we have the result as well, so finish it (doesnt have to exist yet)
-					await cline.say("completion_result", removeClosingTag("result", result), undefined, false)
+					await theaTask.webviewCommunicator.say("completion_result", removeClosingTag("result", result), undefined, false) // Use communicator
 
-					telemetryService.captureTaskCompleted(cline.taskId)
-					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+					telemetryService.captureTaskCompleted(theaTask.taskId)
+					theaTask.emit("taskCompleted", theaTask.taskId, theaTask.taskStateManager.getTokenUsage()) // Use state manager
 
-					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
+					await theaTask.webviewCommunicator.ask("command", removeClosingTag("command", command), block.partial).catch(() => {}) // Use communicator
 				}
 			} else {
 				// no command, still outputting partial result
-				await cline.say("completion_result", removeClosingTag("result", result), undefined, block.partial)
+				await theaTask.webviewCommunicator.say("completion_result", removeClosingTag("result", result), undefined, block.partial) // Use communicator
 			}
 			return
 		} else {
 			if (!result) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("attempt_completion", "result"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("attempt_completion", "result"))
 				return
 			}
 
-			cline.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCount = 0
 
 			let commandResult: ToolResponse | undefined
 
 			if (command) {
 				if (lastMessage && lastMessage.ask !== "command") {
 					// Haven't sent a command message yet so first send completion_result then command.
-					await cline.say("completion_result", result, undefined, false)
-					telemetryService.captureTaskCompleted(cline.taskId)
-					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+					await theaTask.webviewCommunicator.say("completion_result", result, undefined, false) // Use communicator
+					telemetryService.captureTaskCompleted(theaTask.taskId)
+					theaTask.emit("taskCompleted", theaTask.taskId, theaTask.taskStateManager.getTokenUsage()) // Use state manager
 				}
 
 				// Complete command message.
@@ -78,10 +78,10 @@ export async function attemptCompletionTool(
 					return
 				}
 
-				const [userRejected, execCommandResult] = await cline.executeCommandTool(command!)
+				const [userRejected, execCommandResult] = await theaTask.executeCommandTool(command!) // Use theaTask method
 
 				if (userRejected) {
-					cline.didRejectTool = true
+					theaTask.didRejectTool = true
 					pushToolResult(execCommandResult)
 					return
 				}
@@ -89,12 +89,12 @@ export async function attemptCompletionTool(
 				// User didn't reject, but the command may have output.
 				commandResult = execCommandResult
 			} else {
-				await cline.say("completion_result", result, undefined, false)
-				telemetryService.captureTaskCompleted(cline.taskId)
-				cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage())
+				await theaTask.webviewCommunicator.say("completion_result", result, undefined, false) // Use communicator
+				telemetryService.captureTaskCompleted(theaTask.taskId)
+				theaTask.emit("taskCompleted", theaTask.taskId, theaTask.taskStateManager.getTokenUsage()) // Use state manager
 			}
 
-			if (cline.parentTask) {
+			if (theaTask.parentTask) {
 				const didApprove = await askFinishSubTaskApproval()
 
 				if (!didApprove) {
@@ -102,14 +102,14 @@ export async function attemptCompletionTool(
 				}
 
 				// tell the provider to remove the current subtask and resume the previous task in the stack
-				await cline.providerRef.deref()?.finishSubTask(`Task complete: ${lastMessage?.text}`)
+				await theaTask.providerRef.deref()?.finishSubTask(`Task complete: ${lastMessage?.text}`)
 				return
 			}
 
 			// We already sent completion_result says, an
 			// empty string asks relinquishes control over
 			// button and field.
-			const { response, text, images } = await cline.ask("completion_result", "", false)
+			const { response, text, images } = await theaTask.webviewCommunicator.ask("completion_result", "", false) // Use communicator
 
 			// Signals to recursive loop to stop (for now
 			// cline never happens since yesButtonClicked
@@ -119,7 +119,7 @@ export async function attemptCompletionTool(
 				return
 			}
 
-			await cline.say("user_feedback", text ?? "", images)
+			await theaTask.webviewCommunicator.say("user_feedback", text ?? "", images) // Use communicator
 			const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
 
 			if (commandResult) {
@@ -137,12 +137,12 @@ export async function attemptCompletionTool(
 
 			toolResults.push(...formatResponse.imageBlocks(images))
 
-			cline.userMessageContent.push({
+			theaTask.userMessageContent.push({
 				type: "text",
 				text: `${toolDescription()} Result:`,
 			})
 
-			cline.userMessageContent.push(...toolResults)
+			theaTask.userMessageContent.push(...toolResults)
 			return
 		}
 	} catch (error) {

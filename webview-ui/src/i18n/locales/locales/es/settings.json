@@ -97,7 +97,7 @@
     "enterProfileName": "Ingrese el nombre del perfil",
     "createProfile": "Crear perfil",
     "cannotDeleteOnlyProfile": "No se puede eliminar el único perfil",
-    "vscodeLmDescription": "La API del Modelo de Lenguaje de VS Code le permite ejecutar modelos proporcionados por otras extensiones de VS Code (incluido, entre otros, GitHub Copilot). La forma más sencilla de empezar es instalar las extensiones Copilot y Copilot Chat desde el VS Code Marketplace.",
+    "vscodeLmDescription": "La API del Modelo de Lenguaje de VS Code le permite ejecutar modelos proporcionados por otras extensiones de VS Code (incluido, entre otros, GitHub Copilot). La forma más sencilla de empezar es instalar las extensiones Copilot y Copilot Chat.",
     "awsCustomArnUse": "Ingrese un ARN de AWS Bedrock válido para el modelo que desea utilizar. Ejemplos de formato:",
     "awsCustomArnDesc": "Asegúrese de que la región en el ARN coincida con la región de AWS seleccionada anteriormente.",
     "openRouterApiKey": "Clave API de OpenRouter",

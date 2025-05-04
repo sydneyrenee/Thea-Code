@@ -97,7 +97,7 @@
     "enterProfileName": "输入新配置文件名称",
     "createProfile": "创建配置文件",
     "cannotDeleteOnlyProfile": "无法删除唯一的配置文件",
-    "vscodeLmDescription": "VS Code 语言模型 API 允许您运行由其他 VS Code 扩展（包括但不限于 GitHub Copilot）提供的模型。最简单的方法是从 VS Code 市场安装 Copilot 和 Copilot Chat 扩展。",
+    "vscodeLmDescription": "VS Code 语言模型 API 允许您运行由其他 VS Code 扩展提供的模型（包括但不限于 GitHub Copilot）。开始使用的最简单方法是安装 Copilot 和 Copilot Chat 扩展。",
     "awsCustomArnUse": "输入您要使用的模型的有效 AWS Bedrock ARN。格式示例：",
     "awsCustomArnDesc": "确保 ARN 中的区域与您上面选择的 AWS 区域匹配。",
     "openRouterApiKey": "OpenRouter API 密钥",

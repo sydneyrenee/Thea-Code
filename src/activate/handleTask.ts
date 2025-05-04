@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { COMMAND_IDS } from "../core/CodeActionProvider"
-import { ClineProvider } from "../core/webview/ClineProvider"
+import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { t } from "../i18n"
 import { VIEWS } from "../../dist/thea-config" // Import branded constants
 
@@ -17,7 +17,7 @@ export const handleNewTask = async (params: { prompt?: string } | null | undefin
 		return
 	}
 
-	await ClineProvider.handleCodeAction(COMMAND_IDS.NEW_TASK, "NEW_TASK", {
+	await TheaProvider.handleCodeAction(COMMAND_IDS.NEW_TASK, "NEW_TASK", { // Renamed static method call
 		userInput: prompt,
 	})
 }

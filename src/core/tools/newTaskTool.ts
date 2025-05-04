@@ -1,13 +1,13 @@
 import { ToolUse } from "../assistant-message"
 import { HandleError, PushToolResult, RemoveClosingTag } from "./types"
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { AskApproval } from "./types"
 import { defaultModeSlug, getModeBySlug } from "../../shared/modes"
 import { formatResponse } from "../prompts/responses"
 import delay from "delay"
 
 export async function newTaskTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -23,23 +23,23 @@ export async function newTaskTool(
 				mode: removeClosingTag("mode", mode),
 				message: removeClosingTag("message", message),
 			})
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!mode) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("new_task", "mode"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("new_task", "mode"))
 				return
 			}
 			if (!message) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("new_task", "message"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("new_task", "message"))
 				return
 			}
-			cline.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCount = 0
 
 			// Verify the mode exists
-			const targetMode = getModeBySlug(mode, (await cline.providerRef.deref()?.getState())?.customModes)
+			const targetMode = getModeBySlug(mode, (await theaTask.providerRef.deref()?.getState())?.customModes)
 			if (!targetMode) {
 				pushToolResult(formatResponse.toolError(`Invalid mode: ${mode}`))
 				return
@@ -56,14 +56,14 @@ export async function newTaskTool(
 				return
 			}
 
-			const provider = cline.providerRef.deref()
+			const provider = theaTask.providerRef.deref()
 
 			if (!provider) {
 				return
 			}
 
 			// Preserve the current mode so we can resume with it later.
-			cline.pausedModeSlug = (await provider.getState()).mode ?? defaultModeSlug
+			theaTask.pausedModeSlug = (await provider.getState()).mode ?? defaultModeSlug
 
 			// Switch mode first, then create new task instance.
 			await provider.handleModeSwitch(mode)
@@ -71,15 +71,15 @@ export async function newTaskTool(
 			// Delay to allow mode change to take effect before next tool is executed.
 			await delay(500)
 
-			const newCline = await provider.initClineWithTask(message, undefined, cline)
-			cline.emit("taskSpawned", newCline.taskId)
+			const newTheaTask = await provider.initClineWithTask(message, undefined, theaTask) // TODO: Rename initClineWithTask
+			theaTask.emit("taskSpawned", theaTask.taskId, newTheaTask.taskId) // Add parent taskId
 
 			pushToolResult(`Successfully created new task in ${targetMode.name} mode with message: ${message}`)
 
 			// Set the isPaused flag to true so the parent
 			// task can wait for the sub-task to finish.
-			cline.isPaused = true
-			cline.emit("taskPaused")
+			theaTask.isPaused = true
+			theaTask.emit("taskPaused", theaTask.taskId) // Add taskId
 
 			return
 		}

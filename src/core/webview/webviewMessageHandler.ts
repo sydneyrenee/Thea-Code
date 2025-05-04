@@ -3,7 +3,7 @@ import fs from "fs/promises"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { ClineProvider } from "./ClineProvider"
+import { TheaProvider } from "./TheaProvider" // Renamed import
 import { CheckpointStorage, Language, ApiConfigMeta } from "../../schemas"
 import { changeLanguage, t } from "../../i18n"
 import { ApiConfiguration } from "../../shared/api"
@@ -45,7 +45,7 @@ import { EXTENSION_CONFIG_DIR, GLOBAL_FILENAMES as BRANDED_FILENAMES, configSect
 import { SETTING_KEYS } from "../../../dist/thea-config"; // Import branded constant
 
 // Export for testing
-export const webviewMessageHandler = async (provider: ClineProvider, message: WebviewMessage) => {
+export const webviewMessageHandler = async (provider: TheaProvider, message: WebviewMessage) => { // Renamed type
 	switch (message.type) {
 		case "webviewDidLaunch":
 			// Load custom modes first
@@ -300,7 +300,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 			await provider.postStateToWebview()
 			break
 		case "askResponse":
-			provider.getCurrentCline()?.handleWebviewAskResponse(message.askResponse!, message.text, message.images)
+			provider.getCurrentCline()?.webviewCommunicator.handleWebviewAskResponse(message.askResponse!, message.text, message.images) // Use communicator
 			break
 		case "clearTask":
 			// clear task resets the current session and allows for a new task to be started, if this session is a subtask - it allows the parent task to be resumed
@@ -825,20 +825,20 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 
 				const messageIndex = provider
 					.getCurrentCline()!
-					.clineMessages.findIndex((msg) => msg.ts && msg.ts >= timeCutoff)
+					.taskStateManager.clineMessages.findIndex((msg) => msg.ts && msg.ts >= timeCutoff) // Access via state manager
 
 				const apiConversationHistoryIndex = provider
 					.getCurrentCline()
-					?.apiConversationHistory.findIndex((msg) => msg.ts && msg.ts >= timeCutoff)
+					?.taskStateManager.apiConversationHistory.findIndex((msg) => msg.ts && msg.ts >= timeCutoff) // Access via state manager
 
 				if (messageIndex !== -1) {
-					const { historyItem } = await provider.getTaskWithId(provider.getCurrentCline()!.taskId)
+					const { historyItem } = await provider.getTaskWithId(provider.getCurrentCline()!.taskId) // Access taskId directly from TheaTask
 
 					if (answer === t("common:confirmation.just_this_message")) {
 						// Find the next user message first
 						const nextUserMessage = provider
 							.getCurrentCline()!
-							.clineMessages.slice(messageIndex + 1)
+							.taskStateManager.clineMessages.slice(messageIndex + 1) // Access via state manager
 							.find((msg) => msg.type === "say" && msg.say === "user_feedback")
 
 						// Handle UI messages
@@ -846,21 +846,21 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 							// Find absolute index of next user message
 							const nextUserMessageIndex = provider
 								.getCurrentCline()!
-								.clineMessages.findIndex((msg) => msg === nextUserMessage)
+								.taskStateManager.clineMessages.findIndex((msg) => msg === nextUserMessage) // Access via state manager
 
 							// Keep messages before current message and after next user message
 							await provider
 								.getCurrentCline()!
-								.overwriteClineMessages([
-									...provider.getCurrentCline()!.clineMessages.slice(0, messageIndex),
-									...provider.getCurrentCline()!.clineMessages.slice(nextUserMessageIndex),
+								.taskStateManager.overwriteClineMessages([ // Access via state manager
+									...provider.getCurrentCline()!.taskStateManager.clineMessages.slice(0, messageIndex),
+									...provider.getCurrentCline()!.taskStateManager.clineMessages.slice(nextUserMessageIndex),
 								])
 						} else {
 							// If no next user message, keep only messages before current message
 							await provider
 								.getCurrentCline()!
-								.overwriteClineMessages(
-									provider.getCurrentCline()!.clineMessages.slice(0, messageIndex),
+								.taskStateManager.overwriteClineMessages( // Access via state manager
+									provider.getCurrentCline()!.taskStateManager.clineMessages.slice(0, messageIndex),
 								)
 						}
 
@@ -870,13 +870,13 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 								// Keep messages before current API message and after next user message
 								await provider
 									.getCurrentCline()!
-									.overwriteApiConversationHistory([
+									.taskStateManager.overwriteApiConversationHistory([ // Access via state manager
 										...provider
 											.getCurrentCline()!
-											.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+											.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
 										...provider
 											.getCurrentCline()!
-											.apiConversationHistory.filter(
+											.taskStateManager.apiConversationHistory.filter( // Access via state manager
 												(msg) => msg.ts && msg.ts >= nextUserMessage.ts,
 											),
 									])
@@ -884,10 +884,10 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 								// If no next user message, keep only messages before current API message
 								await provider
 									.getCurrentCline()!
-									.overwriteApiConversationHistory(
+									.taskStateManager.overwriteApiConversationHistory( // Access via state manager
 										provider
 											.getCurrentCline()!
-											.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+											.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
 									)
 							}
 						}
@@ -895,14 +895,14 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 						// Delete this message and all that follow
 						await provider
 							.getCurrentCline()!
-							.overwriteClineMessages(provider.getCurrentCline()!.clineMessages.slice(0, messageIndex))
+							.taskStateManager.overwriteClineMessages(provider.getCurrentCline()!.taskStateManager.clineMessages.slice(0, messageIndex)) // Access via state manager
 						if (apiConversationHistoryIndex !== -1) {
 							await provider
 								.getCurrentCline()!
-								.overwriteApiConversationHistory(
+								.taskStateManager.overwriteApiConversationHistory( // Access via state manager
 									provider
 										.getCurrentCline()!
-										.apiConversationHistory.slice(0, apiConversationHistoryIndex),
+										.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
 								)
 						}
 					}
@@ -1353,7 +1353,7 @@ export const webviewMessageHandler = async (provider: ClineProvider, message: We
 	}
 }
 
-const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMessage) => {
+const generateSystemPrompt = async (provider: TheaProvider, message: WebviewMessage) => { // Renamed type
 	const {
 		apiConfiguration,
 		customModePrompts,

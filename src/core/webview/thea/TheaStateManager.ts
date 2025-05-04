@@ -14,13 +14,13 @@ import { TERMINAL_SHELL_INTEGRATION_TIMEOUT } from '../../../integrations/termin
 /**
  * Manages application state retrieval and updates.
  */
-export class ClineStateManager {
+export class TheaStateManager { // Renamed class
     private contextProxy: ContextProxy;
     // Managers are now passed in, assuming they are needed by getState logic implicitly via contextProxy or directly
     private providerSettingsManager: ProviderSettingsManager;
     private customModesManager: CustomModesManager;
 
-    // Define the property explicitly - assigned by ClineProvider instance after construction
+    // Define the property explicitly - assigned by TheaProvider instance after construction
     public getCustomModes?: () => Promise<ModeConfig[] | undefined>;
 
     constructor(

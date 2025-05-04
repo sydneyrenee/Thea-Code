@@ -6,13 +6,12 @@ import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
 import { SPECIFIC_STRINGS } from "../../../../dist/thea-config";
 import {
-	ClineAsk,
-	ClineMessage,
-	ClineSayBrowserAction,
-	ClineSayTool,
+	TheaAsk, // Corrected import
+	TheaMessage, // Corrected import
+	TheaSayBrowserAction, // Corrected import
+	TheaSayTool,
 	ExtensionMessage,
-
-} from "../../../../src/shared/ExtensionMessage"
+} from "../../../../src/shared/ExtensionMessage" // Corrected imports
 import { McpServer, McpTool } from "../../../../src/shared/mcp"
 import { findLast } from "../../../../src/shared/array"
 import { combineApiRequests } from "../../../../src/shared/combineApiRequests"
@@ -74,7 +73,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	} = useExtensionState()
 
 	//const task = messages.length > 0 ? (messages[0].say === "task" ? messages[0] : undefined) : undefined) : undefined
-	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see Cline.abort)
+	const task = useMemo(() => messages.at(0), [messages]) // leaving this less safe version here since if the first message is not a task, then the extension is in a bad state and needs to be debugged (see TheaTask.abort)
 	const modifiedMessages = useMemo(() => combineApiRequests(combineCommandSequences(messages.slice(1))), [messages])
 	// has to be after api_req_finished are all reduced into api_req_started messages
 	const apiMetrics = useMemo(() => getApiMetrics(modifiedMessages), [modifiedMessages])
@@ -85,7 +84,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const [selectedImages, setSelectedImages] = useState<string[]>([])
 
 	// we need to hold on to the ask because useEffect > lastMessage will always let us know when an ask comes in and handle it, but by the time handleMessage is called, the last message might not be the ask anymore (it could be a say that followed)
-	const [clineAsk, setClineAsk] = useState<ClineAsk | undefined>(undefined)
+	const [theaAsk, setTheaAsk] = useState<TheaAsk | undefined>(undefined) // Renamed state variable and type
 	const [enableButtons, setEnableButtons] = useState<boolean>(false)
 	const [primaryButtonText, setPrimaryButtonText] = useState<string | undefined>(undefined)
 	const [secondaryButtonText, setSecondaryButtonText] = useState<string | undefined>(undefined)
@@ -126,7 +125,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "api_req_failed":
 							playSound("progress_loop")
 							setTextAreaDisabled(true)
-							setClineAsk("api_req_failed")
+							setTheaAsk("api_req_failed") // Use renamed setter
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:retry.title"))
 							setSecondaryButtonText(t("chat:startNewTask.title"))
@@ -134,14 +133,14 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						case "mistake_limit_reached":
 							playSound("progress_loop")
 							setTextAreaDisabled(false)
-							setClineAsk("mistake_limit_reached")
+							setTheaAsk("mistake_limit_reached") // Use renamed setter
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:proceedAnyways.title"))
 							setSecondaryButtonText(t("chat:startNewTask.title"))
 							break
 						case "followup":
 							setTextAreaDisabled(isPartial)
-							setClineAsk("followup")
+							setTheaAsk("followup") // Use renamed setter
 							setEnableButtons(isPartial)
 							// setPrimaryButtonText(undefined)
 							// setSecondaryButtonText(undefined)
@@ -151,9 +150,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								playSound("notification")
 							}
 							setTextAreaDisabled(isPartial)
-							setClineAsk("tool")
+							setTheaAsk("tool") // Use renamed setter
 							setEnableButtons(!isPartial)
-							const tool = JSON.parse(lastMessage.text || "{}") as ClineSayTool
+							const tool = JSON.parse(lastMessage.text || "{}") as TheaSayTool
 							switch (tool.tool) {
 								case "editedExistingFile":
 								case "appliedDiff":
@@ -176,7 +175,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								playSound("notification")
 							}
 							setTextAreaDisabled(isPartial)
-							setClineAsk("browser_action_launch")
+							setTheaAsk("browser_action_launch") // Use renamed setter
 							setEnableButtons(!isPartial)
 							setPrimaryButtonText(t("chat:approve.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
@@ -186,21 +185,21 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								playSound("notification")
 							}
 							setTextAreaDisabled(isPartial)
-							setClineAsk("command")
+							setTheaAsk("command") // Use renamed setter
 							setEnableButtons(!isPartial)
 							setPrimaryButtonText(t("chat:runCommand.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
 							break
 						case "command_output":
 							setTextAreaDisabled(false)
-							setClineAsk("command_output")
+							setTheaAsk("command_output") // Use renamed setter
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:proceedWhileRunning.title"))
 							setSecondaryButtonText(undefined)
 							break
 						case "use_mcp_server":
 							setTextAreaDisabled(isPartial)
-							setClineAsk("use_mcp_server")
+							setTheaAsk("use_mcp_server") // Use renamed setter
 							setEnableButtons(!isPartial)
 							setPrimaryButtonText(t("chat:approve.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
@@ -209,14 +208,14 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							// extension waiting for feedback. but we can just present a new task button
 							playSound("celebration")
 							setTextAreaDisabled(isPartial)
-							setClineAsk("completion_result")
+							setTheaAsk("completion_result") // Use renamed setter
 							setEnableButtons(!isPartial)
 							setPrimaryButtonText(t("chat:startNewTask.title"))
 							setSecondaryButtonText(undefined)
 							break
 						case "resume_task":
 							setTextAreaDisabled(false)
-							setClineAsk("resume_task")
+							setTheaAsk("resume_task") // Use renamed setter
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:resumeTask.title"))
 							setSecondaryButtonText(t("chat:terminate.title"))
@@ -224,7 +223,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							break
 						case "resume_completed_task":
 							setTextAreaDisabled(false)
-							setClineAsk("resume_completed_task")
+							setTheaAsk("resume_completed_task") // Use renamed setter
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:startNewTask.title"))
 							setSecondaryButtonText(undefined)
@@ -244,7 +243,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 								setInputValue("")
 								setTextAreaDisabled(true)
 								setSelectedImages([])
-								setClineAsk(undefined)
+								setTheaAsk(undefined) // Use renamed setter
 								setEnableButtons(false)
 							}
 							break
@@ -267,7 +266,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			// this would get called after sending the first message, so we have to watch messages.length instead
 			// No messages, so user has to submit a task
 			// setTextAreaDisabled(false)
-			// setClineAsk(undefined)
+			// setTheaAsk(undefined)
 			// setPrimaryButtonText(undefined)
 			// setSecondaryButtonText(undefined)
 		}
@@ -276,7 +275,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	useEffect(() => {
 		if (messages.length === 0) {
 			setTextAreaDisabled(false)
-			setClineAsk(undefined)
+			setTheaAsk(undefined) // Use renamed setter
 			setEnableButtons(false)
 			setPrimaryButtonText(undefined)
 			setSecondaryButtonText(undefined)
@@ -290,7 +289,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const isStreaming = useMemo(() => {
 		const isLastAsk = !!modifiedMessages.at(-1)?.ask // checking clineAsk isn't enough since messages effect may be called again for a tool for example, set clineAsk to its value, and if the next message is not an ask then it doesn't reset. This is likely due to how much more often we're updating messages as compared to before, and should be resolved with optimizations as it's likely a rendering bug. but as a final guard for now, the cancel button will show if the last message is not an ask
 		const isToolCurrentlyAsking =
-			isLastAsk && clineAsk !== undefined && enableButtons && primaryButtonText !== undefined
+			isLastAsk && theaAsk !== undefined && enableButtons && primaryButtonText !== undefined // Use renamed state variable
 		if (isToolCurrentlyAsking) {
 			return false
 		}
@@ -315,14 +314,14 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		}
 
 		return false
-	}, [modifiedMessages, clineAsk, enableButtons, primaryButtonText])
+	}, [modifiedMessages, theaAsk, enableButtons, primaryButtonText]) // Use renamed state variable
 
 	const handleChatReset = useCallback(() => {
 		// Only reset message-specific state, preserving mode.
 		setInputValue("")
 		setTextAreaDisabled(true)
 		setSelectedImages([])
-		setClineAsk(undefined)
+		setTheaAsk(undefined) // Use renamed setter
 		setEnableButtons(false)
 		// Do not reset mode here as it should persist.
 		// setPrimaryButtonText(undefined)
@@ -335,8 +334,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			text = text.trim()
 			if (text || images.length > 0) {
 				vscode.postMessage({ type: "newTask", text, images })
-				if (clineAsk) {
-					switch (clineAsk) {
+				if (theaAsk) { // Use renamed state variable
+					switch (theaAsk) { // Use renamed state variable
 						case "followup":
 						case "tool":
 						case "browser_action_launch":
@@ -355,7 +354,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				handleChatReset()
 			}
 		},
-		[clineAsk, handleChatReset],
+		[theaAsk, handleChatReset], // Use renamed state variable
 	)
 
 	const handleSetChatBoxMessage = useCallback(
@@ -382,7 +381,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const handlePrimaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()
-			switch (clineAsk) {
+			switch (theaAsk) { // Use renamed state variable
 				case "api_req_failed":
 				case "command":
 				case "command_output":
@@ -416,11 +415,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					break
 			}
 			setTextAreaDisabled(true)
-			setClineAsk(undefined)
+			setTheaAsk(undefined) // Use renamed setter
 			setEnableButtons(false)
 			disableAutoScrollRef.current = false
 		},
-		[clineAsk, startNewTask],
+		[theaAsk, startNewTask], // Use renamed state variable
 	)
 
 	const handleSecondaryButtonClick = useCallback(
@@ -432,7 +431,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				return
 			}
 
-			switch (clineAsk) {
+			switch (theaAsk) { // Use renamed state variable
 				case "api_req_failed":
 				case "mistake_limit_reached":
 				case "resume_task":
@@ -463,11 +462,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 					break
 			}
 			setTextAreaDisabled(true)
-			setClineAsk(undefined)
+			setTheaAsk(undefined) // Use renamed setter
 			setEnableButtons(false)
 			disableAutoScrollRef.current = false
 		},
-		[clineAsk, startNewTask, isStreaming],
+		[theaAsk, startNewTask, isStreaming], // Use renamed state variable
 	)
 
 	const handleTaskCloseButtonClick = useCallback(() => {
@@ -592,7 +591,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		})
 	}, [modifiedMessages])
 
-	const isReadOnlyToolAction = useCallback((message: ClineMessage | undefined) => {
+	const isReadOnlyToolAction = useCallback((message: TheaMessage | undefined) => { // Renamed type
 		if (message?.type === "ask") {
 			if (!message.text) {
 				return true
@@ -610,7 +609,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		return false
 	}, [])
 
-	const isWriteToolAction = useCallback((message: ClineMessage | undefined) => {
+	const isWriteToolAction = useCallback((message: TheaMessage | undefined) => { // Renamed type
 		if (message?.type === "ask") {
 			if (!message.text) {
 				return true
@@ -622,7 +621,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	}, [])
 
 	const isMcpToolAlwaysAllowed = useCallback(
-		(message: ClineMessage | undefined) => {
+		(message: TheaMessage | undefined) => { // Renamed type
 			if (message?.type === "ask" && message.ask === "use_mcp_server") {
 				if (!message.text) {
 					return true
@@ -641,7 +640,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	// Check if a command message is allowed
 	const isAllowedCommand = useCallback(
-		(message: ClineMessage | undefined): boolean => {
+		(message: TheaMessage | undefined): boolean => { // Renamed type
 			if (message?.type !== "ask") return false
 			return validateCommand(message.text || "", allowedCommands || [])
 		},
@@ -649,7 +648,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	)
 
 	const isAutoApproved = useCallback(
-		(message: ClineMessage | undefined) => {
+		(message: TheaMessage | undefined) => { // Renamed type
 			if (!autoApprovalEnabled || !message || message.type !== "ask") return false
 
 			if (message.ask === "browser_action_launch") {
@@ -788,7 +787,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		setWasStreaming(isStreaming)
 	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved, messages.length])
 
-	const isBrowserSessionMessage = (message: ClineMessage): boolean => {
+	const isBrowserSessionMessage = (message: TheaMessage): boolean => { // Renamed type
 		// which of visible messages are browser session messages, see above
 		if (message.type === "ask") {
 			return ["browser_action_launch"].includes(message.ask!)
@@ -800,8 +799,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	}
 
 	const groupedMessages = useMemo(() => {
-		const result: (ClineMessage | ClineMessage[])[] = []
-		let currentGroup: ClineMessage[] = []
+		const result: (TheaMessage | TheaMessage[])[] = [] // Renamed type
+		let currentGroup: TheaMessage[] = [] // Renamed type
 		let isInBrowserSession = false
 
 		const endBrowserSession = () => {
@@ -841,7 +840,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 					// Check if this is a close action
 					if (message.say === "browser_action") {
-						const browserAction = JSON.parse(message.text || "{}") as ClineSayBrowserAction
+						const browserAction = JSON.parse(message.text || "{}") as TheaSayBrowserAction // Renamed type
 						if (browserAction.action === "close") {
 							endBrowserSession()
 						}
@@ -1023,7 +1022,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const placeholderText = task ? t("chat:typeMessage") : t("chat:typeTask")
 
 	const itemContent = useCallback(
-		(index: number, messageOrGroup: ClineMessage | ClineMessage[]) => {
+		(index: number, messageOrGroup: TheaMessage | TheaMessage[]) => { // Renamed type
 			// browser session group
 			if (Array.isArray(messageOrGroup)) {
 				return (
@@ -1082,7 +1081,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	useEffect(() => {
 		// Only proceed if we have an ask and buttons are enabled
-		if (!clineAsk || !enableButtons) return
+		if (!theaAsk || !enableButtons) return // Use renamed state variable
 
 		const autoApprove = async () => {
 			if (isAutoApproved(lastMessage)) {
@@ -1095,7 +1094,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		}
 		autoApprove()
 	}, [
-		clineAsk,
+		theaAsk, // Use renamed state variable
 		enableButtons,
 		handlePrimaryButtonClick,
 		alwaysAllowBrowser,

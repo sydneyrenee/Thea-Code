@@ -29,9 +29,7 @@ English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) 
 <div align="center">
 <h1>Thea Code</h1>
 
-<a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code" target="_blank"><img src="https://img.shields.io/badge/Download%20on%20VS%20Marketplace-blue?style=for-the-badge&logo=visualstudiocode&logoColor=white" alt="Download on VS Marketplace"></a>
 <a href="SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Feature%20Requests-yellow?style=for-the-badge" alt="Feature Requests"></a>
-<a href="https://marketplace.visualstudio.com/items?itemName=SolaceHarmony.thea-code&ssr=false#review-details" target="_blank"><img src="https://img.shields.io/badge/Rate%20%26%20Review-green?style=for-the-badge" alt="Rate & Review"></a>
 <a href="https://docs.thea-placeholder.com" target="_blank"><img src="https://img.shields.io/badge/Documentation-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation"></a>
 
 </div>
@@ -49,7 +47,7 @@ Whether you’re seeking a flexible coding partner, a system architect, or speci
 
 Check out the [CHANGELOG](CHANGELOG.md) for detailed updates and fixes.
 
-> **Note**: Thea Code is a fork of Roo Code. We'd like to express our special thanks to the Roo Code team for their excellent work which served as the foundation for this project.
+> **Note**: Thea Code is a fork of Thea Code. We'd like to express our special thanks to the Thea Code team for their excellent work which served as the foundation for this project.
 
 ---
 

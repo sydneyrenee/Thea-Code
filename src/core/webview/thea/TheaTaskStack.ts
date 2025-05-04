@@ -1,58 +1,58 @@
-import { Cline } from "../../Cline" // Adjusted import path
+import { TheaTask } from "../../TheaTask" // Updated import path and type
 import { t } from "../../../i18n" // Adjusted import path
 
 /**
  * Manages the stack of Cline instances representing ongoing tasks and subtasks.
  */
-export class ClineStack {
-	private stack: Cline[] = []
+export class TheaTaskStack { // Renamed class
+	private stack: TheaTask[] = [] // Renamed type
 
 	/**
 	 * Adds a new Cline instance to the stack.
-	 * @param cline The Cline instance to add to the stack
+	 * @param task The TheaTask instance to add to the stack
 	 */
-	async addCline(cline: Cline): Promise<void> {
-		console.log(`[subtasks] adding task ${cline.taskId}.${cline.instanceId} to stack`)
-		// Add this cline instance into the stack that represents the order of all the called tasks.
-		this.stack.push(cline)
+	async addCline(task: TheaTask): Promise<void> { // Renamed parameter and type
+	 console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`) // Use renamed parameter
+	 // Add this task instance into the stack that represents the order of all the called tasks.
+	 this.stack.push(task) // Use renamed parameter
 		// Note: Validation logic involving `getState` was removed as it belongs in the provider calling this method.
 	}
 
 	/**
 	 * Removes and destroys the top Cline instance (the current finished task).
-	 * @returns The removed Cline instance, if any
+	 * @returns The removed TheaTask instance, if any
 	 */
-	async removeCurrentCline(): Promise<Cline | undefined> {
+	async removeCurrentCline(): Promise<TheaTask | undefined> { // Renamed return type
 		if (this.stack.length === 0) {
 			return undefined
 		}
 
 		// Pop the top Cline instance from the stack.
-		const cline = this.stack.pop()
+		const task = this.stack.pop() // Renamed variable
 
-		if (cline) {
-			console.log(`[subtasks] removing task ${cline.taskId}.${cline.instanceId} from stack`)
+		if (task) { // Use renamed variable
+			console.log(`[subtasks] removing task ${task.taskId}.${task.instanceId} from stack`) // Use renamed variable
 
 			try {
 				// Abort the running task and set isAbandoned to true so
 				// all running promises will exit as well.
-				await cline.abortTask(true)
+				await task.abortTask(true) // Use renamed variable
 			} catch (e) {
 				// Note: Logging removed, should be handled by the caller or a dedicated logger.
 				console.error( // Keep error log for now
-					`[ClineStack] encountered error while aborting task ${cline.taskId}.${cline.instanceId}: ${e.message}`,
+					`[TheaTaskStack] encountered error while aborting task ${task.taskId}.${task.instanceId}: ${e.message}`, // Renamed class in log, use renamed variable
 				)
 			}
 		}
 		// Return the popped cline instance (it's already undefined if not found)
-		return cline
+		return task // Return renamed variable
 	}
 
 	/**
 	 * Returns the current cline object in the stack (the top one)
-	 * @returns The current Cline instance, if any
+	 * @returns The current TheaTask instance, if any
 	 */
-	getCurrentCline(): Cline | undefined {
+	getCurrentCline(): TheaTask | undefined { // Renamed return type
 		if (this.stack.length === 0) {
 			return undefined
 		}
@@ -61,7 +61,7 @@ export class ClineStack {
 
 	/**
 	 * Returns the current stack size
-	 * @returns Number of Cline instances in the stack
+	 * @returns Number of TheaTask instances in the stack
 	 */
 	getSize(): number {
 		return this.stack.length
@@ -72,7 +72,7 @@ export class ClineStack {
 	 * @returns Array of task IDs
 	 */
 	getTaskStack(): string[] {
-		return this.stack.map((cline) => cline.taskId)
+		return this.stack.map((task) => task.taskId) // Use renamed parameter
 	}
 
 	/**

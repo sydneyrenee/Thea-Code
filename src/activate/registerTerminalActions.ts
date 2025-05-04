@@ -1,5 +1,5 @@
 import * as vscode from "vscode"
-import { ClineProvider } from "../core/webview/ClineProvider"
+import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { Terminal } from "../integrations/terminal/Terminal"
 import { t } from "../i18n"
 import { COMMANDS } from "../../dist/thea-config" // Import branded constants
@@ -54,7 +54,7 @@ const registerTerminalAction = (
 					})) ?? ""
 			}
 
-			await ClineProvider.handleTerminalAction(command, promptType, params)
+			await TheaProvider.handleTerminalAction(command, promptType, params) // Renamed static method call
 		}),
 	)
 }

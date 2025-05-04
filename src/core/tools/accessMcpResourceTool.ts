@@ -1,12 +1,12 @@
-import { ClineAskUseMcpServer } from "../../shared/ExtensionMessage"
+import { TheaAskUseMcpServer } from "../../shared/ExtensionMessage" // Renamed import
 import { RemoveClosingTag } from "./types"
 import { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult } from "./types"
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { formatResponse } from "../prompts/responses"
 
 export async function accessMcpResourceTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -21,33 +21,33 @@ export async function accessMcpResourceTool(
 				type: "access_mcp_resource",
 				serverName: removeClosingTag("server_name", server_name),
 				uri: removeClosingTag("uri", uri),
-			} satisfies ClineAskUseMcpServer)
-			await cline.ask("use_mcp_server", partialMessage, block.partial).catch(() => {})
+			} satisfies TheaAskUseMcpServer) // Renamed type
+			await theaTask.webviewCommunicator.ask("use_mcp_server", partialMessage, block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!server_name) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("access_mcp_resource", "server_name"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("access_mcp_resource", "server_name"))
 				return
 			}
 			if (!uri) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("access_mcp_resource", "uri"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("access_mcp_resource", "uri"))
 				return
 			}
-			cline.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCount = 0
 			const completeMessage = JSON.stringify({
 				type: "access_mcp_resource",
 				serverName: server_name,
 				uri,
-			} satisfies ClineAskUseMcpServer)
+			} satisfies TheaAskUseMcpServer) // Renamed type
 			const didApprove = await askApproval("use_mcp_server", completeMessage)
 			if (!didApprove) {
 				return
 			}
 			// now execute the tool
-			await cline.say("mcp_server_request_started")
-			const resourceResult = await cline.providerRef.deref()?.getMcpHub()?.readResource(server_name, uri)
+			await theaTask.webviewCommunicator.say("mcp_server_request_started") // Use communicator
+			const resourceResult = await theaTask.providerRef.deref()?.getMcpHub()?.readResource(server_name, uri)
 			const resourceResultPretty =
 				resourceResult?.contents
 					.map((item) => {
@@ -66,7 +66,7 @@ export async function accessMcpResourceTool(
 					images.push(item.blob)
 				}
 			})
-			await cline.say("mcp_server_response", resourceResultPretty, images)
+			await theaTask.webviewCommunicator.say("mcp_server_response", resourceResultPretty, images) // Use communicator
 			pushToolResult(formatResponse.toolResult(resourceResultPretty, images))
 			return
 		}

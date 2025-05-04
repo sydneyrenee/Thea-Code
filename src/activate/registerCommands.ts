@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import delay from "delay"
 
-import { ClineProvider } from "../core/webview/ClineProvider"
+import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { EXTENSION_NAME, EXTENSION_DISPLAY_NAME, HOMEPAGE_URL, COMMANDS } from "../../dist/thea-config" // Import branded constants
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
@@ -38,7 +38,7 @@ export function setPanel(
 export type RegisterCommandOptions = {
 	context: vscode.ExtensionContext
 	outputChannel: vscode.OutputChannel
-	provider: ClineProvider
+	provider: TheaProvider // Renamed type
 }
 
 export const registerCommands = (options: RegisterCommandOptions) => {
@@ -64,8 +64,8 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		[COMMANDS.PROMPTS_BUTTON]: () => { 
 			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
-		[COMMANDS.POPOUT_BUTTON]: () => openClineInNewTab({ context, outputChannel }), 
-		[COMMANDS.OPEN_NEW_TAB]: () => openClineInNewTab({ context, outputChannel }), 
+		[COMMANDS.POPOUT_BUTTON]: () => openTheaInNewTab({ context, outputChannel }), // Renamed function call
+		[COMMANDS.OPEN_NEW_TAB]: () => openTheaInNewTab({ context, outputChannel }), // Renamed function call
 		[COMMANDS.SETTINGS_BUTTON]: () => { 
 			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
@@ -102,12 +102,12 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	}
 }
 
-const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
+const openTheaInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => { // Renamed function
 	// (This example uses webviewProvider activation event which is necessary to
 	// deserialize cached webview, but since we use retainContextWhenHidden, we
 	// don't need to use that event).
 	// https://github.com/microsoft/vscode-extension-samples/blob/main/webview-sample/src/extension.ts
-	const tabProvider = new ClineProvider(context, outputChannel, "editor")
+	const tabProvider = new TheaProvider(context, outputChannel, "editor") // Renamed constructor
 	const lastCol = Math.max(...vscode.window.visibleTextEditors.map((editor) => editor.viewColumn || 0))
 
 	// Check if there are any visible text editors, otherwise open a new group
@@ -120,7 +120,7 @@ const openClineInNewTab = async ({ context, outputChannel }: Omit<RegisterComman
 
 	const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
 
-	const newPanel = vscode.window.createWebviewPanel(ClineProvider.tabPanelId, EXTENSION_DISPLAY_NAME, targetCol, { 
+	const newPanel = vscode.window.createWebviewPanel(TheaProvider.tabPanelId, EXTENSION_DISPLAY_NAME, targetCol, { // Renamed static property access
 		enableScripts: true,
 		retainContextWhenHidden: true,
 		localResourceRoots: [context.extensionUri],

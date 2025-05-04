@@ -1,5 +1,4 @@
 .pnpm-store
-dist
 out
 out-*
 node_modules
@@ -34,3 +33,9 @@ docs/_site/
 logs
 package.json.bak*
 .thea_modes
+
+# Build output
+dist/
+
+# Logs
+*.log

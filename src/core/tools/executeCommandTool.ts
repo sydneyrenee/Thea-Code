@@ -1,10 +1,10 @@
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import { formatResponse } from "../prompts/responses"
 
 export async function executeCommandTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -15,18 +15,18 @@ export async function executeCommandTool(
 	const customCwd: string | undefined = block.params.cwd
 	try {
 		if (block.partial) {
-			await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
+			await theaTask.webviewCommunicator.ask("command", removeClosingTag("command", command), block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!command) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("execute_command", "command"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("execute_command", "command"))
 				return
 			}
 
-			const ignoredFileAttemptedToAccess = cline.theaIgnoreController?.validateCommand(command)
+			const ignoredFileAttemptedToAccess = theaTask.theaIgnoreController?.validateCommand(command)
 			if (ignoredFileAttemptedToAccess) {
-				await cline.say("theaignore_error", ignoredFileAttemptedToAccess)
+				await theaTask.webviewCommunicator.say("theaignore_error", ignoredFileAttemptedToAccess) // Use communicator
 				pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(ignoredFileAttemptedToAccess)))
 
 				return
@@ -35,15 +35,15 @@ export async function executeCommandTool(
 			// unescape html entities (e.g. &lt; -> <)
 			command = command.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&")
 
-			cline.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCount = 0
 
 			const didApprove = await askApproval("command", command)
 			if (!didApprove) {
 				return
 			}
-			const [userRejected, result] = await cline.executeCommandTool(command, customCwd)
+			const [userRejected, result] = await theaTask.executeCommandTool(command, customCwd) // Use theaTask method
 			if (userRejected) {
-				cline.didRejectTool = true
+				theaTask.didRejectTool = true
 			}
 			pushToolResult(result)
 			return

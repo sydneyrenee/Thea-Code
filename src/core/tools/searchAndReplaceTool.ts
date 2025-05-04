@@ -1,8 +1,8 @@
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import { formatResponse } from "../prompts/responses"
-import { ClineSayTool } from "../../shared/ExtensionMessage"
+import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { getReadablePath } from "../../utils/path"
 import path from "path"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -10,7 +10,7 @@ import { addLineNumbers } from "../../integrations/misc/extract-text"
 import fs from "fs/promises"
 
 export async function searchAndReplaceTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -20,9 +20,9 @@ export async function searchAndReplaceTool(
 	const relPath: string | undefined = block.params.path
 	const operations: string | undefined = block.params.operations
 
-	const sharedMessageProps: ClineSayTool = {
+	const sharedMessageProps: TheaSayTool = {
 		tool: "appliedDiff",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
+		path: getReadablePath(theaTask.cwd, removeClosingTag("path", relPath)),
 	}
 
 	try {
@@ -31,27 +31,27 @@ export async function searchAndReplaceTool(
 				path: removeClosingTag("path", relPath),
 				operations: removeClosingTag("operations", operations),
 			})
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!relPath) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("search_and_replace", "path"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("search_and_replace", "path"))
 				return
 			}
 			if (!operations) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("search_and_replace", "operations"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("search_and_replace", "operations"))
 				return
 			}
 
-			const absolutePath = path.resolve(cline.cwd, relPath)
+			const absolutePath = path.resolve(theaTask.cwd, relPath)
 			const fileExists = await fileExistsAtPath(absolutePath)
 
 			if (!fileExists) {
-				cline.consecutiveMistakeCount++
+				theaTask.consecutiveMistakeCount++
 				const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
-				await cline.say("error", formattedError)
+				await theaTask.webviewCommunicator.say("error", formattedError) // Use communicator
 				pushToolResult(formattedError)
 				return
 			}
@@ -72,16 +72,16 @@ export async function searchAndReplaceTool(
 					throw new Error("Operations must be an array")
 				}
 			} catch (error) {
-				cline.consecutiveMistakeCount++
-				await cline.say("error", `Failed to parse operations JSON: ${error.message}`)
+				theaTask.consecutiveMistakeCount++
+				await theaTask.webviewCommunicator.say("error", `Failed to parse operations JSON: ${error.message}`) // Use communicator
 				pushToolResult(formatResponse.toolError("Invalid operations JSON format"))
 				return
 			}
 
 			// Read the original file content
 			const fileContent = await fs.readFile(absolutePath, "utf-8")
-			cline.diffViewProvider.editType = "modify"
-			cline.diffViewProvider.originalContent = fileContent
+			theaTask.diffViewProvider.editType = "modify"
+			theaTask.diffViewProvider.originalContent = fileContent
 			let lines = fileContent.split("\n")
 
 			for (const op of parsedOperations) {
@@ -117,7 +117,7 @@ export async function searchAndReplaceTool(
 
 			const newContent = lines.join("\n")
 
-			cline.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCount = 0
 
 			// Show diff preview
 			const diff = formatResponse.createPrettyPatch(relPath, fileContent, newContent)
@@ -127,31 +127,31 @@ export async function searchAndReplaceTool(
 				return
 			}
 
-			await cline.diffViewProvider.open(relPath)
-			await cline.diffViewProvider.update(newContent, true)
-			cline.diffViewProvider.scrollToFirstDiff()
+			await theaTask.diffViewProvider.open(relPath)
+			await theaTask.diffViewProvider.update(newContent, true)
+			theaTask.diffViewProvider.scrollToFirstDiff()
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
 				diff: diff,
-			} satisfies ClineSayTool)
+			} satisfies TheaSayTool)
 
 			const didApprove = await askApproval("tool", completeMessage)
 			if (!didApprove) {
-				await cline.diffViewProvider.revertChanges() // cline likely handles closing the diff view
+				await theaTask.diffViewProvider.revertChanges() // theaTask likely handles closing the diff view
 				return
 			}
 
-			const { newProblemsMessage, userEdits, finalContent } = await cline.diffViewProvider.saveChanges()
-			cline.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
+			const { newProblemsMessage, userEdits, finalContent } = await theaTask.diffViewProvider.saveChanges()
+			theaTask.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 			if (userEdits) {
-				await cline.say(
+				await theaTask.webviewCommunicator.say( // Use communicator
 					"user_feedback_diff",
 					JSON.stringify({
 						tool: fileExists ? "editedExistingFile" : "newFileCreated",
-						path: getReadablePath(cline.cwd, relPath),
+						path: getReadablePath(theaTask.cwd, relPath),
 						diff: userEdits,
-					} satisfies ClineSayTool),
+					} satisfies TheaSayTool),
 				)
 				pushToolResult(
 					`The user made the following updates to your content:\n\n${userEdits}\n\n` +
@@ -159,19 +159,19 @@ export async function searchAndReplaceTool(
 						`<final_file_content path="${relPath.toPosix()}">\n${addLineNumbers(finalContent || "")}\n</final_file_content>\n\n` +
 						`Please note:\n` +
 						`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
-						`2. Proceed with the task using cline updated file content as the new baseline.\n` +
+						`2. Proceed with the task using the updated file content as the new baseline.\n` +
 						`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
 						`${newProblemsMessage}`,
 				)
 			} else {
 				pushToolResult(`Changes successfully applied to ${relPath.toPosix()}:\n\n${newProblemsMessage}`)
 			}
-			await cline.diffViewProvider.reset()
+			await theaTask.diffViewProvider.reset()
 			return
 		}
 	} catch (error) {
 		await handleError("applying search and replace", error)
-		await cline.diffViewProvider.reset()
+		await theaTask.diffViewProvider.reset()
 		return
 	}
 }

@@ -686,7 +686,7 @@ export const isGlobalStateKey = (key: string): key is Keys<GlobalState> =>
 	GLOBAL_STATE_KEYS.includes(key as Keys<GlobalState>)
 
 /**
- * ClineAsk
+ * TheaAsk // Renamed
  */
 
 export const clineAsks = [
@@ -706,9 +706,9 @@ export const clineAsks = [
 
 export const clineAskSchema = z.enum(clineAsks)
 
-export type ClineAsk = z.infer<typeof clineAskSchema>
+export type TheaAsk = z.infer<typeof clineAskSchema> // Renamed type
 
-// ClineSay
+// TheaSay // Renamed
 
 export const clineSays = [
 	"task",
@@ -739,7 +739,7 @@ export const clineSays = [
 
 export const clineSaySchema = z.enum(clineSays)
 
-export type ClineSay = z.infer<typeof clineSaySchema>
+export type TheaSay = z.infer<typeof clineSaySchema> // Renamed type
 
 /**
  * ToolProgressStatus
@@ -753,7 +753,7 @@ export const toolProgressStatusSchema = z.object({
 export type ToolProgressStatus = z.infer<typeof toolProgressStatusSchema>
 
 /**
- * ClineMessage
+ * TheaMessage // Renamed
  */
 
 export const clineMessageSchema = z.object({
@@ -770,7 +770,7 @@ export const clineMessageSchema = z.object({
 	progressStatus: toolProgressStatusSchema.optional(),
 })
 
-export type ClineMessage = z.infer<typeof clineMessageSchema>
+export type TheaMessage = z.infer<typeof clineMessageSchema> // Renamed type
 
 /**
  * TokenUsage
@@ -799,7 +799,7 @@ export type TypeDefinition = {
 export const typeDefinitions: TypeDefinition[] = [
 	{ schema: providerSettingsSchema, identifier: "ProviderSettings" },
 	{ schema: globalSettingsSchema, identifier: "GlobalSettings" },
-	{ schema: clineMessageSchema, identifier: "ClineMessage" },
+	{ schema: clineMessageSchema, identifier: "TheaMessage" }, // Renamed identifier
 	{ schema: tokenUsageSchema, identifier: "TokenUsage" },
 ]
 

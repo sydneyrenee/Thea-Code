@@ -1,6 +1,6 @@
 import path from "path"
-import { Cline } from "../Cline"
-import { ClineSayTool } from "../../shared/ExtensionMessage"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
+import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { ToolUse } from "../assistant-message"
 import { formatResponse } from "../prompts/responses"
 import { t } from "../../i18n"
@@ -14,7 +14,7 @@ import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
 
 export async function readFileTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -26,12 +26,12 @@ export async function readFileTool(
 	const endLineStr: string | undefined = block.params.end_line
 
 	// Get the full path and determine if it's outside the workspace
-	const fullPath = relPath ? path.resolve(cline.cwd, removeClosingTag("path", relPath)) : ""
+	const fullPath = relPath ? path.resolve(theaTask.cwd, removeClosingTag("path", relPath)) : ""
 	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
 
-	const sharedMessageProps: ClineSayTool = {
+	const sharedMessageProps: TheaSayTool = {
 		tool: "readFile",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
+		path: getReadablePath(theaTask.cwd, removeClosingTag("path", relPath)),
 		isOutsideWorkspace,
 	}
 	try {
@@ -39,13 +39,13 @@ export async function readFileTool(
 			const partialMessage = JSON.stringify({
 				...sharedMessageProps,
 				content: undefined,
-			} satisfies ClineSayTool)
-			await cline.ask("tool", partialMessage, block.partial).catch(() => {})
+			} satisfies TheaSayTool)
+			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!relPath) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("read_file", "path"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("read_file", "path"))
 				return
 			}
 
@@ -64,8 +64,8 @@ export async function readFileTool(
 				startLine = parseInt(startLineStr)
 				if (isNaN(startLine)) {
 					// Invalid start_line
-					cline.consecutiveMistakeCount++
-					await cline.say("error", `Failed to parse start_line: ${startLineStr}`)
+					theaTask.consecutiveMistakeCount++
+					await theaTask.webviewCommunicator.say("error", `Failed to parse start_line: ${startLineStr}`) // Use communicator
 					pushToolResult(formatResponse.toolError("Invalid start_line value"))
 					return
 				}
@@ -78,8 +78,8 @@ export async function readFileTool(
 
 				if (isNaN(endLine)) {
 					// Invalid end_line
-					cline.consecutiveMistakeCount++
-					await cline.say("error", `Failed to parse end_line: ${endLineStr}`)
+					theaTask.consecutiveMistakeCount++
+					await theaTask.webviewCommunicator.say("error", `Failed to parse end_line: ${endLineStr}`) // Use communicator
 					pushToolResult(formatResponse.toolError("Invalid end_line value"))
 					return
 				}
@@ -88,15 +88,15 @@ export async function readFileTool(
 				endLine -= 1
 			}
 
-			const accessAllowed = cline.theaIgnoreController?.validateAccess(relPath)
+			const accessAllowed = theaTask.theaIgnoreController?.validateAccess(relPath)
 			if (!accessAllowed) {
-				await cline.say("theaignore_error", relPath)
+				await theaTask.webviewCommunicator.say("theaignore_error", relPath) // Use communicator
 				pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 				return
 			}
 
-			const { maxReadFileLine = 500 } = (await cline.providerRef.deref()?.getState()) ?? {}
+			const { maxReadFileLine = 500 } = (await theaTask.providerRef.deref()?.getState()) ?? {}
 
 			// Create line snippet description for approval message
 			let lineSnippet = ""
@@ -112,14 +112,14 @@ export async function readFileTool(
 				lineSnippet = t("tools:readFile.maxLines", { max: maxReadFileLine })
 			}
 
-			cline.consecutiveMistakeCount = 0
-			const absolutePath = path.resolve(cline.cwd, relPath)
+			theaTask.consecutiveMistakeCount = 0
+			const absolutePath = path.resolve(theaTask.cwd, relPath)
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
 				content: absolutePath,
 				reason: lineSnippet,
-			} satisfies ClineSayTool)
+			} satisfies TheaSayTool)
 
 			const didApprove = await askApproval("tool", completeMessage)
 			if (!didApprove) {
@@ -153,7 +153,7 @@ export async function readFileTool(
 
 				const res = await Promise.all([
 					maxReadFileLine > 0 ? readLines(absolutePath, maxReadFileLine - 1, 0) : "",
-					parseSourceCodeDefinitionsForFile(absolutePath, cline.theaIgnoreController),
+					parseSourceCodeDefinitionsForFile(absolutePath, theaTask.theaIgnoreController),
 				])
 
 				content = res[0].length > 0 ? addLineNumbers(res[0]) : ""

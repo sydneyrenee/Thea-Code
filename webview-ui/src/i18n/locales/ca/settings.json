@@ -98,7 +98,7 @@
     "enterProfileName": "Introduïu el nom del perfil",
     "createProfile": "Crea perfil",
     "cannotDeleteOnlyProfile": "No es pot eliminar l'únic perfil",
-    "vscodeLmDescription": "L'API del model de llenguatge de VS Code us permet executar models proporcionats per altres extensions de VS Code (incloent-hi, però no limitat a, GitHub Copilot). La manera més senzilla de començar és instal·lar les extensions Copilot i Copilot Chat des del VS Code Marketplace.",
+    "vscodeLmDescription": "L'API del model de llenguatge de VS Code us permet executar models proporcionats per altres extensions de VS Code (incloent-hi, però no limitat a, GitHub Copilot). La manera més senzilla de començar és instal·lar les extensions Copilot i Copilot Chat.",
     "awsCustomArnUse": "Introduïu un ARN vàlid d'AWS Bedrock per al model que voleu utilitzar. Exemples de format:",
     "awsCustomArnDesc": "Assegureu-vos que la regió a l'ARN coincideix amb la regió d'AWS seleccionada anteriorment.",
     "apiKeyStorageNotice": "Les claus API s'emmagatzemen de forma segura a l'Emmagatzematge Secret de VSCode",

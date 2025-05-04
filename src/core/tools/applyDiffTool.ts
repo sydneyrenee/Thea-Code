@@ -1,7 +1,7 @@
-import { ClineSayTool } from "../../shared/ExtensionMessage"
+import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { getReadablePath } from "../../utils/path"
 import { ToolUse } from "../assistant-message"
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { RemoveClosingTag } from "./types"
 import { formatResponse } from "../prompts/responses"
 import { AskApproval, HandleError, PushToolResult } from "./types"
@@ -11,7 +11,7 @@ import path from "path"
 import fs from "fs/promises"
 
 export async function applyDiffTool(
-	cline: Cline,
+	theaTask: TheaTask, // Renamed parameter and type
 	block: ToolUse,
 	askApproval: AskApproval,
 	handleError: HandleError,
@@ -21,50 +21,50 @@ export async function applyDiffTool(
 	const relPath: string | undefined = block.params.path
 	const diffContent: string | undefined = block.params.diff
 
-	const sharedMessageProps: ClineSayTool = {
+	const sharedMessageProps: TheaSayTool = {
 		tool: "appliedDiff",
-		path: getReadablePath(cline.cwd, removeClosingTag("path", relPath)),
+		path: getReadablePath(theaTask.cwd, removeClosingTag("path", relPath)),
 	}
 
 	try {
 		if (block.partial) {
 			// update gui message
 			let toolProgressStatus
-			if (cline.diffStrategy && cline.diffStrategy.getProgressStatus) {
-				toolProgressStatus = cline.diffStrategy.getProgressStatus(block)
+			if (theaTask.diffStrategy && theaTask.diffStrategy.getProgressStatus) {
+				toolProgressStatus = theaTask.diffStrategy.getProgressStatus(block)
 			}
 
 			const partialMessage = JSON.stringify(sharedMessageProps)
 
-			await cline.ask("tool", partialMessage, block.partial, toolProgressStatus).catch(() => {})
+			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial, toolProgressStatus).catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!relPath) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("apply_diff", "path"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("apply_diff", "path"))
 				return
 			}
 			if (!diffContent) {
-				cline.consecutiveMistakeCount++
-				pushToolResult(await cline.sayAndCreateMissingParamError("apply_diff", "diff"))
+				theaTask.consecutiveMistakeCount++
+				pushToolResult(await theaTask.sayAndCreateMissingParamError("apply_diff", "diff"))
 				return
 			}
 
-			const accessAllowed = cline.theaIgnoreController?.validateAccess(relPath)
+			const accessAllowed = theaTask.theaIgnoreController?.validateAccess(relPath)
 			if (!accessAllowed) {
-				await cline.say("theaignore_error", relPath)
+				await theaTask.webviewCommunicator.say("theaignore_error", relPath) // Use communicator
 				pushToolResult(formatResponse.toolError(formatResponse.theaIgnoreError(relPath)))
 
 				return
 			}
 
-			const absolutePath = path.resolve(cline.cwd, relPath)
+			const absolutePath = path.resolve(theaTask.cwd, relPath)
 			const fileExists = await fileExistsAtPath(absolutePath)
 
 			if (!fileExists) {
-				cline.consecutiveMistakeCount++
+				theaTask.consecutiveMistakeCount++
 				const formattedError = `File does not exist at path: ${absolutePath}\n\n<error_details>\nThe specified file could not be found. Please verify the file path and try again.\n</error_details>`
-				await cline.say("error", formattedError)
+				await theaTask.webviewCommunicator.say("error", formattedError) // Use communicator
 				pushToolResult(formattedError)
 				return
 			}
@@ -72,7 +72,7 @@ export async function applyDiffTool(
 			const originalContent = await fs.readFile(absolutePath, "utf-8")
 
 			// Apply the diff to the original content
-			const diffResult = (await cline.diffStrategy?.applyDiff(
+			const diffResult = (await theaTask.diffStrategy?.applyDiff(
 				originalContent,
 				diffContent,
 				parseInt(block.params.start_line ?? ""),
@@ -84,9 +84,9 @@ export async function applyDiffTool(
 			let partResults = ""
 
 			if (!diffResult.success) {
-				cline.consecutiveMistakeCount++
-				const currentCount = (cline.consecutiveMistakeCountForApplyDiff.get(relPath) || 0) + 1
-				cline.consecutiveMistakeCountForApplyDiff.set(relPath, currentCount)
+				theaTask.consecutiveMistakeCount++
+				const currentCount = (theaTask.consecutiveMistakeCountForApplyDiff.get(relPath) || 0) + 1
+				theaTask.consecutiveMistakeCountForApplyDiff.set(relPath, currentCount)
 				let formattedError = ""
 				if (diffResult.failParts && diffResult.failParts.length > 0) {
 					for (const failPart of diffResult.failParts) {
@@ -107,50 +107,50 @@ export async function applyDiffTool(
 				}
 
 				if (currentCount >= 2) {
-					await cline.say("error", formattedError)
+					await theaTask.webviewCommunicator.say("error", formattedError) // Use communicator
 				}
 				pushToolResult(formattedError)
 				return
 			}
 
-			cline.consecutiveMistakeCount = 0
-			cline.consecutiveMistakeCountForApplyDiff.delete(relPath)
+			theaTask.consecutiveMistakeCount = 0
+			theaTask.consecutiveMistakeCountForApplyDiff.delete(relPath)
 			// Show diff view before asking for approval
-			cline.diffViewProvider.editType = "modify"
-			await cline.diffViewProvider.open(relPath)
-			await cline.diffViewProvider.update(diffResult.content, true)
-			await cline.diffViewProvider.scrollToFirstDiff()
+			theaTask.diffViewProvider.editType = "modify"
+			await theaTask.diffViewProvider.open(relPath)
+			await theaTask.diffViewProvider.update(diffResult.content, true)
+			await theaTask.diffViewProvider.scrollToFirstDiff()
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
 				diff: diffContent,
-			} satisfies ClineSayTool)
+			} satisfies TheaSayTool) // Renamed type
 
 			let toolProgressStatus
-			if (cline.diffStrategy && cline.diffStrategy.getProgressStatus) {
-				toolProgressStatus = cline.diffStrategy.getProgressStatus(block, diffResult)
+			if (theaTask.diffStrategy && theaTask.diffStrategy.getProgressStatus) {
+				toolProgressStatus = theaTask.diffStrategy.getProgressStatus(block, diffResult)
 			}
 
 			const didApprove = await askApproval("tool", completeMessage, toolProgressStatus)
 			if (!didApprove) {
-				await cline.diffViewProvider.revertChanges() // cline likely handles closing the diff view
+				await theaTask.diffViewProvider.revertChanges() // theaTask likely handles closing the diff view
 				return
 			}
 
-			const { newProblemsMessage, userEdits, finalContent } = await cline.diffViewProvider.saveChanges()
-			cline.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
+			const { newProblemsMessage, userEdits, finalContent } = await theaTask.diffViewProvider.saveChanges()
+			theaTask.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 			let partFailHint = ""
 			if (diffResult.failParts && diffResult.failParts.length > 0) {
 				partFailHint = `But unable to apply all diff parts to file: ${absolutePath}, silently use <read_file> tool to check newest file version and re-apply diffs\n`
 			}
 			if (userEdits) {
-				await cline.say(
+				await theaTask.webviewCommunicator.say( // Use communicator
 					"user_feedback_diff",
 					JSON.stringify({
 						tool: fileExists ? "editedExistingFile" : "newFileCreated",
-						path: getReadablePath(cline.cwd, relPath),
+						path: getReadablePath(theaTask.cwd, relPath),
 						diff: userEdits,
-					} satisfies ClineSayTool),
+					} satisfies TheaSayTool), // Renamed type
 				)
 				pushToolResult(
 					`The user made the following updates to your content:\n\n${userEdits}\n\n` +
@@ -161,7 +161,7 @@ export async function applyDiffTool(
 						)}\n</final_file_content>\n\n` +
 						`Please note:\n` +
 						`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
-						`2. Proceed with the task using cline updated file content as the new baseline.\n` +
+						`2. Proceed with the task using the updated file content as the new baseline.\n` +
 						`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
 						`${newProblemsMessage}`,
 				)
@@ -170,12 +170,12 @@ export async function applyDiffTool(
 					`Changes successfully applied to ${relPath.toPosix()}:\n\n${newProblemsMessage}\n` + partFailHint,
 				)
 			}
-			await cline.diffViewProvider.reset()
+			await theaTask.diffViewProvider.reset()
 			return
 		}
 	} catch (error) {
 		await handleError("applying diff", error)
-		await cline.diffViewProvider.reset()
+		await theaTask.diffViewProvider.reset()
 		return
 	}
 }

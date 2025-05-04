@@ -5,10 +5,10 @@ import { useSize } from "react-use"
 import { useCopyToClipboard } from "../../utils/clipboard"
 import { useTranslation, Trans } from "react-i18next"
 import {
-	ClineApiReqInfo,
-	ClineAskUseMcpServer,
-	ClineMessage,
-	ClineSayTool,
+	TheaApiReqInfo,
+	TheaAskUseMcpServer,
+	TheaMessage,
+	TheaSayTool,
 } from "../../../../src/shared/ExtensionMessage"
 import { COMMAND_OUTPUT_STRING } from "../../../../src/shared/combineCommandSequences"
 import { useExtensionState } from "../../context/ExtensionStateContext"
@@ -26,8 +26,8 @@ import { CheckpointSaved } from "./checkpoints/CheckpointSaved"
 import FollowUpSuggest from "./FollowUpSuggest"
 
 interface ChatRowProps {
-	message: ClineMessage
-	lastModifiedMessage?: ClineMessage
+	message: TheaMessage // Renamed type
+	lastModifiedMessage?: TheaMessage // Renamed type
 	isExpanded: boolean
 	isLast: boolean
 	isStreaming: boolean
@@ -88,7 +88,7 @@ export const ChatRowContent = ({
 
 	const [cost, apiReqCancelReason, apiReqStreamingFailedMessage] = useMemo(() => {
 		if (message.text !== null && message.text !== undefined && message.say === "api_req_started") {
-			const info: ClineApiReqInfo = JSON.parse(message.text)
+			const info: TheaApiReqInfo = JSON.parse(message.text) // Renamed type
 			return [info.cost, info.cancelReason, info.streamingFailedMessage]
 		}
 
@@ -143,7 +143,7 @@ export const ChatRowContent = ({
 					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
 				]
 			case "use_mcp_server":
-				const mcpServerUse = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
+				const mcpServerUse = JSON.parse(message.text || "{}") as TheaAskUseMcpServer // Renamed type
 				return [
 					isMcpServerResponding ? (
 						<ProgressIndicator />
@@ -246,7 +246,7 @@ export const ChatRowContent = ({
 
 	const tool = useMemo(() => {
 		if (message.ask === "tool" || message.say === "tool") {
-			return JSON.parse(message.text || "{}") as ClineSayTool
+			return JSON.parse(message.text || "{}") as TheaSayTool
 		}
 		return null
 	}, [message.ask, message.say, message.text])
@@ -714,7 +714,7 @@ export const ChatRowContent = ({
 						</div>
 					)
 				case "user_feedback_diff":
-					const tool = JSON.parse(message.text || "{}") as ClineSayTool
+					const tool = JSON.parse(message.text || "{}") as TheaSayTool
 					return (
 						<div
 							style={{
@@ -924,7 +924,7 @@ export const ChatRowContent = ({
 						</>
 					)
 				case "use_mcp_server":
-					const useMcpServer = JSON.parse(message.text || "{}") as ClineAskUseMcpServer
+					const useMcpServer = JSON.parse(message.text || "{}") as TheaAskUseMcpServer // Renamed type
 					const server = mcpServers.find((server) => server.name === useMcpServer.serverName)
 					return (
 						<>

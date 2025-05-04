@@ -323,7 +323,7 @@ type GlobalSettings = {
 	enhancementApiConfigId?: string | undefined
 }
 
-type ClineMessage = {
+type TheaMessage = { // Renamed type
 	ts: number
 	type: "ask" | "say"
 	ask?:
@@ -404,7 +404,7 @@ interface TheaCodeEvents {
 		{
 			taskId: string
 			action: "created" | "updated"
-			message: ClineMessage
+			message: TheaMessage // Renamed type
 		},
 	]
 	taskCreated: [taskId: string]
@@ -481,9 +481,9 @@ interface TheaCodeAPI extends EventEmitter<TheaCodeEvents> {
 	/**
 	 * Returns the messages for a given task.
 	 * @param taskId The ID of the task.
-	 * @returns An array of ClineMessage objects.
+	 * @returns An array of TheaMessage objects.
 	 */
-	getMessages(taskId: string): ClineMessage[]
+	getMessages(taskId: string): TheaMessage[] // Renamed return type
 	/**
 	 * Returns the token usage for a given task.
 	 * @param taskId The ID of the task.
@@ -498,7 +498,7 @@ interface TheaCodeAPI extends EventEmitter<TheaCodeEvents> {
 }
 
 export type {
-	ClineMessage,
+	TheaMessage, // Renamed type
 	GlobalSettings,
 	ProviderSettings,
 	TheaCodeAPI,

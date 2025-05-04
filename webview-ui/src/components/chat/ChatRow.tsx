@@ -4,12 +4,7 @@ import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
 import { useCopyToClipboard } from "../../utils/clipboard"
 import { useTranslation, Trans } from "react-i18next"
-import {
-	TheaApiReqInfo,
-	TheaAskUseMcpServer,
-	TheaMessage,
-	TheaSayTool,
-} from "../../../../src/shared/ExtensionMessage"
+import { TheaApiReqInfo, TheaAskUseMcpServer, TheaMessage, TheaSayTool } from "../../../../src/shared/ExtensionMessage"
 import { COMMAND_OUTPUT_STRING } from "../../../../src/shared/combineCommandSequences"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { findMatchingResourceOrTemplate } from "../../utils/mcp"

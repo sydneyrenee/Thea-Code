@@ -17,7 +17,8 @@ export class McpServerManager {
 	 * Creates a new instance if one doesn't exist.
 	 * Thread-safe implementation using a promise-based lock.
 	 */
-	static async getInstance(context: vscode.ExtensionContext, provider: TheaProvider): Promise<McpHub> { // Renamed type
+	static async getInstance(context: vscode.ExtensionContext, provider: TheaProvider): Promise<McpHub> {
+		// Renamed type
 		// Register the provider
 		this.providers.add(provider)
 
@@ -54,7 +55,8 @@ export class McpServerManager {
 	 * Remove a provider from the tracked set.
 	 * This is called when a webview is disposed.
 	 */
-	static unregisterProvider(provider: TheaProvider): void { // Renamed type
+	static unregisterProvider(provider: TheaProvider): void {
+		// Renamed type
 		this.providers.delete(provider)
 	}
 

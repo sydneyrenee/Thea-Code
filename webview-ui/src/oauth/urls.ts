@@ -1,6 +1,6 @@
-import { EXTENSION_ID } from "../../../dist/thea-config"; // Adjust path as needed
+import { EXTENSION_ID } from "../../../dist/thea-config" // Adjust path as needed
 export function getCallbackUrl(provider: string, uriScheme?: string) {
-	const callbackUrl = `${uriScheme || "vscode"}://${EXTENSION_ID}/${provider}` 
+	const callbackUrl = `${uriScheme || "vscode"}://${EXTENSION_ID}/${provider}`
 	return encodeURIComponent(callbackUrl)
 }
 

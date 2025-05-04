@@ -19,7 +19,8 @@ import { TheaMessage } from "./ExtensionMessage" // Renamed import
  * const { totalTokensIn, totalTokensOut, totalCost } = getApiMetrics(messages);
  * // Result: { totalTokensIn: 10, totalTokensOut: 20, totalCost: 0.005 }
  */
-export function getApiMetrics(messages: TheaMessage[]) { // Renamed type
+export function getApiMetrics(messages: TheaMessage[]) {
+	// Renamed type
 	const result: TokenUsage = {
 		totalTokensIn: 0,
 		totalTokensOut: 0,
@@ -30,7 +31,8 @@ export function getApiMetrics(messages: TheaMessage[]) { // Renamed type
 	}
 
 	// Helper function to get total tokens from a message
-	const getTotalTokensFromMessage = (message: TheaMessage): number => { // Renamed type
+	const getTotalTokensFromMessage = (message: TheaMessage): number => {
+		// Renamed type
 		if (!message.text) return 0
 		try {
 			const { tokensIn, tokensOut, cacheWrites, cacheReads } = JSON.parse(message.text)

@@ -1,7 +1,7 @@
 import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
 import { Anthropic } from "@anthropic-ai/sdk"
-import { API_REFERENCES } from "../../../../dist/thea-config"; // Import branded constants
+import { API_REFERENCES } from "../../../../dist/thea-config" // Import branded constants
 // Mock OpenAI client
 const mockCreate = jest.fn()
 jest.mock("openai", () => {
@@ -99,8 +99,8 @@ describe("OpenAiHandler", () => {
 				baseURL: expect.any(String),
 				apiKey: expect.any(String),
 				defaultHeaders: {
-					"HTTP-Referer": API_REFERENCES.HOMEPAGE, 
-					"X-Title": API_REFERENCES.APP_TITLE, 
+					"HTTP-Referer": API_REFERENCES.HOMEPAGE,
+					"X-Title": API_REFERENCES.APP_TITLE,
 				},
 			})
 		})

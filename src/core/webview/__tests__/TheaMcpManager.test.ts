@@ -12,14 +12,14 @@ jest.mock("os")
 jest.mock("fs/promises")
 jest.mock("../../../services/mcp/McpHub")
 jest.mock("path", () => {
-    const originalPath = jest.requireActual("path")
-    return {
-        ...originalPath,
-        // Ensure consistent path separators in tests regardless of platform
-        join: (...paths: string[]) => {
-            return paths.join("/")
-        }
-    }
+	const originalPath = jest.requireActual("path")
+	return {
+		...originalPath,
+		// Ensure consistent path separators in tests regardless of platform
+		join: (...paths: string[]) => {
+			return paths.join("/")
+		},
+	}
 })
 
 describe("TheaMcpManager", () => {
@@ -43,7 +43,7 @@ describe("TheaMcpManager", () => {
 		// Mock os functions with temp directory
 		;(os.homedir as jest.Mock).mockReturnValue(TEST_TEMP_DIR)
 		;(os.tmpdir as jest.Mock).mockReturnValue(TEST_TEMP_DIR)
-		
+
 		// Mock fs functions
 		;(fs.mkdir as jest.Mock).mockResolvedValue(undefined)
 		;(fs.access as jest.Mock).mockResolvedValue(undefined)
@@ -70,7 +70,7 @@ describe("TheaMcpManager", () => {
 	afterEach(() => {
 		jest.restoreAllMocks()
 		// Restore original process.platform
-		Object.defineProperty(process, 'platform', { value: originalPlatform })
+		Object.defineProperty(process, "platform", { value: originalPlatform })
 	})
 
 	test("setMcpHub sets the hub instance", () => {
@@ -89,8 +89,8 @@ describe("TheaMcpManager", () => {
 	describe("ensureMcpServersDirectoryExists", () => {
 		test("creates and returns correct directory path on macOS", async () => {
 			// Setup - override process.platform
-			Object.defineProperty(process, 'platform', { value: 'darwin' })
-			
+			Object.defineProperty(process, "platform", { value: "darwin" })
+
 			// Execute
 			const result = await mcpManager.ensureMcpServersDirectoryExists()
 
@@ -102,8 +102,8 @@ describe("TheaMcpManager", () => {
 
 		test("creates and returns correct directory path on Windows", async () => {
 			// Setup - override process.platform
-			Object.defineProperty(process, 'platform', { value: 'win32' })
-			
+			Object.defineProperty(process, "platform", { value: "win32" })
+
 			// Execute
 			const result = await mcpManager.ensureMcpServersDirectoryExists()
 
@@ -115,8 +115,8 @@ describe("TheaMcpManager", () => {
 
 		test("creates and returns correct directory path on Linux", async () => {
 			// Setup - override process.platform
-			Object.defineProperty(process, 'platform', { value: 'linux' })
-			
+			Object.defineProperty(process, "platform", { value: "linux" })
+
 			// Execute
 			const result = await mcpManager.ensureMcpServersDirectoryExists()
 
@@ -128,7 +128,7 @@ describe("TheaMcpManager", () => {
 
 		test("falls back to alternate path when directory creation fails", async () => {
 			// Setup - use macOS for this test
-			Object.defineProperty(process, 'platform', { value: 'darwin' })
+			Object.defineProperty(process, "platform", { value: "darwin" })
 			;(fs.mkdir as jest.Mock).mockRejectedValue(new Error("Permission denied"))
 
 			// Execute
@@ -204,7 +204,9 @@ describe("TheaMcpManager", () => {
 			await mcpManager.updateServerTimeout("server1", 60000)
 
 			// Verify
-			expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("McpHub not available for updateServerTimeout"))
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("McpHub not available for updateServerTimeout"),
+			)
 		})
 
 		test("deleteServer logs warning when McpHub not set", async () => {
@@ -220,7 +222,9 @@ describe("TheaMcpManager", () => {
 			await mcpManager.toggleServerDisabled("server1", true)
 
 			// Verify
-			expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("McpHub not available for toggleServerDisabled"))
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("McpHub not available for toggleServerDisabled"),
+			)
 		})
 
 		test("restartConnection logs warning when McpHub not set", async () => {
@@ -228,19 +232,23 @@ describe("TheaMcpManager", () => {
 			await mcpManager.restartConnection("server1")
 
 			// Verify
-			expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("McpHub not available for restartConnection"))
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("McpHub not available for restartConnection"),
+			)
 		})
 
 		test("getMcpSettingsFilePath uses fallback path when McpHub not set", async () => {
 			// Setup
-			Object.defineProperty(process, 'platform', { value: 'darwin' })
+			Object.defineProperty(process, "platform", { value: "darwin" })
 			const expectedFallbackPath = `${TEST_TEMP_DIR}/Documents/${EXTENSION_DISPLAY_NAME}/MCP/mcp_settings.json`
-			
+
 			// Execute
 			const result = await mcpManager.getMcpSettingsFilePath()
 
 			// Verify
-			expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("McpHub not available for getMcpSettingsFilePath"))
+			expect(console.warn).toHaveBeenCalledWith(
+				expect.stringContaining("McpHub not available for getMcpSettingsFilePath"),
+			)
 			expect(result).toBe(expectedFallbackPath)
 		})
 

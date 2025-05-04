@@ -37,7 +37,7 @@ export class TerminalRegistry {
 						terminalInfo.setActiveStream(stream)
 					} else {
 						console.error(
-							`[TerminalRegistry] Shell execution started, but not from a ${EXTENSION_DISPLAY_NAME}-registered terminal:`, 
+							`[TerminalRegistry] Shell execution started, but not from a ${EXTENSION_DISPLAY_NAME}-registered terminal:`,
 							e,
 						)
 					}
@@ -61,7 +61,7 @@ export class TerminalRegistry {
 
 					if (!terminalInfo) {
 						console.error(
-							`[TerminalRegistry] Shell execution ended, but not from a ${EXTENSION_DISPLAY_NAME}-registered terminal:`, 
+							`[TerminalRegistry] Shell execution ended, but not from a ${EXTENSION_DISPLAY_NAME}-registered terminal:`,
 							e,
 						)
 						return
@@ -112,7 +112,7 @@ export class TerminalRegistry {
 	static createTerminal(cwd: string | vscode.Uri): Terminal {
 		const terminal = vscode.window.createTerminal({
 			cwd,
-			name: EXTENSION_DISPLAY_NAME, 
+			name: EXTENSION_DISPLAY_NAME,
 			iconPath: new vscode.ThemeIcon("rocket"),
 			env: {
 				PAGER: "cat",

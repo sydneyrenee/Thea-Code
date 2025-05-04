@@ -5,7 +5,7 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 
 // Use static import for easier mocking
-import { getTaskDirectoryPath } from "../shared/storagePathManager";
+import { getTaskDirectoryPath } from "../shared/storagePathManager"
 
 import { TheaProvider } from "./webview/TheaProvider" // Renamed import and path
 import { TheaMessage } from "../shared/ExtensionMessage" // Renamed import
@@ -57,7 +57,8 @@ export class TaskStateManager {
 		this.onTokenUsageUpdate = onTokenUsageUpdate
 	}
 
-	private async log(message: string) { // Added async
+	private async log(message: string) {
+		// Added async
 		// console.log(`[TaskStateManager:${this.taskId}] ${message}`) // Removed direct console log to reduce test noise
 		try {
 			await this.providerRef.deref()?.log(`[TaskStateManager:${this.taskId}] ${message}`) // Added await
@@ -167,14 +168,16 @@ export class TaskStateManager {
 		}
 	}
 
-	public async addToClineMessages(message: TheaMessage) { // Renamed type
+	public async addToClineMessages(message: TheaMessage) {
+		// Renamed type
 		this.theaTaskMessages.push(message)
 		this.onMessagesUpdate?.(this.theaTaskMessages) // Notify TheaTask
 		// TheaTask is responsible for emitting 'message' event and posting state
 		await this.saveClineMessages() // Added await
 	}
 
-	public async overwriteClineMessages(newMessages: TheaMessage[]) { // Renamed type
+	public async overwriteClineMessages(newMessages: TheaMessage[]) {
+		// Renamed type
 		this.theaTaskMessages = newMessages
 		this.onMessagesUpdate?.(this.theaTaskMessages)
 		await this.saveClineMessages() // Added await
@@ -193,7 +196,7 @@ export class TaskStateManager {
 
 			// Update history item and wait for it to complete
 			try {
-				await this.updateHistoryItem(taskDir);
+				await this.updateHistoryItem(taskDir)
 			} catch (err) {
 				await this.log(`Error updating history item: ${err.message}`) // Added await
 			}
@@ -227,13 +230,17 @@ export class TaskStateManager {
 		try {
 			taskDirSize = await getFolderSize.loose(taskDir)
 		} catch (err) {
-			await this.log(`Failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`) // Added await
+			await this.log(
+				`Failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
+			) // Added await
 		}
 
 		// Use the provider reference to access the history manager
 		const provider = this.providerRef.deref()
-		if (provider?.theaTaskHistoryManagerInstance) { // Renamed getter
-			await provider.theaTaskHistoryManagerInstance.updateTaskHistory({ // Renamed getter
+		if (provider?.theaTaskHistoryManagerInstance) {
+			// Renamed getter
+			await provider.theaTaskHistoryManagerInstance.updateTaskHistory({
+				// Renamed getter
 				id: this.taskId,
 				number: this.taskNumber,
 				ts: lastRelevantMessage.ts,

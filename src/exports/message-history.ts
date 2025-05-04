@@ -9,7 +9,8 @@ export class MessageHistory {
 		this.list = {}
 	}
 
-	public add(taskId: string, message: TheaMessage) { // Renamed type
+	public add(taskId: string, message: TheaMessage) {
+		// Renamed type
 		if (!this.messages[taskId]) {
 			this.messages[taskId] = {}
 		}
@@ -23,7 +24,8 @@ export class MessageHistory {
 		this.list[taskId].push(message.ts)
 	}
 
-	public update(taskId: string, message: TheaMessage) { // Renamed type
+	public update(taskId: string, message: TheaMessage) {
+		// Renamed type
 		if (this.messages[taskId][message.ts]) {
 			this.messages[taskId][message.ts] = message
 		}

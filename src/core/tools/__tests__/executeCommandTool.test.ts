@@ -44,14 +44,27 @@ describe("executeCommandTool", () => {
 			consecutiveMistakeCount: 0,
 			didRejectTool: false,
 			theaIgnoreController: {
-				validateCommand: jest.fn().mockReturnValue(null) // Simplified mock
+				validateCommand: jest.fn().mockReturnValue(null), // Simplified mock
 			} as any, // Use 'as any' to bypass strict type check for mock
-			webviewCommunicator: { // Add communicator mock setup
+			webviewCommunicator: {
+				// Add communicator mock setup
 				say: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-				ask: jest.fn<() => Promise<{ response: TheaAskResponse; text?: string; images?: string[] }>>().mockResolvedValue({ response: "yesButtonClicked" }),
+				ask: jest
+					.fn<() => Promise<{ response: TheaAskResponse; text?: string; images?: string[] }>>()
+					.mockResolvedValue({ response: "yesButtonClicked" }),
 			} as any, // Cast partial mock to any
-			taskStateManager: { // Add state manager mock setup
-				getTokenUsage: jest.fn<() => { totalTokensIn: number; totalTokensOut: number; totalCost: number; contextTokens: number }>().mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 }),
+			taskStateManager: {
+				// Add state manager mock setup
+				getTokenUsage: jest
+					.fn<
+						() => {
+							totalTokensIn: number
+							totalTokensOut: number
+							totalCost: number
+							contextTokens: number
+						}
+					>()
+					.mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 }),
 			} as any, // Cast partial mock to any
 		}
 
@@ -250,7 +263,7 @@ describe("executeCommandTool", () => {
 			// Override the validateCommand mock to return a filename
 			const validateCommandMock = jest.fn().mockReturnValue(".env")
 			mockTheaTask.theaIgnoreController = {
-				validateCommand: validateCommandMock // Simplified mock
+				validateCommand: validateCommandMock, // Simplified mock
 			} as any // Use 'as any' to bypass strict type check for mock
 
 			const mockTheaIgnoreError = "TheaIgnore error"
@@ -270,7 +283,7 @@ describe("executeCommandTool", () => {
 			// Verify
 			expect(validateCommandMock).toHaveBeenCalledWith("cat .env")
 			// Add check to ensure communicator exists
-			expect(mockTheaTask.webviewCommunicator).toBeDefined();
+			expect(mockTheaTask.webviewCommunicator).toBeDefined()
 			expect(mockTheaTask.webviewCommunicator.say).toHaveBeenCalledWith("theaignore_error", ".env")
 			expect(formatResponse.theaIgnoreError).toHaveBeenCalledWith(".env")
 			expect(formatResponse.toolError).toHaveBeenCalledWith(mockTheaIgnoreError)

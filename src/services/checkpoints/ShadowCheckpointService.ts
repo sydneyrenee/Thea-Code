@@ -71,18 +71,20 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			// Ensure parent directories exist
 			const parentDir = path.dirname(this.checkpointsDir)
 			await fs.mkdir(parentDir, { recursive: true })
-			
+
 			// Create the checkpoints directory
 			await fs.mkdir(this.checkpointsDir, { recursive: true })
-			
+
 			// Instead of using fs.access, we'll check if the directory exists using fileExistsAtPath
-			if (!await fileExistsAtPath(this.checkpointsDir)) {
+			if (!(await fileExistsAtPath(this.checkpointsDir))) {
 				throw new Error(`Checkpoint directory does not exist after creation attempt: ${this.checkpointsDir}`)
 			}
 		} catch (error) {
-			throw new Error(`Cannot initialize git: failed to create checkpoint directory: ${this.checkpointsDir}: ${error.message}`)
+			throw new Error(
+				`Cannot initialize git: failed to create checkpoint directory: ${this.checkpointsDir}: ${error.message}`,
+			)
 		}
-		
+
 		const git = simpleGit(this.checkpointsDir)
 		const gitVersion = await git.version()
 		this.log(`[${this.constructor.name}#create] git = ${gitVersion}`)
@@ -107,8 +109,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.init()
 			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
-			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME) 
-			await git.addConfig("user.email", AUTHOR_EMAIL) 
+			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME)
+			await git.addConfig("user.email", AUTHOR_EMAIL)
 			await this.writeExcludeFile()
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })
@@ -386,7 +388,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 		const git = simpleGit(workspaceRepoDir)
 		const branches = await git.branchLocal()
 
-		if (branches.all.includes(`${BRANCH_PREFIX}${taskId}`)) { 
+		if (branches.all.includes(`${BRANCH_PREFIX}${taskId}`)) {
 			return "workspace"
 		}
 
@@ -410,7 +412,7 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			console.log(`[${this.name}#deleteTask.${taskId}] removed ${taskRepoDir}`)
 		} else if (storage === "workspace") {
 			const workspaceRepoDir = this.workspaceRepoDir({ globalStorageDir, workspaceDir })
-			const branchName = `${BRANCH_PREFIX}${taskId}` 
+			const branchName = `${BRANCH_PREFIX}${taskId}`
 			const git = simpleGit(workspaceRepoDir)
 			const success = await this.deleteBranch(git, branchName)
 

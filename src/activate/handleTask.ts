@@ -13,11 +13,12 @@ export const handleNewTask = async (params: { prompt?: string } | null | undefin
 		})
 	}
 	if (!prompt) {
-		await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) 
+		await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`)
 		return
 	}
 
-	await TheaProvider.handleCodeAction(COMMAND_IDS.NEW_TASK, "NEW_TASK", { // Renamed static method call
+	await TheaProvider.handleCodeAction(COMMAND_IDS.NEW_TASK, "NEW_TASK", {
+		// Renamed static method call
 		userInput: prompt,
 	})
 }

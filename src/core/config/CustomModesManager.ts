@@ -7,8 +7,7 @@ import { fileExistsAtPath } from "../../utils/fs"
 import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { logger } from "../../utils/logging"
 import { GlobalFileNames } from "../../shared/globalFileNames"
-import { GLOBAL_FILENAMES as BRANDED_FILENAMES } from "../../../dist/thea-config"; // Import branded constant
-
+import { GLOBAL_FILENAMES as BRANDED_FILENAMES } from "../../../dist/thea-config" // Import branded constant
 
 export class CustomModesManager {
 	private disposables: vscode.Disposable[] = []
@@ -54,7 +53,7 @@ export class CustomModesManager {
 			return undefined
 		}
 		const workspaceRoot = getWorkspacePath()
-		const projectModesPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) 
+		const projectModesPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME)
 		const exists = await fileExistsAtPath(projectModesPath)
 		return exists ? projectModesPath : undefined
 	}
@@ -69,7 +68,7 @@ export class CustomModesManager {
 			}
 
 			// Determine source based on file path
-			const isTheamodes = filePath.endsWith(BRANDED_FILENAMES.MODES_FILENAME) 
+			const isTheamodes = filePath.endsWith(BRANDED_FILENAMES.MODES_FILENAME)
 			const source = isTheamodes ? ("project" as const) : ("global" as const)
 
 			// Add source to each mode
@@ -230,9 +229,9 @@ export class CustomModesManager {
 					throw new Error("No workspace folder found for project-specific mode")
 				}
 				const workspaceRoot = getWorkspacePath()
-				targetPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME) 
+				targetPath = path.join(workspaceRoot, BRANDED_FILENAMES.MODES_FILENAME)
 				const exists = await fileExistsAtPath(targetPath)
-				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${BRANDED_FILENAMES.MODES_FILENAME}`, { 
+				logger.info(`${exists ? "Updating" : "Creating"} project mode in ${BRANDED_FILENAMES.MODES_FILENAME}`, {
 					slug,
 					workspace: workspaceRoot,
 				})

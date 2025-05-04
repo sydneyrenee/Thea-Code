@@ -309,9 +309,10 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && npm run build:extension && npm run prettier:branding && npm run build:webui",
+    "build": "npm run clean && npm run build:extension && npm run build:webui",
     "build:extension": "npx esbuild --bundle ./src/extension.ts --external:vscode --platform=node --format=esm --outfile=dist/extension.js --sourcemap",
     "build:webui": "cd webview-ui && npm run build",
+    "brand": "npm run prettier:branding",
     "semantic-release": "semantic-release",
     "clean": "rimraf out",
     "precompile": "cross-os precompile",
@@ -325,7 +326,7 @@
     "pretty:check": "prettier --check --ignore-unknown \"**/*\"",
     "prettier:branding": "node scripts/apply-thea-branding.js",
     "verify": "node scripts/verify-branding.js",
-    "package": "npm run build && vsce package --out bin/thea-code-$npm_package_version.vsix",
+    "package": "npm run clean && npm run build:extension && npm run build:webui && vsce package --out bin/thea-code-$npm_package_version.vsix",
     "test": "node ./scripts/run-all-linters.js && npm run test:jest && npm run test:types",
     "test:jest": "cd webview-ui && npm run test && cd .. && npm run test:extension",
     "test:extension": "jest",

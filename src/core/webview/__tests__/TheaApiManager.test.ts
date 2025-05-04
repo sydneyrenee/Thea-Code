@@ -76,12 +76,7 @@ describe("ClineApiManager", () => {
 		} as unknown as jest.Mocked<ProviderSettingsManager>
 
 		// Create instance of ClineApiManager
-		manager = new TheaApiManager(
-			mockContext,
-			mockOutputChannel,
-			mockContextProxy,
-			mockProviderSettingsManager
-		)
+		manager = new TheaApiManager(mockContext, mockOutputChannel, mockContextProxy, mockProviderSettingsManager)
 	})
 
 	test("updateApiConfiguration updates mode config association", async () => {
@@ -170,7 +165,7 @@ describe("ClineApiManager", () => {
 		// Setup
 		const mockApiConfig = { apiProvider: "anthropic" as const }
 		mockProviderSettingsManager.saveConfig.mockRejectedValue(new Error("Failed to save config"))
-		
+
 		// Mock window.showErrorMessage
 		vscode.window.showErrorMessage = jest.fn()
 
@@ -185,7 +180,7 @@ describe("ClineApiManager", () => {
 		const mockApiConfig = { apiProvider: "openrouter" as const }
 		mockContextProxy.getProviderSettings.mockImplementation(() => mockApiConfig)
 		mockContextProxy.getValue.mockImplementation(() => Promise.resolve("default"))
-		
+
 		// Mock axios response
 		;(axios.post as jest.Mock).mockResolvedValue({
 			data: { key: "test-api-key" },
@@ -199,16 +194,13 @@ describe("ClineApiManager", () => {
 
 		// Verify
 		expect(axios.post).toHaveBeenCalledWith("https://openrouter.ai/api/v1/auth/keys", { code: "test-code" })
-		expect(manager.upsertApiConfiguration).toHaveBeenCalledWith(
-			"default",
-			{
-				...mockApiConfig,
-				apiProvider: "openrouter",
-				openRouterApiKey: "test-api-key",
-				openRouterModelId: openRouterDefaultModelId,
-				openRouterModelInfo: openRouterDefaultModelInfo,
-			}
-		)
+		expect(manager.upsertApiConfiguration).toHaveBeenCalledWith("default", {
+			...mockApiConfig,
+			apiProvider: "openrouter",
+			openRouterApiKey: "test-api-key",
+			openRouterModelId: openRouterDefaultModelId,
+			openRouterModelInfo: openRouterDefaultModelInfo,
+		})
 	})
 
 	test("handleGlamaCallback exchanges code for API key and updates config", async () => {
@@ -216,7 +208,7 @@ describe("ClineApiManager", () => {
 		const mockApiConfig = { apiProvider: "glama" as const }
 		mockContextProxy.getProviderSettings.mockImplementation(() => mockApiConfig)
 		mockContextProxy.getValue.mockImplementation(() => Promise.resolve("default"))
-		
+
 		// Mock axios response
 		;(axios.post as jest.Mock).mockResolvedValue({
 			data: { apiKey: "test-api-key" },
@@ -229,17 +221,16 @@ describe("ClineApiManager", () => {
 		await manager.handleGlamaCallback("test-code")
 
 		// Verify
-		expect(axios.post).toHaveBeenCalledWith("https://glama.ai/api/gateway/v1/auth/exchange-code", { code: "test-code" })
-		expect(manager.upsertApiConfiguration).toHaveBeenCalledWith(
-			"default",
-			{
-				...mockApiConfig,
-				apiProvider: "glama",
-				glamaApiKey: "test-api-key",
-				glamaModelId: glamaDefaultModelId,
-				glamaModelInfo: glamaDefaultModelInfo,
-			}
-		)
+		expect(axios.post).toHaveBeenCalledWith("https://glama.ai/api/gateway/v1/auth/exchange-code", {
+			code: "test-code",
+		})
+		expect(manager.upsertApiConfiguration).toHaveBeenCalledWith("default", {
+			...mockApiConfig,
+			apiProvider: "glama",
+			glamaApiKey: "test-api-key",
+			glamaModelId: glamaDefaultModelId,
+			glamaModelInfo: glamaDefaultModelInfo,
+		})
 	})
 
 	test("handleRequestyCallback updates config with provided code as API key", async () => {
@@ -255,16 +246,13 @@ describe("ClineApiManager", () => {
 		await manager.handleRequestyCallback("test-api-key")
 
 		// Verify
-		expect(manager.upsertApiConfiguration).toHaveBeenCalledWith(
-			"default",
-			{
-				...mockApiConfig,
-				apiProvider: "requesty",
-				requestyApiKey: "test-api-key",
-				requestyModelId: requestyDefaultModelId,
-				requestyModelInfo: requestyDefaultModelInfo,
-			}
-		)
+		expect(manager.upsertApiConfiguration).toHaveBeenCalledWith("default", {
+			...mockApiConfig,
+			apiProvider: "requesty",
+			requestyApiKey: "test-api-key",
+			requestyModelId: requestyDefaultModelId,
+			requestyModelInfo: requestyDefaultModelInfo,
+		})
 	})
 
 	test("buildApiHandler calls the global buildApiHandler function", () => {

@@ -1,7 +1,7 @@
 import * as fs from "fs/promises"
 import * as path from "path"
 
-import { EXTENSION_ID, CONFIG } from "../../dist/thea-config"; // Import branded constants
+import { EXTENSION_ID, CONFIG } from "../../dist/thea-config" // Import branded constants
 import * as vscode from "vscode"
 
 import { TheaCodeAPI, TokenUsage } from "../../src/exports/thea-code"

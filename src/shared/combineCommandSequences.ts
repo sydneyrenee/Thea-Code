@@ -20,7 +20,8 @@ import { TheaMessage } from "./ExtensionMessage" // Renamed import
  * const result = simpleCombineCommandSequences(messages);
  * // Result: [{ type: 'ask', ask: 'command', text: 'ls\nfile1.txt\nfile2.txt', ts: 1625097600000 }]
  */
-export function combineCommandSequences(messages: TheaMessage[]): TheaMessage[] { // Renamed type
+export function combineCommandSequences(messages: TheaMessage[]): TheaMessage[] {
+	// Renamed type
 	const combinedCommands: TheaMessage[] = [] // Renamed type
 
 	// First pass: combine commands with their outputs

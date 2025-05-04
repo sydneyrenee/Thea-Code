@@ -1,6 +1,6 @@
 import * as assert from "assert"
 import * as vscode from "vscode"
-import { EXTENSION_NAME, EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config"; // Import branded constant
+import { EXTENSION_NAME, EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config" // Import branded constant
 
 suite(`${EXTENSION_DISPLAY_NAME} Extension`, () => {
 	test("OPENROUTER_API_KEY environment variable is set", () => {

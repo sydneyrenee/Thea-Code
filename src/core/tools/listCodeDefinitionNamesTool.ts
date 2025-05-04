@@ -41,7 +41,10 @@ export async function listCodeDefinitionNamesTool(
 			try {
 				const stats = await fs.stat(absolutePath)
 				if (stats.isFile()) {
-					const fileResult = await parseSourceCodeDefinitionsForFile(absolutePath, theaTask.theaIgnoreController)
+					const fileResult = await parseSourceCodeDefinitionsForFile(
+						absolutePath,
+						theaTask.theaIgnoreController,
+					)
 					result = fileResult ?? "No source code definitions found in cline file."
 				} else if (stats.isDirectory()) {
 					result = await parseSourceCodeForDefinitionsTopLevel(absolutePath, theaTask.theaIgnoreController)

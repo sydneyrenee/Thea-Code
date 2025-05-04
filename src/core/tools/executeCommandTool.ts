@@ -15,7 +15,9 @@ export async function executeCommandTool(
 	const customCwd: string | undefined = block.params.cwd
 	try {
 		if (block.partial) {
-			await theaTask.webviewCommunicator.ask("command", removeClosingTag("command", command), block.partial).catch(() => {}) // Use communicator
+			await theaTask.webviewCommunicator
+				.ask("command", removeClosingTag("command", command), block.partial)
+				.catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!command) {

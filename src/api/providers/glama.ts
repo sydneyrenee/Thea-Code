@@ -109,7 +109,7 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 						labels: [
 							{
 								key: "app",
-								value: EXTENSION_ID, 
+								value: EXTENSION_ID,
 							},
 						],
 					}),

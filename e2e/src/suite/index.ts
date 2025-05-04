@@ -1,6 +1,6 @@
 import * as path from "path"
 import Mocha from "mocha"
-import { EXTENSION_ID } from "../../../dist/thea-config"; // Import branded constant
+import { EXTENSION_ID } from "../../../dist/thea-config" // Import branded constant
 import { glob } from "glob"
 import * as vscode from "vscode"
 

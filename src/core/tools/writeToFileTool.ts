@@ -72,7 +72,8 @@ export async function writeToFileTool(
 	const fullPath = relPath ? path.resolve(theaTask.cwd, removeClosingTag("path", relPath)) : ""
 	const isOutsideWorkspace = isPathOutsideWorkspace(fullPath)
 
-	const sharedMessageProps: TheaSayTool = { // Renamed type
+	const sharedMessageProps: TheaSayTool = {
+		// Renamed type
 		tool: fileExists ? "editedExistingFile" : "newFileCreated",
 		path: getReadablePath(theaTask.cwd, removeClosingTag("path", relPath)),
 		isOutsideWorkspace,
@@ -175,7 +176,8 @@ export async function writeToFileTool(
 			const { newProblemsMessage, userEdits, finalContent } = await theaTask.diffViewProvider.saveChanges()
 			theaTask.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 			if (userEdits) {
-				await theaTask.webviewCommunicator.say( // Use communicator
+				await theaTask.webviewCommunicator.say(
+					// Use communicator
 					"user_feedback_diff",
 					JSON.stringify({
 						tool: fileExists ? "editedExistingFile" : "newFileCreated",

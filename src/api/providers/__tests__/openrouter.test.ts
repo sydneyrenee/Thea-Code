@@ -6,7 +6,7 @@ import OpenAI from "openai"
 
 import { OpenRouterHandler } from "../openrouter"
 import { ApiHandlerOptions, ModelInfo } from "../../../shared/api"
-import { API_REFERENCES } from "../../../../dist/thea-config"; // Import branded constants
+import { API_REFERENCES } from "../../../../dist/thea-config" // Import branded constants
 // Mock dependencies
 jest.mock("openai")
 jest.mock("axios")
@@ -38,8 +38,8 @@ describe("OpenRouterHandler", () => {
 			baseURL: "https://openrouter.ai/api/v1",
 			apiKey: mockOptions.openRouterApiKey,
 			defaultHeaders: {
-				"HTTP-Referer": API_REFERENCES.HOMEPAGE, 
-				"X-Title": API_REFERENCES.APP_TITLE, 
+				"HTTP-Referer": API_REFERENCES.HOMEPAGE,
+				"X-Title": API_REFERENCES.APP_TITLE,
 			},
 		})
 	})

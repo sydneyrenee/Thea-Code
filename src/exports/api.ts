@@ -12,7 +12,8 @@ export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI {
 	private readonly history: MessageHistory
 	private readonly tokenUsage: Record<string, TokenUsage>
 
-	constructor(outputChannel: vscode.OutputChannel, provider: TheaProvider) { // Renamed type
+	constructor(outputChannel: vscode.OutputChannel, provider: TheaProvider) {
+		// Renamed type
 		super()
 
 		this.outputChannel = outputChannel
@@ -20,7 +21,8 @@ export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI {
 		this.history = new MessageHistory()
 		this.tokenUsage = {}
 
-		this.provider.on("theaTaskCreated", (task) => { // Renamed event and parameter
+		this.provider.on("theaTaskCreated", (task) => {
+			// Renamed event and parameter
 			task.on("message", (message) => this.emit("message", { ...message })) // Remove duplicate taskId
 			task.on("taskStarted", () => this.emit("taskStarted", task.taskId)) // Use renamed parameter
 			task.on("taskPaused", () => this.emit("taskPaused", task.taskId)) // Use renamed parameter

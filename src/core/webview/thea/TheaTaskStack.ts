@@ -4,17 +4,19 @@ import { t } from "../../../i18n" // Adjusted import path
 /**
  * Manages the stack of Cline instances representing ongoing tasks and subtasks.
  */
-export class TheaTaskStack { // Renamed class
+export class TheaTaskStack {
+	// Renamed class
 	private stack: TheaTask[] = [] // Renamed type
 
 	/**
 	 * Adds a new Cline instance to the stack.
 	 * @param task The TheaTask instance to add to the stack
 	 */
-	async addTheaTask(task: TheaTask): Promise<void> { // Renamed parameter and type
-	 console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`) // Use renamed parameter
-	 // Add this task instance into the stack that represents the order of all the called tasks.
-	 this.stack.push(task) // Use renamed parameter
+	async addTheaTask(task: TheaTask): Promise<void> {
+		// Renamed parameter and type
+		console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`) // Use renamed parameter
+		// Add this task instance into the stack that represents the order of all the called tasks.
+		this.stack.push(task) // Use renamed parameter
 		// Note: Validation logic involving `getState` was removed as it belongs in the provider calling this method.
 	}
 
@@ -22,7 +24,8 @@ export class TheaTaskStack { // Renamed class
 	 * Removes and destroys the top Cline instance (the current finished task).
 	 * @returns The removed TheaTask instance, if any
 	 */
-	async removeCurrentTheaTask(): Promise<TheaTask | undefined> { // Renamed return type
+	async removeCurrentTheaTask(): Promise<TheaTask | undefined> {
+		// Renamed return type
 		if (this.stack.length === 0) {
 			return undefined
 		}
@@ -30,7 +33,8 @@ export class TheaTaskStack { // Renamed class
 		// Pop the top Cline instance from the stack.
 		const task = this.stack.pop() // Renamed variable
 
-		if (task) { // Use renamed variable
+		if (task) {
+			// Use renamed variable
 			console.log(`[subtasks] removing task ${task.taskId}.${task.instanceId} from stack`) // Use renamed variable
 
 			try {
@@ -39,7 +43,8 @@ export class TheaTaskStack { // Renamed class
 				await task.abortTask(true) // Use renamed variable
 			} catch (e) {
 				// Note: Logging removed, should be handled by the caller or a dedicated logger.
-				console.error( // Keep error log for now
+				console.error(
+					// Keep error log for now
 					`[TheaTaskStack] encountered error while aborting task ${task.taskId}.${task.instanceId}: ${e.message}`, // Renamed class in log, use renamed variable
 				)
 			}
@@ -52,7 +57,8 @@ export class TheaTaskStack { // Renamed class
 	 * Returns the current cline object in the stack (the top one)
 	 * @returns The current TheaTask instance, if any
 	 */
-	getCurrentTheaTask(): TheaTask | undefined { // Renamed return type
+	getCurrentTheaTask(): TheaTask | undefined {
+		// Renamed return type
 		if (this.stack.length === 0) {
 			return undefined
 		}

@@ -7,7 +7,7 @@ jest.mock("../../TheaTask") // Updated mock path
 
 describe("TheaTaskStack", () => {
 	let theaTaskStack: TheaTaskStack
-	
+
 	beforeEach(() => {
 		// Reset mocks
 		jest.clearAllMocks()
@@ -125,20 +125,20 @@ describe("TheaTaskStack", () => {
 		// Setup
 		const mockTheaTask1 = { taskId: "test-task-id-1" } as unknown as TheaTask
 		const mockTheaTask2 = { taskId: "test-task-id-2" } as unknown as TheaTask
-		
+
 		// Execute & Verify - Empty stack
 		expect(theaTaskStack.getSize()).toBe(0)
-		
+
 		// Add instances and verify
 		await theaTaskStack.addTheaTask(mockTheaTask1)
 		expect(theaTaskStack.getSize()).toBe(1)
-		
+
 		await theaTaskStack.addTheaTask(mockTheaTask2)
 		expect(theaTaskStack.getSize()).toBe(2)
-		
+
 		await theaTaskStack.removeCurrentTheaTask()
 		expect(theaTaskStack.getSize()).toBe(1)
-		
+
 		await theaTaskStack.removeCurrentTheaTask()
 		expect(theaTaskStack.getSize()).toBe(0)
 	})
@@ -163,12 +163,12 @@ describe("TheaTaskStack", () => {
 			taskId: "parent-task-id",
 			resumePausedTask: jest.fn(),
 		} as unknown as TheaTask
-		
+
 		const mockSubTaskTheaTask = {
 			taskId: "subtask-id",
 			abortTask: jest.fn().mockResolvedValue(undefined),
 		} as unknown as TheaTask
-		
+
 		await theaTaskStack.addTheaTask(mockParentTheaTask)
 		await theaTaskStack.addTheaTask(mockSubTaskTheaTask)
 

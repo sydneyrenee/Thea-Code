@@ -85,9 +85,9 @@ export interface ContextMenuQueryItem {
 
 // Browser-compatible basename function
 function getBasenameBrowser(p: string): string {
-  p = p.replace(/[\\/]+$/, ''); // Remove trailing slashes (fixed regex)
-  const lastSlashIndex = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
-  return lastSlashIndex === -1 ? p : p.slice(lastSlashIndex + 1);
+	p = p.replace(/[\\/]+$/, "") // Remove trailing slashes (fixed regex)
+	const lastSlashIndex = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"))
+	return lastSlashIndex === -1 ? p : p.slice(lastSlashIndex + 1)
 }
 
 function mapSearchResult(result: SearchResult, os?: string): ContextMenuQueryItem {

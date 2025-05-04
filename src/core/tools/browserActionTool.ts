@@ -35,9 +35,12 @@ export async function browserActionTool(
 	try {
 		if (block.partial) {
 			if (action === "launch") {
-				await theaTask.webviewCommunicator.ask("browser_action_launch", removeClosingTag("url", url), block.partial).catch(() => {}) // Use communicator
+				await theaTask.webviewCommunicator
+					.ask("browser_action_launch", removeClosingTag("url", url), block.partial)
+					.catch(() => {}) // Use communicator
 			} else {
-				await theaTask.webviewCommunicator.say( // Use communicator
+				await theaTask.webviewCommunicator.say(
+					// Use communicator
 					"browser_action",
 					JSON.stringify({
 						action: action as BrowserAction,
@@ -89,7 +92,8 @@ export async function browserActionTool(
 					}
 				}
 				theaTask.consecutiveMistakeCount = 0
-				await theaTask.webviewCommunicator.say( // Use communicator
+				await theaTask.webviewCommunicator.say(
+					// Use communicator
 					"browser_action",
 					JSON.stringify({
 						action: action as BrowserAction,

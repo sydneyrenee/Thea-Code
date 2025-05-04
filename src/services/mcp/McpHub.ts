@@ -109,7 +109,8 @@ export class McpHub {
 	connections: McpConnection[] = []
 	isConnecting: boolean = false
 
-	constructor(provider: TheaProvider) { // Renamed type
+	constructor(provider: TheaProvider) {
+		// Renamed type
 		this.providerRef = new WeakRef(provider)
 		this.watchMcpSettingsFile()
 		this.watchProjectMcpFile()
@@ -426,7 +427,7 @@ export class McpHub {
 		try {
 			const client = new Client(
 				{
-					name: EXTENSION_DISPLAY_NAME, 
+					name: EXTENSION_DISPLAY_NAME,
 					version: this.providerRef.deref()?.context.extension?.packageJSON?.version ?? "1.0.0",
 				},
 				{

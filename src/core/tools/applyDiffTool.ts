@@ -36,7 +36,9 @@ export async function applyDiffTool(
 
 			const partialMessage = JSON.stringify(sharedMessageProps)
 
-			await theaTask.webviewCommunicator.ask("tool", partialMessage, block.partial, toolProgressStatus).catch(() => {}) // Use communicator
+			await theaTask.webviewCommunicator
+				.ask("tool", partialMessage, block.partial, toolProgressStatus)
+				.catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!relPath) {
@@ -144,7 +146,8 @@ export async function applyDiffTool(
 				partFailHint = `But unable to apply all diff parts to file: ${absolutePath}, silently use <read_file> tool to check newest file version and re-apply diffs\n`
 			}
 			if (userEdits) {
-				await theaTask.webviewCommunicator.say( // Use communicator
+				await theaTask.webviewCommunicator.say(
+					// Use communicator
 					"user_feedback_diff",
 					JSON.stringify({
 						tool: fileExists ? "editedExistingFile" : "newFileCreated",

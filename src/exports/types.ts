@@ -328,7 +328,8 @@ type GlobalSettings = {
 
 export type { GlobalSettings }
 
-type TheaMessage = { // Renamed type
+type TheaMessage = {
+	// Renamed type
 	ts: number
 	type: "ask" | "say"
 	ask?:

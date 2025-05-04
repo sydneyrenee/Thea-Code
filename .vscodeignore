@@ -32,6 +32,19 @@ cline_docs/**
 coverage/**
 locales/**
 
+refactor_analysis.md
+refactor_new.md
+.gitconfig
+.git*
+package.json.bak-*
+*.log
+*.txt
+lint-output.log
+out.js.txt
+out.ts.txt
+out.tsx.txt
+out.txt
+
 # Ignore all webview-ui files except the build directory (https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/frameworks/hello-world-react-cra/.vscodeignore)
 webview-ui/src/**
 webview-ui/public/**

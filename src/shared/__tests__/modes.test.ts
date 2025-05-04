@@ -7,7 +7,7 @@ jest.mock("../../core/prompts/sections/custom-instructions", () => ({
 
 import { isToolAllowedForMode, FileRestrictionError, ModeConfig, getFullModeDetails, modes } from "../modes"
 import { addCustomInstructions } from "../../core/prompts/sections/custom-instructions"
-import { AI_IDENTITY_NAME } from "../../../dist/thea-config"; // Import branded constant
+import { AI_IDENTITY_NAME } from "../../../dist/thea-config" // Import branded constant
 describe("isToolAllowedForMode", () => {
 	const customModes: ModeConfig[] = [
 		{
@@ -339,8 +339,7 @@ describe("FileRestrictionError", () => {
 			expect(debugMode).toMatchObject({
 				slug: "debug",
 				name: "Debug",
-				roleDefinition:
-					`You are ${AI_IDENTITY_NAME}, an expert software debugger specializing in systematic problem diagnosis and resolution.`, 
+				roleDefinition: `You are ${AI_IDENTITY_NAME}, an expert software debugger specializing in systematic problem diagnosis and resolution.`,
 				groups: ["read", "edit", "browser", "command", "mcp"],
 			})
 			expect(debugMode?.customInstructions).toContain(
@@ -360,8 +359,7 @@ describe("FileRestrictionError", () => {
 			expect(result).toMatchObject({
 				slug: "debug",
 				name: "Debug",
-				roleDefinition:
-					`You are ${AI_IDENTITY_NAME}, an expert software debugger specializing in systematic problem diagnosis and resolution.`, 
+				roleDefinition: `You are ${AI_IDENTITY_NAME}, an expert software debugger specializing in systematic problem diagnosis and resolution.`,
 			})
 		})
 

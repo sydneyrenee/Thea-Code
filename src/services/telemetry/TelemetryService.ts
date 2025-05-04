@@ -5,7 +5,8 @@ import { ZodError } from "zod"
 import { logger } from "../../utils/logging"
 
 // This forward declaration is needed to avoid circular dependencies
-interface TheaProviderInterface { // Renamed interface
+interface TheaProviderInterface {
+	// Renamed interface
 	// Gets telemetry properties to attach to every event
 	getTelemetryProperties(): Promise<Record<string, any>>
 }
@@ -85,7 +86,8 @@ class PostHogClient {
 	 * Sets the TheaProvider reference to use for global properties
 	 * @param provider A TheaProvider instance to use
 	 */
-	public setProvider(provider: TheaProviderInterface): void { // Renamed type
+	public setProvider(provider: TheaProviderInterface): void {
+		// Renamed type
 		this.providerRef = new WeakRef(provider)
 		logger.debug("PostHogClient: TheaProvider reference set") // Updated log message
 	}
@@ -174,7 +176,8 @@ class TelemetryService {
 	 * Sets the TheaProvider reference to use for global properties
 	 * @param provider A TheaProvider instance to use
 	 */
-	public setProvider(provider: TheaProviderInterface): void { // Renamed type
+	public setProvider(provider: TheaProviderInterface): void {
+		// Renamed type
 		// Keep a weak reference to avoid memory leaks
 		this.providerRef = new WeakRef(provider)
 		// If client is initialized, pass the provider reference

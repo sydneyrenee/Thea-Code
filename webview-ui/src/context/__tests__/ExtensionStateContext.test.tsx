@@ -19,7 +19,9 @@ const TestComponent = () => {
 			<button data-testid="update-button" onClick={() => setAllowedCommands(["npm install", "git status"])}>
 				Update Commands
 			</button>
-			<button data-testid="toggle-theaignore-button" onClick={() => setShowTheaIgnoredFiles(!showTheaIgnoredFiles)}>
+			<button
+				data-testid="toggle-theaignore-button"
+				onClick={() => setShowTheaIgnoredFiles(!showTheaIgnoredFiles)}>
 				Update Commands
 			</button>
 		</div>

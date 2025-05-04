@@ -20,7 +20,8 @@ class WorkspaceTracker {
 	get cwd() {
 		return getWorkspacePath()
 	}
-	constructor(provider: TheaProvider) { // Renamed type
+	constructor(provider: TheaProvider) {
+		// Renamed type
 		this.providerRef = new WeakRef(provider)
 		this.registerListeners()
 	}

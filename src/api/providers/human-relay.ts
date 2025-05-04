@@ -123,7 +123,7 @@ async function showHumanRelayDialog(promptText: string): Promise<string | undefi
 
 		// Register a global callback function
 		vscode.commands.executeCommand(
-			`${EXTENSION_NAME}.registerHumanRelayCallback`, 
+			`${EXTENSION_NAME}.registerHumanRelayCallback`,
 			requestId,
 			(response: string | undefined) => {
 				resolve(response)
@@ -131,7 +131,7 @@ async function showHumanRelayDialog(promptText: string): Promise<string | undefi
 		)
 
 		// Open the dialog box directly using the current panel
-		vscode.commands.executeCommand(`${EXTENSION_NAME}.showHumanRelayDialog`, { 
+		vscode.commands.executeCommand(`${EXTENSION_NAME}.showHumanRelayDialog`, {
 			requestId,
 			promptText,
 		})

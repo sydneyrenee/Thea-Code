@@ -3,7 +3,6 @@ import { TheaProvider } from "./webview/TheaProvider" // Renamed import and path
 import { TheaAsk, TheaMessage, TheaSay, ToolProgressStatus } from "../shared/ExtensionMessage" // Renamed imports
 import { TheaAskResponse as TheaAskResponse } from "../shared/WebviewMessage" // Renamed import and type // TODO: Rename source type
 
-
 interface TaskWebviewCommunicatorOptions {
 	providerRef: WeakRef<TheaProvider> // Renamed type
 	getMessages: () => TheaMessage[] // Renamed type
@@ -52,7 +51,8 @@ export class TaskWebviewCommunicator {
 		text?: string,
 		partial?: boolean,
 		progressStatus?: ToolProgressStatus,
-	): Promise<{ response: TheaAskResponse; text?: string; images?: string[] }> { // Renamed type
+	): Promise<{ response: TheaAskResponse; text?: string; images?: string[] }> {
+		// Renamed type
 		if (this.isTaskAborted()) {
 			throw new Error(`[TaskWebviewCommunicator#ask] task ${this.taskId}.${this.instanceId} aborted`)
 		}
@@ -125,7 +125,8 @@ export class TaskWebviewCommunicator {
 	}
 
 	// Called by the provider when a response comes from the webview
-	handleWebviewAskResponse(askResponse: TheaAskResponse, text?: string, images?: string[]) { // Renamed type
+	handleWebviewAskResponse(askResponse: TheaAskResponse, text?: string, images?: string[]) {
+		// Renamed type
 		this.askResponse = askResponse
 		this.askResponseText = text
 		this.askResponseImages = images

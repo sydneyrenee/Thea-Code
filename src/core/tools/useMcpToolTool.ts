@@ -48,7 +48,10 @@ export async function useMcpToolTool(
 					parsedArguments = JSON.parse(mcp_arguments)
 				} catch (error) {
 					theaTask.consecutiveMistakeCount++
-					await theaTask.webviewCommunicator.say("error", `Thea tried to use ${tool_name} with an invalid JSON argument. Retrying...`) // Use communicator
+					await theaTask.webviewCommunicator.say(
+						"error",
+						`Thea tried to use ${tool_name} with an invalid JSON argument. Retrying...`,
+					) // Use communicator
 					pushToolResult(
 						formatResponse.toolError(formatResponse.invalidMcpToolArgumentError(server_name, tool_name)),
 					)

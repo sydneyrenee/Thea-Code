@@ -18,7 +18,8 @@ jest.mock("../../config/ProviderSettingsManager")
 jest.mock("../../config/CustomModesManager")
 jest.mock("../../../shared/language")
 
-describe("TheaStateManager", () => { // Renamed describe block
+describe("TheaStateManager", () => {
+	// Renamed describe block
 	let stateManager: TheaStateManager // Renamed type
 	let mockContext: vscode.ExtensionContext
 	let mockContextProxy: jest.Mocked<ContextProxy>
@@ -73,7 +74,9 @@ describe("TheaStateManager", () => { // Renamed describe block
 
 		// Mock custom modes manager
 		mockCustomModesManager = {
-			getCustomModes: jest.fn().mockResolvedValue([{ slug: "custom", name: "Custom", roleDefinition: "Role", groups: ["read"] }]),
+			getCustomModes: jest
+				.fn()
+				.mockResolvedValue([{ slug: "custom", name: "Custom", roleDefinition: "Role", groups: ["read"] }]),
 		} as unknown as jest.Mocked<CustomModesManager>
 
 		// Create instance of ClineStateManager
@@ -89,55 +92,57 @@ describe("TheaStateManager", () => { // Renamed describe block
 		const state = await stateManager.getState()
 
 		// Verify
-		expect(state).toEqual(expect.objectContaining({
-			apiConfiguration: { apiProvider: "anthropic" },
-			osInfo: "unix",
-			alwaysAllowReadOnly: false,
-			alwaysAllowReadOnlyOutsideWorkspace: false,
-			alwaysAllowWrite: false,
-			alwaysAllowWriteOutsideWorkspace: false,
-			alwaysAllowExecute: false,
-			alwaysAllowBrowser: false,
-			alwaysAllowMcp: false,
-			alwaysAllowModeSwitch: false,
-			alwaysAllowSubtasks: false,
-			soundEnabled: false,
-			ttsEnabled: false,
-			ttsSpeed: 1.0,
-			diffEnabled: true,
-			enableCheckpoints: true,
-			checkpointStorage: "task",
-			browserViewportSize: "900x600",
-			screenshotQuality: 75,
-			remoteBrowserEnabled: false,
-			fuzzyMatchThreshold: 1.0,
-			writeDelayMs: 1000,
-			terminalOutputLineLimit: 500,
-			terminalShellIntegrationTimeout: TERMINAL_SHELL_INTEGRATION_TIMEOUT,
-			mode: defaultModeSlug,
-			language: "en",
-			mcpEnabled: true,
-			enableMcpServerCreation: true,
-			alwaysApproveResubmit: false,
-			requestDelaySeconds: 10,
-			rateLimitSeconds: 0,
-			currentApiConfigName: "default",
-			listApiConfigMeta: [],
-			pinnedApiConfigs: {},
-			modeApiConfigs: {},
-			customModePrompts: {},
-			customSupportPrompts: {},
-			experiments: experimentDefault,
-			autoApprovalEnabled: false,
-			customModes: [{ slug: "custom", name: "Custom", roleDefinition: "Role", groups: ["read"] }],
-			maxOpenTabsContext: 20,
-			maxWorkspaceFiles: 200,
-			openRouterUseMiddleOutTransform: true,
-			browserToolEnabled: true,
-			telemetrySetting: "unset",
-			showTheaIgnoredFiles: true,
-			maxReadFileLine: 500,
-		}))
+		expect(state).toEqual(
+			expect.objectContaining({
+				apiConfiguration: { apiProvider: "anthropic" },
+				osInfo: "unix",
+				alwaysAllowReadOnly: false,
+				alwaysAllowReadOnlyOutsideWorkspace: false,
+				alwaysAllowWrite: false,
+				alwaysAllowWriteOutsideWorkspace: false,
+				alwaysAllowExecute: false,
+				alwaysAllowBrowser: false,
+				alwaysAllowMcp: false,
+				alwaysAllowModeSwitch: false,
+				alwaysAllowSubtasks: false,
+				soundEnabled: false,
+				ttsEnabled: false,
+				ttsSpeed: 1.0,
+				diffEnabled: true,
+				enableCheckpoints: true,
+				checkpointStorage: "task",
+				browserViewportSize: "900x600",
+				screenshotQuality: 75,
+				remoteBrowserEnabled: false,
+				fuzzyMatchThreshold: 1.0,
+				writeDelayMs: 1000,
+				terminalOutputLineLimit: 500,
+				terminalShellIntegrationTimeout: TERMINAL_SHELL_INTEGRATION_TIMEOUT,
+				mode: defaultModeSlug,
+				language: "en",
+				mcpEnabled: true,
+				enableMcpServerCreation: true,
+				alwaysApproveResubmit: false,
+				requestDelaySeconds: 10,
+				rateLimitSeconds: 0,
+				currentApiConfigName: "default",
+				listApiConfigMeta: [],
+				pinnedApiConfigs: {},
+				modeApiConfigs: {},
+				customModePrompts: {},
+				customSupportPrompts: {},
+				experiments: experimentDefault,
+				autoApprovalEnabled: false,
+				customModes: [{ slug: "custom", name: "Custom", roleDefinition: "Role", groups: ["read"] }],
+				maxOpenTabsContext: 20,
+				maxWorkspaceFiles: 200,
+				openRouterUseMiddleOutTransform: true,
+				browserToolEnabled: true,
+				telemetrySetting: "unset",
+				showTheaIgnoredFiles: true,
+				maxReadFileLine: 500,
+			}),
+		)
 	})
 
 	test("getState correctly integrates stored state values", async () => {
@@ -159,18 +164,20 @@ describe("TheaStateManager", () => { // Renamed describe block
 		const state = await stateManager.getState()
 
 		// Verify
-		expect(state).toEqual(expect.objectContaining({
-			apiConfiguration: {
-				apiProvider: "openrouter",
-				openRouterApiKey: "test-key",
-			},
-			mode: "architect",
-			soundEnabled: true,
-			diffEnabled: false,
-			browserViewportSize: "1200x800",
-			maxWorkspaceFiles: 300,
-			customModePrompts: { architect: { customInstructions: "Test instructions" } },
-		}))
+		expect(state).toEqual(
+			expect.objectContaining({
+				apiConfiguration: {
+					apiProvider: "openrouter",
+					openRouterApiKey: "test-key",
+				},
+				mode: "architect",
+				soundEnabled: true,
+				diffEnabled: false,
+				browserViewportSize: "1200x800",
+				maxWorkspaceFiles: 300,
+				customModePrompts: { architect: { customInstructions: "Test instructions" } },
+			}),
+		)
 	})
 
 	test("getState uses getCustomModes method if available", async () => {
@@ -202,7 +209,9 @@ describe("TheaStateManager", () => { // Renamed describe block
 
 		// Verify
 		expect(mockCustomModesManager.getCustomModes).toHaveBeenCalled()
-		expect(state.customModes).toEqual([{ slug: "custom", name: "Custom", roleDefinition: "Role", groups: ["read"] }])
+		expect(state.customModes).toEqual([
+			{ slug: "custom", name: "Custom", roleDefinition: "Role", groups: ["read"] },
+		])
 	})
 
 	test("getState enforces minimum requestDelaySeconds", async () => {

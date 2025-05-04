@@ -2,7 +2,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { promises as fs } from "fs"
 import { GlobalFileNames } from "../../../shared/globalFileNames" // Re-add original import
-import { GLOBAL_FILENAMES as BRANDED_FILENAMES, AI_IDENTITY_NAME } from "../../../../dist/thea-config"; // Alias branded import
+import { GLOBAL_FILENAMES as BRANDED_FILENAMES, AI_IDENTITY_NAME } from "../../../../dist/thea-config" // Alias branded import
 
 export async function createModeInstructions(context: vscode.ExtensionContext | undefined): Promise<string> {
 	if (!context) throw new Error("Missing VSCode Extension Context")

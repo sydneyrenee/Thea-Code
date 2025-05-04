@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
-import { SPECIFIC_STRINGS } from "../../../../dist/thea-config";
+import { SPECIFIC_STRINGS } from "../../../../dist/thea-config"
 import {
 	TheaAsk, // Corrected import
 	TheaMessage, // Corrected import
@@ -334,8 +334,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			text = text.trim()
 			if (text || images.length > 0) {
 				vscode.postMessage({ type: "newTask", text, images })
-				if (theaAsk) { // Use renamed state variable
-					switch (theaAsk) { // Use renamed state variable
+				if (theaAsk) {
+					// Use renamed state variable
+					switch (
+						theaAsk // Use renamed state variable
+					) {
 						case "followup":
 						case "tool":
 						case "browser_action_launch":
@@ -381,7 +384,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const handlePrimaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()
-			switch (theaAsk) { // Use renamed state variable
+			switch (
+				theaAsk // Use renamed state variable
+			) {
 				case "api_req_failed":
 				case "command":
 				case "command_output":
@@ -431,7 +436,9 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				return
 			}
 
-			switch (theaAsk) { // Use renamed state variable
+			switch (
+				theaAsk // Use renamed state variable
+			) {
 				case "api_req_failed":
 				case "mistake_limit_reached":
 				case "resume_task":
@@ -591,7 +598,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		})
 	}, [modifiedMessages])
 
-	const isReadOnlyToolAction = useCallback((message: TheaMessage | undefined) => { // Renamed type
+	const isReadOnlyToolAction = useCallback((message: TheaMessage | undefined) => {
+		// Renamed type
 		if (message?.type === "ask") {
 			if (!message.text) {
 				return true
@@ -609,7 +617,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		return false
 	}, [])
 
-	const isWriteToolAction = useCallback((message: TheaMessage | undefined) => { // Renamed type
+	const isWriteToolAction = useCallback((message: TheaMessage | undefined) => {
+		// Renamed type
 		if (message?.type === "ask") {
 			if (!message.text) {
 				return true
@@ -621,7 +630,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	}, [])
 
 	const isMcpToolAlwaysAllowed = useCallback(
-		(message: TheaMessage | undefined) => { // Renamed type
+		(message: TheaMessage | undefined) => {
+			// Renamed type
 			if (message?.type === "ask" && message.ask === "use_mcp_server") {
 				if (!message.text) {
 					return true
@@ -640,7 +650,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 	// Check if a command message is allowed
 	const isAllowedCommand = useCallback(
-		(message: TheaMessage | undefined): boolean => { // Renamed type
+		(message: TheaMessage | undefined): boolean => {
+			// Renamed type
 			if (message?.type !== "ask") return false
 			return validateCommand(message.text || "", allowedCommands || [])
 		},
@@ -648,7 +659,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	)
 
 	const isAutoApproved = useCallback(
-		(message: TheaMessage | undefined) => { // Renamed type
+		(message: TheaMessage | undefined) => {
+			// Renamed type
 			if (!autoApprovalEnabled || !message || message.type !== "ask") return false
 
 			if (message.ask === "browser_action_launch") {
@@ -787,7 +799,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		setWasStreaming(isStreaming)
 	}, [isStreaming, lastMessage, wasStreaming, isAutoApproved, messages.length])
 
-	const isBrowserSessionMessage = (message: TheaMessage): boolean => { // Renamed type
+	const isBrowserSessionMessage = (message: TheaMessage): boolean => {
+		// Renamed type
 		// which of visible messages are browser session messages, see above
 		if (message.type === "ask") {
 			return ["browser_action_launch"].includes(message.ask!)
@@ -1022,7 +1035,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const placeholderText = task ? t("chat:typeMessage") : t("chat:typeTask")
 
 	const itemContent = useCallback(
-		(index: number, messageOrGroup: TheaMessage | TheaMessage[]) => { // Renamed type
+		(index: number, messageOrGroup: TheaMessage | TheaMessage[]) => {
+			// Renamed type
 			// browser session group
 			if (Array.isArray(messageOrGroup)) {
 				return (

@@ -1,6 +1,6 @@
 import * as React from "react"
 import { CaretUpIcon } from "@radix-ui/react-icons"
-import { SPECIFIC_STRINGS } from "../../../../dist/thea-config"; // Adjust path as needed
+import { SPECIFIC_STRINGS } from "../../../../dist/thea-config" // Adjust path as needed
 
 import { cn } from "@/lib/utils"
 

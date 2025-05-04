@@ -3,7 +3,7 @@ import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { Terminal } from "../integrations/terminal/Terminal"
 import { t } from "../i18n"
 import { COMMANDS } from "../../dist/thea-config" // Import branded constants
-import { AI_IDENTITY_NAME } from "../../dist/thea-config"; // Import branded constant
+import { AI_IDENTITY_NAME } from "../../dist/thea-config" // Import branded constant
 const TERMINAL_COMMAND_IDS = {
 	ADD_TO_CONTEXT: COMMANDS.TERMINAL_ADD_TO_CONTEXT,
 	FIX: COMMANDS.TERMINAL_FIX,
@@ -15,7 +15,12 @@ const TERMINAL_COMMAND_IDS = {
 export const registerTerminalActions = (context: vscode.ExtensionContext) => {
 	registerTerminalAction(context, TERMINAL_COMMAND_IDS.ADD_TO_CONTEXT, "TERMINAL_ADD_TO_CONTEXT")
 
-	registerTerminalActionPair(context, TERMINAL_COMMAND_IDS.FIX, "TERMINAL_FIX", "What would you like ${AI_IDENTITY_NAME} to fix?")
+	registerTerminalActionPair(
+		context,
+		TERMINAL_COMMAND_IDS.FIX,
+		"TERMINAL_FIX",
+		"What would you like ${AI_IDENTITY_NAME} to fix?",
+	)
 
 	registerTerminalActionPair(
 		context,

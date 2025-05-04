@@ -8,7 +8,7 @@ import { ModeConfig } from "../../../shared/modes"
 import { fileExistsAtPath } from "../../../utils/fs"
 import { getWorkspacePath, arePathsEqual } from "../../../utils/path"
 import { GlobalFileNames } from "../../../shared/globalFileNames"
-import { GLOBAL_FILENAMES as BRANDED_FILENAMES } from "../../../../dist/thea-config"; // Import branded constant
+import { GLOBAL_FILENAMES as BRANDED_FILENAMES } from "../../../../dist/thea-config" // Import branded constant
 jest.mock("vscode")
 jest.mock("fs/promises")
 jest.mock("../../../utils/fs")
@@ -23,7 +23,7 @@ describe("CustomModesManager", () => {
 	// Use path.sep to ensure correct path separators for the current platform
 	const mockStoragePath = `${path.sep}mock${path.sep}settings`
 	const mockSettingsPath = path.join(mockStoragePath, "settings", GlobalFileNames.customModes)
-	const mockProjectModesPath = `${path.sep}mock${path.sep}workspace${path.sep}${BRANDED_FILENAMES.MODES_FILENAME}` 
+	const mockProjectModesPath = `${path.sep}mock${path.sep}workspace${path.sep}${BRANDED_FILENAMES.MODES_FILENAME}`
 
 	beforeEach(() => {
 		mockOnUpdate = jest.fn()

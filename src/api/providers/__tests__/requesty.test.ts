@@ -67,8 +67,8 @@ describe("RequestyHandler", () => {
 				baseURL: "https://router.requesty.ai/v1",
 				apiKey: defaultOptions.requestyApiKey,
 				defaultHeaders: {
-					"HTTP-Referer": API_REFERENCES.HOMEPAGE, 
-					"X-Title": API_REFERENCES.APP_TITLE, 
+					"HTTP-Referer": API_REFERENCES.HOMEPAGE,
+					"X-Title": API_REFERENCES.APP_TITLE,
 				},
 			})
 		})

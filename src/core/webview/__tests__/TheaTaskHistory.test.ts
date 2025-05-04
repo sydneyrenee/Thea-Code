@@ -27,7 +27,8 @@ jest.mock("../../../shared/storagePathManager", () => ({
 	}),
 }))
 
-describe("TheaTaskHistory", () => { // Updated describe block
+describe("TheaTaskHistory", () => {
+	// Updated describe block
 	let taskHistory: TheaTaskHistory // Updated type
 	let mockContext: vscode.ExtensionContext
 	let mockContextProxy: jest.Mocked<ContextProxy>
@@ -76,15 +77,15 @@ describe("TheaTaskHistory", () => { // Updated describe block
 			// Setup
 			const mockHistory: HistoryItem[] = []
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve(mockHistory))
-			
-			const newHistoryItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Test Task", 
-				ts: 123456789, 
+
+			const newHistoryItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Test Task",
+				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
 
 			// Execute
@@ -98,27 +99,27 @@ describe("TheaTaskHistory", () => { // Updated describe block
 
 		test("updates an existing history item", async () => {
 			// Setup
-			const existingItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Original Task", 
+			const existingItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Original Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
-			
+
 			const mockHistory = [existingItem]
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve(mockHistory))
-			
-			const updatedItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Updated Task", 
+
+			const updatedItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Updated Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 150,
 				tokensOut: 250,
-				totalCost: 0.02
+				totalCost: 0.02,
 			}
 
 			// Execute
@@ -132,14 +133,14 @@ describe("TheaTaskHistory", () => { // Updated describe block
 		test("handles empty history list", async () => {
 			// Setup
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve(null))
-			const newHistoryItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Test Task", 
+			const newHistoryItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Test Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
 
 			// Execute
@@ -154,21 +155,21 @@ describe("TheaTaskHistory", () => { // Updated describe block
 	describe("getTaskWithId", () => {
 		test("returns task data when task exists", async () => {
 			// Setup
-			const mockHistoryItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Test Task", 
+			const mockHistoryItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Test Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve([mockHistoryItem]))
-			
+
 			const expectedTaskDirPath = path.join("/test/storage/path", "tasks", "test-task-id")
 			const expectedApiHistoryPath = path.join(expectedTaskDirPath, GlobalFileNames.apiConversationHistory)
 			const expectedUiMessagesPath = path.join(expectedTaskDirPath, GlobalFileNames.uiMessages)
-			
+
 			;(fileExistsAtPath as jest.Mock).mockResolvedValue(true)
 			;(fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify([{ role: "user", content: "Hello" }]))
 
@@ -187,14 +188,14 @@ describe("TheaTaskHistory", () => { // Updated describe block
 
 		test("handles missing conversation history file", async () => {
 			// Setup
-			const mockHistoryItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Test Task", 
+			const mockHistoryItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Test Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve([mockHistoryItem]))
 			;(fileExistsAtPath as jest.Mock).mockResolvedValue(false)
@@ -209,9 +210,10 @@ describe("TheaTaskHistory", () => { // Updated describe block
 		test("throws error and attempts cleanup when task not found", async () => {
 			// Setup
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve([]))
-			
+
 			// Mock the deleteTaskFromState method
-			const deleteTaskFromStateSpy = jest.spyOn(taskHistory as any, "deleteTaskFromState")
+			const deleteTaskFromStateSpy = jest
+				.spyOn(taskHistory as any, "deleteTaskFromState")
 				.mockResolvedValue(undefined)
 
 			// Execute & Verify
@@ -221,14 +223,14 @@ describe("TheaTaskHistory", () => { // Updated describe block
 
 		test("handles error when reading conversation history", async () => {
 			// Setup
-			const mockHistoryItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Test Task", 
+			const mockHistoryItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Test Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve([mockHistoryItem]))
 			;(fileExistsAtPath as jest.Mock).mockResolvedValue(true)
@@ -246,18 +248,19 @@ describe("TheaTaskHistory", () => { // Updated describe block
 	describe("showTaskWithId", () => {
 		test("initializes new Cline when showing a different task", async () => {
 			// Setup
-			const mockHistoryItem: HistoryItem = { 
-				id: "different-task-id", 
-				task: "Different Task", 
+			const mockHistoryItem: HistoryItem = {
+				id: "different-task-id",
+				task: "Different Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
-			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId")
+			const mockGetTaskWithId = jest
+				.spyOn(taskHistory as any, "getTaskWithId")
 				.mockResolvedValue({ historyItem: mockHistoryItem })
-			
+
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" }) // Keep as is, represents return value
 			const mockInitClineWithHistoryItem = jest.fn().mockResolvedValue({ taskId: mockHistoryItem.id }) // Keep as is, represents return value
 			const mockPostWebviewAction = jest.fn().mockResolvedValue(undefined)
@@ -267,7 +270,7 @@ describe("TheaTaskHistory", () => { // Updated describe block
 				"different-task-id",
 				mockGetCurrentCline,
 				mockInitClineWithHistoryItem,
-				mockPostWebviewAction
+				mockPostWebviewAction,
 			)
 
 			// Verify
@@ -276,7 +279,8 @@ describe("TheaTaskHistory", () => { // Updated describe block
 			expect(mockPostWebviewAction).toHaveBeenCalledWith("chatButtonClicked")
 		})
 
-		test("doesn't initialize TheaTask when showing current task", async () => { // Updated test description
+		test("doesn't initialize TheaTask when showing current task", async () => {
+			// Updated test description
 			// Setup
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" })
 			const mockInitClineWithHistoryItem = jest.fn()
@@ -288,7 +292,7 @@ describe("TheaTaskHistory", () => { // Updated describe block
 				"current-task-id",
 				mockGetCurrentCline,
 				mockInitClineWithHistoryItem,
-				mockPostWebviewAction
+				mockPostWebviewAction,
 			)
 
 			// Verify
@@ -301,17 +305,18 @@ describe("TheaTaskHistory", () => { // Updated describe block
 	describe("exportTaskWithId", () => {
 		test("exports task conversation to markdown", async () => {
 			// Setup
-			const mockHistoryItem: HistoryItem = { 
-				id: "test-task-id", 
-				task: "Test Task", 
+			const mockHistoryItem: HistoryItem = {
+				id: "test-task-id",
+				task: "Test Task",
 				ts: 123456789,
 				number: 1,
 				tokensIn: 100,
 				tokensOut: 200,
-				totalCost: 0.01
+				totalCost: 0.01,
 			}
 			const mockApiHistory = [{ role: "user", content: "Hello" }]
-			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId")
+			const mockGetTaskWithId = jest
+				.spyOn(taskHistory as any, "getTaskWithId")
 				.mockResolvedValue({ historyItem: mockHistoryItem, apiConversationHistory: mockApiHistory })
 
 			// Execute
@@ -328,12 +333,12 @@ describe("TheaTaskHistory", () => { // Updated describe block
 			// Setup
 			const taskId = "test-task-id"
 			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId")
-				.mockResolvedValue({ taskDirPath })
+			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId").mockResolvedValue({ taskDirPath })
 
-			const mockDeleteTaskFromState = jest.spyOn(taskHistory as any, "deleteTaskFromState")
+			const mockDeleteTaskFromState = jest
+				.spyOn(taskHistory as any, "deleteTaskFromState")
 				.mockResolvedValue(undefined)
-			
+
 			// Mock getCurrentCline to return a different task ID
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "different-task-id" })
 			const mockFinishSubTask = jest.fn()
@@ -357,12 +362,12 @@ describe("TheaTaskHistory", () => { // Updated describe block
 			// Setup
 			const taskId = "current-task-id"
 			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId")
-				.mockResolvedValue({ taskDirPath })
-			
-			const mockDeleteTaskFromState = jest.spyOn(taskHistory as any, "deleteTaskFromState")
+			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId").mockResolvedValue({ taskDirPath })
+
+			const mockDeleteTaskFromState = jest
+				.spyOn(taskHistory as any, "deleteTaskFromState")
 				.mockResolvedValue(undefined)
-			
+
 			// Mock getCurrentCline to return the same task ID
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId })
 			const mockFinishSubTask = jest.fn().mockResolvedValue(undefined)
@@ -377,9 +382,10 @@ describe("TheaTaskHistory", () => { // Updated describe block
 		test("handles task not found error", async () => {
 			// Setup
 			const taskId = "non-existent-id"
-			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId")
+			const mockGetTaskWithId = jest
+				.spyOn(taskHistory as any, "getTaskWithId")
 				.mockRejectedValue(new Error("Task non-existent-id not found"))
-			
+
 			const mockGetCurrentCline = jest.fn()
 			const mockFinishSubTask = jest.fn()
 
@@ -394,16 +400,16 @@ describe("TheaTaskHistory", () => { // Updated describe block
 			// Setup
 			const taskId = "test-task-id"
 			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId")
-				.mockResolvedValue({ taskDirPath })
-			
-			const mockDeleteTaskFromState = jest.spyOn(taskHistory as any, "deleteTaskFromState")
+			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId").mockResolvedValue({ taskDirPath })
+
+			const mockDeleteTaskFromState = jest
+				.spyOn(taskHistory as any, "deleteTaskFromState")
 				.mockResolvedValue(undefined)
-			
+
 			// Mock ShadowCheckpointService to throw an error
 			const mockError = new Error("Shadow deletion error")
 			;(ShadowCheckpointService.deleteTask as jest.Mock).mockRejectedValue(mockError)
-			
+
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "different-task-id" })
 			const mockFinishSubTask = jest.fn()
 
@@ -421,23 +427,23 @@ describe("TheaTaskHistory", () => { // Updated describe block
 			// Setup
 			const taskId = "test-task-id"
 			const mockHistory = [
-				{ 
-					id: "other-task-id", 
+				{
+					id: "other-task-id",
 					task: "Other Task",
 					number: 1,
 					ts: 123456789,
 					tokensIn: 100,
 					tokensOut: 200,
-					totalCost: 0.01
+					totalCost: 0.01,
 				},
-				{ 
-					id: taskId, 
+				{
+					id: taskId,
 					task: "Test Task",
 					number: 2,
-					ts: 123456789, 
+					ts: 123456789,
 					tokensIn: 100,
 					tokensOut: 200,
-					totalCost: 0.01
+					totalCost: 0.01,
 				},
 			]
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve(mockHistory))
@@ -446,32 +452,33 @@ describe("TheaTaskHistory", () => { // Updated describe block
 			await taskHistory.deleteTaskFromState(taskId)
 
 			// Verify
-			expect(mockContextProxy.setValue).toHaveBeenCalledWith(
-				"taskHistory", 
-				[{ 
-					id: "other-task-id", 
+			expect(mockContextProxy.setValue).toHaveBeenCalledWith("taskHistory", [
+				{
+					id: "other-task-id",
 					task: "Other Task",
 					number: 1,
 					ts: 123456789,
 					tokensIn: 100,
 					tokensOut: 200,
-					totalCost: 0.01
-				}]
-			)
+					totalCost: 0.01,
+				},
+			])
 		})
 
 		test("does nothing when task is not in history list", async () => {
 			// Setup
 			const taskId = "non-existent-id"
-			const mockHistory = [{ 
-				id: "other-task-id", 
-				task: "Other Task",
-				number: 1,
-				ts: 123456789,
-				tokensIn: 100,
-				tokensOut: 200,
-				totalCost: 0.01
-			}]
+			const mockHistory = [
+				{
+					id: "other-task-id",
+					task: "Other Task",
+					number: 1,
+					ts: 123456789,
+					tokensIn: 100,
+					tokensOut: 200,
+					totalCost: 0.01,
+				},
+			]
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve(mockHistory))
 
 			// Execute

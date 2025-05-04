@@ -14,7 +14,8 @@ const webviewUiDir = path.join(projectRoot, "webview-ui", "src")
 const benchmarkDir = path.join(projectRoot, "benchmark", "src")
 const e2eDir = path.join(projectRoot, "e2e", "src")
 const localesDir = path.join(projectRoot, "locales") // For top-level MD files in locale folders
-const rootFiles = [ // Specific root-level files to process
+const rootFiles = [
+	// Specific root-level files to process
 	// path.join(projectRoot, ".github", "ISSUE_TEMPLATE", "config.yml"), // Removed
 	// path.join(projectRoot, ".github", "pull_request_template.md"), // Removed
 	// path.join(projectRoot, ".husky", "pre-commit"), // Removed
@@ -22,8 +23,8 @@ const rootFiles = [ // Specific root-level files to process
 	path.join(projectRoot, "LICENSE"), // Check if branding needed here
 	path.join(projectRoot, "README.md"),
 	path.join(projectRoot, "flake.nix"),
-    path.join(projectRoot, "scripts", "generate-types.mts"),
-    path.join(projectRoot, "webview-ui", "index.html"),
+	path.join(projectRoot, "scripts", "generate-types.mts"),
+	path.join(projectRoot, "webview-ui", "index.html"),
 ]
 
 // --- Read Files ---
@@ -41,16 +42,17 @@ try {
 
 // Helper to extract org/repo from URL
 function getOrgRepo(url) {
-    try {
-        const match = url.match(/github\.com\/([^/]+)\/([^/]+?)(\.git)?$/);
-        if (match) {
-            return { org: match[1], repo: match[2] };
-        }
-    } catch (e) { /* ignore errors */ }
-    return { org: 'sydneyrenee', repo: 'Thea-Code' }; // Fallback
+	try {
+		const match = url.match(/github\.com\/([^/]+)\/([^/]+?)(\.git)?$/)
+		if (match) {
+			return { org: match[1], repo: match[2] }
+		}
+	} catch (e) {
+		/* ignore errors */
+	}
+	return { org: "sydneyrenee", repo: "Thea-Code" } // Fallback
 }
-const { org: repoOrg, repo: repoName } = getOrgRepo(brandingJson.repository?.url);
-
+const { org: repoOrg, repo: repoName } = getOrgRepo(brandingJson.repository?.url)
 
 try {
 	console.log(`Reading package.json: ${packageJsonPath}`)
@@ -77,46 +79,46 @@ const showIgnoredFilesKey = `show${brandingJson.displayName.replace(/\s+/g, "")}
 
 const rawReplacements = {
 	// URLs first to handle full path before partials
-    "https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline": `https://marketplace.visualstudio.com/items?itemName=${brandingJson.publisher}.${brandingJson.name}`,
-    "https://github.com/RooVetGit/Roo-Code": brandingJson.repository.url,
-    "github.com/RooVetGit/thea-code": `github.com/${repoOrg}/${repoName}`, // Specific pattern from i18n files
-    "RooVetGit/Roo-Code": `${repoOrg}/${repoName}`, // GitHub path fragment
-    "RooVetGit": repoOrg, // Organization name
+	"https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline": `https://marketplace.visualstudio.com/items?itemName=${brandingJson.publisher}.${brandingJson.name}`,
+	"https://github.com/RooVetGit/Roo-Code": brandingJson.repository.url,
+	"github.com/RooVetGit/thea-code": `github.com/${repoOrg}/${repoName}`, // Specific pattern from i18n files
+	"RooVetGit/Roo-Code": `${repoOrg}/${repoName}`, // GitHub path fragment
+	RooVetGit: repoOrg, // Organization name
 
-    // Core Branding
+	// Core Branding
 	"roo-cline": brandingJson.name,
 	"roo-code": brandingJson.name,
 	"Roo Code": brandingJson.displayName,
-    RooCodeStorage: `${brandingJson.displayName.replace(/\s+/g, "")}Storage`, // Derived but necessary for JSON values
+	RooCodeStorage: `${brandingJson.displayName.replace(/\s+/g, "")}Storage`, // Derived but necessary for JSON values
 	"roo code": brandingJson.name, // Lowercase variation if needed
 	RooCodeAPI: brandingJson.apiTypeName,
 	RooCodeEvents: brandingJson.eventsTypeName,
 	RooVeterinaryInc: brandingJson.publisher,
-    "Roo Vet": brandingJson.author.name, // Specific author name replacement
-    "support@roocode.com": brandingJson.author.email,
-    "discord.gg/roocode": brandingJson.discordUrl,
-    "reddit.com/r/RooCode": brandingJson.redditUrl,
+	"Roo Vet": brandingJson.author.name, // Specific author name replacement
+	"support@roocode.com": brandingJson.author.email,
+	"discord.gg/roocode": brandingJson.discordUrl,
+	"reddit.com/r/RooCode": brandingJson.redditUrl,
 
 	// Config/Ignore Files & Dirs
 	".rooignore": brandingJson.ignoreFileName,
 	".roomodes": brandingJson.modesFileName,
 	".roo/": `${brandingJson.configDirName}/`,
-    rooignore_error: brandingJson.ignoreErrorIdentifier,
-    rooIgnoreContent: brandingJson.ignoreContentVarName,
-    rooIgnoreParsed: brandingJson.ignoreParsedVarName,
-    RooIgnoreController: brandingJson.ignoreControllerClassName,
-    "\"rooignore\"": "\"ignoreFileSetting\"", // Explicitly replace the JSON key string
+	rooignore_error: brandingJson.ignoreErrorIdentifier,
+	rooIgnoreContent: brandingJson.ignoreContentVarName,
+	rooIgnoreParsed: brandingJson.ignoreParsedVarName,
+	RooIgnoreController: brandingJson.ignoreControllerClassName,
+	'"rooignore"': '"ignoreFileSetting"', // Explicitly replace the JSON key string
 
 	// Identifiers
-    "roo_cline_config_": brandingJson.extensionSecretsPrefix, // For secrets prefix in tests
-    "rooWantsToUse": "aiWantsToUse", // i18n key rename
+	roo_cline_config_: brandingJson.extensionSecretsPrefix, // For secrets prefix in tests
+	rooWantsToUse: "aiWantsToUse", // i18n key rename
 
-    // Specific File/Key Names
-    "roo-code-settings.json": brandingJson.settingsFileName,
-    showRooIgnoredFiles: showIgnoredFilesKey, // Setting key
+	// Specific File/Key Names
+	"roo-code-settings.json": brandingJson.settingsFileName,
+	showRooIgnoredFiles: showIgnoredFilesKey, // Setting key
 
-    // UI/Misc
-    "roo-portal": brandingJson.portalName,
+	// UI/Misc
+	"roo-portal": brandingJson.portalName,
 
 	// Standalone AI Name (Whole word, case-sensitive) - applied separately
 	// Add other direct mappings as needed
@@ -153,10 +155,10 @@ function replaceStringsRecursively(item, replacements, aiIdentityName) {
 		// Apply general replacements first
 		for (const [oldStr, newStr] of Object.entries(replacements)) {
 			// Escape special regex characters in the old string
-            const escapedOldStr = oldStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-			const regex = new RegExp(escapedOldStr, "gi"); // Use escaped string
-            // Ensure newStr is a string before replacing
-            const replacementString = typeof newStr === 'string' ? newStr : String(newStr);
+			const escapedOldStr = oldStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+			const regex = new RegExp(escapedOldStr, "gi") // Use escaped string
+			// Ensure newStr is a string before replacing
+			const replacementString = typeof newStr === "string" ? newStr : String(newStr)
 			replacedItem = replacedItem.replace(regex, replacementString)
 		}
 		// Apply standalone AI name replacement last (whole word, case-sensitive)
@@ -187,7 +189,11 @@ if (packageObj.contributes) {
 	const sectionsToBrand = ["viewsContainers", "views", "commands", "configuration", "submenus", "menus"]
 	sectionsToBrand.forEach((section) => {
 		if (packageObj.contributes[section]) {
-			packageObj.contributes[section] = replaceStringsRecursively(packageObj.contributes[section], stringReplacements, brandingJson.aiIdentityName)
+			packageObj.contributes[section] = replaceStringsRecursively(
+				packageObj.contributes[section],
+				stringReplacements,
+				brandingJson.aiIdentityName,
+			)
 			console.log(`Branded contributes.${section}`)
 		} else {
 			console.log(`Skipping contributes.${section} (not found).`)
@@ -198,7 +204,6 @@ if (packageObj.contributes) {
 }
 console.log("Selective replacement in contributes done.")
 
-
 // --- Merge Keywords in package.json ---
 console.log("Merging keywords...")
 const currentKeywords = new Set(packageObj.keywords || [])
@@ -207,7 +212,6 @@ brandingJson.keywords.forEach((k) => currentKeywords.add(k))
 oldKeywords.forEach((k) => currentKeywords.delete(k))
 packageObj.keywords = Array.from(currentKeywords)
 console.log("Keywords merged.")
-
 
 // --- Write updated package.json ---
 try {
@@ -234,8 +238,8 @@ try {
 				if (typeof item === "string") {
 					let replacedItem = item
 					for (const [oldStr, newStr] of Object.entries(benchmarkReplacements)) {
-                        const escapedOldStr = oldStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-						const regex = new RegExp(escapedOldStr, "gi");
+						const escapedOldStr = oldStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+						const regex = new RegExp(escapedOldStr, "gi")
 						replacedItem = replacedItem.replace(regex, newStr)
 					}
 					return replacedItem
@@ -278,20 +282,20 @@ function generateTsConfigContent(branding, version) {
 	const ignoreFileName = branding.ignoreFileName
 	const modesFileName = branding.modesFileName
 	const aiIdentityName = branding.aiIdentityName
-    const aiIdentityNameLowercase = branding.aiIdentityNameLowercase // New
+	const aiIdentityNameLowercase = branding.aiIdentityNameLowercase // New
 	const branchPrefix = branding.branchPrefix
 	const configDirName = branding.configDirName
-    const settingsFileName = branding.settingsFileName // New
-    const ignoreErrorIdentifier = branding.ignoreErrorIdentifier // New
-    const ignoreContentVarName = branding.ignoreContentVarName // New
-    const ignoreParsedVarName = branding.ignoreParsedVarName // New
-    const ignoreControllerClassName = branding.ignoreControllerClassName // New
-    const apiTypeName = branding.apiTypeName // New
-    const eventsTypeName = branding.eventsTypeName // New
-    const portalName = branding.portalName // New
-    const discordUrl = branding.discordUrl || ""; // New with fallback
-    const redditUrl = branding.redditUrl || ""; // New with fallback
-    const showIgnoredFilesSettingKey = `show${displayName.replace(/\s+/g, "")}IgnoredFiles` // Derived
+	const settingsFileName = branding.settingsFileName // New
+	const ignoreErrorIdentifier = branding.ignoreErrorIdentifier // New
+	const ignoreContentVarName = branding.ignoreContentVarName // New
+	const ignoreParsedVarName = branding.ignoreParsedVarName // New
+	const ignoreControllerClassName = branding.ignoreControllerClassName // New
+	const apiTypeName = branding.apiTypeName // New
+	const eventsTypeName = branding.eventsTypeName // New
+	const portalName = branding.portalName // New
+	const discordUrl = branding.discordUrl || "" // New with fallback
+	const redditUrl = branding.redditUrl || "" // New with fallback
+	const showIgnoredFilesSettingKey = `show${displayName.replace(/\s+/g, "")}IgnoredFiles` // Derived
 
 	const commands = {
 		PLUS_BUTTON: `${name}.plusButtonClicked`,
@@ -327,12 +331,12 @@ function generateTsConfigContent(branding, version) {
 	const menuGroups = { AI_COMMANDS: `${displayName} Commands`, NAVIGATION: "navigation" }
 	// Updated apiReferences to include discord and reddit URLs
 	const apiReferences = {
-        REPO_URL: repoUrl,
-        HOMEPAGE: homepageUrl,
-        APP_TITLE: displayName,
-        DISCORD_URL: discordUrl,
-        REDDIT_URL: redditUrl,
-    }
+		REPO_URL: repoUrl,
+		HOMEPAGE: homepageUrl,
+		APP_TITLE: displayName,
+		DISCORD_URL: discordUrl,
+		REDDIT_URL: redditUrl,
+	}
 	const globalFileNames = { IGNORE_FILENAME: ignoreFileName, MODES_FILENAME: modesFileName }
 
 	const settingKeys = { SHOW_IGNORED_FILES: showIgnoredFilesSettingKey }
@@ -345,12 +349,12 @@ function generateTsConfigContent(branding, version) {
 	// Add new constants
 	const specificStrings = {
 		AI_IDENTITY_NAME_LOWERCASE: aiIdentityNameLowercase,
-        IGNORE_ERROR_IDENTIFIER: ignoreErrorIdentifier,
-        IGNORE_CONTENT_VAR_NAME: ignoreContentVarName,
-        IGNORE_PARSED_VAR_NAME: ignoreParsedVarName,
-        IGNORE_CONTROLLER_CLASS_NAME: ignoreControllerClassName,
-        SETTINGS_FILE_NAME: settingsFileName,
-        PORTAL_NAME: portalName,
+		IGNORE_ERROR_IDENTIFIER: ignoreErrorIdentifier,
+		IGNORE_CONTENT_VAR_NAME: ignoreContentVarName,
+		IGNORE_PARSED_VAR_NAME: ignoreParsedVarName,
+		IGNORE_CONTROLLER_CLASS_NAME: ignoreControllerClassName,
+		SETTINGS_FILE_NAME: settingsFileName,
+		PORTAL_NAME: portalName,
 	}
 
 	return `// Generated by scripts/apply-thea-branding.js - Do not edit manually
@@ -389,7 +393,6 @@ export const configSection = (): string => CONFIG.SECTION;
 `
 }
 
-
 // --- Recursive File Walker and In-Place Replacer ---
 function walkAndReplaceInPlace(dir, replacements, aiIdentityName, excludeDirs, includeExtensions) {
 	try {
@@ -407,11 +410,14 @@ function walkAndReplaceInPlace(dir, replacements, aiIdentityName, excludeDirs, i
 				continue
 			}
 
-            // Skip node_modules and dist directories
-            if (entry.isDirectory() && (entry.name === 'node_modules' || entry.name === 'dist' || entry.name === 'out')) {
-                // console.log(`Skipping directory: ${currentPath}`) // Reduce noise
-                continue;
-            }
+			// Skip node_modules and dist directories
+			if (
+				entry.isDirectory() &&
+				(entry.name === "node_modules" || entry.name === "dist" || entry.name === "out")
+			) {
+				// console.log(`Skipping directory: ${currentPath}`) // Reduce noise
+				continue
+			}
 
 			if (entry.isDirectory()) {
 				walkAndReplaceInPlace(currentPath, replacements, aiIdentityName, excludeDirs, includeExtensions)
@@ -430,13 +436,13 @@ function walkAndReplaceInPlace(dir, replacements, aiIdentityName, excludeDirs, i
 // --- Function to Apply Replacements to a Single File (In-Place) ---
 function applyReplacementsToFile(filePath, replacements, aiIdentityName) {
 	try {
-        // console.log(`Attempting to process: ${filePath}`); // Add logging
+		// console.log(`Attempting to process: ${filePath}`); // Add logging
 		let originalContent = fs.readFileSync(filePath, "utf8")
 		let modifiedContent = originalContent
 		const fileExtension = path.extname(filePath)
 
 		if (fileExtension === ".json") {
-            // console.log(`[JSON PROC] Processing: ${filePath}`); // Debug log
+			// console.log(`[JSON PROC] Processing: ${filePath}`); // Debug log
 			try {
 				let jsonObj = JSON.parse(modifiedContent)
 				// Ensure recursive replacement happens correctly
@@ -450,9 +456,9 @@ function applyReplacementsToFile(filePath, replacements, aiIdentityName) {
 			// Handle other text files (MD, HTML, etc.)
 			// Apply general replacements first
 			for (const [oldStr, newStr] of Object.entries(replacements)) {
-                const escapedOldStr = oldStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-				const regex = new RegExp(escapedOldStr, "gi");
-                const replacementString = typeof newStr === 'string' ? newStr : String(newStr);
+				const escapedOldStr = oldStr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+				const regex = new RegExp(escapedOldStr, "gi")
+				const replacementString = typeof newStr === "string" ? newStr : String(newStr)
 				modifiedContent = modifiedContent.replace(regex, replacementString)
 			}
 			// Apply standalone AI name replacement last (whole word, case-sensitive)
@@ -464,9 +470,9 @@ function applyReplacementsToFile(filePath, replacements, aiIdentityName) {
 			console.log(`Applying branding to file (in-place): ${filePath}`) // Keep this log
 			fs.writeFileSync(filePath, modifiedContent, "utf8")
 		}
-        // else { // Optional: Log files that were processed but unchanged
-        //     console.log(`No changes needed for: ${filePath}`);
-        // }
+		// else { // Optional: Log files that were processed but unchanged
+		//     console.log(`No changes needed for: ${filePath}`);
+		// }
 	} catch (fileErr) {
 		console.error(`Error processing file ${filePath}: ${fileErr.message}`)
 	}
@@ -475,81 +481,88 @@ function applyReplacementsToFile(filePath, replacements, aiIdentityName) {
 // --- Apply In-Place Branding ---
 console.log(`Applying branding in-place to project files...`)
 const excludeDirs = [".git", "node_modules", "dist", "out", "assets", "audio"]
-const includeExtensions = [ ".md", ".mdx", ".json", ".html" ]
+const includeExtensions = [".md", ".mdx", ".json", ".html"]
 
 // Process main source directories (excluding i18n initially)
-const mainSrcExclude = [...excludeDirs, "i18n"]; // Temporarily exclude i18n
-console.log("--- Processing srcDir (excluding i18n) ---");
-walkAndReplaceInPlace(srcDir, stringReplacements, brandingJson.aiIdentityName, mainSrcExclude, includeExtensions);
-console.log("--- Processing webviewUiDir (excluding i18n) ---");
-walkAndReplaceInPlace(webviewUiDir, stringReplacements, brandingJson.aiIdentityName, mainSrcExclude, includeExtensions); // Assuming webview also has i18n
+const mainSrcExclude = [...excludeDirs, "i18n"] // Temporarily exclude i18n
+console.log("--- Processing srcDir (excluding i18n) ---")
+walkAndReplaceInPlace(srcDir, stringReplacements, brandingJson.aiIdentityName, mainSrcExclude, includeExtensions)
+console.log("--- Processing webviewUiDir (excluding i18n) ---")
+walkAndReplaceInPlace(webviewUiDir, stringReplacements, brandingJson.aiIdentityName, mainSrcExclude, includeExtensions) // Assuming webview also has i18n
 // walkAndReplaceInPlace(benchmarkDir, stringReplacements, brandingJson.aiIdentityName, excludeDirs, includeExtensions); // Keep commented if not needed
 // walkAndReplaceInPlace(e2eDir, stringReplacements, brandingJson.aiIdentityName, excludeDirs, includeExtensions); // Keep commented if not needed
 
 // Explicitly process i18n JSON files in src and webview-ui
-const srcI18nDir = path.join(srcDir, "i18n", "locales");
-const webviewI18nDir = path.join(webviewUiDir, "i18n", "locales");
+const srcI18nDir = path.join(srcDir, "i18n", "locales")
+const webviewI18nDir = path.join(webviewUiDir, "i18n", "locales")
 
-console.log("--- Explicitly processing i18n JSON files ---");
-[srcI18nDir, webviewI18nDir].forEach(i18nDir => {
-    if (fs.existsSync(i18nDir)) {
-        fs.readdirSync(i18nDir).forEach(langCode => {
-            const langDir = path.join(i18nDir, langCode);
-            // Check if langDir is actually a directory before proceeding
-            if (fs.existsSync(langDir) && fs.statSync(langDir).isDirectory()) {
-                const commonJsonPath = path.join(langDir, "common.json");
-                if (fs.existsSync(commonJsonPath)) {
-                    applyReplacementsToFile(commonJsonPath, stringReplacements, brandingJson.aiIdentityName);
-                }
-                // Add other specific json files if needed, e.g., chat.json, settings.json
-                const otherJsonFiles = fs.readdirSync(langDir).filter(f => f.endsWith('.json') && f !== 'common.json');
-                otherJsonFiles.forEach(jsonFile => {
-                     applyReplacementsToFile(path.join(langDir, jsonFile), stringReplacements, brandingJson.aiIdentityName);
-                });
-            } else if (langCode !== 'locales') { // Avoid warning about the nested 'locales' folder itself
-                 console.warn(`Expected language directory not found or is not a directory: ${langDir}`);
-            }
-        });
-    } else {
-        console.log(`Directory not found, skipping: ${i18nDir}`);
-    }
-});
-
+console.log("--- Explicitly processing i18n JSON files ---")
+;[srcI18nDir, webviewI18nDir].forEach((i18nDir) => {
+	if (fs.existsSync(i18nDir)) {
+		fs.readdirSync(i18nDir).forEach((langCode) => {
+			const langDir = path.join(i18nDir, langCode)
+			// Check if langDir is actually a directory before proceeding
+			if (fs.existsSync(langDir) && fs.statSync(langDir).isDirectory()) {
+				const commonJsonPath = path.join(langDir, "common.json")
+				if (fs.existsSync(commonJsonPath)) {
+					applyReplacementsToFile(commonJsonPath, stringReplacements, brandingJson.aiIdentityName)
+				}
+				// Add other specific json files if needed, e.g., chat.json, settings.json
+				const otherJsonFiles = fs.readdirSync(langDir).filter((f) => f.endsWith(".json") && f !== "common.json")
+				otherJsonFiles.forEach((jsonFile) => {
+					applyReplacementsToFile(
+						path.join(langDir, jsonFile),
+						stringReplacements,
+						brandingJson.aiIdentityName,
+					)
+				})
+			} else if (langCode !== "locales") {
+				// Avoid warning about the nested 'locales' folder itself
+				console.warn(`Expected language directory not found or is not a directory: ${langDir}`)
+			}
+		})
+	} else {
+		console.log(`Directory not found, skipping: ${i18nDir}`)
+	}
+})
 
 // Process locale MD files
 try {
-    if (fs.existsSync(localesDir)) {
-        const localeFolders = fs.readdirSync(localesDir, { withFileTypes: true })
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => path.join(localesDir, dirent.name));
+	if (fs.existsSync(localesDir)) {
+		const localeFolders = fs
+			.readdirSync(localesDir, { withFileTypes: true })
+			.filter((dirent) => dirent.isDirectory())
+			.map((dirent) => path.join(localesDir, dirent.name))
 
-        localeFolders.forEach(folder => {
-            const mdFiles = fs.readdirSync(folder)
-                               .filter(file => file.endsWith('.md'))
-                               .map(file => path.join(folder, file));
-            mdFiles.forEach(mdFile => applyReplacementsToFile(mdFile, stringReplacements, brandingJson.aiIdentityName));
-        });
-        console.log("Processed locale MD files.");
-    } else {
-        console.log("Locales directory not found, skipping locale MD processing.");
-    }
-} catch(err) {
-     console.error(`Error processing locale MD files: ${err.message}`);
+		localeFolders.forEach((folder) => {
+			const mdFiles = fs
+				.readdirSync(folder)
+				.filter((file) => file.endsWith(".md"))
+				.map((file) => path.join(folder, file))
+			mdFiles.forEach((mdFile) =>
+				applyReplacementsToFile(mdFile, stringReplacements, brandingJson.aiIdentityName),
+			)
+		})
+		console.log("Processed locale MD files.")
+	} else {
+		console.log("Locales directory not found, skipping locale MD processing.")
+	}
+} catch (err) {
+	console.error(`Error processing locale MD files: ${err.message}`)
 }
 
-
 // Process specific root files
-rootFiles.forEach(filePath => {
+rootFiles.forEach((filePath) => {
 	// Check if path exists before processing
-    if (filePath && fs.existsSync(filePath)) {
+	if (filePath && fs.existsSync(filePath)) {
 		applyReplacementsToFile(filePath, stringReplacements, brandingJson.aiIdentityName)
-	} else if (filePath) { // Only warn if filePath was defined
+	} else if (filePath) {
+		// Only warn if filePath was defined
 		// console.warn(`Root file not found, skipping: ${filePath}`) // Reduce noise
 	}
 })
 
 console.log("Finished applying in-place branding.")
-
 
 // --- Generate Runtime Config File ---
 console.log("Generating runtime configuration file...")
@@ -568,6 +581,5 @@ try {
 }
 
 // --- Process Modes Template File --- REMOVED
-
 
 console.log("Branding script finished.")

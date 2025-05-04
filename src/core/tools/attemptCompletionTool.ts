@@ -36,20 +36,34 @@ export async function attemptCompletionTool(
 				// const secondLastMessage = cline.clineMessages.at(-2)
 				if (lastMessage && lastMessage.ask === "command") {
 					// update command
-					await theaTask.webviewCommunicator.ask("command", removeClosingTag("command", command), block.partial).catch(() => {}) // Use communicator
+					await theaTask.webviewCommunicator
+						.ask("command", removeClosingTag("command", command), block.partial)
+						.catch(() => {}) // Use communicator
 				} else {
 					// last message is completion_result
 					// we have command string, which means we have the result as well, so finish it (doesnt have to exist yet)
-					await theaTask.webviewCommunicator.say("completion_result", removeClosingTag("result", result), undefined, false) // Use communicator
+					await theaTask.webviewCommunicator.say(
+						"completion_result",
+						removeClosingTag("result", result),
+						undefined,
+						false,
+					) // Use communicator
 
 					telemetryService.captureTaskCompleted(theaTask.taskId)
 					theaTask.emit("taskCompleted", theaTask.taskId, theaTask.taskStateManager.getTokenUsage()) // Use state manager
 
-					await theaTask.webviewCommunicator.ask("command", removeClosingTag("command", command), block.partial).catch(() => {}) // Use communicator
+					await theaTask.webviewCommunicator
+						.ask("command", removeClosingTag("command", command), block.partial)
+						.catch(() => {}) // Use communicator
 				}
 			} else {
 				// no command, still outputting partial result
-				await theaTask.webviewCommunicator.say("completion_result", removeClosingTag("result", result), undefined, block.partial) // Use communicator
+				await theaTask.webviewCommunicator.say(
+					"completion_result",
+					removeClosingTag("result", result),
+					undefined,
+					block.partial,
+				) // Use communicator
 			}
 			return
 		} else {

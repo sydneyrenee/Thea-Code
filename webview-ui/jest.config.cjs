@@ -17,7 +17,7 @@ module.exports = {
 		"^\\./setup$": "<rootDir>/src/__mocks__/i18n/setup.ts",
 		"^src/i18n/TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
 		"^\\.\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
-		"^\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx"
+		"^\\./TranslationContext$": "<rootDir>/src/__mocks__/i18n/TranslationContext.tsx",
 	},
 	reporters: [["jest-simple-dot-reporter", {}]],
 	transformIgnorePatterns: [

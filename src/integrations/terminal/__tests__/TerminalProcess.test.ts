@@ -46,7 +46,7 @@ describe("TerminalProcess", () => {
 			shellIntegration: {
 				executeCommand: jest.fn(),
 			},
-			name: EXTENSION_DISPLAY_NAME, 
+			name: EXTENSION_DISPLAY_NAME,
 			processId: Promise.resolve(123),
 			creationOptions: {},
 			exitStatus: undefined,

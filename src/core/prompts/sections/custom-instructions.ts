@@ -73,7 +73,8 @@ export async function addCustomInstructions(
 		rules.push(`# Rules from ${modeRuleFile}:\n${modeRuleContent}`)
 	}
 
-	if (options.theaIgnoreInstructions) { // Use renamed parameter
+	if (options.theaIgnoreInstructions) {
+		// Use renamed parameter
 		rules.push(options.theaIgnoreInstructions) // Use renamed parameter
 	}
 

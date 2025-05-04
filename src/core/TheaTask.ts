@@ -76,8 +76,8 @@ import { switchModeTool } from "./tools/switchModeTool"
 import { attemptCompletionTool } from "./tools/attemptCompletionTool"
 import { newTaskTool } from "./tools/newTaskTool"
 import { TaskCheckpointManager } from "./TaskCheckpointManager" // Import the new manager
-import { TaskStateManager } from "./TaskStateManager"; // Import the new state manager
-import { TaskWebviewCommunicator } from "./TaskWebviewCommunicator"; // Import the new communicator
+import { TaskStateManager } from "./TaskStateManager" // Import the new state manager
+import { TaskWebviewCommunicator } from "./TaskWebviewCommunicator" // Import the new communicator
 
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
@@ -94,7 +94,8 @@ export type TheaTaskEvents = {
 	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
 
-export type TheaTaskOptions = { // Renamed type
+export type TheaTaskOptions = {
+	// Renamed type
 	provider: TheaProvider // Renamed type
 	apiConfiguration: ApiConfiguration
 	customInstructions?: string
@@ -110,15 +111,15 @@ export type TheaTaskOptions = { // Renamed type
 	rootTask?: TheaTask
 	parentTask?: TheaTask
 	taskNumber?: number
-	onCreated?: (task: TheaTask) => void 
+	onCreated?: (task: TheaTask) => void
 }
 
 export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	readonly taskId: string
 	readonly instanceId: string
 
-	readonly rootTask: TheaTask | undefined = undefined 
-	readonly parentTask: TheaTask | undefined = undefined 
+	readonly rootTask: TheaTask | undefined = undefined
+	readonly parentTask: TheaTask | undefined = undefined
 	readonly taskNumber: number
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
@@ -133,7 +134,6 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	diffStrategy?: DiffStrategy
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number = 1.0
-
 
 	theaIgnoreController?: TheaIgnoreController
 
@@ -150,8 +150,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	isInitialized = false
 
 	// Checkpoint manager instance
-	public webviewCommunicator: TaskWebviewCommunicator; // Added communicator instance
-	public taskStateManager: TaskStateManager; // Added state manager instance
+	public webviewCommunicator: TaskWebviewCommunicator // Added communicator instance
+	public taskStateManager: TaskStateManager // Added state manager instance
 	private checkpointManager?: TaskCheckpointManager
 
 	// streaming
@@ -184,7 +184,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		parentTask,
 		taskNumber,
 		onCreated,
-	}: TheaTaskOptions) { // Renamed type
+	}: TheaTaskOptions) {
+		// Renamed type
 		super()
 
 		if (startTask && !task && !images && !historyItem) {
@@ -207,7 +208,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		this.diffEnabled = enableDiff ?? false
 		this.fuzzyMatchThreshold = fuzzyMatchThreshold ?? 1.0
 		this.providerRef = new WeakRef(provider)
-// Initialize State Manager FIRST
+		// Initialize State Manager FIRST
 		this.taskStateManager = new TaskStateManager({
 			taskId: this.taskId,
 			providerRef: this.providerRef as WeakRef<any>, // TODO: Fix type in TaskStateManager constructor
@@ -216,17 +217,17 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			onMessagesUpdate: async (messages) => {
 				// If TheaTask needs its own copy, update it here.
 				// Otherwise, just trigger webview update if needed.
-				await this.providerRef.deref()?.postStateToWebview();
+				await this.providerRef.deref()?.postStateToWebview()
 			},
 			onHistoryUpdate: (history) => {
 				// If TheaTask needs its own copy, update it here.
 			},
 			onTokenUsageUpdate: (usage) => {
-				this.emit("taskTokenUsageUpdated", this.taskId, usage);
+				this.emit("taskTokenUsageUpdated", this.taskId, usage)
 			},
-		});
+		})
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
-// Initialize Webview Communicator SECOND
+		// Initialize Webview Communicator SECOND
 		this.webviewCommunicator = new TaskWebviewCommunicator({
 			providerRef: this.providerRef as WeakRef<any>, // TODO: Fix type in TaskWebviewCommunicator constructor
 			getMessages: () => this.taskStateManager.theaTaskMessages, // Use state manager // Renamed type
@@ -237,7 +238,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			taskId: this.taskId,
 			instanceId: this.instanceId,
 			onAskResponded: () => this.emit("taskAskResponded", this.taskId), // Add taskId
-		});
+		})
 
 		// Initialize Checkpoint Manager
 		if (enableCheckpoints) {
@@ -275,22 +276,25 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			}
 		}
 	}
-// --- Communication Helpers (Internal Wrappers for Communicator) ---
+	// --- Communication Helpers (Internal Wrappers for Communicator) ---
 
-	private async addMessageToStateAndEmit(message: TheaMessage) { // Renamed type
+	private async addMessageToStateAndEmit(message: TheaMessage) {
+		// Renamed type
 		// This method now acts as a bridge to the state manager and event emitter
-		await this.taskStateManager.addToClineMessages(message);
-		this.emit("message", { taskId: this.taskId, action: "created", message }); // Add taskId
+		await this.taskStateManager.addToClineMessages(message)
+		this.emit("message", { taskId: this.taskId, action: "created", message }) // Add taskId
 	}
 
-	private async updateUiMessage(partialMessage: TheaMessage) { // Renamed type
+	private async updateUiMessage(partialMessage: TheaMessage) {
+		// Renamed type
 		// This method now acts as a bridge to the provider and event emitter
-		await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage });
-		this.emit("message", { taskId: this.taskId, action: "updated", message: partialMessage }); // Add taskId
+		await this.providerRef.deref()?.postMessageToWebview({ type: "partialMessage", partialMessage })
+		this.emit("message", { taskId: this.taskId, action: "updated", message: partialMessage }) // Add taskId
 		// Note: Saving is handled when the partial message becomes complete via the communicator
 	}
 
-	static create(options: TheaTaskOptions): [TheaTask, Promise<void>] { // Renamed type
+	static create(options: TheaTaskOptions): [TheaTask, Promise<void>] {
+		// Renamed type
 		const instance = new TheaTask({ ...options, startTask: false }) // Renamed TheaTask
 		const { images, task, historyItem } = options
 		let promise
@@ -318,9 +322,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 
 			fuzzyMatchThreshold: this.fuzzyMatchThreshold,
 		})
-
 	}
-
 
 	async sayAndCreateMissingParamError(toolName: ToolUseName, paramName: string, relPath?: string) {
 		await this.webviewCommunicator.say(
@@ -387,7 +389,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	private async resumeTaskFromHistory() {
 		// Loading now happens in TaskStateManager constructor or load methods
 		// const modifiedClineMessages = await this.taskStateManager.loadClineMessages(); // Example if needed, but likely redundant
-		const modifiedClineMessages = [...this.taskStateManager.theaTaskMessages]; // Work with current state
+		const modifiedClineMessages = [...this.taskStateManager.theaTaskMessages] // Work with current state
 
 		// Remove any resume messages that may have been added before
 		const lastRelevantMessageIndex = findLastIndex(
@@ -447,7 +449,9 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 
 		// Make sure that the api conversation history can be resumed by the API,
 		// even if it goes out of sync with cline messages.
-		let existingApiConversationHistory: Anthropic.Messages.MessageParam[] = [...this.taskStateManager.apiConversationHistory]; // Initialize from state manager
+		let existingApiConversationHistory: Anthropic.Messages.MessageParam[] = [
+			...this.taskStateManager.apiConversationHistory,
+		] // Initialize from state manager
 		// v2.0 xml tags refactor caveat: replace tool use blocks with text blocks as API disallows tool use without schema
 		// Force re-parse
 		const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
@@ -731,13 +735,17 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			}
 		}
 
-		const { terminalOutputLineLimit = 500 } = (await this.providerRef.deref()?.theaStateManagerInstance.getState()) ?? {} // Renamed getter
+		const { terminalOutputLineLimit = 500 } =
+			(await this.providerRef.deref()?.theaStateManagerInstance.getState()) ?? {} // Renamed getter
 
 		process.on("line", (line) => {
 			if (!didContinue) {
 				sendCommandOutput(Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
 			} else {
-				this.webviewCommunicator.say("command_output", Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
+				this.webviewCommunicator.say(
+					"command_output",
+					Terminal.compressTerminalOutput(line, terminalOutputLineLimit),
+				)
 			}
 		})
 
@@ -1215,7 +1223,12 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					partialMessage?: string,
 					progressStatus?: ToolProgressStatus,
 				) => {
-					const { response, text, images } = await this.webviewCommunicator.ask(type, partialMessage, false, progressStatus)
+					const { response, text, images } = await this.webviewCommunicator.ask(
+						type,
+						partialMessage,
+						false,
+						progressStatus,
+					)
 					if (response !== "yesButtonClicked") {
 						// Handle both messageResponse and noButtonClicked with text
 						if (text) {
@@ -1293,7 +1306,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				}
 
 				// Validate tool use before execution
-				const { mode, customModes } = (await this.providerRef.deref()?.theaStateManagerInstance.getState()) ?? {} // Renamed getter
+				const { mode, customModes } =
+					(await this.providerRef.deref()?.theaStateManagerInstance.getState()) ?? {} // Renamed getter
 				try {
 					validateToolUse(
 						block.name as ToolName,
@@ -1462,7 +1476,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		})
 	}
 
-// Helper to convert Anthropic messages to Neutral format for Ollama/OpenAI-compatible APIs
+	// Helper to convert Anthropic messages to Neutral format for Ollama/OpenAI-compatible APIs
 	private anthropicToNeutral(anthropicMessages: Anthropic.Messages.MessageParam[]): NeutralMessage[] {
 		const neutralMessages: NeutralMessage[] = []
 		for (const msg of anthropicMessages) {
@@ -1489,10 +1503,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	}
 
 	// Renamed from recursivelyMakeClineRequests
-	async recursivelyMakeTheaRequests(
-		userContent: UserContent,
-		includeFileDetails: boolean = false,
-	): Promise<boolean> {
+	async recursivelyMakeTheaRequests(userContent: UserContent, includeFileDetails: boolean = false): Promise<boolean> {
 		if (this.abort) {
 			throw new Error(`[TheaTask#recursivelyMakeTheaRequests] task ${this.taskId}.${this.instanceId} aborted`)
 		}
@@ -1521,7 +1532,10 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 
 		// Get previous api req's index to check token usage and determine if we
 		// need to truncate conversation history.
-		const previousApiReqIndex = findLastIndex(this.taskStateManager.theaTaskMessages, (m) => m.say === "api_req_started")
+		const previousApiReqIndex = findLastIndex(
+			this.taskStateManager.theaTaskMessages,
+			(m) => m.say === "api_req_started",
+		)
 
 		// In this TheaTask request loop, we need to check if this task instance
 		// has been asked to wait for a subtask to finish before continuing.
@@ -1567,7 +1581,10 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		telemetryService.captureConversationMessage(this.taskId, "user")
 
 		// since we sent off a placeholder api_req_started message to update the webview while waiting to actually start the API request (to load potential details for example), we need to update the text of that message
-		const lastApiReqIndex = findLastIndex(this.taskStateManager.theaTaskMessages, (m) => m.say === "api_req_started")
+		const lastApiReqIndex = findLastIndex(
+			this.taskStateManager.theaTaskMessages,
+			(m) => m.say === "api_req_started",
+		)
 
 		this.taskStateManager.theaTaskMessages[lastApiReqIndex].text = JSON.stringify({
 			request: userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
@@ -1586,31 +1603,33 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			// update api_req_started. we can't use api_req_finished anymore since it's a unique case where it could come after a streaming message (ie in the middle of being updated or executed)
 			// fortunately api_req_finished was always parsed out for the gui anyways, so it remains solely for legacy purposes to keep track of prices in tasks from history
 			// (it's worth removing a few months from now)
-			const updateApiReqMsg = (cancelReason?: TheaApiReqCancelReason, streamingFailedMessage?: string) => { // Renamed type
+			const updateApiReqMsg = (cancelReason?: TheaApiReqCancelReason, streamingFailedMessage?: string) => {
+				// Renamed type
 				// Ensure message exists before updating
 				if (this.taskStateManager.theaTaskMessages[lastApiReqIndex]) {
 					this.taskStateManager.theaTaskMessages[lastApiReqIndex].text = JSON.stringify({
-					...JSON.parse(this.taskStateManager.theaTaskMessages[lastApiReqIndex].text || "{}"),
-					tokensIn: inputTokens,
-					tokensOut: outputTokens,
-					cacheWrites: cacheWriteTokens,
-					cacheReads: cacheReadTokens,
-					cost:
-						totalCost ??
-						calculateApiCostAnthropic(
-							this.api.getModel().info,
-							inputTokens,
-							outputTokens,
-							cacheWriteTokens,
-							cacheReadTokens,
-						),
-					cancelReason,
-					streamingFailedMessage,
+						...JSON.parse(this.taskStateManager.theaTaskMessages[lastApiReqIndex].text || "{}"),
+						tokensIn: inputTokens,
+						tokensOut: outputTokens,
+						cacheWrites: cacheWriteTokens,
+						cacheReads: cacheReadTokens,
+						cost:
+							totalCost ??
+							calculateApiCostAnthropic(
+								this.api.getModel().info,
+								inputTokens,
+								outputTokens,
+								cacheWriteTokens,
+								cacheReadTokens,
+							),
+						cancelReason,
+						streamingFailedMessage,
 					} satisfies TheaApiReqInfo) // Renamed type
 				}
 			}
 
-			const abortStream = async (cancelReason: TheaApiReqCancelReason, streamingFailedMessage?: string) => { // Renamed type
+			const abortStream = async (cancelReason: TheaApiReqCancelReason, streamingFailedMessage?: string) => {
+				// Renamed type
 				if (this.diffViewProvider.isEditing) {
 					await this.diffViewProvider.revertChanges() // closes diff view
 				}
@@ -1737,9 +1756,11 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					await abortStream(
 						"streaming_failed",
 						error.message ?? JSON.stringify(serializeError(error), null, 2),
-					);
-					
-					const history = await this.providerRef.deref()?.theaTaskHistoryManagerInstance.getTaskWithId(this.taskId); // Renamed getter
+					)
+
+					const history = await this.providerRef
+						.deref()
+						?.theaTaskHistoryManagerInstance.getTaskWithId(this.taskId) // Renamed getter
 
 					if (history) {
 						await this.providerRef.deref()?.initWithHistoryItem(history.historyItem) // TODO: Rename initClineWithHistoryItem
@@ -1832,7 +1853,9 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			// 2. ToolResultBlockParam's content/context text arrays if it contains "<feedback>" (see formatToolDeniedFeedback, attemptCompletion, executeCommand, and consecutiveMistakeCount >= 3) or "<answer>" (see askFollowupQuestion), we place all user generated content in these tags so they can effectively be used as markers for when we should parse mentions)
 			Promise.all(
 				userContent.map(async (block) => {
-					const { osInfo } = (await this.providerRef.deref()?.theaStateManagerInstance.getState()) || { osInfo: "unix" } // Renamed getter
+					const { osInfo } = (await this.providerRef.deref()?.theaStateManagerInstance.getState()) || {
+						osInfo: "unix",
+					} // Renamed getter
 
 					const shouldProcessMentions = (text: string) =>
 						text.includes("<task>") || text.includes("<feedback>")
@@ -2114,7 +2137,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			} else {
 				const maxFiles = maxWorkspaceFiles ?? 200
 				const [files, didHitLimit] = await listFiles(this.cwd, true, maxFiles)
-				const { showTheaIgnoredFiles = true } = (await this.providerRef.deref()?.theaStateManagerInstance.getState()) ?? {} // Renamed getter
+				const { showTheaIgnoredFiles = true } =
+					(await this.providerRef.deref()?.theaStateManagerInstance.getState()) ?? {} // Renamed getter
 				const result = formatResponse.formatFilesList(
 					this.cwd,
 					files,
@@ -2164,7 +2188,9 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				combineApiRequests(combineCommandSequences(deletedMessages)),
 			)
 
-			await this.taskStateManager.overwriteClineMessages(this.taskStateManager.theaTaskMessages.slice(0, index + 1))
+			await this.taskStateManager.overwriteClineMessages(
+				this.taskStateManager.theaTaskMessages.slice(0, index + 1),
+			)
 
 			await this.webviewCommunicator.say(
 				"api_req_deleted",

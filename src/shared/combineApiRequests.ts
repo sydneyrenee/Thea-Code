@@ -18,7 +18,8 @@ import { TheaMessage } from "./ExtensionMessage" // Renamed import
  * const result = combineApiRequests(messages);
  * // Result: [{ type: "say", say: "api_req_started", text: '{"request":"GET /api/data","cost":0.005}', ts: 1000 }]
  */
-export function combineApiRequests(messages: TheaMessage[]): TheaMessage[] { // Renamed type
+export function combineApiRequests(messages: TheaMessage[]): TheaMessage[] {
+	// Renamed type
 	const combinedApiRequests: TheaMessage[] = [] // Renamed type
 
 	for (let i = 0; i < messages.length; i++) {

@@ -16,7 +16,9 @@ export async function askFollowupQuestionTool(
 	const follow_up: string | undefined = block.params.follow_up
 	try {
 		if (block.partial) {
-			await theaTask.webviewCommunicator.ask("followup", removeClosingTag("question", question), block.partial).catch(() => {}) // Use communicator
+			await theaTask.webviewCommunicator
+				.ask("followup", removeClosingTag("question", question), block.partial)
+				.catch(() => {}) // Use communicator
 			return
 		} else {
 			if (!question) {
@@ -59,7 +61,11 @@ export async function askFollowupQuestionTool(
 
 			theaTask.consecutiveMistakeCount = 0
 
-			const { text, images } = await theaTask.webviewCommunicator.ask("followup", JSON.stringify(follow_up_json), false) // Use communicator
+			const { text, images } = await theaTask.webviewCommunicator.ask(
+				"followup",
+				JSON.stringify(follow_up_json),
+				false,
+			) // Use communicator
 			await theaTask.webviewCommunicator.say("user_feedback", text ?? "", images) // Use communicator
 			pushToolResult(formatResponse.toolResult(`<answer>\n${text}\n</answer>`, images))
 			return

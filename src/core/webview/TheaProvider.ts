@@ -12,10 +12,7 @@ import * as vscode from "vscode"
 import { GlobalState, ProviderSettings, TheaCodeSettings, TokenUsage } from "../../schemas" // Added TokenUsage import
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
-import {
-	ApiConfiguration,
-	ModelInfo,
-} from "../../shared/api"
+import { ApiConfiguration, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
 import { supportPrompt } from "../../shared/support-prompt"
 import { HistoryItem } from "../../shared/HistoryItem"
@@ -41,20 +38,21 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
-import { EXTENSION_DISPLAY_NAME, VIEWS, CONFIG } from "../../../dist/thea-config"; // Correct import path and add EXTENSION_CONFIG_DIR, CONFIG
-import { TheaTaskStack } from "./thea/TheaTaskStack"; // Renamed import
-import { TheaStateManager } from "./thea/TheaStateManager"; // Renamed import
-import { TheaApiManager } from "./api/TheaApiManager"; // Renamed import
-import { TheaTaskHistory } from "./history/TheaTaskHistory"; // Renamed import
-import { TheaCacheManager } from "./cache/TheaCacheManager"; // Renamed import
-import { TheaMcpManager } from "./mcp/TheaMcpManager"; // Renamed import
+import { EXTENSION_DISPLAY_NAME, VIEWS, CONFIG } from "../../../dist/thea-config" // Correct import path and add EXTENSION_CONFIG_DIR, CONFIG
+import { TheaTaskStack } from "./thea/TheaTaskStack" // Renamed import
+import { TheaStateManager } from "./thea/TheaStateManager" // Renamed import
+import { TheaApiManager } from "./api/TheaApiManager" // Renamed import
+import { TheaTaskHistory } from "./history/TheaTaskHistory" // Renamed import
+import { TheaCacheManager } from "./cache/TheaCacheManager" // Renamed import
+import { TheaMcpManager } from "./mcp/TheaMcpManager" // Renamed import
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
  * https://github.com/KumarVariable/vscode-extension-sidebar-html/blob/master/src/customSidebarViewProvider.ts
  */
 
-export type TheaProviderEvents = { // Renamed
+export type TheaProviderEvents = {
+	// Renamed
 	theaTaskCreated: [task: TheaTask] // Renamed event and type
 	// Added missing events from original TheaEvents
 	message: [{ taskId: string; action: "created" | "updated"; message: TheaMessage }]
@@ -68,9 +66,10 @@ export type TheaProviderEvents = { // Renamed
 	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
 
-export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vscode.WebviewViewProvider { // TODO: Rename
-	public static readonly sideBarId = VIEWS.SIDEBAR 
-	public static readonly tabPanelId = VIEWS.TAB_PANEL 
+export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vscode.WebviewViewProvider {
+	// TODO: Rename
+	public static readonly sideBarId = VIEWS.SIDEBAR
+	public static readonly tabPanelId = VIEWS.TAB_PANEL
 	private static activeInstances: Set<TheaProvider> = new Set() // TODO: Rename
 	private disposables: vscode.Disposable[] = []
 	// not private, so it can be accessed from webviewMessageHandler
@@ -86,18 +85,18 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	// not private, so it can be accessed from webviewMessageHandler
 	latestAnnouncementId = "mar-30-2025-3-11" // update for v3.11.0 announcement
 	// Add messageHandler property for testing
-	messageHandler = webviewMessageHandler;
+	messageHandler = webviewMessageHandler
 	// not private, so it can be accessed from webviewMessageHandler
 	settingsImportedAt?: number
 	public readonly contextProxy: ContextProxy
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
-	private readonly theaTaskStackManager: TheaTaskStack; 
-	private readonly theaStateManager: TheaStateManager; 
-	private readonly theaApiManager: TheaApiManager; 
-	private readonly theaTaskHistoryManager: TheaTaskHistory; 
-	private readonly theaCacheManager: TheaCacheManager; 
-	private readonly theaMcpManager: TheaMcpManager; 
+	private readonly theaTaskStackManager: TheaTaskStack
+	private readonly theaStateManager: TheaStateManager
+	private readonly theaApiManager: TheaApiManager
+	private readonly theaTaskHistoryManager: TheaTaskHistory
+	private readonly theaCacheManager: TheaCacheManager
+	private readonly theaMcpManager: TheaMcpManager
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -107,7 +106,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	) {
 		super()
 
-		this.outputChannel.appendLine("TheaProvider instantiated") 
+		this.outputChannel.appendLine("TheaProvider instantiated")
 		this.contextProxy = new ContextProxy(context)
 		TheaProvider.activeInstances.add(this)
 
@@ -122,20 +121,29 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		this.customModesManager = new CustomModesManager(this.context, async () => {
 			await this.postStateToWebview()
 		})
-		this.theaTaskStackManager = new TheaTaskStack(); // Renamed property and constructor
-		this.theaStateManager = new TheaStateManager(this.context, this.providerSettingsManager, this.customModesManager); // Renamed property and constructor
-		this.theaStateManager.getCustomModes = () => this.customModesManager.getCustomModes(); // Renamed property
-		this.theaApiManager = new TheaApiManager(this.context, this.outputChannel, this.contextProxy, this.providerSettingsManager); // Renamed property and constructor
-		this.theaTaskHistoryManager = new TheaTaskHistory(this.context, this.contextProxy); // Renamed property and constructor
-		this.theaCacheManager = new TheaCacheManager(this.context); // Renamed property and constructor
-		this.theaMcpManager = new TheaMcpManager(this.context); // Renamed property and constructor
+		this.theaTaskStackManager = new TheaTaskStack() // Renamed property and constructor
+		this.theaStateManager = new TheaStateManager(
+			this.context,
+			this.providerSettingsManager,
+			this.customModesManager,
+		) // Renamed property and constructor
+		this.theaStateManager.getCustomModes = () => this.customModesManager.getCustomModes() // Renamed property
+		this.theaApiManager = new TheaApiManager(
+			this.context,
+			this.outputChannel,
+			this.contextProxy,
+			this.providerSettingsManager,
+		) // Renamed property and constructor
+		this.theaTaskHistoryManager = new TheaTaskHistory(this.context, this.contextProxy) // Renamed property and constructor
+		this.theaCacheManager = new TheaCacheManager(this.context) // Renamed property and constructor
+		this.theaMcpManager = new TheaMcpManager(this.context) // Renamed property and constructor
 
 		// Initialize MCP Hub through the singleton manager
 		McpServerManager.getInstance(this.context, this)
 			.then((hub) => {
-				this.mcpHub = hub; // Keep local reference
-				this.mcpHub = hub; // Keep local reference if needed
-				this.theaMcpManager.setMcpHub(hub); // Renamed property
+				this.mcpHub = hub // Keep local reference
+				this.mcpHub = hub // Keep local reference if needed
+				this.theaMcpManager.setMcpHub(hub) // Renamed property
 			})
 			.catch((error) => {
 				this.outputChannel.appendLine(`Failed to initialize MCP Hub: ${error}`)
@@ -172,8 +180,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		this.workspaceTracker = undefined
 		this.mcpHub?.dispose()
 		this.mcpHub = undefined
-		this.customModesManager?.dispose();
-		this.theaMcpManager?.dispose(); // Renamed property
+		this.customModesManager?.dispose()
+		this.theaMcpManager?.dispose() // Renamed property
 		this.outputChannel.appendLine("Disposed all disposables")
 		TheaProvider.activeInstances.delete(this) // TODO: Rename
 
@@ -181,16 +189,18 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		McpServerManager.unregisterProvider(this)
 	}
 
-	public static getVisibleInstance(): TheaProvider | undefined { // TODO: Rename
+	public static getVisibleInstance(): TheaProvider | undefined {
+		// TODO: Rename
 		return findLast(Array.from(this.activeInstances), (instance) => instance.view?.visible === true)
 	}
 
-	public static async getInstance(): Promise<TheaProvider | undefined> { // TODO: Rename
+	public static async getInstance(): Promise<TheaProvider | undefined> {
+		// TODO: Rename
 		let visibleProvider = TheaProvider.getVisibleInstance() // TODO: Rename
 
 		// If no visible provider, try to show the sidebar view
 		if (!visibleProvider) {
-			await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`) 
+			await vscode.commands.executeCommand(`${VIEWS.SIDEBAR}.focus`)
 			// Wait briefly for the view to become visible
 			await delay(100)
 			visibleProvider = TheaProvider.getVisibleInstance() // TODO: Rename
@@ -211,7 +221,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		}
 
 		// check if there is a  instance in the stack (if this provider has an active task)
-		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask()) { // Renamed property
+		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask()) {
+			// Renamed property
 			return true
 		}
 
@@ -229,7 +240,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return
 		}
 
-		const { customSupportPrompts } = await visibleProvider.theaStateManager.getState(); // Renamed property
+		const { customSupportPrompts } = await visibleProvider.theaStateManager.getState() // Renamed property
 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
@@ -243,7 +254,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return
 		}
 
-		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask() && command.endsWith("InCurrentTask")) { // Renamed property
+		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask() && command.endsWith("InCurrentTask")) {
+			// Renamed property
 			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
 			return
 		}
@@ -261,7 +273,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return
 		}
 
-		const { customSupportPrompts } = await visibleProvider.theaStateManager.getState(); // Renamed property
+		const { customSupportPrompts } = await visibleProvider.theaStateManager.getState() // Renamed property
 
 		const prompt = supportPrompt.create(promptType, params, customSupportPrompts)
 
@@ -274,7 +286,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return
 		}
 
-		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask() && command.endsWith("InCurrentTask")) { // Renamed property
+		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask() && command.endsWith("InCurrentTask")) {
+			// Renamed property
 			await visibleProvider.postMessageToWebview({
 				type: "invoke",
 				invoke: "sendMessage",
@@ -303,23 +316,26 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			// Sidebar Type
 			setPanel(webviewView, "sidebar")
 		}
-		
+
 		// Ensure messageHandler is properly set up
-		this.messageHandler = webviewMessageHandler;
+		this.messageHandler = webviewMessageHandler
 
 		// Initialize out-of-scope variables that need to recieve persistent global state values
-		this.theaStateManager.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => { // Renamed property
+		this.theaStateManager.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
+			// Renamed property
 			setSoundEnabled(soundEnabled ?? false)
 			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT)
 		})
 
 		// Initialize tts enabled state
-		this.theaStateManager.getState().then(({ ttsEnabled }) => { // Renamed property
+		this.theaStateManager.getState().then(({ ttsEnabled }) => {
+			// Renamed property
 			setTtsEnabled(ttsEnabled ?? false)
 		})
 
 		// Initialize tts speed state
-		this.theaStateManager.getState().then(({ ttsSpeed }) => { // Renamed property
+		this.theaStateManager.getState().then(({ ttsSpeed }) => {
+			// Renamed property
 			setTtsSpeed(ttsSpeed ?? 1)
 		})
 
@@ -396,14 +412,16 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		this.outputChannel.appendLine("Webview view resolved")
 	}
 
-	public async initWithSubTask(parent: TheaTask, task?: string, images?: string[]) { // Renamed type
+	public async initWithSubTask(parent: TheaTask, task?: string, images?: string[]) {
+		// Renamed type
 		return this.initWithTask(task, images, parent) // TODO: Rename
 	}
 
 	// when initializing a new task, (not from history but from a tool command new_task) there is no need to remove the previouse task
 	// since the new task is a sub task of the previous one, and when it finishes it is removed from the stack and the caller is resumed
 	// in this way we can have a chain of tasks, each one being a sub task of the previous one until the main task is finished
-	public async initWithTask(task?: string, images?: string[], parentTask?: TheaTask) { // Renamed type
+	public async initWithTask(task?: string, images?: string[], parentTask?: TheaTask) {
+		// Renamed type
 		const {
 			apiConfiguration,
 			customModePrompts,
@@ -419,7 +437,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		const modePrompt = customModePrompts?.[mode] as PromptComponent
 		const effectiveInstructions = [globalInstructions, modePrompt?.customInstructions].filter(Boolean).join("\n\n")
 
-		const theaTask = new TheaTask({ // Renamed constructor and variable
+		const theaTask = new TheaTask({
+			// Renamed constructor and variable
 			provider: this,
 			apiConfiguration, // This already comes from StateManager.getState()
 			customInstructions: effectiveInstructions,
@@ -430,25 +449,26 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			task,
 			images,
 			experiments,
-			rootTask: this.theaTaskStackManager.getSize() > 0 ? this.theaTaskStackManager['stack'][0] : undefined, // Renamed property
+			rootTask: this.theaTaskStackManager.getSize() > 0 ? this.theaTaskStackManager["stack"][0] : undefined, // Renamed property
 			parentTask,
 			taskNumber: this.theaTaskStackManager.getSize() + 1, // Renamed property
 			onCreated: (task) => this.emit("theaTaskCreated", task), // Renamed event and payload
 		})
 
 		// Delegate adding task to stack manager, handle provider-level validation first
-		const state = await this.theaStateManager.getState(); // Renamed property
+		const state = await this.theaStateManager.getState() // Renamed property
 		if (!state || typeof state.mode !== "string") {
-			throw new Error(t("common:errors.retrieve_current_mode"));
+			throw new Error(t("common:errors.retrieve_current_mode"))
 		}
-		await this.theaTaskStackManager.addTheaTask(theaTask); // Renamed property
+		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
 		this.log(
 			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
 		return theaTask // Return renamed variable
 	}
 
-	public async initWithHistoryItem(historyItem: HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }) { // Renamed type
+	public async initWithHistoryItem(historyItem: HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }) {
+		// Renamed type
 		await this.theaTaskStackManager.removeCurrentTheaTask() // Renamed property
 
 		const {
@@ -470,7 +490,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		const globalStorageDir = this.contextProxy.globalStorageUri.fsPath
 		const workspaceDir = this.cwd
 
-		const checkpoints: Pick<TheaTaskOptions, "enableCheckpoints" | "checkpointStorage"> = { // Renamed type
+		const checkpoints: Pick<TheaTaskOptions, "enableCheckpoints" | "checkpointStorage"> = {
+			// Renamed type
 			enableCheckpoints,
 			checkpointStorage,
 		}
@@ -492,7 +513,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			}
 		}
 
-		const theaTask = new TheaTask({ // Renamed constructor and variable
+		const theaTask = new TheaTask({
+			// Renamed constructor and variable
 			provider: this,
 			apiConfiguration, // This already comes from StateManager.getState()
 			customInstructions: effectiveInstructions,
@@ -507,11 +529,11 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			onCreated: (task) => this.emit("theaTaskCreated", task), // Renamed event and payload
 		})
 		// Delegate adding  to stack manager, handle provider-level validation first
-		const stateForHistory = await this.theaStateManager.getState(); // Renamed property
+		const stateForHistory = await this.theaStateManager.getState() // Renamed property
 		if (!stateForHistory || typeof stateForHistory.mode !== "string") {
-			throw new Error(t("common:errors.retrieve_current_mode"));
+			throw new Error(t("common:errors.retrieve_current_mode"))
 		}
-		await this.theaTaskStackManager.addTheaTask(theaTask); // Renamed property
+		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
 		this.log(
 			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
@@ -694,7 +716,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		// Use the messageHandler property for consistency with tests
 		const onReceiveMessage = async (message: WebviewMessage) => {
 			// Call the messageHandler with the correct 'this' context
-			return this.messageHandler(this, message);
+			return this.messageHandler(this, message)
 		}
 
 		webview.onDidReceiveMessage(onReceiveMessage, null, this.disposables)
@@ -706,25 +728,25 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	// Note: Provider still needs access to the *result* of handleModeSwitch to update current  API handler.
 	// Note: Provider still needs access to updateApiConfiguration result? No, API handler update happens internally now.
 
-	// Wrapper method to handle mode switch and update current 
+	// Wrapper method to handle mode switch and update current
 	public async handleModeSwitchAndUpdate(newMode: Mode) {
 		// Capture telemetry here as Provider has taskId
-		const currentTaskId = this.theaTaskStackManager.getCurrentTheaTask()?.taskId; // Renamed property
+		const currentTaskId = this.theaTaskStackManager.getCurrentTheaTask()?.taskId // Renamed property
 		if (currentTaskId) {
-			telemetryService.captureModeSwitch(currentTaskId, newMode);
+			telemetryService.captureModeSwitch(currentTaskId, newMode)
 		}
 		// Delegate mode switch logic and get the config to load
-		const configToLoad = await this.theaApiManager.handleModeSwitch(newMode); // Renamed property
+		const configToLoad = await this.theaApiManager.handleModeSwitch(newMode) // Renamed property
 		// If a new config was loaded/associated, update the current  instance
 		if (configToLoad) {
-			const currentTheaTask = this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
+			const currentTheaTask = this.theaTaskStackManager.getCurrentTheaTask() // Renamed property
 			if (currentTheaTask) {
 				// Use the buildApiHandler potentially from the ApiManager or global scope
-				currentTheaTask.api = buildApiHandler(configToLoad);
+				currentTheaTask.api = buildApiHandler(configToLoad)
 			}
 		}
 		// Post updated state to webview
-		await this.postStateToWebview();
+		await this.postStateToWebview()
 	}
 
 	async cancelTask() {
@@ -759,7 +781,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			console.error("Failed to abort task")
 		})
 
-		const currentForAbandon = this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
+		const currentForAbandon = this.theaTaskStackManager.getCurrentTheaTask() // Renamed property
 		if (currentForAbandon) {
 			// 'abandoned' will prevent this  instance from affecting
 			// future  instances. This may happen if its hanging on a
@@ -775,7 +797,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		// User may be clearing the field.
 		await this.contextProxy.setValue("customInstructions", instructions || undefined) // Use contextProxy directly
 
-		const currentTheaTaskForInstructions = this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
+		const currentTheaTaskForInstructions = this.theaTaskStackManager.getCurrentTheaTask() // Renamed property
 		if (currentTheaTaskForInstructions) {
 			currentTheaTaskForInstructions.customInstructions = instructions || undefined
 		}
@@ -792,38 +814,45 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	// Task history methods removed - delegated to TheaTaskHistory manager.
 
 	// Wrapper methods to call manager and handle provider-specific logic (posting state, passing callbacks)
-	public async getTaskWithId(id: string) { // Made public for  access
+	public async getTaskWithId(id: string) {
+		// Made public for  access
 		// Simple delegation for getting task data
-		return this.theaTaskHistoryManager.getTaskWithId(id); // Renamed property
+		return this.theaTaskHistoryManager.getTaskWithId(id) // Renamed property
 	}
 
-	public async showTaskWithId(id: string) { // Changed from private to public for backward compatibility
+	public async showTaskWithId(id: string) {
+		// Changed from private to public for backward compatibility
 		// Delegate, passing necessary provider methods/context as callbacks
-		await this.theaTaskHistoryManager.showTaskWithId( // Renamed property
+		await this.theaTaskHistoryManager.showTaskWithId(
+			// Renamed property
 			id,
 			() => this.theaTaskStackManager.getCurrentTheaTask(), // Renamed property
 			// Pass provider method - Type 'Promise<TheaTask>' is assignable to 'Promise<void>'? Let's assume type compatibility for now or history manager adjusts.
-			(historyItem) => this.initWithHistoryItem(historyItem as HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }),
+			(historyItem) =>
+				this.initWithHistoryItem(historyItem as HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }),
 			// Pass provider method - Ensure type compatibility for 'action'
-			(action: string) => this.postMessageToWebview({ type: "action", action: action as any }) // Use type assertion as temporary fix if needed
-		);
+			(action: string) => this.postMessageToWebview({ type: "action", action: action as any }), // Use type assertion as temporary fix if needed
+		)
 		// Note: postStateToWebview might be needed here or is handled by initWithHistoryItem implicitly
 	}
 
-	public async exportTaskWithId(id: string) { // Changed from private to public for backward compatibility
+	public async exportTaskWithId(id: string) {
+		// Changed from private to public for backward compatibility
 		// Simple delegation
-		return this.theaTaskHistoryManager.exportTaskWithId(id); // Renamed property
+		return this.theaTaskHistoryManager.exportTaskWithId(id) // Renamed property
 	}
 
-	public async deleteTaskWithId(id: string) { // Changed from private to public for backward compatibility
+	public async deleteTaskWithId(id: string) {
+		// Changed from private to public for backward compatibility
 		// Delegate, passing necessary provider methods/context as callbacks
-		await this.theaTaskHistoryManager.deleteTaskWithId( // Renamed property
+		await this.theaTaskHistoryManager.deleteTaskWithId(
+			// Renamed property
 			id,
 			() => this.theaTaskStackManager.getCurrentTheaTask(), // Renamed property
-			(message) => this.theaTaskStackManager.finishSubTask(message) // Renamed property
-		);
+			(message) => this.theaTaskStackManager.finishSubTask(message), // Renamed property
+		)
 		// Post updated state after deletion attempt (manager handles internal state update)
-		await this.postStateToWebview();
+		await this.postStateToWebview()
 	}
 
 	// deleteTaskFromState is purely state management, keep delegation simple via contextProxy or state manager?
@@ -911,7 +940,9 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			uriScheme: vscode.env.uriScheme,
 			currentTaskItem: this.theaTaskStackManager.getCurrentTheaTask()?.taskId // Renamed property
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.theaTaskStackManager.getCurrentTheaTask()?.taskId) // Renamed property
+				? (taskHistory || []).find(
+						(item: HistoryItem) => item.id === this.theaTaskStackManager.getCurrentTheaTask()?.taskId,
+					) // Renamed property
 				: undefined,
 			Messages: this.theaTaskStackManager.getCurrentTheaTask()?.taskStateManager.theaTaskMessages || [], // Renamed property & access via state manager
 			clineMessages: this.theaTaskStackManager.getCurrentTheaTask()?.taskStateManager.theaTaskMessages || [], // Add required property to satisfy ExtensionState type
@@ -1009,218 +1040,224 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		await this.theaTaskStackManager.removeCurrentTheaTask() // Use manager
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
-
 	}
 
-		// logging
-	
-		public async log(message: string) { // Added async
-			this.outputChannel.appendLine(message)
-			console.log(message)
-		}
-	
-		// integration tests
-	
-		get viewLaunched() {
-			return this.isViewLaunched
-		}
-	
-		get messages() {
-			return this.theaTaskStackManager.getCurrentTheaTask()?.taskStateManager.theaTaskMessages || [] // Access via state manager
-		}
-	
-		// getMcpHub removed - use McpManager.getMcpHub()
-	
-		/**
-		 * Returns properties to be included in every telemetry event
-		 * This method is called by the telemetry service to get context information
-		 * like the current mode, API provider, etc.
-		 */
-		public async getTelemetryProperties(): Promise<Record<string, any>> {
-			const { mode, apiConfiguration, language } = await this.theaStateManager.getState() // Use manager
-			const appVersion = this.context.extension?.packageJSON?.version
-			const vscodeVersion = vscode.version
-			const platform = process.platform
-	
-			const properties: Record<string, any> = {
-				vscodeVersion,
-				platform,
-			}
-	
-			// Add extension version
-			if (appVersion) {
-				properties.appVersion = appVersion
-			}
-	
-			// Add language
-			if (language) {
-				properties.language = language
-			}
-	
-			// Add current mode
-			if (mode) {
-				properties.mode = mode
-			}
-	
-			// Add API provider
-			if (apiConfiguration?.apiProvider) {
-				properties.apiProvider = apiConfiguration.apiProvider
-			}
-	
-			// Add model ID if available
-			const currentTheaTask = this.theaTaskStackManager.getCurrentTheaTask() // Use manager // Renamed variable
-			if (currentTheaTask?.api) {
-				const { id: modelId } = currentTheaTask.api.getModel()
-				if (modelId) {
-					properties.modelId = modelId
-				}
-			}
-	
-			if (currentTheaTask?.diffStrategy) {
-				properties.diffStrategy = currentTheaTask.diffStrategy.getName()
-			}
-	
-			return properties
-		}
-		
-		// --- Manager Getters for  ---
-	
-		public get theaStateManagerInstance(): TheaStateManager { // Renamed getter and type
-			return this.theaStateManager; // Renamed property
-		}
-	
-		public get theaTaskHistoryManagerInstance(): TheaTaskHistory { // Renamed getter and type
-			return this.theaTaskHistoryManager; // Renamed property
-		}
-	
-		public get theaMcpManagerInstance(): TheaMcpManager { // Renamed getter and type
-			return this.theaMcpManager; // Renamed property
-		}
-	
-		// --- Proxy Methods for Backward Compatibility ---
-		// These methods delegate to the appropriate manager instances to maintain compatibility with existing code
-	
-		// StateManager proxy methods
-		public async getState() {
-			return this.theaStateManager.getState(); // Renamed property
-		}
-	
-		public async updateGlobalState<K extends keyof GlobalState>(key: K, value: GlobalState[K]) {
-			return this.theaStateManager.updateGlobalState(key, value); // Renamed property
-		}
-	
-		public getGlobalState<K extends keyof GlobalState>(key: K) {
-			return this.theaStateManager.getGlobalState(key); // Renamed property
-		}
-	
-		public async setValue<K extends keyof TheaCodeSettings>(key: K, value: TheaCodeSettings[K]) {
-			await this.theaStateManager.setValue(key, value); // Renamed property
-			// Update current  instance if needed
-			if (key === "currentApiConfigName" && this.getCurrent()) { // getCurrent returns TheaTask | undefined
-				const config = await this.providerSettingsManager.loadConfig(value as string);
-				if (config) {
-					this.getCurrent()!.api = buildApiHandler(config); // getCurrent returns TheaTask | undefined
-				}
-				// Post state to webview after API configuration update
-				await this.postStateToWebview();
-			} else if ((key as string) === "apiConfiguration" && this.getCurrent()) { // getCurrent returns TheaTask | undefined
-				// If the API configuration itself is updated, update the current  instance
-				this.getCurrent()!.api = buildApiHandler(value as ApiConfiguration); // getCurrent returns TheaTask | undefined
-				// Post state to webview after API configuration update
-				await this.postStateToWebview();
-			}
-			return value;
-		}
-	
-		public getValue<K extends keyof TheaCodeSettings>(key: K) {
-			return this.theaStateManager.getValue(key); // Renamed property
-		}
-	
-		public getValues() {
-			return this.theaStateManager.getValues(); // Renamed property
-		}
-	
-		public async setValues(values: TheaCodeSettings) {
-			return this.theaStateManager.setValues(values); // Renamed property
-		}
-	
-		// Stack proxy methods
-		public async addToStack(task: TheaTask) { // Renamed parameter and type
-			return this.theaTaskStackManager.addTheaTask(task); // Renamed property
-		}
-	
-		public async removeFromStack() {
-			return this.theaTaskStackManager.removeCurrentTheaTask(); // Renamed property
-		}
-	
-		public getCurrent(): TheaTask | undefined { // Add return type
-			return this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
-		}
-	
-		public getStackSize() {
-			return this.theaTaskStackManager.getSize(); // Renamed property
-		}
-	
-		public getCurrentTaskStack() {
-			return this.theaTaskStackManager.getTaskStack(); // Renamed property
-		}
-	
-		public async finishSubTask(message?: string) {
-			return this.theaTaskStackManager.finishSubTask(message); // Renamed property
-		}
-	
-		// ApiManager proxy methods
-		public async handleModeSwitch(newMode: Mode) {
-			return this.handleModeSwitchAndUpdate(newMode);
-		}
-		public async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
-			return this.theaApiManager.updateApiConfiguration(apiConfiguration); // Renamed property
-		}
-	
-		public async upsertApiConfiguration(configName: string, apiConfiguration: ApiConfiguration) {
-			return this.theaApiManager.upsertApiConfiguration(configName, apiConfiguration); // Renamed property
-		}
-	
-		// TheaCacheManager proxy methods
-		public async ensureCacheDirectoryExists() {
-			return this.theaCacheManager.ensureCacheDirectoryExists(); // Renamed property
-		}
-	
-		public async ensureSettingsDirectoryExists() {
-			return this.theaCacheManager.ensureSettingsDirectoryExists(); // Renamed property
-		}
-	
-		public async readModelsFromCache(filename: string) {
-			return this.theaCacheManager.readModelsFromCache(filename); // Renamed property
-		}
-	
-		public async writeModelsToCache(filename: string, data: Record<string, ModelInfo>) {
-			return this.theaCacheManager.writeModelsToCache(filename, data); // Renamed property
-		}
-	
-		// ApiManager OAuth callback proxy methods
-		public async handleGlamaCallback(code: string) {
-			return this.theaApiManager.handleGlamaCallback(code); // Renamed property
-		}
-	
-		public async handleOpenRouterCallback(code: string) {
-			return this.theaApiManager.handleOpenRouterCallback(code); // Renamed property
-		}
-	
-		public async handleRequestyCallback(code: string) {
-			return this.theaApiManager.handleRequestyCallback(code); // Renamed property
-		}
-	
-		// McpManager proxy methods
-		public async ensureMcpServersDirectoryExists() {
-			return this.theaMcpManager.ensureMcpServersDirectoryExists(); // Renamed property
-		}
-	
-		// Removed duplicate proxy methods since the original methods were changed from private to public
-	
-		public getMcpHub() {
-			return this.theaMcpManager.getMcpHub(); // Renamed property
-		}
+	// logging
+
+	public async log(message: string) {
+		// Added async
+		this.outputChannel.appendLine(message)
+		console.log(message)
 	}
-	// Removed duplicated code block from lines 1078-1255
-	
+
+	// integration tests
+
+	get viewLaunched() {
+		return this.isViewLaunched
+	}
+
+	get messages() {
+		return this.theaTaskStackManager.getCurrentTheaTask()?.taskStateManager.theaTaskMessages || [] // Access via state manager
+	}
+
+	// getMcpHub removed - use McpManager.getMcpHub()
+
+	/**
+	 * Returns properties to be included in every telemetry event
+	 * This method is called by the telemetry service to get context information
+	 * like the current mode, API provider, etc.
+	 */
+	public async getTelemetryProperties(): Promise<Record<string, any>> {
+		const { mode, apiConfiguration, language } = await this.theaStateManager.getState() // Use manager
+		const appVersion = this.context.extension?.packageJSON?.version
+		const vscodeVersion = vscode.version
+		const platform = process.platform
+
+		const properties: Record<string, any> = {
+			vscodeVersion,
+			platform,
+		}
+
+		// Add extension version
+		if (appVersion) {
+			properties.appVersion = appVersion
+		}
+
+		// Add language
+		if (language) {
+			properties.language = language
+		}
+
+		// Add current mode
+		if (mode) {
+			properties.mode = mode
+		}
+
+		// Add API provider
+		if (apiConfiguration?.apiProvider) {
+			properties.apiProvider = apiConfiguration.apiProvider
+		}
+
+		// Add model ID if available
+		const currentTheaTask = this.theaTaskStackManager.getCurrentTheaTask() // Use manager // Renamed variable
+		if (currentTheaTask?.api) {
+			const { id: modelId } = currentTheaTask.api.getModel()
+			if (modelId) {
+				properties.modelId = modelId
+			}
+		}
+
+		if (currentTheaTask?.diffStrategy) {
+			properties.diffStrategy = currentTheaTask.diffStrategy.getName()
+		}
+
+		return properties
+	}
+
+	// --- Manager Getters for  ---
+
+	public get theaStateManagerInstance(): TheaStateManager {
+		// Renamed getter and type
+		return this.theaStateManager // Renamed property
+	}
+
+	public get theaTaskHistoryManagerInstance(): TheaTaskHistory {
+		// Renamed getter and type
+		return this.theaTaskHistoryManager // Renamed property
+	}
+
+	public get theaMcpManagerInstance(): TheaMcpManager {
+		// Renamed getter and type
+		return this.theaMcpManager // Renamed property
+	}
+
+	// --- Proxy Methods for Backward Compatibility ---
+	// These methods delegate to the appropriate manager instances to maintain compatibility with existing code
+
+	// StateManager proxy methods
+	public async getState() {
+		return this.theaStateManager.getState() // Renamed property
+	}
+
+	public async updateGlobalState<K extends keyof GlobalState>(key: K, value: GlobalState[K]) {
+		return this.theaStateManager.updateGlobalState(key, value) // Renamed property
+	}
+
+	public getGlobalState<K extends keyof GlobalState>(key: K) {
+		return this.theaStateManager.getGlobalState(key) // Renamed property
+	}
+
+	public async setValue<K extends keyof TheaCodeSettings>(key: K, value: TheaCodeSettings[K]) {
+		await this.theaStateManager.setValue(key, value) // Renamed property
+		// Update current  instance if needed
+		if (key === "currentApiConfigName" && this.getCurrent()) {
+			// getCurrent returns TheaTask | undefined
+			const config = await this.providerSettingsManager.loadConfig(value as string)
+			if (config) {
+				this.getCurrent()!.api = buildApiHandler(config) // getCurrent returns TheaTask | undefined
+			}
+			// Post state to webview after API configuration update
+			await this.postStateToWebview()
+		} else if ((key as string) === "apiConfiguration" && this.getCurrent()) {
+			// getCurrent returns TheaTask | undefined
+			// If the API configuration itself is updated, update the current  instance
+			this.getCurrent()!.api = buildApiHandler(value as ApiConfiguration) // getCurrent returns TheaTask | undefined
+			// Post state to webview after API configuration update
+			await this.postStateToWebview()
+		}
+		return value
+	}
+
+	public getValue<K extends keyof TheaCodeSettings>(key: K) {
+		return this.theaStateManager.getValue(key) // Renamed property
+	}
+
+	public getValues() {
+		return this.theaStateManager.getValues() // Renamed property
+	}
+
+	public async setValues(values: TheaCodeSettings) {
+		return this.theaStateManager.setValues(values) // Renamed property
+	}
+
+	// Stack proxy methods
+	public async addToStack(task: TheaTask) {
+		// Renamed parameter and type
+		return this.theaTaskStackManager.addTheaTask(task) // Renamed property
+	}
+
+	public async removeFromStack() {
+		return this.theaTaskStackManager.removeCurrentTheaTask() // Renamed property
+	}
+
+	public getCurrent(): TheaTask | undefined {
+		// Add return type
+		return this.theaTaskStackManager.getCurrentTheaTask() // Renamed property
+	}
+
+	public getStackSize() {
+		return this.theaTaskStackManager.getSize() // Renamed property
+	}
+
+	public getCurrentTaskStack() {
+		return this.theaTaskStackManager.getTaskStack() // Renamed property
+	}
+
+	public async finishSubTask(message?: string) {
+		return this.theaTaskStackManager.finishSubTask(message) // Renamed property
+	}
+
+	// ApiManager proxy methods
+	public async handleModeSwitch(newMode: Mode) {
+		return this.handleModeSwitchAndUpdate(newMode)
+	}
+	public async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
+		return this.theaApiManager.updateApiConfiguration(apiConfiguration) // Renamed property
+	}
+
+	public async upsertApiConfiguration(configName: string, apiConfiguration: ApiConfiguration) {
+		return this.theaApiManager.upsertApiConfiguration(configName, apiConfiguration) // Renamed property
+	}
+
+	// TheaCacheManager proxy methods
+	public async ensureCacheDirectoryExists() {
+		return this.theaCacheManager.ensureCacheDirectoryExists() // Renamed property
+	}
+
+	public async ensureSettingsDirectoryExists() {
+		return this.theaCacheManager.ensureSettingsDirectoryExists() // Renamed property
+	}
+
+	public async readModelsFromCache(filename: string) {
+		return this.theaCacheManager.readModelsFromCache(filename) // Renamed property
+	}
+
+	public async writeModelsToCache(filename: string, data: Record<string, ModelInfo>) {
+		return this.theaCacheManager.writeModelsToCache(filename, data) // Renamed property
+	}
+
+	// ApiManager OAuth callback proxy methods
+	public async handleGlamaCallback(code: string) {
+		return this.theaApiManager.handleGlamaCallback(code) // Renamed property
+	}
+
+	public async handleOpenRouterCallback(code: string) {
+		return this.theaApiManager.handleOpenRouterCallback(code) // Renamed property
+	}
+
+	public async handleRequestyCallback(code: string) {
+		return this.theaApiManager.handleRequestyCallback(code) // Renamed property
+	}
+
+	// McpManager proxy methods
+	public async ensureMcpServersDirectoryExists() {
+		return this.theaMcpManager.ensureMcpServersDirectoryExists() // Renamed property
+	}
+
+	// Removed duplicate proxy methods since the original methods were changed from private to public
+
+	public getMcpHub() {
+		return this.theaMcpManager.getMcpHub() // Renamed property
+	}
+}
+// Removed duplicated code block from lines 1078-1255

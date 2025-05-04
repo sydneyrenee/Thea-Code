@@ -323,7 +323,8 @@ type GlobalSettings = {
 	enhancementApiConfigId?: string | undefined
 }
 
-type TheaMessage = { // Renamed type
+type TheaMessage = {
+	// Renamed type
 	ts: number
 	type: "ask" | "say"
 	ask?:

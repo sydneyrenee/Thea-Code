@@ -41,11 +41,17 @@ import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } f
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
-import { EXTENSION_CONFIG_DIR, GLOBAL_FILENAMES as BRANDED_FILENAMES, configSection, EXTENSION_NAME } from "../../../dist/thea-config"; // Import branded constants
-import { SETTING_KEYS } from "../../../dist/thea-config"; // Import branded constant
+import {
+	EXTENSION_CONFIG_DIR,
+	GLOBAL_FILENAMES as BRANDED_FILENAMES,
+	configSection,
+	EXTENSION_NAME,
+} from "../../../dist/thea-config" // Import branded constants
+import { SETTING_KEYS } from "../../../dist/thea-config" // Import branded constant
 
 // Export for testing
-export const webviewMessageHandler = async (provider: TheaProvider, message: WebviewMessage) => { // Renamed type
+export const webviewMessageHandler = async (provider: TheaProvider, message: WebviewMessage) => {
+	// Renamed type
 	switch (message.type) {
 		case "webviewDidLaunch":
 			// Load custom modes first
@@ -300,7 +306,9 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			await provider.postStateToWebview()
 			break
 		case "askResponse":
-			provider.getCurrent()?.webviewCommunicator.handleWebviewAskResponse(message.askResponse!, message.text, message.images) // Use communicator
+			provider
+				.getCurrent()
+				?.webviewCommunicator.handleWebviewAskResponse(message.askResponse!, message.text, message.images) // Use communicator
 			break
 		case "clearTask":
 			// clear task resets the current session and allows for a new task to be started, if this session is a subtask - it allows the parent task to be resumed
@@ -512,7 +520,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			await provider.context.globalState.update("allowedCommands", message.commands)
 			// Also update workspace settings
 			await vscode.workspace
-				.getConfiguration(configSection()) 
+				.getConfiguration(configSection())
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 			break
 		case "openMcpSettings": {
@@ -529,7 +537,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			}
 
 			const workspaceFolder = vscode.workspace.workspaceFolders[0]
-			const configDir = path.join(workspaceFolder.uri.fsPath, EXTENSION_CONFIG_DIR) 
+			const configDir = path.join(workspaceFolder.uri.fsPath, EXTENSION_CONFIG_DIR)
 			const mcpPath = path.join(configDir, "mcp.json") // Use renamed variable
 
 			try {
@@ -849,60 +857,56 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 								.taskStateManager.theaTaskMessages.findIndex((msg) => msg === nextUserMessage) // Access via state manager
 
 							// Keep messages before current message and after next user message
-							await provider
-								.getCurrent()!
-								.taskStateManager.overwriteClineMessages([ // Access via state manager
-									...provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(0, messageIndex),
-									...provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(nextUserMessageIndex),
-								])
+							await provider.getCurrent()!.taskStateManager.overwriteClineMessages([
+								// Access via state manager
+								...provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(0, messageIndex),
+								...provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(nextUserMessageIndex),
+							])
 						} else {
 							// If no next user message, keep only messages before current message
-							await provider
-								.getCurrent()!
-								.taskStateManager.overwriteClineMessages( // Access via state manager
-									provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(0, messageIndex),
-								)
+							await provider.getCurrent()!.taskStateManager.overwriteClineMessages(
+								// Access via state manager
+								provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(0, messageIndex),
+							)
 						}
 
 						// Handle API messages
 						if (apiConversationHistoryIndex !== -1) {
 							if (nextUserMessage && nextUserMessage.ts) {
 								// Keep messages before current API message and after next user message
-								await provider
-									.getCurrent()!
-									.taskStateManager.overwriteApiConversationHistory([ // Access via state manager
-										...provider
-											.getCurrent()!
-											.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
-										...provider
-											.getCurrent()!
-											.taskStateManager.apiConversationHistory.filter( // Access via state manager
-												(msg) => msg.ts && msg.ts >= nextUserMessage.ts,
-											),
-									])
+								await provider.getCurrent()!.taskStateManager.overwriteApiConversationHistory([
+									// Access via state manager
+									...provider
+										.getCurrent()!
+										.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
+									...provider.getCurrent()!.taskStateManager.apiConversationHistory.filter(
+										// Access via state manager
+										(msg) => msg.ts && msg.ts >= nextUserMessage.ts,
+									),
+								])
 							} else {
 								// If no next user message, keep only messages before current API message
-								await provider
-									.getCurrent()!
-									.taskStateManager.overwriteApiConversationHistory( // Access via state manager
-										provider
-											.getCurrent()!
-											.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
-									)
+								await provider.getCurrent()!.taskStateManager.overwriteApiConversationHistory(
+									// Access via state manager
+									provider
+										.getCurrent()!
+										.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
+								)
 							}
 						}
 					} else if (answer === t("common:confirmation.this_and_subsequent")) {
 						await provider // Added await
 							.getCurrent()!
-							.taskStateManager.overwriteClineMessages(provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(0, messageIndex)) // Access via state manager
+							.taskStateManager.overwriteClineMessages(
+								provider.getCurrent()!.taskStateManager.theaTaskMessages.slice(0, messageIndex),
+							) // Access via state manager
 						if (apiConversationHistoryIndex !== -1) {
-							await provider
-								.getCurrent()!
-								.taskStateManager.overwriteApiConversationHistory( // Access via state manager
-									provider
-										.getCurrent()!
-										.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
-								)
+							await provider.getCurrent()!.taskStateManager.overwriteApiConversationHistory(
+								// Access via state manager
+								provider
+									.getCurrent()!
+									.taskStateManager.apiConversationHistory.slice(0, apiConversationHistoryIndex), // Access via state manager
+							)
 						}
 					}
 
@@ -1113,13 +1117,13 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 		case "upsertApiConfiguration":
 			if (message.text && message.apiConfiguration) {
 				try {
-					await provider.upsertApiConfiguration(message.text, message.apiConfiguration);
+					await provider.upsertApiConfiguration(message.text, message.apiConfiguration)
 					// Make sure to post state to webview after successful API configuration update
-					await provider.postStateToWebview();
+					await provider.postStateToWebview()
 				} catch (error) {
 					provider.outputChannel.appendLine(
-						`Error handling upsertApiConfiguration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`
-					);
+						`Error handling upsertApiConfiguration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+					)
 					// Error is already shown to user in upsertApiConfiguration
 				}
 			}
@@ -1324,7 +1328,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			break
 		case "humanRelayResponse":
 			if (message.requestId && message.text) {
-				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { 
+				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, {
 					requestId: message.requestId,
 					text: message.text,
 					cancelled: false,
@@ -1334,7 +1338,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 
 		case "humanRelayCancel":
 			if (message.requestId) {
-				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, { 
+				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, {
 					requestId: message.requestId,
 					cancelled: true,
 				})
@@ -1352,7 +1356,8 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 	}
 }
 
-const generateSystemPrompt = async (provider: TheaProvider, message: WebviewMessage) => { // Renamed type
+const generateSystemPrompt = async (provider: TheaProvider, message: WebviewMessage) => {
+	// Renamed type
 	const {
 		apiConfiguration,
 		customModePrompts,

@@ -2,7 +2,7 @@ import fs from "fs/promises"
 import path from "path"
 import { Mode } from "../../../shared/modes"
 import { fileExistsAtPath } from "../../../utils/fs"
-import { EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config"; // Import branded constant
+import { EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config" // Import branded constant
 
 /**
  * Safely reads a file, returning an empty string if the file doesn't exist
@@ -25,7 +25,7 @@ async function safeReadFile(filePath: string): Promise<string> {
  * Get the path to a system prompt file for a specific mode
  */
 export function getSystemPromptFilePath(cwd: string, mode: Mode): string {
-	return path.join(cwd, EXTENSION_CONFIG_DIR, `system-prompt-${mode}`) 
+	return path.join(cwd, EXTENSION_CONFIG_DIR, `system-prompt-${mode}`)
 }
 
 /**
@@ -40,8 +40,9 @@ export async function loadSystemPromptFile(cwd: string, mode: Mode): Promise<str
 /**
  * Ensures the .thea directory exists, creating it if necessary
  */
-export async function ensureConfigDirectory(cwd: string): Promise<void> { // Rename function
-	const configDir = path.join(cwd, EXTENSION_CONFIG_DIR) 
+export async function ensureConfigDirectory(cwd: string): Promise<void> {
+	// Rename function
+	const configDir = path.join(cwd, EXTENSION_CONFIG_DIR)
 
 	// Check if directory already exists
 	if (await fileExistsAtPath(configDir)) {

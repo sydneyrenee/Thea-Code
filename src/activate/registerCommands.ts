@@ -53,27 +53,27 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	return {
 		// Construct internal command ID using EXTENSION_NAME
 		[`${EXTENSION_NAME}.activationCompleted`]: () => {},
-		[COMMANDS.PLUS_BUTTON]: async () => { 
+		[COMMANDS.PLUS_BUTTON]: async () => {
 			await provider.removeFromStack()
 			await provider.postStateToWebview()
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
-		[COMMANDS.MCP_BUTTON]: () => { 
+		[COMMANDS.MCP_BUTTON]: () => {
 			provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
-		[COMMANDS.PROMPTS_BUTTON]: () => { 
+		[COMMANDS.PROMPTS_BUTTON]: () => {
 			provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
 		[COMMANDS.POPOUT_BUTTON]: () => openTheaInNewTab({ context, outputChannel }), // Renamed function call
 		[COMMANDS.OPEN_NEW_TAB]: () => openTheaInNewTab({ context, outputChannel }), // Renamed function call
-		[COMMANDS.SETTINGS_BUTTON]: () => { 
+		[COMMANDS.SETTINGS_BUTTON]: () => {
 			provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
-		[COMMANDS.HISTORY_BUTTON]: () => { 
+		[COMMANDS.HISTORY_BUTTON]: () => {
 			provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
-		[COMMANDS.HELP_BUTTON]: () => { 
-			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL)) 
+		[COMMANDS.HELP_BUTTON]: () => {
+			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL))
 		},
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.showHumanRelayDialog`]: (params: { requestId: string; promptText: string }) => {
@@ -93,7 +93,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		[`${EXTENSION_NAME}.unregisterHumanRelayCallback`]: unregisterHumanRelayCallback,
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.handleHumanRelayResponse`]: handleHumanRelayResponse,
-		[COMMANDS.NEW_TASK]: handleNewTask, 
+		[COMMANDS.NEW_TASK]: handleNewTask,
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.setCustomStoragePath`]: async () => {
 			const { promptForCustomStoragePath } = await import("../shared/storagePathManager")
@@ -102,7 +102,8 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 	}
 }
 
-const openTheaInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => { // Renamed function
+const openTheaInNewTab = async ({ context, outputChannel }: Omit<RegisterCommandOptions, "provider">) => {
+	// Renamed function
 	// (This example uses webviewProvider activation event which is necessary to
 	// deserialize cached webview, but since we use retainContextWhenHidden, we
 	// don't need to use that event).
@@ -120,7 +121,8 @@ const openTheaInNewTab = async ({ context, outputChannel }: Omit<RegisterCommand
 
 	const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
 
-	const newPanel = vscode.window.createWebviewPanel(TheaProvider.tabPanelId, EXTENSION_DISPLAY_NAME, targetCol, { // Renamed static property access
+	const newPanel = vscode.window.createWebviewPanel(TheaProvider.tabPanelId, EXTENSION_DISPLAY_NAME, targetCol, {
+		// Renamed static property access
 		enableScripts: true,
 		retainContextWhenHidden: true,
 		localResourceRoots: [context.extensionUri],

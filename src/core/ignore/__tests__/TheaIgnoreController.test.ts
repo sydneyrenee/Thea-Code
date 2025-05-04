@@ -5,7 +5,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs/promises"
 import { fileExistsAtPath } from "../../../utils/fs"
-import { GLOBAL_FILENAMES, AI_IDENTITY_NAME } from "../../../../dist/thea-config"; // Import branded constants
+import { GLOBAL_FILENAMES, AI_IDENTITY_NAME } from "../../../../dist/thea-config" // Import branded constants
 
 // Mock dependencies
 jest.mock("fs/promises")
@@ -39,7 +39,7 @@ jest.mock("vscode", () => {
 	}
 })
 
-describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => { 
+describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 	const TEST_CWD = "/test/path"
 	let controller: TheaIgnoreController // Use renamed class
 	let mockFileExists: jest.MockedFunction<typeof fileExistsAtPath>
@@ -73,7 +73,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests the controller initialization when ignore file exists
 		 */
-		it(`should load ${GLOBAL_FILENAMES.IGNORE_FILENAME} patterns on initialization when file exists`, async () => { 
+		it(`should load ${GLOBAL_FILENAMES.IGNORE_FILENAME} patterns on initialization when file exists`, async () => {
 			// Setup mocks to simulate existing ignore file
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets.json")
@@ -82,8 +82,8 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			await controller.initialize()
 
 			// Verify file was checked and read
-			expect(mockFileExists).toHaveBeenCalledWith(path.join(TEST_CWD, GLOBAL_FILENAMES.IGNORE_FILENAME)) 
-			expect(mockReadFile).toHaveBeenCalledWith(path.join(TEST_CWD, GLOBAL_FILENAMES.IGNORE_FILENAME), "utf8") 
+			expect(mockFileExists).toHaveBeenCalledWith(path.join(TEST_CWD, GLOBAL_FILENAMES.IGNORE_FILENAME))
+			expect(mockReadFile).toHaveBeenCalledWith(path.join(TEST_CWD, GLOBAL_FILENAMES.IGNORE_FILENAME), "utf8")
 
 			// Verify content was stored
 			expect(controller.theaIgnoreContent).toBe("node_modules\n.git\nsecrets.json")
@@ -98,7 +98,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests the controller behavior when ignore file doesn't exist
 		 */
-		it(`should allow all access when ${GLOBAL_FILENAMES.IGNORE_FILENAME} doesn't exist`, async () => { 
+		it(`should allow all access when ${GLOBAL_FILENAMES.IGNORE_FILENAME} doesn't exist`, async () => {
 			// Setup mocks to simulate missing ignore file
 			mockFileExists.mockResolvedValue(false)
 
@@ -116,12 +116,12 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests the file watcher setup
 		 */
-		it(`should set up file watcher for ${GLOBAL_FILENAMES.IGNORE_FILENAME} changes`, async () => { 
+		it(`should set up file watcher for ${GLOBAL_FILENAMES.IGNORE_FILENAME} changes`, async () => {
 			// Check that watcher was created with correct pattern
 			expect(vscode.workspace.createFileSystemWatcher).toHaveBeenCalledWith(
 				expect.objectContaining({
 					base: TEST_CWD,
-					pattern: GLOBAL_FILENAMES.IGNORE_FILENAME, 
+					pattern: GLOBAL_FILENAMES.IGNORE_FILENAME,
 				}),
 			)
 
@@ -134,7 +134,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests error handling during initialization
 		 */
-		it(`should handle errors when loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}`, async () => { 
+		it(`should handle errors when loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}`, async () => {
 			// Setup mocks to simulate error
 			mockFileExists.mockResolvedValue(true)
 			mockReadFile.mockRejectedValue(new Error("Test file read error"))
@@ -146,7 +146,10 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			await controller.initialize()
 
 			// Verify error was logged
-			expect(consoleSpy).toHaveBeenCalledWith(`Unexpected error loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}:`, expect.any(Error)) 
+			expect(consoleSpy).toHaveBeenCalledWith(
+				`Unexpected error loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}:`,
+				expect.any(Error),
+			)
 
 			// Cleanup
 			consoleSpy.mockRestore()
@@ -277,7 +280,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests behavior when no ignore file exists
 		 */
-		it(`should allow all commands when no ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => { 
+		it(`should allow all commands when no ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => {
 			// Create a new controller with no .theaignore
 			mockFileExists.mockResolvedValue(false)
 			const emptyController = new TheaIgnoreController(TEST_CWD) // Use renamed class
@@ -356,7 +359,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests instructions generation with ignore file
 		 */
-		it(`should generate formatted instructions when ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => { 
+		it(`should generate formatted instructions when ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => {
 			// Setup ignore file content
 			mockFileExists.mockResolvedValue(true) // Ensure file exists
 			mockReadFile.mockResolvedValue("node_modules\n.git\nsecrets/**")
@@ -365,7 +368,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			const instructions = controller.getInstructions()
 
 			// Verify instruction format
-			expect(instructions).toContain(`# ${GLOBAL_FILENAMES.IGNORE_FILENAME}`) 
+			expect(instructions).toContain(`# ${GLOBAL_FILENAMES.IGNORE_FILENAME}`)
 			expect(instructions).toContain(LOCK_TEXT_SYMBOL)
 			expect(instructions).toContain("node_modules")
 			expect(instructions).toContain(".git")
@@ -375,7 +378,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests behavior when no ignore file exists
 		 */
-		it(`should return undefined when no ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => { 
+		it(`should return undefined when no ${GLOBAL_FILENAMES.IGNORE_FILENAME} exists`, async () => {
 			// Setup no .theaignore
 			mockFileExists.mockResolvedValue(false) // Mock file not existing
 			await controller.initialize()
@@ -411,7 +414,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests behavior when ignore file is created
 		 */
-		it(`should reload ${GLOBAL_FILENAMES.IGNORE_FILENAME} when file is created`, async () => { 
+		it(`should reload ${GLOBAL_FILENAMES.IGNORE_FILENAME} when file is created`, async () => {
 			// Setup initial state without .theaignore
 			mockFileExists.mockResolvedValue(false) // Mock file not existing initially
 			await controller.initialize()
@@ -431,12 +434,11 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			expect(controller.theaIgnoreContent).toBeUndefined()
 
 			// Now simulate file creation
-			mockFileExists.mockReset().mockResolvedValue(true);
-			mockReadFile.mockReset().mockResolvedValue("node_modules");
+			mockFileExists.mockReset().mockResolvedValue(true)
+			mockReadFile.mockReset().mockResolvedValue("node_modules")
 
 			// Force reload of ignore content manually as watcher mock is unreliable
 			await controller.initialize()
-
 
 			// Now verify content was updated
 			expect(controller.theaIgnoreContent).toBe("node_modules")
@@ -448,7 +450,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests behavior when ignore file is changed
 		 */
-		it(`should reload ${GLOBAL_FILENAMES.IGNORE_FILENAME} when file is changed`, async () => { 
+		it(`should reload ${GLOBAL_FILENAMES.IGNORE_FILENAME} when file is changed`, async () => {
 			// Setup initial state with .theaignore
 			mockFileExists.mockResolvedValue(true) // Mock file exists
 			mockReadFile.mockResolvedValue("node_modules")
@@ -465,7 +467,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			const onChangeHandler = mockWatcher.onDidChange.mock.calls[0][0]
 			await onChangeHandler()
 			// Allow time for async operations within handler
-			await new Promise(resolve => setTimeout(resolve, 10));
+			await new Promise((resolve) => setTimeout(resolve, 10))
 
 			// Verify content was updated
 			expect(controller.theaIgnoreContent).toBe("node_modules\n.git")
@@ -478,7 +480,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests behavior when ignore file is deleted
 		 */
-		it(`should reset when ${GLOBAL_FILENAMES.IGNORE_FILENAME} is deleted`, async () => { 
+		it(`should reset when ${GLOBAL_FILENAMES.IGNORE_FILENAME} is deleted`, async () => {
 			// Setup initial state with .theaignore
 			mockFileExists.mockResolvedValue(true) // Mock file exists initially
 			mockReadFile.mockResolvedValue("node_modules")

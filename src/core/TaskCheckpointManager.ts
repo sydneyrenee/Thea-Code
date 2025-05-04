@@ -42,13 +42,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 	private _isEnabled: boolean = true
 	private _isInitialized: boolean = false
 
-	constructor({
-		taskId,
-		providerRef,
-		checkpointStorage,
-		getMessages,
-		saveMessages,
-	}: TaskCheckpointManagerOptions) {
+	constructor({ taskId, providerRef, checkpointStorage, getMessages, saveMessages }: TaskCheckpointManagerOptions) {
 		super()
 		this.taskId = taskId
 		this.providerRef = providerRef
@@ -125,7 +119,8 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 					this._isInitialized = true
 					this.log("Checkpoint service initialized.")
 					const messages = this.getMessages()
-					const isCheckpointNeeded = typeof messages.find(({ say }) => say === "checkpoint_saved") === "undefined"
+					const isCheckpointNeeded =
+						typeof messages.find(({ say }) => say === "checkpoint_saved") === "undefined"
 
 					if (isCheckpointNeeded) {
 						this.log("No previous checkpoints found, saving initial checkpoint.")

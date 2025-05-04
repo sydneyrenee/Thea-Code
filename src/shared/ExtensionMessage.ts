@@ -13,7 +13,7 @@ import {
 	ToolProgressStatus,
 	TheaMessage, // Renamed
 } from "../schemas"
-import { SETTING_KEYS } from "../../dist/thea-config"; // Import branded constant
+import { SETTING_KEYS } from "../../dist/thea-config" // Import branded constant
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
 import { Mode } from "./modes"
@@ -209,7 +209,8 @@ export type ExtensionState = Pick<
 
 export type { TheaMessage, TheaAsk, TheaSay } // Renamed exports
 
-export interface TheaSayTool { // Renamed interface
+export interface TheaSayTool {
+	// Renamed interface
 	tool:
 		| "editedExistingFile"
 		| "appliedDiff"
@@ -238,7 +239,8 @@ export const browserActions = ["launch", "click", "hover", "type", "scroll_down"
 
 export type BrowserAction = (typeof browserActions)[number]
 
-export interface TheaSayBrowserAction { // Renamed interface
+export interface TheaSayBrowserAction {
+	// Renamed interface
 	action: BrowserAction
 	coordinate?: string
 	text?: string
@@ -251,7 +253,8 @@ export type BrowserActionResult = {
 	currentMousePosition?: string
 }
 
-export interface TheaAskUseMcpServer { // Renamed interface
+export interface TheaAskUseMcpServer {
+	// Renamed interface
 	serverName: string
 	type: "use_mcp_tool" | "access_mcp_resource"
 	toolName?: string
@@ -259,7 +262,8 @@ export interface TheaAskUseMcpServer { // Renamed interface
 	uri?: string
 }
 
-export interface TheaApiReqInfo { // Renamed interface
+export interface TheaApiReqInfo {
+	// Renamed interface
 	request?: string
 	tokensIn?: number
 	tokensOut?: number

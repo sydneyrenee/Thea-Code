@@ -19,7 +19,7 @@ export const providerProfilesSchema = z.object({
 export type ProviderProfiles = z.infer<typeof providerProfilesSchema>
 
 export class ProviderSettingsManager {
-	private static readonly SCOPE_PREFIX = EXTENSION_SECRETS_PREFIX 
+	private static readonly SCOPE_PREFIX = EXTENSION_SECRETS_PREFIX
 	private readonly defaultConfigId = this.generateId()
 
 	private readonly defaultModeApiConfigs: Record<string, string> = Object.fromEntries(

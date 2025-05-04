@@ -3,7 +3,7 @@
 // can run `npm run generate-types`.
 
 import { z } from "zod"
-import { SETTING_KEYS } from "../../dist/thea-config"; // Import branded constant
+import { SETTING_KEYS } from "../../dist/thea-config" // Import branded constant
 import { Equals, Keys, AssertEqual } from "../utils/type-fu"
 
 /**

@@ -20,7 +20,8 @@ jest.mock("../../../shared/storagePathManager", () => {
 	}
 })
 
-describe("TheaCacheManager", () => { // Updated describe block
+describe("TheaCacheManager", () => {
+	// Updated describe block
 	let cacheManager: TheaCacheManager // Updated type
 	let mockContext: vscode.ExtensionContext
 
@@ -43,7 +44,7 @@ describe("TheaCacheManager", () => { // Updated describe block
 		// Mock console.error to prevent test output noise
 		jest.spyOn(console, "error").mockImplementation(() => {})
 		jest.spyOn(console, "log").mockImplementation(() => {})
-		
+
 		// Mock fs.readdir
 		;(fs.readdir as jest.Mock) = jest.fn()
 	})
@@ -56,7 +57,7 @@ describe("TheaCacheManager", () => { // Updated describe block
 	test("ensureCacheDirectoryExists creates and returns cache directory path", async () => {
 		// Setup
 		const expectedCachePath = path.join("/test/storage/path", "cache")
-		
+
 		// Execute
 		const result = await cacheManager.ensureCacheDirectoryExists()
 
@@ -83,7 +84,7 @@ describe("TheaCacheManager", () => { // Updated describe block
 	test("ensureSettingsDirectoryExists creates and returns settings directory path", async () => {
 		// Setup
 		const expectedSettingsPath = path.join("/test/storage/path", "settings")
-		
+
 		// Execute
 		const result = await cacheManager.ensureSettingsDirectoryExists()
 
@@ -112,14 +113,14 @@ describe("TheaCacheManager", () => { // Updated describe block
 		const expectedCachePath = path.join("/test/storage/path", "cache")
 		const filename = "models.json"
 		const expectedFilePath = path.join(expectedCachePath, filename)
-		const mockModelData: Record<string, ModelInfo> = { 
-			"model-1": { 
+		const mockModelData: Record<string, ModelInfo> = {
+			"model-1": {
 				contextWindow: 4000,
 				supportsPromptCache: true,
 				maxTokens: 1000,
-			} 
+			},
 		}
-		
+
 		;(fileExistsAtPath as jest.Mock).mockResolvedValue(true)
 		;(fs.readFile as jest.Mock).mockResolvedValue(JSON.stringify(mockModelData))
 
@@ -164,22 +165,19 @@ describe("TheaCacheManager", () => { // Updated describe block
 		const expectedCachePath = path.join("/test/storage/path", "cache")
 		const filename = "models.json"
 		const expectedFilePath = path.join(expectedCachePath, filename)
-		const mockModelData: Record<string, ModelInfo> = { 
-			"model-1": { 
+		const mockModelData: Record<string, ModelInfo> = {
+			"model-1": {
 				contextWindow: 4000,
 				supportsPromptCache: true,
 				maxTokens: 1000,
-			} 
+			},
 		}
 
 		// Execute
 		await cacheManager.writeModelsToCache(filename, mockModelData)
 
 		// Verify
-		expect(fs.writeFile).toHaveBeenCalledWith(
-			expectedFilePath,
-			JSON.stringify(mockModelData, null, 2)
-		)
+		expect(fs.writeFile).toHaveBeenCalledWith(expectedFilePath, JSON.stringify(mockModelData, null, 2))
 	})
 
 	test("writeModelsToCache handles write errors gracefully", async () => {
@@ -190,7 +188,7 @@ describe("TheaCacheManager", () => { // Updated describe block
 				contextWindow: 4000,
 				supportsPromptCache: true,
 				maxTokens: 1000,
-			}
+			},
 		}
 		const mockError = new Error("Write error")
 		;(fs.writeFile as jest.Mock).mockRejectedValue(mockError)

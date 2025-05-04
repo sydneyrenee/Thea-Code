@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 
-import { EXTENSION_NAME } from "../../../dist/thea-config"; // Import branded constant
+import { EXTENSION_NAME } from "../../../dist/thea-config" // Import branded constant
 import { TheaCodeAPI } from "../../../src/exports/thea-code"
 
 type WaitForOptions = {

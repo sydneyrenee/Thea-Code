@@ -145,7 +145,8 @@ export async function searchAndReplaceTool(
 			const { newProblemsMessage, userEdits, finalContent } = await theaTask.diffViewProvider.saveChanges()
 			theaTask.didEditFile = true // used to determine if we should wait for busy terminal to update before sending api request
 			if (userEdits) {
-				await theaTask.webviewCommunicator.say( // Use communicator
+				await theaTask.webviewCommunicator.say(
+					// Use communicator
 					"user_feedback_diff",
 					JSON.stringify({
 						tool: fileExists ? "editedExistingFile" : "newFileCreated",

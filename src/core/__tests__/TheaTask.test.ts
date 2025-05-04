@@ -148,7 +148,8 @@ jest.mock("p-wait-for", () => ({
 	default: jest.fn().mockImplementation(async () => Promise.resolve()),
 }))
 
-describe("TheaTask", () => { // Renamed describe block
+describe("TheaTask", () => {
+	// Renamed describe block
 	let mockProvider: jest.Mocked<TheaProvider> // Renamed type
 	let mockApiConfig: ApiConfiguration
 	let mockOutputChannel: any
@@ -159,7 +160,7 @@ describe("TheaTask", () => { // Renamed describe block
 		const storageUri = {
 			fsPath: path.join(os.tmpdir(), "test-storage"),
 		}
-		
+
 		// Mock getEnvironmentDetails to avoid globbing timeout
 		jest.spyOn(TheaTask.prototype as any, "getEnvironmentDetails").mockResolvedValue("")
 
@@ -262,7 +263,8 @@ describe("TheaTask", () => { // Renamed describe block
 
 	describe("constructor", () => {
 		it("should respect provided settings", async () => {
-			const theaTask = new TheaTask({ // Renamed variable and constructor
+			const theaTask = new TheaTask({
+				// Renamed variable and constructor
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
 				customInstructions: "custom instructions",
@@ -277,7 +279,8 @@ describe("TheaTask", () => { // Renamed describe block
 		})
 
 		it("should use default fuzzy match threshold when not provided", async () => {
-			const theaTask = new TheaTask({ // Renamed variable and constructor
+			const theaTask = new TheaTask({
+				// Renamed variable and constructor
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
 				customInstructions: "custom instructions",
@@ -296,7 +299,8 @@ describe("TheaTask", () => { // Renamed describe block
 		it("should use provided fuzzy match threshold", async () => {
 			const getDiffStrategySpy = jest.spyOn(require("../diff/DiffStrategy"), "getDiffStrategy")
 
-			const theaTask = new TheaTask({ // Renamed variable and constructor
+			const theaTask = new TheaTask({
+				// Renamed variable and constructor
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
 				customInstructions: "custom instructions",
@@ -319,7 +323,8 @@ describe("TheaTask", () => { // Renamed describe block
 		it("should pass default threshold to diff strategy when not provided", async () => {
 			const getDiffStrategySpy = jest.spyOn(require("../diff/DiffStrategy"), "getDiffStrategy")
 
-			const theaTask = new TheaTask({ // Renamed variable and constructor
+			const theaTask = new TheaTask({
+				// Renamed variable and constructor
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
 				customInstructions: "custom instructions",
@@ -389,7 +394,8 @@ describe("TheaTask", () => { // Renamed describe block
 		})
 
 		it("should include timezone information in environment details", async () => {
-			const theaTask = new TheaTask({ // Renamed variable and constructor
+			const theaTask = new TheaTask({
+				// Renamed variable and constructor
 				provider: mockProvider,
 				apiConfiguration: mockApiConfig,
 				task: "test task",
@@ -398,7 +404,7 @@ describe("TheaTask", () => { // Renamed describe block
 
 			// Restore the original implementation for this test
 			jest.spyOn(TheaTask.prototype, "getEnvironmentDetails").mockRestore()
-			
+
 			// Mock the implementation to return expected timezone information
 			jest.spyOn(theaTask, "getEnvironmentDetails").mockResolvedValue(`<environment_details>
 # Current Time
@@ -416,7 +422,8 @@ describe("TheaTask", () => { // Renamed describe block
 
 		describe("API conversation handling", () => {
 			it("should clean conversation history before sending to API", async () => {
-				const [theaTask, task] = TheaTask.create({ // Renamed class and variable
+				const [theaTask, task] = TheaTask.create({
+					// Renamed class and variable
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
@@ -441,7 +448,8 @@ describe("TheaTask", () => { // Renamed describe block
 				jest.spyOn(theaTask as any, "loadContext").mockImplementation(async (content) => [content, ""])
 
 				// Add test message to conversation history.
-				theaTask.taskStateManager.apiConversationHistory = [ // Use state manager
+				theaTask.taskStateManager.apiConversationHistory = [
+					// Use state manager
 					{
 						role: "user" as const,
 						content: [{ type: "text" as const, text: "test message" }],
@@ -503,8 +511,8 @@ describe("TheaTask", () => { // Renamed describe block
 						supportsImages: false,
 						supportsPromptCache: false,
 						inputPrice: 0.5,
-						outputPrice: 1.5
-					}
+						outputPrice: 1.5,
+					},
 				}
 
 				// Create test conversation history with mixed content
@@ -538,7 +546,8 @@ describe("TheaTask", () => { // Renamed describe block
 				]
 
 				// Test with model that supports images
-				const [theaTaskWithImages, taskWithImages] = TheaTask.create({ // Renamed class and variable
+				const [theaTaskWithImages, taskWithImages] = TheaTask.create({
+					// Renamed class and variable
 					provider: mockProvider,
 					apiConfiguration: configWithImages,
 					task: "test task",
@@ -550,7 +559,8 @@ describe("TheaTask", () => { // Renamed describe block
 				theaTaskWithImages.taskStateManager.apiConversationHistory = conversationHistory // Correct variable
 
 				// Test with model that doesn't support images
-				const [theaTaskWithoutImages, taskWithoutImages] = TheaTask.create({ // Renamed class and variable
+				const [theaTaskWithoutImages, taskWithoutImages] = TheaTask.create({
+					// Renamed class and variable
 					provider: mockProvider,
 					apiConfiguration: configWithoutImages,
 					task: "test task",
@@ -565,20 +575,22 @@ describe("TheaTask", () => { // Renamed describe block
 						supportsImages: false,
 						supportsPromptCache: false,
 						inputPrice: 0.5,
-						outputPrice: 1.5
-					}
+						outputPrice: 1.5,
+					},
 				})
 
 				theaTaskWithoutImages.taskStateManager.apiConversationHistory = conversationHistory // Use correct variable and state manager
 
 				// Mock abort state for both instances
-				Object.defineProperty(theaTaskWithImages, "abort", { // Restore Object.defineProperty
+				Object.defineProperty(theaTaskWithImages, "abort", {
+					// Restore Object.defineProperty
 					get: () => false,
 					set: () => {},
 					configurable: true,
 				})
 
-				Object.defineProperty(theaTaskWithoutImages, "abort", { // Use correct variable
+				Object.defineProperty(theaTaskWithoutImages, "abort", {
+					// Use correct variable
 					get: () => false,
 					set: () => {},
 					configurable: true,
@@ -587,19 +599,23 @@ describe("TheaTask", () => { // Renamed describe block
 				// Mock environment details and context loading
 				jest.spyOn(theaTaskWithImages as any, "getEnvironmentDetails").mockResolvedValue("")
 				jest.spyOn(theaTaskWithoutImages as any, "getEnvironmentDetails").mockResolvedValue("") // Use correct variable
-				jest.spyOn(theaTaskWithImages as any, "loadContext").mockImplementation(async (content) => [content, ""])
-				jest.spyOn(theaTaskWithoutImages as any, "loadContext").mockImplementation(async (content) => [ // Use correct variable
+				jest.spyOn(theaTaskWithImages as any, "loadContext").mockImplementation(async (content) => [
 					content,
 					"",
 				])
-				
+				jest.spyOn(theaTaskWithoutImages as any, "loadContext").mockImplementation(async (content) => [
+					// Use correct variable
+					content,
+					"",
+				])
+
 				// Mock token counting to avoid Anthropic API calls
 				jest.spyOn(theaTaskWithImages.api, "countTokens").mockResolvedValue(100)
 				jest.spyOn(theaTaskWithoutImages.api, "countTokens").mockResolvedValue(100)
-				
+
 				// Disable checkpoints for this test to avoid directory creation issues
-				theaTaskWithImages['checkpointManager'] = undefined
-				theaTaskWithoutImages['checkpointManager'] = undefined
+				theaTaskWithImages["checkpointManager"] = undefined
+				theaTaskWithoutImages["checkpointManager"] = undefined
 
 				// Set up mock streams
 				const mockStreamWithImages = (async function* () {
@@ -631,29 +647,40 @@ describe("TheaTask", () => { // Renamed describe block
 				// Set both tasks as abandoned to prevent infinite loops in error handling
 				theaTaskWithImages.abandoned = true
 				theaTaskWithoutImages.abandoned = true
-				
+
 				// Wait for the task promises to settle
 				await taskWithImages.catch(() => {})
 				await taskWithoutImages.catch(() => {})
 
 				// Mock the log method to prevent logging after test completion
-				const originalLog = theaTaskWithImages.taskStateManager['log'];
-				jest.spyOn(theaTaskWithImages.taskStateManager, 'log' as any).mockImplementation(async () => {});
-				jest.spyOn(theaTaskWithoutImages.taskStateManager, 'log' as any).mockImplementation(async () => {});
-				
+				const originalLog = theaTaskWithImages.taskStateManager["log"]
+				jest.spyOn(theaTaskWithImages.taskStateManager, "log" as any).mockImplementation(async () => {})
+				jest.spyOn(theaTaskWithoutImages.taskStateManager, "log" as any).mockImplementation(async () => {})
+
 				// Mock saveClineMessages and saveApiConversationHistory to be no-ops
-				jest.spyOn(theaTaskWithImages.taskStateManager, 'saveClineMessages').mockImplementation(async () => {});
-				jest.spyOn(theaTaskWithoutImages.taskStateManager, 'saveClineMessages').mockImplementation(async () => {});
-				jest.spyOn(theaTaskWithImages.taskStateManager, 'saveApiConversationHistory' as any).mockImplementation(async () => {});
-				jest.spyOn(theaTaskWithoutImages.taskStateManager, 'saveApiConversationHistory' as any).mockImplementation(async () => {});
-				
+				jest.spyOn(theaTaskWithImages.taskStateManager, "saveClineMessages").mockImplementation(async () => {})
+				jest.spyOn(theaTaskWithoutImages.taskStateManager, "saveClineMessages").mockImplementation(
+					async () => {},
+				)
+				jest.spyOn(theaTaskWithImages.taskStateManager, "saveApiConversationHistory" as any).mockImplementation(
+					async () => {},
+				)
+				jest.spyOn(
+					theaTaskWithoutImages.taskStateManager,
+					"saveApiConversationHistory" as any,
+				).mockImplementation(async () => {})
+
 				// Mock updateHistoryItem to be a no-op
-				jest.spyOn(theaTaskWithImages.taskStateManager, 'updateHistoryItem' as any).mockImplementation(async () => {});
-				jest.spyOn(theaTaskWithoutImages.taskStateManager, 'updateHistoryItem' as any).mockImplementation(async () => {});
+				jest.spyOn(theaTaskWithImages.taskStateManager, "updateHistoryItem" as any).mockImplementation(
+					async () => {},
+				)
+				jest.spyOn(theaTaskWithoutImages.taskStateManager, "updateHistoryItem" as any).mockImplementation(
+					async () => {},
+				)
 
 				// Trigger API requests - these should complete without async issues now
-				await theaTaskWithImages.recursivelyMakeTheaRequests([{ type: "text", text: "test request" }]);
-				await theaTaskWithoutImages.recursivelyMakeTheaRequests([{ type: "text", text: "test request" }]);
+				await theaTaskWithImages.recursivelyMakeTheaRequests([{ type: "text", text: "test request" }])
+				await theaTaskWithoutImages.recursivelyMakeTheaRequests([{ type: "text", text: "test request" }])
 
 				// Get the calls
 				const imagesCalls = imagesSpy.mock.calls
@@ -674,7 +701,7 @@ describe("TheaTask", () => { // Renamed describe block
 			})
 
 			it.skip("should handle API retry with countdown", async () => {
-				const [theaTask, task] = TheaTask.create({ 
+				const [theaTask, task] = TheaTask.create({
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
@@ -743,7 +770,8 @@ describe("TheaTask", () => { // Renamed describe block
 				})
 
 				// Mock previous API request message
-				theaTask.taskStateManager.theaTaskMessages = [ // Use state manager and correct property name
+				theaTask.taskStateManager.theaTaskMessages = [
+					// Use state manager and correct property name
 					{
 						ts: Date.now(),
 						type: "say",
@@ -788,7 +816,9 @@ describe("TheaTask", () => { // Renamed describe block
 				expect(mockDelay).toHaveBeenCalledWith(1000)
 
 				// Verify error message content
-				const errorMessage = saySpy.mock.calls.find((call) => typeof call[1] === 'string' && call[1].includes(mockError.message))?.[1]
+				const errorMessage = saySpy.mock.calls.find(
+					(call) => typeof call[1] === "string" && call[1].includes(mockError.message),
+				)?.[1]
 				expect(errorMessage).toBe(
 					`${mockError.message}\n\nRetry attempt 1\nRetrying in ${baseDelay} seconds...`,
 				)
@@ -798,7 +828,8 @@ describe("TheaTask", () => { // Renamed describe block
 			})
 
 			it.skip("should not apply retry delay twice", async () => {
-				const [theaTask, task] = TheaTask.create({ // Renamed class and variable
+				const [theaTask, task] = TheaTask.create({
+					// Renamed class and variable
 					provider: mockProvider,
 					apiConfiguration: mockApiConfig,
 					task: "test task",
@@ -867,7 +898,8 @@ describe("TheaTask", () => { // Renamed describe block
 				})
 
 				// Mock previous API request message
-				theaTask.taskStateManager.theaTaskMessages = [ // Use state manager and correct property name
+				theaTask.taskStateManager.theaTaskMessages = [
+					// Use state manager and correct property name
 					{
 						ts: Date.now(),
 						type: "say",
@@ -894,10 +926,12 @@ describe("TheaTask", () => { // Renamed describe block
 
 				// Verify countdown messages were only shown once
 				const retryMessages = saySpy.mock.calls.filter(
-					(call) => call[0] === "api_req_retry_delayed" && typeof call[1] === 'string' && call[1].includes("Retrying in"),
+					(call) =>
+						call[0] === "api_req_retry_delayed" &&
+						typeof call[1] === "string" &&
+						call[1].includes("Retrying in"),
 				)
 				expect(retryMessages).toHaveLength(baseDelay)
-				
 
 				// Verify the retry message sequence
 				for (let i = baseDelay; i > 0; i--) {
@@ -923,7 +957,8 @@ describe("TheaTask", () => { // Renamed describe block
 
 			describe("loadContext", () => {
 				it("should process mentions in task and feedback tags", async () => {
-					const [theaTask, task] = TheaTask.create({ // Renamed class and variable
+					const [theaTask, task] = TheaTask.create({
+						// Renamed class and variable
 						provider: mockProvider,
 						apiConfiguration: mockApiConfig,
 						task: "test task",

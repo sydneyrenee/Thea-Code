@@ -5,7 +5,7 @@ import * as path from "path"
 
 import * as vscode from "vscode"
 
-import { SPECIFIC_STRINGS } from "../../../../dist/thea-config"; // Import branded constant
+import { SPECIFIC_STRINGS } from "../../../../dist/thea-config" // Import branded constant
 import { ProviderName } from "../../../schemas"
 import { importSettings, exportSettings } from "../importExport"
 import { ProviderSettingsManager } from "../ProviderSettingsManager"
@@ -425,7 +425,9 @@ describe("importExport", () => {
 			})
 
 			// Verify Uri.file was called with the correct path
-			expect(vscode.Uri.file).toHaveBeenCalledWith(path.join("/mock/home", "Documents", SPECIFIC_STRINGS.SETTINGS_FILE_NAME))
+			expect(vscode.Uri.file).toHaveBeenCalledWith(
+				path.join("/mock/home", "Documents", SPECIFIC_STRINGS.SETTINGS_FILE_NAME),
+			)
 		})
 	})
 })

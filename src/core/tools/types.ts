@@ -1,9 +1,9 @@
-import { ClineAsk, ToolProgressStatus } from "../../schemas"
+import { TheaAsk, ToolProgressStatus } from "../../schemas"
 import { ToolParamName } from "../assistant-message"
-import { ToolResponse } from "../Cline"
+import { ToolResponse } from "../TheaTask"
 
 export type AskApproval = (
-	type: ClineAsk,
+	type: TheaAsk,
 	partialMessage?: string,
 	progressStatus?: ToolProgressStatus,
 ) => Promise<boolean>

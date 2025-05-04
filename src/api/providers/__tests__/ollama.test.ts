@@ -1,4 +1,4 @@
-import { OllamaHandler } from "../ollama"
+import { OllamaHandler, NeutralMessage } from "../ollama"
 import { ApiHandlerOptions } from "../../../shared/api"
 import OpenAI from "openai"
 import { Anthropic } from "@anthropic-ai/sdk"
@@ -94,7 +94,7 @@ describe("OllamaHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralMessage[] = [
 			{
 				role: "user",
 				content: "Hello!",

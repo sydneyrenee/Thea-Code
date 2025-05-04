@@ -343,7 +343,20 @@ export class McpHub {
 			}
 
 			const content = await fs.readFile(configPath, "utf-8")
-			const config = JSON.parse(content)
+			let config
+			try {
+				config = JSON.parse(content)
+				// If config is an array, convert it to an object with mcpServers property
+				if (Array.isArray(config)) {
+					config = { mcpServers: {} }
+					// Write the corrected format back to the file
+					await fs.writeFile(configPath, JSON.stringify(config, null, 2))
+				}
+			} catch (error) {
+				// If parsing fails, initialize with empty mcpServers object
+				config = { mcpServers: {} }
+				await fs.writeFile(configPath, JSON.stringify(config, null, 2))
+			}
 			const result = McpSettingsSchema.safeParse(config)
 
 			if (result.success) {

@@ -2,7 +2,7 @@ import { z } from "zod"
 import { ApiConfiguration, ApiProvider } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
 
-export type ClineAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
+export type TheaAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
 
 export type PromptMode = Mode | "enhance"
 
@@ -123,7 +123,7 @@ export interface WebviewMessage {
 		| "toggleApiConfigPin"
 	text?: string
 	disabled?: boolean
-	askResponse?: ClineAskResponse
+	askResponse?: TheaAskResponse
 	apiConfiguration?: ApiConfiguration
 	images?: string[]
 	bool?: boolean

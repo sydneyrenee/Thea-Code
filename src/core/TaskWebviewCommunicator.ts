@@ -1,10 +1,8 @@
 import pWaitFor from "p-wait-for"
-import * as vscode from "vscode" // Assuming needed for provider context or types
 import { TheaProvider } from "./webview/TheaProvider" // Renamed import and path
 import { TheaAsk, TheaMessage, TheaSay, ToolProgressStatus } from "../shared/ExtensionMessage" // Renamed imports
-import { ClineAskResponse as TheaAskResponse } from "../shared/WebviewMessage" // Renamed import and type // TODO: Rename source type
+import { TheaAskResponse as TheaAskResponse } from "../shared/WebviewMessage" // Renamed import and type // TODO: Rename source type
 
-// TODO: Rename types if necessary
 
 interface TaskWebviewCommunicatorOptions {
 	providerRef: WeakRef<TheaProvider> // Renamed type

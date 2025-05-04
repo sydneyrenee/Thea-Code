@@ -56,7 +56,7 @@ import { TheaMcpManager } from "./mcp/TheaMcpManager"; // Renamed import
 
 export type TheaProviderEvents = { // Renamed
 	theaTaskCreated: [task: TheaTask] // Renamed event and type
-	// Added missing events from original ClineEvents
+	// Added missing events from original TheaEvents
 	message: [{ taskId: string; action: "created" | "updated"; message: TheaMessage }]
 	taskStarted: [taskId: string]
 	taskPaused: [taskId: string]
@@ -78,7 +78,6 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	// not private, so it can be accessed from webviewMessageHandler
 	// callers could update to get viewLaunched() getter function
 	isViewLaunched = false
-	// clineStack property removed - managed by ClineStack manager
 	// not private, so it can be accessed from webviewMessageHandler
 	workspaceTracker?: WorkspaceTracker
 	// not protected, so it can be accessed from webviewMessageHandler.
@@ -93,12 +92,12 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	public readonly contextProxy: ContextProxy
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
-	private readonly theaTaskStackManager: TheaTaskStack; // Renamed property and type
-	private readonly theaStateManager: TheaStateManager; // Renamed property and type
-	private readonly theaApiManager: TheaApiManager; // Renamed property and type
-	private readonly theaTaskHistoryManager: TheaTaskHistory; // Renamed property and type
-	private readonly theaCacheManager: TheaCacheManager; // Renamed property and type
-	private readonly theaMcpManager: TheaMcpManager; // Renamed property and type
+	private readonly theaTaskStackManager: TheaTaskStack; 
+	private readonly theaStateManager: TheaStateManager; 
+	private readonly theaApiManager: TheaApiManager; 
+	private readonly theaTaskHistoryManager: TheaTaskHistory; 
+	private readonly theaCacheManager: TheaCacheManager; 
+	private readonly theaMcpManager: TheaMcpManager; 
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -108,9 +107,9 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	) {
 		super()
 
-		this.outputChannel.appendLine("TheaProvider instantiated") // TODO: Rename
+		this.outputChannel.appendLine("TheaProvider instantiated") 
 		this.contextProxy = new ContextProxy(context)
-		TheaProvider.activeInstances.add(this) // TODO: Rename
+		TheaProvider.activeInstances.add(this)
 
 		// Register this provider with the telemetry service to enable it to add
 		// properties like mode and provider.
@@ -143,8 +142,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			})
 	}
 
-	// ClineStack related methods (addClineToStack, removeClineFromStack, getCurrentCline, getClineStackSize, getCurrentTaskStack, finishSubTask)
-	// removed and delegated to clineStackManager instance.
+	// Stack related methods (addToStack, removeFromStack, getCurrent, getStackSize, getCurrentTaskStack, finishSubTask)
+	// removed and delegated to StackManager instance.
 
 	/*
 	VSCode extensions use the disposable pattern to clean up resources when the sidebar/editor tab is closed by the user or system. This applies to event listening, commands, interacting with the UI, etc.
@@ -153,7 +152,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	*/
 	async dispose() {
 		this.outputChannel.appendLine("Disposing TheaProvider...") // TODO: Rename
-		await this.theaTaskStackManager.removeCurrentCline() // Renamed property
+		await this.theaTaskStackManager.removeCurrentTheaTask() // Renamed property
 		this.outputChannel.appendLine("Cleared task")
 
 		if (this.view && "dispose" in this.view) {
@@ -211,8 +210,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return false
 		}
 
-		// check if there is a cline instance in the stack (if this provider has an active task)
-		if (visibleProvider.theaTaskStackManager.getCurrentCline()) { // Renamed property
+		// check if there is a  instance in the stack (if this provider has an active task)
+		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask()) { // Renamed property
 			return true
 		}
 
@@ -244,12 +243,12 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return
 		}
 
-		if (visibleProvider.theaTaskStackManager.getCurrentCline() && command.endsWith("InCurrentTask")) { // Renamed property
+		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask() && command.endsWith("InCurrentTask")) { // Renamed property
 			await visibleProvider.postMessageToWebview({ type: "invoke", invoke: "sendMessage", text: prompt })
 			return
 		}
 
-		await visibleProvider.initClineWithTask(prompt) // TODO: Rename
+		await visibleProvider.initWithTask(prompt) // TODO: Rename
 	}
 
 	public static async handleTerminalAction(
@@ -275,7 +274,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return
 		}
 
-		if (visibleProvider.theaTaskStackManager.getCurrentCline() && command.endsWith("InCurrentTask")) { // Renamed property
+		if (visibleProvider.theaTaskStackManager.getCurrentTheaTask() && command.endsWith("InCurrentTask")) { // Renamed property
 			await visibleProvider.postMessageToWebview({
 				type: "invoke",
 				invoke: "sendMessage",
@@ -284,7 +283,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return
 		}
 
-		await visibleProvider.initClineWithTask(prompt) // TODO: Rename
+		await visibleProvider.initWithTask(prompt) // TODO: Rename
 	}
 
 	async resolveWebviewView(webviewView: vscode.WebviewView | vscode.WebviewPanel) {
@@ -392,19 +391,19 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		)
 
 		// If the extension is starting a new session, clear previous task state.
-		await this.theaTaskStackManager.removeCurrentCline() // Renamed property
+		await this.theaTaskStackManager.removeCurrentTheaTask() // Renamed property
 
 		this.outputChannel.appendLine("Webview view resolved")
 	}
 
-	public async initClineWithSubTask(parent: TheaTask, task?: string, images?: string[]) { // Renamed type
-		return this.initClineWithTask(task, images, parent) // TODO: Rename
+	public async initWithSubTask(parent: TheaTask, task?: string, images?: string[]) { // Renamed type
+		return this.initWithTask(task, images, parent) // TODO: Rename
 	}
 
 	// when initializing a new task, (not from history but from a tool command new_task) there is no need to remove the previouse task
 	// since the new task is a sub task of the previous one, and when it finishes it is removed from the stack and the caller is resumed
 	// in this way we can have a chain of tasks, each one being a sub task of the previous one until the main task is finished
-	public async initClineWithTask(task?: string, images?: string[], parentTask?: TheaTask) { // Renamed type
+	public async initWithTask(task?: string, images?: string[], parentTask?: TheaTask) { // Renamed type
 		const {
 			apiConfiguration,
 			customModePrompts,
@@ -422,7 +421,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 
 		const theaTask = new TheaTask({ // Renamed constructor and variable
 			provider: this,
-			apiConfiguration, // This already comes from clineStateManager.getState()
+			apiConfiguration, // This already comes from StateManager.getState()
 			customInstructions: effectiveInstructions,
 			enableDiff,
 			enableCheckpoints,
@@ -442,15 +441,15 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		if (!state || typeof state.mode !== "string") {
 			throw new Error(t("common:errors.retrieve_current_mode"));
 		}
-		await this.theaTaskStackManager.addCline(theaTask); // Renamed property
+		await this.theaTaskStackManager.addTheaTask(theaTask); // Renamed property
 		this.log(
 			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
 		return theaTask // Return renamed variable
 	}
 
-	public async initClineWithHistoryItem(historyItem: HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }) { // Renamed type
-		await this.theaTaskStackManager.removeCurrentCline() // Renamed property
+	public async initWithHistoryItem(historyItem: HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }) { // Renamed type
+		await this.theaTaskStackManager.removeCurrentTheaTask() // Renamed property
 
 		const {
 			apiConfiguration,
@@ -485,17 +484,17 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 				})
 
 				this.log(
-					`[TheaProvider#initClineWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`, // TODO: Rename
+					`[TheaProvider#initWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`, // TODO: Rename
 				)
 			} catch (error) {
 				checkpoints.enableCheckpoints = false
-				this.log(`[TheaProvider#initClineWithHistoryItem] Error getting task storage: ${error.message}`) // TODO: Rename
+				this.log(`[TheaProvider#initWithHistoryItem] Error getting task storage: ${error.message}`) // TODO: Rename
 			}
 		}
 
 		const theaTask = new TheaTask({ // Renamed constructor and variable
 			provider: this,
-			apiConfiguration, // This already comes from clineStateManager.getState()
+			apiConfiguration, // This already comes from StateManager.getState()
 			customInstructions: effectiveInstructions,
 			enableDiff,
 			...checkpoints,
@@ -507,12 +506,12 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			taskNumber: historyItem.number,
 			onCreated: (task) => this.emit("theaTaskCreated", task), // Renamed event and payload
 		})
-		// Delegate adding cline to stack manager, handle provider-level validation first
+		// Delegate adding  to stack manager, handle provider-level validation first
 		const stateForHistory = await this.theaStateManager.getState(); // Renamed property
 		if (!stateForHistory || typeof stateForHistory.mode !== "string") {
 			throw new Error(t("common:errors.retrieve_current_mode"));
 		}
-		await this.theaTaskStackManager.addCline(theaTask); // Renamed property
+		await this.theaTaskStackManager.addTheaTask(theaTask); // Renamed property
 		this.log(
 			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
@@ -702,23 +701,23 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	}
 
 	// API Management methods (handleModeSwitch, updateApiConfiguration, upsertApiConfiguration, OAuth callbacks)
-	// removed and delegated to clineApiManager instance.
+	// removed and delegated to ApiManager instance.
 
-	// Note: Provider still needs access to the *result* of handleModeSwitch to update current Cline API handler.
+	// Note: Provider still needs access to the *result* of handleModeSwitch to update current  API handler.
 	// Note: Provider still needs access to updateApiConfiguration result? No, API handler update happens internally now.
 
-	// Wrapper method to handle mode switch and update current cline
-	public async handleModeSwitchAndUpdateCline(newMode: Mode) {
+	// Wrapper method to handle mode switch and update current 
+	public async handleModeSwitchAndUpdate(newMode: Mode) {
 		// Capture telemetry here as Provider has taskId
-		const currentTaskId = this.theaTaskStackManager.getCurrentCline()?.taskId; // Renamed property
+		const currentTaskId = this.theaTaskStackManager.getCurrentTheaTask()?.taskId; // Renamed property
 		if (currentTaskId) {
 			telemetryService.captureModeSwitch(currentTaskId, newMode);
 		}
 		// Delegate mode switch logic and get the config to load
 		const configToLoad = await this.theaApiManager.handleModeSwitch(newMode); // Renamed property
-		// If a new config was loaded/associated, update the current Cline instance
+		// If a new config was loaded/associated, update the current  instance
 		if (configToLoad) {
-			const currentTheaTask = this.theaTaskStackManager.getCurrentCline(); // Renamed property
+			const currentTheaTask = this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
 			if (currentTheaTask) {
 				// Use the buildApiHandler potentially from the ApiManager or global scope
 				currentTheaTask.api = buildApiHandler(configToLoad);
@@ -729,7 +728,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	}
 
 	async cancelTask() {
-		const theaTask = this.theaTaskStackManager.getCurrentCline() // Renamed property
+		const theaTask = this.theaTaskStackManager.getCurrentTheaTask() // Renamed property
 
 		if (!theaTask) {
 			return
@@ -746,13 +745,13 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 
 		await pWaitFor(
 			() =>
-				this.theaTaskStackManager.getCurrentCline()! === undefined || // Renamed property
-				this.theaTaskStackManager.getCurrentCline()!.isStreaming === false || // Renamed property
-				this.theaTaskStackManager.getCurrentCline()!.didFinishAbortingStream || // Renamed property
+				this.theaTaskStackManager.getCurrentTheaTask()! === undefined || // Renamed property
+				this.theaTaskStackManager.getCurrentTheaTask()!.isStreaming === false || // Renamed property
+				this.theaTaskStackManager.getCurrentTheaTask()!.didFinishAbortingStream || // Renamed property
 				// If only the first chunk is processed, then there's no
 				// need to wait for graceful abort (closes edits, browser,
 				// etc).
-				this.theaTaskStackManager.getCurrentCline()!.isWaitingForFirstChunk, // Renamed property
+				this.theaTaskStackManager.getCurrentTheaTask()!.isWaitingForFirstChunk, // Renamed property
 			{
 				timeout: 3_000,
 			},
@@ -760,23 +759,23 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			console.error("Failed to abort task")
 		})
 
-		const currentClineForAbandon = this.theaTaskStackManager.getCurrentCline(); // Renamed property
-		if (currentClineForAbandon) {
-			// 'abandoned' will prevent this Cline instance from affecting
-			// future Cline instances. This may happen if its hanging on a
+		const currentForAbandon = this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
+		if (currentForAbandon) {
+			// 'abandoned' will prevent this  instance from affecting
+			// future  instances. This may happen if its hanging on a
 			// streaming request.
-			currentClineForAbandon.abandoned = true
+			currentForAbandon.abandoned = true
 		}
 
 		// Clears task again, so we need to abortTask manually above.
-		await this.initClineWithHistoryItem({ ...historyItem, rootTask, parentTask })
+		await this.initWithHistoryItem({ ...historyItem, rootTask, parentTask })
 	}
 
 	async updateCustomInstructions(instructions?: string) {
 		// User may be clearing the field.
 		await this.contextProxy.setValue("customInstructions", instructions || undefined) // Use contextProxy directly
 
-		const currentTheaTaskForInstructions = this.theaTaskStackManager.getCurrentCline(); // Renamed property
+		const currentTheaTaskForInstructions = this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
 		if (currentTheaTaskForInstructions) {
 			currentTheaTaskForInstructions.customInstructions = instructions || undefined
 		}
@@ -784,16 +783,16 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		await this.postStateToWebview()
 	}
 
-	// MCP related methods removed - delegated to ClineMcpManager
+	// MCP related methods removed - delegated to McpManager
 
-	// Cache/Settings directory and model cache methods removed - delegated to ClineCacheManager.
+	// Cache/Settings directory and model cache methods removed - delegated to TheaCacheManager.
 
-	// OAuth Callbacks and Upsert Config are now handled by ClineApiManager
+	// OAuth Callbacks and Upsert Config are now handled by ApiManager
 
-	// Task history methods removed - delegated to ClineTaskHistory manager.
+	// Task history methods removed - delegated to TheaTaskHistory manager.
 
 	// Wrapper methods to call manager and handle provider-specific logic (posting state, passing callbacks)
-	public async getTaskWithId(id: string) { // Made public for Cline access
+	public async getTaskWithId(id: string) { // Made public for  access
 		// Simple delegation for getting task data
 		return this.theaTaskHistoryManager.getTaskWithId(id); // Renamed property
 	}
@@ -802,13 +801,13 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		// Delegate, passing necessary provider methods/context as callbacks
 		await this.theaTaskHistoryManager.showTaskWithId( // Renamed property
 			id,
-			() => this.theaTaskStackManager.getCurrentCline(), // Renamed property
+			() => this.theaTaskStackManager.getCurrentTheaTask(), // Renamed property
 			// Pass provider method - Type 'Promise<TheaTask>' is assignable to 'Promise<void>'? Let's assume type compatibility for now or history manager adjusts.
-			(historyItem) => this.initClineWithHistoryItem(historyItem as HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }),
+			(historyItem) => this.initWithHistoryItem(historyItem as HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }),
 			// Pass provider method - Ensure type compatibility for 'action'
 			(action: string) => this.postMessageToWebview({ type: "action", action: action as any }) // Use type assertion as temporary fix if needed
 		);
-		// Note: postStateToWebview might be needed here or is handled by initClineWithHistoryItem implicitly
+		// Note: postStateToWebview might be needed here or is handled by initWithHistoryItem implicitly
 	}
 
 	public async exportTaskWithId(id: string) { // Changed from private to public for backward compatibility
@@ -820,7 +819,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		// Delegate, passing necessary provider methods/context as callbacks
 		await this.theaTaskHistoryManager.deleteTaskWithId( // Renamed property
 			id,
-			() => this.theaTaskStackManager.getCurrentCline(), // Renamed property
+			() => this.theaTaskStackManager.getCurrentTheaTask(), // Renamed property
 			(message) => this.theaTaskStackManager.finishSubTask(message) // Renamed property
 		);
 		// Post updated state after deletion attempt (manager handles internal state update)
@@ -911,10 +910,11 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			alwaysAllowModeSwitch: alwaysAllowModeSwitch ?? false,
 			alwaysAllowSubtasks: alwaysAllowSubtasks ?? false,
 			uriScheme: vscode.env.uriScheme,
-			currentTaskItem: this.theaTaskStackManager.getCurrentCline()?.taskId // Renamed property
-				? (taskHistory || []).find((item: HistoryItem) => item.id === this.theaTaskStackManager.getCurrentCline()?.taskId) // Renamed property
+			currentTaskItem: this.theaTaskStackManager.getCurrentTheaTask()?.taskId // Renamed property
+				? (taskHistory || []).find((item: HistoryItem) => item.id === this.theaTaskStackManager.getCurrentTheaTask()?.taskId) // Renamed property
 				: undefined,
-			clineMessages: this.theaTaskStackManager.getCurrentCline()?.taskStateManager.clineMessages || [], // Renamed property & access via state manager
+			Messages: this.theaTaskStackManager.getCurrentTheaTask()?.taskStateManager.theaTaskMessages || [], // Renamed property & access via state manager
+			clineMessages: this.theaTaskStackManager.getCurrentTheaTask()?.taskStateManager.theaTaskMessages || [], // Add required property to satisfy ExtensionState type
 			taskHistory: (taskHistory || [])
 				.filter((item: HistoryItem) => item.ts && item.task)
 				.sort((a: HistoryItem, b: HistoryItem) => b.ts - a.ts),
@@ -975,10 +975,10 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	 */
 
 	// State management methods (getState, updateGlobalState, getGlobalState, setValue, getValue, getValues, setValues)
-	// removed and delegated to clineStateManager instance or contextProxy directly.
+	// removed and delegated to StateManager instance or contextProxy directly.
 	// Note: getStateToPostToWebview remains as it combines state with runtime context.
 
-	// updateTaskHistory method removed - delegated to ClineTaskHistory manager.
+	// updateTaskHistory method removed - delegated to TheaTaskHistory manager.
 
 	// ContextProxy delegation methods removed - use contextProxy directly or via state manager.
 
@@ -1006,7 +1006,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		await this.contextProxy.resetAllState()
 		await this.providerSettingsManager.resetAllConfigs() // No change needed here, already correct
 		await this.customModesManager.resetCustomModes()
-		await this.theaTaskStackManager.removeCurrentCline() // Use manager
+		await this.theaTaskStackManager.removeCurrentTheaTask() // Use manager
 		await this.postStateToWebview()
 		await this.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 
@@ -1014,7 +1014,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 
 		// logging
 	
-		public log(message: string) {
+		public async log(message: string) { // Added async
 			this.outputChannel.appendLine(message)
 			console.log(message)
 		}
@@ -1026,10 +1026,10 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		}
 	
 		get messages() {
-			return this.theaTaskStackManager.getCurrentCline()?.taskStateManager.clineMessages || [] // Access via state manager
+			return this.theaTaskStackManager.getCurrentTheaTask()?.taskStateManager.theaTaskMessages || [] // Access via state manager
 		}
 	
-		// getMcpHub removed - use clineMcpManager.getMcpHub()
+		// getMcpHub removed - use McpManager.getMcpHub()
 	
 		/**
 		 * Returns properties to be included in every telemetry event
@@ -1068,7 +1068,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			}
 	
 			// Add model ID if available
-			const currentTheaTask = this.theaTaskStackManager.getCurrentCline() // Use manager // Renamed variable
+			const currentTheaTask = this.theaTaskStackManager.getCurrentTheaTask() // Use manager // Renamed variable
 			if (currentTheaTask?.api) {
 				const { id: modelId } = currentTheaTask.api.getModel()
 				if (modelId) {
@@ -1083,7 +1083,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return properties
 		}
 		
-		// --- Manager Getters for Cline ---
+		// --- Manager Getters for  ---
 	
 		public get theaStateManagerInstance(): TheaStateManager { // Renamed getter and type
 			return this.theaStateManager; // Renamed property
@@ -1100,7 +1100,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		// --- Proxy Methods for Backward Compatibility ---
 		// These methods delegate to the appropriate manager instances to maintain compatibility with existing code
 	
-		// ClineStateManager proxy methods
+		// StateManager proxy methods
 		public async getState() {
 			return this.theaStateManager.getState(); // Renamed property
 		}
@@ -1115,17 +1115,17 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	
 		public async setValue<K extends keyof TheaCodeSettings>(key: K, value: TheaCodeSettings[K]) {
 			await this.theaStateManager.setValue(key, value); // Renamed property
-			// Update current Cline instance if needed
-			if (key === "currentApiConfigName" && this.getCurrentCline()) { // getCurrentCline returns TheaTask | undefined
+			// Update current  instance if needed
+			if (key === "currentApiConfigName" && this.getCurrent()) { // getCurrent returns TheaTask | undefined
 				const config = await this.providerSettingsManager.loadConfig(value as string);
 				if (config) {
-					this.getCurrentCline()!.api = buildApiHandler(config); // getCurrentCline returns TheaTask | undefined
+					this.getCurrent()!.api = buildApiHandler(config); // getCurrent returns TheaTask | undefined
 				}
 				// Post state to webview after API configuration update
 				await this.postStateToWebview();
-			} else if ((key as string) === "apiConfiguration" && this.getCurrentCline()) { // getCurrentCline returns TheaTask | undefined
-				// If the API configuration itself is updated, update the current Cline instance
-				this.getCurrentCline()!.api = buildApiHandler(value as ApiConfiguration); // getCurrentCline returns TheaTask | undefined
+			} else if ((key as string) === "apiConfiguration" && this.getCurrent()) { // getCurrent returns TheaTask | undefined
+				// If the API configuration itself is updated, update the current  instance
+				this.getCurrent()!.api = buildApiHandler(value as ApiConfiguration); // getCurrent returns TheaTask | undefined
 				// Post state to webview after API configuration update
 				await this.postStateToWebview();
 			}
@@ -1144,20 +1144,20 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return this.theaStateManager.setValues(values); // Renamed property
 		}
 	
-		// ClineStack proxy methods
-		public async addClineToStack(task: TheaTask) { // Renamed parameter and type
-			return this.theaTaskStackManager.addCline(task); // Renamed property
+		// Stack proxy methods
+		public async addToStack(task: TheaTask) { // Renamed parameter and type
+			return this.theaTaskStackManager.addTheaTask(task); // Renamed property
 		}
 	
-		public async removeClineFromStack() {
-			return this.theaTaskStackManager.removeCurrentCline(); // Renamed property
+		public async removeFromStack() {
+			return this.theaTaskStackManager.removeCurrentTheaTask(); // Renamed property
 		}
 	
-		public getCurrentCline(): TheaTask | undefined { // Add return type
-			return this.theaTaskStackManager.getCurrentCline(); // Renamed property
+		public getCurrent(): TheaTask | undefined { // Add return type
+			return this.theaTaskStackManager.getCurrentTheaTask(); // Renamed property
 		}
 	
-		public getClineStackSize() {
+		public getStackSize() {
 			return this.theaTaskStackManager.getSize(); // Renamed property
 		}
 	
@@ -1169,9 +1169,9 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return this.theaTaskStackManager.finishSubTask(message); // Renamed property
 		}
 	
-		// ClineApiManager proxy methods
+		// ApiManager proxy methods
 		public async handleModeSwitch(newMode: Mode) {
-			return this.handleModeSwitchAndUpdateCline(newMode);
+			return this.handleModeSwitchAndUpdate(newMode);
 		}
 		public async updateApiConfiguration(apiConfiguration: ApiConfiguration) {
 			return this.theaApiManager.updateApiConfiguration(apiConfiguration); // Renamed property
@@ -1181,7 +1181,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return this.theaApiManager.upsertApiConfiguration(configName, apiConfiguration); // Renamed property
 		}
 	
-		// ClineCacheManager proxy methods
+		// TheaCacheManager proxy methods
 		public async ensureCacheDirectoryExists() {
 			return this.theaCacheManager.ensureCacheDirectoryExists(); // Renamed property
 		}
@@ -1198,7 +1198,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return this.theaCacheManager.writeModelsToCache(filename, data); // Renamed property
 		}
 	
-		// ClineApiManager OAuth callback proxy methods
+		// ApiManager OAuth callback proxy methods
 		public async handleGlamaCallback(code: string) {
 			return this.theaApiManager.handleGlamaCallback(code); // Renamed property
 		}
@@ -1211,7 +1211,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			return this.theaApiManager.handleRequestyCallback(code); // Renamed property
 		}
 	
-		// ClineMcpManager proxy methods
+		// McpManager proxy methods
 		public async ensureMcpServersDirectoryExists() {
 			return this.theaMcpManager.ensureMcpServersDirectoryExists(); // Renamed property
 		}

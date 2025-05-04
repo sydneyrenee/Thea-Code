@@ -1,7 +1,7 @@
 // filepath: /Volumes/stuff/Projects/Thea-Code/src/core/webview/__tests__/ClineStateManager.test.ts
 import * as vscode from "vscode"
 import * as os from "os"
-import { ClineStateManager } from "../cline/ClineStateManager"
+import { TheaStateManager } from "../thea/TheaStateManager" // Renamed import and path
 import { ContextProxy } from "../../config/ContextProxy"
 import { ProviderSettingsManager } from "../../config/ProviderSettingsManager"
 import { CustomModesManager } from "../../config/CustomModesManager"
@@ -18,8 +18,8 @@ jest.mock("../../config/ProviderSettingsManager")
 jest.mock("../../config/CustomModesManager")
 jest.mock("../../../shared/language")
 
-describe("ClineStateManager", () => {
-	let stateManager: ClineStateManager
+describe("TheaStateManager", () => { // Renamed describe block
+	let stateManager: TheaStateManager // Renamed type
 	let mockContext: vscode.ExtensionContext
 	let mockContextProxy: jest.Mocked<ContextProxy>
 	let mockProviderSettingsManager: jest.Mocked<ProviderSettingsManager>
@@ -77,7 +77,7 @@ describe("ClineStateManager", () => {
 		} as unknown as jest.Mocked<CustomModesManager>
 
 		// Create instance of ClineStateManager
-		stateManager = new ClineStateManager(mockContext, mockProviderSettingsManager, mockCustomModesManager)
+		stateManager = new TheaStateManager(mockContext, mockProviderSettingsManager, mockCustomModesManager) // Renamed constructor
 	})
 
 	test("getState returns correct default state when no values are provided", async () => {

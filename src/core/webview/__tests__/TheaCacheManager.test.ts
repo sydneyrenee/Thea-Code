@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import fs from "fs/promises"
-import { ClineCacheManager } from "../cache/ClineCacheManager"
+import { TheaCacheManager } from "../cache/TheaCacheManager" // Updated import
 import { fileExistsAtPath } from "../../../utils/fs"
 import { ModelInfo } from "../../../shared/api"
 
@@ -20,8 +20,8 @@ jest.mock("../../../shared/storagePathManager", () => {
 	}
 })
 
-describe("ClineCacheManager", () => {
-	let cacheManager: ClineCacheManager
+describe("TheaCacheManager", () => { // Updated describe block
+	let cacheManager: TheaCacheManager // Updated type
 	let mockContext: vscode.ExtensionContext
 
 	beforeEach(() => {
@@ -37,8 +37,8 @@ describe("ClineCacheManager", () => {
 			},
 		} as unknown as vscode.ExtensionContext
 
-		// Create instance of ClineCacheManager
-		cacheManager = new ClineCacheManager(mockContext)
+		// Create instance of TheaCacheManager
+		cacheManager = new TheaCacheManager(mockContext) // Updated instantiation
 
 		// Mock console.error to prevent test output noise
 		jest.spyOn(console, "error").mockImplementation(() => {})

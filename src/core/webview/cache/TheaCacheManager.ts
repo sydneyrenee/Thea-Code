@@ -5,7 +5,7 @@ import fs from 'fs/promises';
 import { fileExistsAtPath } from '../../../utils/fs'; // Adjusted path
 import { ModelInfo } from '../../../shared/api'; // Adjusted path
 // Assuming storagePathManager is used similarly
-// import { getCacheDirectoryPath, getSettingsDirectoryPath } from '../../../shared/storagePathManager'; // Adjusted path - dynamic import used below
+import { getCacheDirectoryPath, getSettingsDirectoryPath } from '../../../shared/storagePathManager'; // Added static import
 
 /**
  * Manages disk cache operations, primarily for API model information.
@@ -21,8 +21,7 @@ export class TheaCacheManager { // Renamed class
      * Creates the directory if it doesn't exist.
      */
     async ensureCacheDirectoryExists(): Promise<string> {
-        // Use dynamic import as in the original code
-        const { getCacheDirectoryPath } = await import("../../../shared/storagePathManager"); // Adjusted path
+        // Use statically imported function
         const globalStoragePath = this.context.globalStorageUri.fsPath;
         const cacheDir = await getCacheDirectoryPath(globalStoragePath);
 
@@ -40,8 +39,7 @@ export class TheaCacheManager { // Renamed class
      * Creates the directory if it doesn't exist.
      */
     async ensureSettingsDirectoryExists(): Promise<string> {
-        // Use dynamic import as in the original code
-        const { getSettingsDirectoryPath } = await import("../../../shared/storagePathManager"); // Adjusted path
+        // Use statically imported function
         const globalStoragePath = this.context.globalStorageUri.fsPath;
         const settingsDir = await getSettingsDirectoryPath(globalStoragePath);
 

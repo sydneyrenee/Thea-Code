@@ -2,19 +2,25 @@
 
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 import { executeCommandTool } from "../executeCommandTool"
-import { Cline } from "../../Cline"
+import { TheaTask } from "../../TheaTask" // Renamed import
 import { ToolUse } from "../../assistant-message"
 import { formatResponse } from "../../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../types"
-import { ClineAsk } from "../../../schemas"
+import { TheaAsk } from "../../../schemas" // Renamed import
+import { TheaAskResponse } from "../../../shared/WebviewMessage" // Import response type
 
 // Mock dependencies
-jest.mock("../../Cline")
+jest.mock("../../TheaTask") // Renamed mock
 jest.mock("../../prompts/responses")
 
 describe("executeCommandTool", () => {
 	// Setup common test variables
-	let mockCline: jest.Mocked<Partial<Cline>> & { consecutiveMistakeCount: number; didRejectTool: boolean }
+	let mockTheaTask: jest.Mocked<Partial<TheaTask>> & {
+		consecutiveMistakeCount: number
+		didRejectTool: boolean
+		webviewCommunicator: { say: jest.Mock } // Add communicator mock
+		taskStateManager: { getTokenUsage: jest.Mock } // Add state manager mock for getTokenUsage if needed by other tests
+	}
 	let mockAskApproval: jest.Mock
 	let mockHandleError: jest.Mock
 	let mockPushToolResult: jest.Mock
@@ -26,7 +32,7 @@ describe("executeCommandTool", () => {
 		jest.clearAllMocks()
 
 		// Create mock implementations with eslint directives to handle the type issues
-		mockCline = {
+		mockTheaTask = {
 			// @ts-expect-error - Jest mock function type issues
 			ask: jest.fn().mockResolvedValue(undefined),
 			// @ts-expect-error - Jest mock function type issues
@@ -38,9 +44,15 @@ describe("executeCommandTool", () => {
 			consecutiveMistakeCount: 0,
 			didRejectTool: false,
 			theaIgnoreController: {
-				// @ts-expect-error - Jest mock function type issues
-				validateCommand: jest.fn().mockReturnValue(null),
-			},
+				validateCommand: jest.fn().mockReturnValue(null) // Simplified mock
+			} as any, // Use 'as any' to bypass strict type check for mock
+			webviewCommunicator: { // Add communicator mock setup
+				say: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+				ask: jest.fn<() => Promise<{ response: TheaAskResponse; text?: string; images?: string[] }>>().mockResolvedValue({ response: "yesButtonClicked" }),
+			} as any, // Cast partial mock to any
+			taskStateManager: { // Add state manager mock setup
+				getTokenUsage: jest.fn<() => { totalTokensIn: number; totalTokensOut: number; totalCost: number; contextTokens: number }>().mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 }),
+			} as any, // Cast partial mock to any
 		}
 
 		// @ts-expect-error - Jest mock function type issues
@@ -73,7 +85,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -83,7 +95,7 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo <test>")
-			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo <test>", undefined)
+			expect(mockTheaTask.executeCommandTool).toHaveBeenCalledWith("echo <test>", undefined)
 		})
 
 		it("should unescape &gt; to > character in commands", async () => {
@@ -92,7 +104,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -102,7 +114,7 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test > output.txt")
-			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo test > output.txt", undefined)
+			expect(mockTheaTask.executeCommandTool).toHaveBeenCalledWith("echo test > output.txt", undefined)
 		})
 
 		it("should unescape &amp; to & character in commands", async () => {
@@ -111,7 +123,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -121,7 +133,7 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo foo && echo bar")
-			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo foo && echo bar", undefined)
+			expect(mockTheaTask.executeCommandTool).toHaveBeenCalledWith("echo foo && echo bar", undefined)
 		})
 
 		it("should handle multiple mixed HTML entities in commands", async () => {
@@ -130,7 +142,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -141,7 +153,7 @@ describe("executeCommandTool", () => {
 			// Verify
 			const expectedCommand = "grep -E 'pattern' <file.txt >output.txt 2>&1"
 			expect(mockAskApproval).toHaveBeenCalledWith("command", expectedCommand)
-			expect(mockCline.executeCommandTool).toHaveBeenCalledWith(expectedCommand, undefined)
+			expect(mockTheaTask.executeCommandTool).toHaveBeenCalledWith(expectedCommand, undefined)
 		})
 	})
 
@@ -153,7 +165,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -163,7 +175,7 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test")
-			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo test", undefined)
+			expect(mockTheaTask.executeCommandTool).toHaveBeenCalledWith("echo test", undefined)
 			expect(mockPushToolResult).toHaveBeenCalledWith("Command executed")
 		})
 
@@ -174,7 +186,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -183,7 +195,7 @@ describe("executeCommandTool", () => {
 			)
 
 			// Verify
-			expect(mockCline.executeCommandTool).toHaveBeenCalledWith("echo test", "/custom/path")
+			expect(mockTheaTask.executeCommandTool).toHaveBeenCalledWith("echo test", "/custom/path")
 		})
 	})
 
@@ -194,7 +206,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -203,11 +215,11 @@ describe("executeCommandTool", () => {
 			)
 
 			// Verify
-			expect(mockCline.consecutiveMistakeCount).toBe(1)
-			expect(mockCline.sayAndCreateMissingParamError).toHaveBeenCalledWith("execute_command", "command")
+			expect(mockTheaTask.consecutiveMistakeCount).toBe(1)
+			expect(mockTheaTask.sayAndCreateMissingParamError).toHaveBeenCalledWith("execute_command", "command")
 			expect(mockPushToolResult).toHaveBeenCalledWith("Missing parameter error")
 			expect(mockAskApproval).not.toHaveBeenCalled()
-			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()
+			expect(mockTheaTask.executeCommandTool).not.toHaveBeenCalled()
 		})
 
 		it("should handle command rejection", async () => {
@@ -218,7 +230,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -228,7 +240,7 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			expect(mockAskApproval).toHaveBeenCalledWith("command", "echo test")
-			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()
+			expect(mockTheaTask.executeCommandTool).not.toHaveBeenCalled()
 			expect(mockPushToolResult).not.toHaveBeenCalled()
 		})
 
@@ -237,10 +249,9 @@ describe("executeCommandTool", () => {
 			mockToolUse.params.command = "cat .env"
 			// Override the validateCommand mock to return a filename
 			const validateCommandMock = jest.fn().mockReturnValue(".env")
-			mockCline.theaIgnoreController = {
-				// @ts-expect-error - Jest mock function type issues
-				validateCommand: validateCommandMock,
-			}
+			mockTheaTask.theaIgnoreController = {
+				validateCommand: validateCommandMock // Simplified mock
+			} as any // Use 'as any' to bypass strict type check for mock
 
 			const mockTheaIgnoreError = "TheaIgnore error"
 			;(formatResponse.theaIgnoreError as jest.Mock).mockReturnValue(mockTheaIgnoreError)
@@ -248,7 +259,7 @@ describe("executeCommandTool", () => {
 
 			// Execute
 			await executeCommandTool(
-				mockCline as unknown as Cline,
+				mockTheaTask as unknown as TheaTask,
 				mockToolUse,
 				mockAskApproval as unknown as AskApproval,
 				mockHandleError as unknown as HandleError,
@@ -258,12 +269,14 @@ describe("executeCommandTool", () => {
 
 			// Verify
 			expect(validateCommandMock).toHaveBeenCalledWith("cat .env")
-			expect(mockCline.say).toHaveBeenCalledWith("theaignore_error", ".env")
+			// Add check to ensure communicator exists
+			expect(mockTheaTask.webviewCommunicator).toBeDefined();
+			expect(mockTheaTask.webviewCommunicator.say).toHaveBeenCalledWith("theaignore_error", ".env")
 			expect(formatResponse.theaIgnoreError).toHaveBeenCalledWith(".env")
 			expect(formatResponse.toolError).toHaveBeenCalledWith(mockTheaIgnoreError)
 			expect(mockPushToolResult).toHaveBeenCalled()
 			expect(mockAskApproval).not.toHaveBeenCalled()
-			expect(mockCline.executeCommandTool).not.toHaveBeenCalled()
+			expect(mockTheaTask.executeCommandTool).not.toHaveBeenCalled()
 		})
 	})
 })

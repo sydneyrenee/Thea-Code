@@ -27,7 +27,7 @@ export async function attemptCompletionTool(
 	const result: string | undefined = block.params.result
 	const command: string | undefined = block.params.command
 	try {
-		const lastMessage = theaTask.taskStateManager.clineMessages.at(-1) // Use state manager
+		const lastMessage = theaTask.taskStateManager.theaTaskMessages.at(-1) // Use state manager
 		if (block.partial) {
 			if (command) {
 				// the attempt_completion text is done, now we're getting command

@@ -19,16 +19,20 @@ export const formatResponse = {
 		`Access to ${path} is blocked by the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file settings. You must try to continue in the task without using this file, or ask the user to update the ${GLOBAL_FILENAMES.IGNORE_FILENAME} file.`,
 
 	noToolsUsed: () =>
-		`[ERROR] You did not use a tool in your previous response! Please retry with a tool use.
-
-${toolUseInstructionsReminder}
-
-# Next Steps
-
-If you have completed the user's task, use the attempt_completion tool. 
-If you require additional information from the user, use the ask_followup_question tool. 
-Otherwise, if you have not completed the task and do not need additional information, then proceed with the next step of the task. 
-(This is an automated message, so do not respond to it conversationally.)`,
+		`[ERROR] Tool use is mandatory. You did not use a tool in your previous response.
+	
+	# Task Completion Check
+	
+	**If you believe you have completed the user's task, you MUST use the <attempt_completion> tool.** Failure to do so will prevent the task from finishing correctly.
+	
+	# Other Actions
+	
+	If you require additional information from the user, use the <ask_followup_question> tool.
+	If you need to perform other actions to continue the task, use the appropriate tool.
+	
+	${toolUseInstructionsReminder}
+	
+	(This is an automated message. Respond with a tool use, not conversationally.)`,
 
 	tooManyMistakes: (feedback?: string) =>
 		`You seem to be having trouble proceeding. The user has provided the following feedback to help guide you:\n<feedback>\n${feedback}\n</feedback>`,

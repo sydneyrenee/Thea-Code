@@ -15,12 +15,7 @@ import * as vscode from "vscode"
 import { TokenUsage } from "../schemas"
 import { ApiHandler, buildApiHandler } from "../api"
 import { ApiStream } from "../api/transform/stream"
-import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
-import {
-	CheckpointServiceOptions,
-	RepoPerTaskCheckpointService,
-	RepoPerWorkspaceCheckpointService,
-} from "../services/checkpoints" // Will be moved to TaskCheckpointManager
+import { DiffViewProvider } from "../integrations/editor/DiffViewProvider"
 import { findToolName, formatContentBlockToMarkdown } from "../integrations/misc/export-markdown"
 import { fetchInstructionsTool } from "./tools/fetchInstructionsTool"
 import { listFilesTool } from "./tools/listFilesTool"
@@ -45,7 +40,7 @@ import {
 } from "../shared/ExtensionMessage"
 import { getApiMetrics } from "../shared/getApiMetrics"
 import { HistoryItem } from "../shared/HistoryItem"
-import { ClineAskResponse as TheaAskResponse } from "../shared/WebviewMessage" // Renamed import // TODO: Rename source type
+import { TheaAskResponse } from "../shared/WebviewMessage" // Renamed import // TODO: Rename source type
 import { GlobalFileNames } from "../shared/globalFileNames"
 import { defaultModeSlug, getModeBySlug, getFullModeDetails } from "../shared/modes"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
@@ -87,8 +82,7 @@ import { TaskWebviewCommunicator } from "./TaskWebviewCommunicator"; // Import t
 export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
 type UserContent = Array<Anthropic.Messages.ContentBlockParam>
 
-// TODO: Rename ClineEvents to TheaTaskEvents
-export type ClineEvents = {
+export type TheaTaskEvents = {
 	message: [{ action: "created" | "updated"; message: TheaMessage }] // Renamed type
 	taskStarted: []
 	taskPaused: []
@@ -100,7 +94,6 @@ export type ClineEvents = {
 	taskTokenUsageUpdated: [taskId: string, usage: TokenUsage]
 }
 
-// TODO: Rename ClineOptions to TheaTaskOptions
 export type TheaTaskOptions = { // Renamed type
 	provider: TheaProvider // Renamed type
 	apiConfiguration: ApiConfiguration
@@ -114,18 +107,18 @@ export type TheaTaskOptions = { // Renamed type
 	historyItem?: HistoryItem
 	experiments?: Record<string, boolean>
 	startTask?: boolean
-	rootTask?: TheaTask // Renamed from Cline
-	parentTask?: TheaTask // Renamed from Cline
+	rootTask?: TheaTask
+	parentTask?: TheaTask
 	taskNumber?: number
-	onCreated?: (task: TheaTask) => void // Renamed from Cline
+	onCreated?: (task: TheaTask) => void 
 }
 
-export class TheaTask extends EventEmitter<TheaProviderEvents> { // Corrected event type usage
+export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	readonly taskId: string
 	readonly instanceId: string
 
-	readonly rootTask: TheaTask | undefined = undefined // Renamed from Cline
-	readonly parentTask: TheaTask | undefined = undefined // Renamed from Cline
+	readonly rootTask: TheaTask | undefined = undefined 
+	readonly parentTask: TheaTask | undefined = undefined 
 	readonly taskNumber: number
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
@@ -141,13 +134,9 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> { // Corrected ev
 	diffEnabled: boolean = false
 	fuzzyMatchThreshold: number = 1.0
 
-	// apiConversationHistory moved to TaskStateManager
-	// clineMessages moved to TaskStateManager
+
 	theaIgnoreController?: TheaIgnoreController
-	// private askResponse?: ClineAskResponse // TODO: Rename ClineAskResponse // Moved to TaskWebviewCommunicator
-	// private askResponseText?: string // Moved to TaskWebviewCommunicator
-	// private askResponseImages?: string[] // Moved to TaskWebviewCommunicator
-	// private lastMessageTs?: number // Moved to TaskWebviewCommunicator
+
 	// Not private since it needs to be accessible by tools
 	consecutiveMistakeCount: number = 0
 	consecutiveMistakeCountForApplyDiff: Map<string, number> = new Map()
@@ -161,8 +150,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> { // Corrected ev
 	isInitialized = false
 
 	// Checkpoint manager instance
-public webviewCommunicator: TaskWebviewCommunicator; // Added communicator instance
-public taskStateManager: TaskStateManager; // Added state manager instance
+	public webviewCommunicator: TaskWebviewCommunicator; // Added communicator instance
+	public taskStateManager: TaskStateManager; // Added state manager instance
 	private checkpointManager?: TaskCheckpointManager
 
 	// streaming
@@ -240,7 +229,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 // Initialize Webview Communicator SECOND
 		this.webviewCommunicator = new TaskWebviewCommunicator({
 			providerRef: this.providerRef as WeakRef<any>, // TODO: Fix type in TaskWebviewCommunicator constructor
-			getMessages: () => this.taskStateManager.clineMessages, // Use state manager // Renamed type
+			getMessages: () => this.taskStateManager.theaTaskMessages, // Use state manager // Renamed type
 			addMessage: (message: TheaMessage) => this.addMessageToStateAndEmit(message), // Wrapper // Renamed type
 			updateMessageUi: (message: TheaMessage) => this.updateUiMessage(message), // Wrapper // Renamed type
 			saveMessages: () => this.taskStateManager.saveClineMessages(), // Use state manager
@@ -256,7 +245,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 				taskId: this.taskId,
 				providerRef: this.providerRef as WeakRef<any>, // TODO: Fix type in TaskCheckpointManager constructor
 				checkpointStorage: checkpointStorage,
-				getMessages: () => this.taskStateManager.clineMessages, // Pass getter for messages
+				getMessages: () => this.taskStateManager.theaTaskMessages, // Pass getter for messages
 				saveMessages: () => this.taskStateManager.saveClineMessages(), // Use state manager method // Renamed type
 			})
 		}
@@ -332,182 +321,6 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 
 	}
 
-	// Storing task to disk for history
-
-	// State Persistence methods moved to TaskStateManager
-
-	// Communicate with webview
-
-	// partial has three valid states true (partial message), false (completion of partial message), undefined (individual complete message)
-	// async ask(
-	// 	type: TheaAsk, // Renamed type
-	// 	text?: string,
-	// 	partial?: boolean,
-	// 	progressStatus?: ToolProgressStatus,
-	// ): Promise<{ response: TheaAskResponse; text?: string; images?: string[] }> { // Renamed type
-	// 	// If this TheaTask instance was aborted by the provider, then the only
-	// 	// thing keeping us alive is a promise still running in the background,
-	// 	// in which case we don't want to send its result to the webview as it
-	// 	// is attached to a new instance of TheaTask now. So we can safely ignore
-	// 	// the result of any active promises, and this class will be
-	// 	// deallocated. (Although we set TheaTask = undefined in provider, that
-	// 	// simply removes the reference to this instance, but the instance is
-	// 	// still alive until this promise resolves or rejects.)
-	// 	if (this.abort) {
-	// 		throw new Error(`[TheaTask#ask] task ${this.taskId}.${this.instanceId} aborted`)
-	// 	}
-	//
-	// 	let askTs: number
-	//
-	// 	if (partial !== undefined) {
-	// 		const lastMessage = this.taskStateManager.clineMessages.at(-1)
-	// 		const isUpdatingPreviousPartial =
-	// 			lastMessage && lastMessage.partial && lastMessage.type === "ask" && lastMessage.ask === type
-	// 		if (partial) {
-	// 			if (isUpdatingPreviousPartial) {
-	// 				// Existing partial message, so update it.
-	// 				lastMessage.text = text
-	// 				lastMessage.partial = partial
-	// 				lastMessage.progressStatus = progressStatus
-	// 				// TODO: Be more efficient about saving and posting only new
-	// 				// data or one whole message at a time so ignore partial for
-	// 				// saves, and only post parts of partial message instead of
-	// 				// whole array in new listener.
-	// 				this.updateUiMessage(lastMessage) // Use correct wrapper
-	// 				throw new Error("Current ask promise was ignored (#1)")
-	// 			} else {
-	// 				// This is a new partial message, so add it with partial
-	// 				// state.
-	// 				askTs = Date.now()
-	// 				this.lastMessageTs = askTs
-	// 				await this.addMessageToStateAndEmit({ ts: askTs, type: "ask", ask: type, text, partial }) // Use correct wrapper
-	// 				throw new Error("Current ask promise was ignored (#2)")
-	// 			}
-	// 		} else {
-	// 			if (isUpdatingPreviousPartial) {
-	// 				// This is the complete version of a previously partial
-	// 				// message, so replace the partial with the complete version.
-	// 				this.askResponse = undefined
-	// 				this.askResponseText = undefined
-	// 				this.askResponseImages = undefined
-	//
-	// 				/*
-	// 				Bug for the history books:
-	// 				In the webview we use the ts as the chatrow key for the virtuoso list. Since we would update this ts right at the end of streaming, it would cause the view to flicker. The key prop has to be stable otherwise react has trouble reconciling items between renders, causing unmounting and remounting of components (flickering).
-	// 				The lesson here is if you see flickering when rendering lists, it's likely because the key prop is not stable.
-	// 				So in this case we must make sure that the message ts is never altered after first setting it.
-	// 				*/
-	// 				askTs = lastMessage.ts
-	// 				this.lastMessageTs = askTs
-	// 				// lastMessage.ts = askTs
-	// 				lastMessage.text = text
-	// 				lastMessage.partial = false
-	// 				lastMessage.progressStatus = progressStatus
-	// 				await this.taskStateManager.saveClineMessages()
-	// 				this.updateUiMessage(lastMessage) // Use correct wrapper
-	// 			} else {
-	// 				// This is a new and complete message, so add it like normal.
-	// 				this.askResponse = undefined
-	// 				this.askResponseText = undefined
-	// 				this.askResponseImages = undefined
-	// 				askTs = Date.now()
-	// 				this.lastMessageTs = askTs
-	// 				await this.addMessageToStateAndEmit({ ts: askTs, type: "ask", ask: type, text }) // Use correct wrapper
-	// 			}
-	// 		}
-	// 	} else {
-	// 		// This is a new non-partial message, so add it like normal.
-	// 		this.askResponse = undefined
-	// 		this.askResponseText = undefined
-	// 		this.askResponseImages = undefined
-	// 		askTs = Date.now()
-	// 		this.lastMessageTs = askTs
-	// 		await this.addMessageToStateAndEmit({ ts: askTs, type: "ask", ask: type, text }) // Use correct wrapper
-	// 	}
-	//
-	// 	await pWaitFor(() => this.askResponse !== undefined || this.lastMessageTs !== askTs, { interval: 100 })
-	//
-	// 	if (this.lastMessageTs !== askTs) {
-	// 		// Could happen if we send multiple asks in a row i.e. with
-	// 		// command_output. It's important that when we know an ask could
-	// 		// fail, it is handled gracefully.
-	// 		throw new Error("Current ask promise was ignored")
-	// 	}
-	//
-	// 	const result = { response: this.askResponse!, text: this.askResponseText, images: this.askResponseImages }
-	// 	this.askResponse = undefined
-	// 	this.askResponseText = undefined
-	// 	this.askResponseImages = undefined
-	// 	this.emit("taskAskResponded")
-	// 	return result
-	// }
-
-	// async handleWebviewAskResponse(askResponse: TheaAskResponse, text?: string, images?: string[]) { // Renamed type // Moved to TaskWebviewCommunicator
-	// 	this.askResponse = askResponse
-	// 	this.askResponseText = text
-	// 	this.askResponseImages = images
-	// }
-
-	// async say(
-	// 	type: TheaSay, // Renamed type
-	// 	text?: string,
-	// 	images?: string[],
-	// 	partial?: boolean,
-	// 	checkpoint?: Record<string, unknown>,
-	// 	progressStatus?: ToolProgressStatus,
-	// ): Promise<undefined> {
-	// 	if (this.abort) {
-	// 		throw new Error(`[TheaTask#say] task ${this.taskId}.${this.instanceId} aborted`)
-	// 	}
-	//
-	// 	if (partial !== undefined) {
-	// 		const lastMessage = this.taskStateManager.clineMessages.at(-1)
-	// 		const isUpdatingPreviousPartial =
-	// 			lastMessage && lastMessage.partial && lastMessage.type === "say" && lastMessage.say === type
-	// 		if (partial) {
-	// 			if (isUpdatingPreviousPartial) {
-	// 				// existing partial message, so update it
-	// 				lastMessage.text = text
-	// 				lastMessage.images = images
-	// 				lastMessage.partial = partial
-	// 				lastMessage.progressStatus = progressStatus
-	// 				this.updateUiMessage(lastMessage) // Use correct wrapper
-	// 			} else {
-	// 				// this is a new partial message, so add it with partial state
-	// 				const sayTs = Date.now()
-	// 				this.lastMessageTs = sayTs
-	// 				await this.addMessageToStateAndEmit({ ts: sayTs, type: "say", say: type, text, images, partial }) // Use correct wrapper
-	// 			}
-	// 		} else {
-	// 			// New now have a complete version of a previously partial message.
-	// 			if (isUpdatingPreviousPartial) {
-	// 				// This is the complete version of a previously partial
-	// 				// message, so replace the partial with the complete version.
-	// 				this.lastMessageTs = lastMessage.ts
-	// 				// lastMessage.ts = sayTs
-	// 				lastMessage.text = text
-	// 				lastMessage.images = images
-	// 				lastMessage.partial = false
-	// 				lastMessage.progressStatus = progressStatus
-	// 				// Instead of streaming partialMessage events, we do a save
-	// 				// and post like normal to persist to disk.
-	// 				await this.taskStateManager.saveClineMessages()
-	// 				// More performant than an entire postStateToWebview.
-	// 				this.updateUiMessage(lastMessage) // Use correct wrapper
-	// 			} else {
-	// 				// This is a new and complete message, so add it like normal.
-	// 				const sayTs = Date.now()
-	// 				this.lastMessageTs = sayTs
-	// 				await this.addMessageToStateAndEmit({ ts: sayTs, type: "say", say: type, text, images }) // Use correct wrapper
-	// 			}
-	// 		}
-	// 	} else {
-	// 		// this is a new non-partial message, so add it like normal
-	// 		const sayTs = Date.now()
-	// 		this.lastMessageTs = sayTs
-	// 		await this.addMessageToStateAndEmit({ ts: sayTs, type: "say", say: type, text, images, checkpoint }) // Use correct wrapper
-	// 	}
-	// }
 
 	async sayAndCreateMissingParamError(toolName: ToolUseName, paramName: string, relPath?: string) {
 		await this.webviewCommunicator.say(
@@ -524,7 +337,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 	private async startTask(task?: string, images?: string[]): Promise<void> {
 		// conversationHistory (for API) and clineMessages (for webview) need to be in sync
 		// if the extension process were killed, then on restart the clineMessages might not be empty, so we need to set it to [] when we create a new TheaTask client (otherwise webview would show stale messages from previous session)
-		this.taskStateManager.clineMessages = []
+		this.taskStateManager.theaTaskMessages = []
 		this.taskStateManager.apiConversationHistory = []
 		await this.providerRef.deref()?.postStateToWebview()
 
@@ -574,7 +387,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 	private async resumeTaskFromHistory() {
 		// Loading now happens in TaskStateManager constructor or load methods
 		// const modifiedClineMessages = await this.taskStateManager.loadClineMessages(); // Example if needed, but likely redundant
-		const modifiedClineMessages = [...this.taskStateManager.clineMessages]; // Work with current state
+		const modifiedClineMessages = [...this.taskStateManager.theaTaskMessages]; // Work with current state
 
 		// Remove any resume messages that may have been added before
 		const lastRelevantMessageIndex = findLastIndex(
@@ -609,7 +422,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 		// the task first.
 		await this.taskStateManager.loadApiConversationHistory() // Use manager method to load
 
-		const lastClineMessage = this.taskStateManager.clineMessages
+		const lastClineMessage = this.taskStateManager.theaTaskMessages
 			.slice()
 			.reverse()
 			.find((m) => !(m.ask === "resume_task" || m.ask === "resume_completed_task")) // could be multiple resume tasks
@@ -1089,7 +902,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 
 		// If the previous API request's total token usage is close to the context window, truncate the conversation history to free up space for the new request
 		if (previousApiReqIndex >= 0) {
-			const previousRequest = this.taskStateManager.clineMessages[previousApiReqIndex]?.text
+			const previousRequest = this.taskStateManager.theaTaskMessages[previousApiReqIndex]?.text
 			if (!previousRequest) return
 
 			const {
@@ -1623,13 +1436,13 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 				// there are already more content blocks to stream, so we'll call this function ourselves
 				// await this.presentAssistantContent()
 
-				this.presentAssistantMessage()
+				await this.presentAssistantMessage()
 				return
 			}
 		}
 		// block is partial, but the read stream may have finished
 		if (this.presentAssistantMessageHasPendingUpdates) {
-			this.presentAssistantMessage()
+			await this.presentAssistantMessage()
 		}
 	}
 
@@ -1708,7 +1521,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 
 		// Get previous api req's index to check token usage and determine if we
 		// need to truncate conversation history.
-		const previousApiReqIndex = findLastIndex(this.taskStateManager.clineMessages, (m) => m.say === "api_req_started")
+		const previousApiReqIndex = findLastIndex(this.taskStateManager.theaTaskMessages, (m) => m.say === "api_req_started")
 
 		// In this TheaTask request loop, we need to check if this task instance
 		// has been asked to wait for a subtask to finish before continuing.
@@ -1722,7 +1535,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 
 			if (currentMode !== this.pausedModeSlug) {
 				// The mode has changed, we need to switch back to the paused mode.
-				await provider.handleModeSwitchAndUpdateCline(this.pausedModeSlug) // Use wrapper method
+				await provider.handleModeSwitchAndUpdate(this.pausedModeSlug) // Use wrapper method
 
 				// Delay to allow mode change to take effect before next tool is executed.
 				await delay(500)
@@ -1754,9 +1567,9 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 		telemetryService.captureConversationMessage(this.taskId, "user")
 
 		// since we sent off a placeholder api_req_started message to update the webview while waiting to actually start the API request (to load potential details for example), we need to update the text of that message
-		const lastApiReqIndex = findLastIndex(this.taskStateManager.clineMessages, (m) => m.say === "api_req_started")
+		const lastApiReqIndex = findLastIndex(this.taskStateManager.theaTaskMessages, (m) => m.say === "api_req_started")
 
-		this.taskStateManager.clineMessages[lastApiReqIndex].text = JSON.stringify({
+		this.taskStateManager.theaTaskMessages[lastApiReqIndex].text = JSON.stringify({
 			request: userContent.map((block) => formatContentBlockToMarkdown(block)).join("\n\n"),
 		} satisfies TheaApiReqInfo) // Renamed type
 
@@ -1775,9 +1588,9 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 			// (it's worth removing a few months from now)
 			const updateApiReqMsg = (cancelReason?: TheaApiReqCancelReason, streamingFailedMessage?: string) => { // Renamed type
 				// Ensure message exists before updating
-				if (this.taskStateManager.clineMessages[lastApiReqIndex]) {
-					this.taskStateManager.clineMessages[lastApiReqIndex].text = JSON.stringify({
-					...JSON.parse(this.taskStateManager.clineMessages[lastApiReqIndex].text || "{}"),
+				if (this.taskStateManager.theaTaskMessages[lastApiReqIndex]) {
+					this.taskStateManager.theaTaskMessages[lastApiReqIndex].text = JSON.stringify({
+					...JSON.parse(this.taskStateManager.theaTaskMessages[lastApiReqIndex].text || "{}"),
 					tokensIn: inputTokens,
 					tokensOut: outputTokens,
 					cacheWrites: cacheWriteTokens,
@@ -1803,7 +1616,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 				}
 
 				// if last message is a partial we need to update and save it
-				const lastMessage = this.taskStateManager.clineMessages.at(-1)
+				const lastMessage = this.taskStateManager.theaTaskMessages.at(-1)
 
 				if (lastMessage && lastMessage.partial) {
 					// lastMessage.ts = Date.now() DO NOT update ts since it is used as a key for virtuoso list
@@ -1886,7 +1699,7 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 								this.userMessageContentReady = false // new content we need to present, reset to false in case previous content set this to true
 							}
 							// present content to user
-							this.presentAssistantMessage()
+							await this.presentAssistantMessage()
 							break
 					}
 
@@ -1924,12 +1737,12 @@ public taskStateManager: TaskStateManager; // Added state manager instance
 					await abortStream(
 						"streaming_failed",
 						error.message ?? JSON.stringify(serializeError(error), null, 2),
-					)
-const history = await this.providerRef.deref()?.theaTaskHistoryManagerInstance.getTaskWithId(this.taskId) // Renamed getter
-
+					);
+					
+					const history = await this.providerRef.deref()?.theaTaskHistoryManagerInstance.getTaskWithId(this.taskId); // Renamed getter
 
 					if (history) {
-						await this.providerRef.deref()?.initClineWithHistoryItem(history.historyItem) // TODO: Rename initClineWithHistoryItem
+						await this.providerRef.deref()?.initWithHistoryItem(history.historyItem) // TODO: Rename initClineWithHistoryItem
 						// await this.providerRef.deref()?.postStateToWebview()
 					}
 				}
@@ -1952,7 +1765,7 @@ const history = await this.providerRef.deref()?.theaTaskHistoryManagerInstance.g
 			})
 			// this.assistantMessageContent.forEach((e) => (e.partial = false)) // cant just do this bc a tool could be in the middle of executing ()
 			if (partialBlocks.length > 0) {
-				this.presentAssistantMessage() // if there is content to update then it will complete and update this.userMessageContentReady to true, which we pwaitfor before making the next request. all this is really doing is presenting the last partial message that we just set to complete
+				await this.presentAssistantMessage() // if there is content to update then it will complete and update this.userMessageContentReady to true, which we pwaitfor before making the next request. all this is really doing is presenting the last partial message that we just set to complete
 			}
 
 			updateApiReqMsg()
@@ -2248,7 +2061,7 @@ const history = await this.providerRef.deref()?.theaTaskHistoryManagerInstance.g
 		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
 
 		// Add context tokens information
-		const { contextTokens, totalCost } = getApiMetrics(this.taskStateManager.clineMessages)
+		const { contextTokens, totalCost } = getApiMetrics(this.taskStateManager.theaTaskMessages)
 		const modelInfo = this.api.getModel().info
 		const contextWindow = modelInfo.contextWindow
 		const contextPercentage =
@@ -2335,7 +2148,7 @@ const history = await this.providerRef.deref()?.theaTaskHistoryManagerInstance.g
 	public async checkpointRestore(options: { ts: number; commitHash: string; mode: "preview" | "restore" }) {
 		if (!this.checkpointManager) return
 
-		const index = this.taskStateManager.clineMessages.findIndex((m) => m.ts === options.ts)
+		const index = this.taskStateManager.theaTaskMessages.findIndex((m) => m.ts === options.ts)
 		if (index === -1) return
 
 		const success = await this.checkpointManager.restore(options)
@@ -2346,12 +2159,12 @@ const history = await this.providerRef.deref()?.theaTaskHistoryManagerInstance.g
 				this.taskStateManager.apiConversationHistory.filter((m) => !m.ts || m.ts < options.ts),
 			)
 
-			const deletedMessages = this.taskStateManager.clineMessages.slice(index + 1)
+			const deletedMessages = this.taskStateManager.theaTaskMessages.slice(index + 1)
 			const { totalTokensIn, totalTokensOut, totalCacheWrites, totalCacheReads, totalCost } = getApiMetrics(
 				combineApiRequests(combineCommandSequences(deletedMessages)),
 			)
 
-			await this.taskStateManager.overwriteClineMessages(this.taskStateManager.clineMessages.slice(0, index + 1))
+			await this.taskStateManager.overwriteClineMessages(this.taskStateManager.theaTaskMessages.slice(0, index + 1))
 
 			await this.webviewCommunicator.say(
 				"api_req_deleted",

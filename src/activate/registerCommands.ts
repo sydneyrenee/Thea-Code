@@ -54,7 +54,7 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		// Construct internal command ID using EXTENSION_NAME
 		[`${EXTENSION_NAME}.activationCompleted`]: () => {},
 		[COMMANDS.PLUS_BUTTON]: async () => { 
-			await provider.removeClineFromStack()
+			await provider.removeFromStack()
 			await provider.postStateToWebview()
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},

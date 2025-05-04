@@ -327,8 +327,8 @@
     "verify": "node scripts/verify-branding.js",
     "package": "npm run build && vsce package --out bin/thea-code-$npm_package_version.vsix",
     "test": "node ./scripts/run-all-linters.js && npm run test:jest && npm run test:types",
-    "test:jest": "cd webview-ui && npm run test:webviews && cd .. && npm run test:extension",
-    "test:extension": "jest --selectProjects extension --detectOpenHandles",
+    "test:jest": "cd webview-ui && npm run test && cd .. && npm run test:extension",
+    "test:extension": "jest",
     "test:types": "tsc --noEmit",
     "install:all": "npm install && cd webview-ui && npm install && cd ../e2e && npm install && cd ../"
   },

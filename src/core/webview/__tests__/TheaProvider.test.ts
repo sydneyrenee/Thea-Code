@@ -1,36 +1,33 @@
 import * as vscode from "vscode"
 import EventEmitter from "events"
-import { ClineProvider } from "../ClineProvider"
-import { ClineStack } from "../cline/ClineStack"
-import { ClineStateManager } from "../cline/ClineStateManager"
-import { ClineApiManager } from "../api/ClineApiManager"
-import { ClineTaskHistory } from "../history/ClineTaskHistory"
-import { ClineCacheManager } from "../cache/ClineCacheManager"
-import { ClineMcpManager } from "../mcp/ClineMcpManager"
+import { TheaProvider } from "../TheaProvider" // Renamed import
+import { TheaTaskStack } from "../thea/TheaTaskStack" // Renamed import and path
+import { TheaStateManager } from "../thea/TheaStateManager" // Renamed import and path
+import { TheaApiManager } from "../api/TheaApiManager" // Renamed import
+import { TheaTaskHistory } from "../history/TheaTaskHistory" // Renamed import
+import { TheaCacheManager } from "../cache/TheaCacheManager" // Renamed import
+import { TheaMcpManager } from "../mcp/TheaMcpManager" // Renamed import
 import { ContextProxy } from "../../config/ContextProxy"
 import { ProviderSettingsManager } from "../../config/ProviderSettingsManager"
 import { CustomModesManager } from "../../config/CustomModesManager"
-import { Cline } from "../../Cline"
-import { webviewMessageHandler } from "../webviewMessageHandler"
-import { telemetryService } from "../../../services/telemetry/TelemetryService"
+import { TheaTask } from "../../TheaTask" // Renamed import
 import { McpServerManager } from "../../../services/mcp/McpServerManager"
-import { McpHub } from "../../../services/mcp/McpHub"
 import { defaultModeSlug } from "../../../shared/modes"
 import { HistoryItem } from "../../../shared/HistoryItem"
 import { t } from "../../../i18n"
 
 // Mock dependencies
 jest.mock("vscode")
-jest.mock("../cline/ClineStack")
-jest.mock("../cline/ClineStateManager")
-jest.mock("../api/ClineApiManager")
-jest.mock("../history/ClineTaskHistory")
-jest.mock("../cache/ClineCacheManager")
-jest.mock("../mcp/ClineMcpManager")
+jest.mock("../thea/TheaTaskStack") // Updated mock path
+jest.mock("../thea/TheaStateManager") // Updated mock path
+jest.mock("../api/TheaApiManager") // Updated mock path
+jest.mock("../history/TheaTaskHistory") // Updated mock path
+jest.mock("../cache/TheaCacheManager") // Updated mock path
+jest.mock("../mcp/TheaMcpManager") // Updated mock path
 jest.mock("../../config/ContextProxy")
 jest.mock("../../config/ProviderSettingsManager")
 jest.mock("../../config/CustomModesManager")
-jest.mock("../../Cline")
+jest.mock("../../TheaTask") // Updated mock path
 jest.mock("../webviewMessageHandler")
 jest.mock("../../../services/telemetry/TelemetryService")
 jest.mock("../../../services/mcp/McpServerManager")
@@ -47,26 +44,26 @@ jest.mock("../../../i18n")
 console.log = jest.fn()
 console.error = jest.fn()
 
-describe("ClineProvider", () => {
+describe("TheaProvider", () => { // Renamed describe block
   // Setup variables
-  let clineProvider: ClineProvider
+  let theaProvider: TheaProvider // Renamed variable and type
   let mockContext: vscode.ExtensionContext
   let mockOutputChannel: vscode.OutputChannel
   let mockWebview: vscode.Webview
   let mockWebviewView: vscode.WebviewView
-  let mockCline: jest.Mocked<Cline>
+  let mockTheaTask: jest.Mocked<TheaTask> // Renamed variable and type
 
   // Create mocks for manager instances
-  const mockClineStack = {
-    addCline: jest.fn(),
-    removeCurrentCline: jest.fn(),
-    getCurrentCline: jest.fn(),
+  const mockTheaTaskStack = { // Renamed variable
+    addTheaTask: jest.fn(),
+    removeCurrentTheaTask: jest.fn(),
+    getCurrentTheaTask: jest.fn(),
     getSize: jest.fn(),
     getTaskStack: jest.fn(),
     finishSubTask: jest.fn(),
   }
 
-  const mockClineStateManager = {
+  const mockTheaStateManager = { // Renamed variable
     getState: jest.fn(),
     updateGlobalState: jest.fn(),
     getGlobalState: jest.fn(),
@@ -77,7 +74,7 @@ describe("ClineProvider", () => {
     getCustomModes: jest.fn(),
   }
 
-  const mockClineApiManager = {
+  const mockTheaApiManager = { // Renamed variable
     handleModeSwitch: jest.fn(),
     updateApiConfiguration: jest.fn(),
     upsertApiConfiguration: jest.fn(),
@@ -86,7 +83,7 @@ describe("ClineProvider", () => {
     handleRequestyCallback: jest.fn(),
   }
 
-  const mockClineTaskHistory = {
+  const mockTheaTaskHistory = { // Renamed variable
     getTaskWithId: jest.fn(),
     showTaskWithId: jest.fn(),
     exportTaskWithId: jest.fn(),
@@ -94,14 +91,14 @@ describe("ClineProvider", () => {
     updateTaskHistory: jest.fn(),
   }
 
-  const mockClineCacheManager = {
+  const mockTheaCacheManager = { // Renamed variable
     ensureCacheDirectoryExists: jest.fn(),
     ensureSettingsDirectoryExists: jest.fn(),
     readModelsFromCache: jest.fn(),
     writeModelsToCache: jest.fn(),
   }
 
-  const mockClineMcpManager = {
+  const mockTheaMcpManager = { // Renamed variable
     setMcpHub: jest.fn(),
     getMcpHub: jest.fn(),
     getAllServers: jest.fn(),
@@ -178,8 +175,8 @@ describe("ClineProvider", () => {
       dispose: jest.fn(),
     } as unknown as vscode.WebviewView
 
-    // Setup mock Cline
-    mockCline = {
+    // Setup mock TheaTask
+    mockTheaTask = { // Renamed variable
       taskId: "test-task-id",
       instanceId: "test-instance-id",
       abortTask: jest.fn(),
@@ -195,15 +192,20 @@ describe("ClineProvider", () => {
       abandoned: false,
       api: { getModel: jest.fn().mockReturnValue({ id: "test-model-id" }) },
       diffStrategy: { getName: jest.fn().mockReturnValue("test-diff-strategy") },
-    } as unknown as jest.Mocked<Cline>
+      taskStateManager: { // Add mock state manager
+        clineMessages: [], // Provide at least clineMessages
+        apiConversationHistory: [], // Add other properties if needed by tests
+        getTokenUsage: jest.fn().mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 }),
+      },
+    } as unknown as jest.Mocked<TheaTask>
 
     // Setup mock manager responses
-    ;(ClineStack as jest.Mock).mockImplementation(() => mockClineStack)
-    ;(ClineStateManager as jest.Mock).mockImplementation(() => mockClineStateManager)
-    ;(ClineApiManager as jest.Mock).mockImplementation(() => mockClineApiManager)
-    ;(ClineTaskHistory as jest.Mock).mockImplementation(() => mockClineTaskHistory)
-    ;(ClineCacheManager as jest.Mock).mockImplementation(() => mockClineCacheManager)
-    ;(ClineMcpManager as jest.Mock).mockImplementation(() => mockClineMcpManager)
+    ;(TheaTaskStack as jest.Mock).mockImplementation(() => mockTheaTaskStack) // Renamed class and variable
+    ;(TheaStateManager as jest.Mock).mockImplementation(() => mockTheaStateManager) // Renamed class and variable
+    ;(TheaApiManager as jest.Mock).mockImplementation(() => mockTheaApiManager) // Renamed class and variable
+    ;(TheaTaskHistory as jest.Mock).mockImplementation(() => mockTheaTaskHistory) // Renamed class and variable
+    ;(TheaCacheManager as jest.Mock).mockImplementation(() => mockTheaCacheManager) // Renamed class and variable
+    ;(TheaMcpManager as jest.Mock).mockImplementation(() => mockTheaMcpManager) // Renamed class and variable
     ;(ContextProxy as jest.Mock).mockImplementation(() => mockContextProxy)
     ;((ProviderSettingsManager as unknown) as jest.Mock).mockImplementation(() => mockProviderSettingsManager)
     ;(CustomModesManager as jest.Mock).mockImplementation(() => mockCustomModesManager)
@@ -221,8 +223,8 @@ describe("ClineProvider", () => {
       return translations[key] || key;
     });
 
-    // Create instance of ClineProvider
-    clineProvider = new ClineProvider(mockContext, mockOutputChannel, "sidebar")
+    // Create instance of TheaProvider
+    theaProvider = new TheaProvider(mockContext, mockOutputChannel, "sidebar") // Renamed variable and constructor
   })
 
   afterEach(() => {
@@ -230,35 +232,35 @@ describe("ClineProvider", () => {
   })
 
   test("constructor initializes dependencies correctly", () => {
-    expect(ClineStack).toHaveBeenCalled()
-    expect(ClineStateManager).toHaveBeenCalled()
-    expect(ClineApiManager).toHaveBeenCalled()
-    expect(ClineTaskHistory).toHaveBeenCalled()
-    expect(ClineCacheManager).toHaveBeenCalled()
-    expect(ClineMcpManager).toHaveBeenCalled()
+    expect(TheaTaskStack).toHaveBeenCalled() // Renamed class
+    expect(TheaStateManager).toHaveBeenCalled() // Renamed class
+    expect(TheaApiManager).toHaveBeenCalled() // Renamed class
+    expect(TheaTaskHistory).toHaveBeenCalled() // Renamed class
+    expect(TheaCacheManager).toHaveBeenCalled() // Renamed class
+    expect(TheaMcpManager).toHaveBeenCalled() // Renamed class
     expect(ContextProxy).toHaveBeenCalledWith(mockContext)
     expect(ProviderSettingsManager).toHaveBeenCalledWith(mockContext)
     expect(CustomModesManager).toHaveBeenCalled()
     
     // Verify McpServerManager was called
-    expect(McpServerManager.getInstance).toHaveBeenCalledWith(mockContext, clineProvider)
+    expect(McpServerManager.getInstance).toHaveBeenCalledWith(mockContext, theaProvider)
     
     // Check initial properties
-    expect(clineProvider.isViewLaunched).toBe(false)
-    expect(clineProvider.contextProxy).toBe(mockContextProxy)
-    expect(clineProvider.providerSettingsManager).toBe(mockProviderSettingsManager)
-    expect(clineProvider.customModesManager).toBe(mockCustomModesManager)
-    expect(clineProvider['clineStackManager']).toBe(mockClineStack)
-    expect(clineProvider['clineStateManager']).toBe(mockClineStateManager)
-    expect(clineProvider['clineApiManager']).toBe(mockClineApiManager)
-    expect(clineProvider['clineTaskHistoryManager']).toBe(mockClineTaskHistory)
-    expect(clineProvider['clineCacheManager']).toBe(mockClineCacheManager)
-    expect(clineProvider['clineMcpManager']).toBe(mockClineMcpManager)
+    expect(theaProvider.isViewLaunched).toBe(false)
+    expect(theaProvider.contextProxy).toBe(mockContextProxy)
+    expect(theaProvider.providerSettingsManager).toBe(mockProviderSettingsManager)
+    expect(theaProvider.customModesManager).toBe(mockCustomModesManager) // Renamed variable
+    expect(theaProvider['theaTaskStackManager']).toBe(mockTheaTaskStack) // Renamed property access and variable
+    expect(theaProvider['theaStateManager']).toBe(mockTheaStateManager) // Renamed property access and variable
+    expect(theaProvider['theaApiManager']).toBe(mockTheaApiManager) // Renamed property access and variable
+    expect(theaProvider['theaTaskHistoryManager']).toBe(mockTheaTaskHistory) // Renamed property access and variable
+    expect(theaProvider['theaCacheManager']).toBe(mockTheaCacheManager) // Renamed property access and variable
+    expect(theaProvider['theaMcpManager']).toBe(mockTheaMcpManager) // Renamed property access and variable
   })
 
   test("resolveWebviewView initializes webview correctly", async () => {
     // Setup state manager to return mock state
-    mockClineStateManager.getState.mockResolvedValue({
+    mockTheaStateManager.getState.mockResolvedValue({ // Renamed variable
       soundEnabled: true,
       terminalShellIntegrationTimeout: 5000,
       ttsEnabled: false,
@@ -266,10 +268,10 @@ describe("ClineProvider", () => {
     })
 
     // Execute
-    await clineProvider.resolveWebviewView(mockWebviewView)
+    await theaProvider.resolveWebviewView(mockWebviewView)
 
     // Verify
-    expect(clineProvider.view).toBe(mockWebviewView)
+    expect(theaProvider.view).toBe(mockWebviewView)
     expect(mockWebview.onDidReceiveMessage).toHaveBeenCalled()
     expect(mockWebviewView.onDidChangeVisibility).toHaveBeenCalled()
     expect(mockWebviewView.onDidDispose).toHaveBeenCalled()
@@ -277,27 +279,27 @@ describe("ClineProvider", () => {
       enableScripts: true,
       localResourceRoots: [mockContextProxy.extensionUri],
     })
-    expect(mockClineStack.removeCurrentCline).toHaveBeenCalled()
+    expect(mockTheaTaskStack.removeCurrentTheaTask).toHaveBeenCalled() // Updated to new method name
   })
 
   test("dispose cleans up resources properly", async () => {
     // Setup
-    clineProvider.view = mockWebviewView
+    theaProvider.view = mockWebviewView
     
     // Execute
-    await clineProvider.dispose()
+    await theaProvider.dispose()
 
     // Verify
-    expect(mockClineStack.removeCurrentCline).toHaveBeenCalled()
+    expect(mockTheaTaskStack.removeCurrentTheaTask).toHaveBeenCalled() // Updated to new method name
     // WebviewView doesn't have a dispose method, we should check if unregisterProvider was called
     // and if clineMcpManager.dispose was called, which are the important cleanup steps
-    expect(mockClineMcpManager.dispose).toHaveBeenCalled()
-    expect(McpServerManager.unregisterProvider).toHaveBeenCalledWith(clineProvider)
+    expect(mockTheaMcpManager.dispose).toHaveBeenCalled() // Renamed variable
+    expect(McpServerManager.unregisterProvider).toHaveBeenCalledWith(theaProvider) // Renamed variable
   })
 
-  test("initClineWithTask creates a new cline instance and adds it to stack", async () => {
+  test("initClineWithTask creates a new TheaTask instance and adds it to stack", async () => { // Updated test description
     // Setup state
-    mockClineStateManager.getState.mockResolvedValue({
+    mockTheaStateManager.getState.mockResolvedValue({ // Renamed variable
       apiConfiguration: { apiProvider: "test-provider" },
       customModePrompts: {},
       diffEnabled: true,
@@ -310,18 +312,18 @@ describe("ClineProvider", () => {
     })
     
     // Mock stack size for task number
-    mockClineStack.getSize.mockReturnValue(0)
+    mockTheaTaskStack.getSize.mockReturnValue(0) // Renamed variable
     
-    // Mock Cline constructor
-    ;(Cline as unknown as jest.Mock).mockImplementation(() => mockCline)
+    // Mock TheaTask constructor
+    ;(TheaTask as unknown as jest.Mock).mockImplementation(() => mockTheaTask) // Renamed class and variable
 
     // Execute
-    const result = await clineProvider.initClineWithTask("test task")
+    const result = await theaProvider.initWithTask("test task") // Updated to new method name
 
     // Verify
-    expect(mockClineStateManager.getState).toHaveBeenCalled()
-    expect(Cline).toHaveBeenCalledWith(expect.objectContaining({
-      provider: clineProvider,
+    expect(mockTheaStateManager.getState).toHaveBeenCalled() // Renamed variable
+    expect(TheaTask).toHaveBeenCalledWith(expect.objectContaining({ // Renamed class
+      provider: theaProvider, // Renamed variable
       task: "test task",
       enableDiff: true,
       enableCheckpoints: true,
@@ -329,13 +331,13 @@ describe("ClineProvider", () => {
       fuzzyMatchThreshold: 1.0,
       taskNumber: 1,
     }))
-    expect(mockClineStack.addCline).toHaveBeenCalledWith(mockCline)
-    expect(result).toBe(mockCline)
+    expect(mockTheaTaskStack.addTheaTask).toHaveBeenCalledWith(mockTheaTask) // Updated to new method name
+    expect(result).toBe(mockTheaTask) // Renamed variable
   })
 
-  test("initClineWithHistoryItem initializes cline from history and adds to stack", async () => {
+  test("initClineWithHistoryItem initializes TheaTask from history and adds to stack", async () => { // Updated test description
     // Setup state
-    mockClineStateManager.getState.mockResolvedValue({
+    mockTheaStateManager.getState.mockResolvedValue({ // Renamed variable
       apiConfiguration: { apiProvider: "test-provider" },
       customModePrompts: {},
       diffEnabled: true,
@@ -348,7 +350,7 @@ describe("ClineProvider", () => {
     })
     
     // Create history item
-    const historyItem: HistoryItem & { rootTask?: Cline; parentTask?: Cline } = {
+    const historyItem: HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask } = { // Renamed type
       id: "test-history-id",
       task: "test history task",
       ts: Date.now(),
@@ -358,17 +360,17 @@ describe("ClineProvider", () => {
       totalCost: 0,
     }
     
-    // Mock Cline constructor
-    ;(Cline as unknown as jest.Mock).mockImplementation(() => mockCline)
+    // Mock TheaTask constructor
+    ;(TheaTask as unknown as jest.Mock).mockImplementation(() => mockTheaTask) // Renamed class and variable
 
     // Execute
-    const result = await clineProvider.initClineWithHistoryItem(historyItem)
+    const result = await theaProvider.initWithHistoryItem(historyItem) // Updated to new method name
 
     // Verify
-    expect(mockClineStack.removeCurrentCline).toHaveBeenCalled()
-    expect(mockClineStateManager.getState).toHaveBeenCalled()
-    expect(Cline).toHaveBeenCalledWith(expect.objectContaining({
-      provider: clineProvider,
+    expect(mockTheaTaskStack.removeCurrentTheaTask).toHaveBeenCalled() // Updated to new method name
+    expect(mockTheaStateManager.getState).toHaveBeenCalled() // Renamed variable
+    expect(TheaTask).toHaveBeenCalledWith(expect.objectContaining({ // Renamed class
+      provider: theaProvider, // Renamed variable
       historyItem,
       enableDiff: true,
       enableCheckpoints: true,
@@ -376,8 +378,8 @@ describe("ClineProvider", () => {
       fuzzyMatchThreshold: 1.0,
       taskNumber: 2,
     }))
-    expect(mockClineStack.addCline).toHaveBeenCalledWith(mockCline)
-    expect(result).toBe(mockCline)
+    expect(mockTheaTaskStack.addTheaTask).toHaveBeenCalledWith(mockTheaTask) // Updated to new method name
+    expect(result).toBe(mockTheaTask) // Renamed variable
   })
 
   test("cancelTask aborts current task and reloads from history", async () => {
@@ -388,16 +390,16 @@ describe("ClineProvider", () => {
       ts: Date.now(),
     }
     
-    mockClineStack.getCurrentCline.mockReturnValue(mockCline)
-    mockClineTaskHistory.getTaskWithId.mockResolvedValue({ historyItem })
+    mockTheaTaskStack.getCurrentTheaTask.mockReturnValue(mockTheaTask) // Updated to new method name
+    mockTheaTaskHistory.getTaskWithId.mockResolvedValue({ historyItem }) // Renamed variable
 
     // Execute
-    await clineProvider.cancelTask()
+    await theaProvider.cancelTask()
 
     // Verify
-    expect(mockCline.abortTask).toHaveBeenCalled()
-    expect(mockCline.abandoned).toBe(true)
-    expect(mockClineTaskHistory.getTaskWithId).toHaveBeenCalledWith("test-task-id")
+    expect(mockTheaTask.abortTask).toHaveBeenCalled() // Renamed variable
+    expect(mockTheaTask.abandoned).toBe(true) // Renamed variable
+    expect(mockTheaTaskHistory.getTaskWithId).toHaveBeenCalledWith("test-task-id") // Renamed variable
   })
 
   test("postStateToWebview sends correct state to webview", async () => {
@@ -409,18 +411,18 @@ describe("ClineProvider", () => {
       taskHistory: [{ id: "task1", ts: 1000, task: "Task 1" }],
     }
     
-    mockClineStateManager.getState.mockResolvedValue(mockState)
-    mockClineStack.getCurrentCline.mockReturnValue(undefined)
+    mockTheaStateManager.getState.mockResolvedValue(mockState) // Renamed variable
+    mockTheaTaskStack.getCurrentTheaTask.mockReturnValue(undefined) // Updated to new method name
     mockCustomModesManager.getCustomModes.mockResolvedValue([])
-    mockClineMcpManager.getAllServers.mockReturnValue([])
+    mockTheaMcpManager.getAllServers.mockReturnValue([]) // Renamed variable
     
-    clineProvider.view = mockWebviewView
+    theaProvider.view = mockWebviewView
 
     // Execute
-    await clineProvider.postStateToWebview()
+    await theaProvider.postStateToWebview()
 
     // Verify
-    expect(mockClineStateManager.getState).toHaveBeenCalled()
+    expect(mockTheaStateManager.getState).toHaveBeenCalled() // Renamed variable
     expect(mockWebview.postMessage).toHaveBeenCalledWith({
       type: "state",
       state: expect.objectContaining({
@@ -446,57 +448,57 @@ describe("ClineProvider", () => {
       }
     );
     
-    clineProvider.view = mockWebviewView;
+    theaProvider.view = mockWebviewView;
 
     // Execute
-    await clineProvider.resetState();
+    await theaProvider.resetState();
 
     // Verify
     expect(mockContextProxy.resetAllState).toHaveBeenCalled();
     expect(mockProviderSettingsManager.resetAllConfigs).toHaveBeenCalled();
     expect(mockCustomModesManager.resetCustomModes).toHaveBeenCalled();
-    expect(mockClineStack.removeCurrentCline).toHaveBeenCalled();
+    expect(mockTheaTaskStack.removeCurrentTheaTask).toHaveBeenCalled(); // Updated to new method name
     expect(mockWebview.postMessage).toHaveBeenCalledTimes(2);
   });
 
   test("handleModeSwitchAndUpdateCline delegates to managers correctly", async () => {
     // Setup
     const mockApiConfig = { apiProvider: "updated-provider" }
-    mockClineApiManager.handleModeSwitch.mockResolvedValue(mockApiConfig)
-    mockClineStack.getCurrentCline.mockReturnValue(mockCline)
+    mockTheaApiManager.handleModeSwitch.mockResolvedValue(mockApiConfig) // Renamed variable
+    mockTheaTaskStack.getCurrentTheaTask.mockReturnValue(mockTheaTask) // Updated to new method name
 
     // Execute
-    await clineProvider.handleModeSwitchAndUpdateCline("default")
+    await theaProvider.handleModeSwitchAndUpdate("default") // Updated to new method name
 
     // Verify
-    expect(mockClineApiManager.handleModeSwitch).toHaveBeenCalledWith("default")
-    expect(mockCline.api).toBeDefined() // Checks that api was updated
+    expect(mockTheaApiManager.handleModeSwitch).toHaveBeenCalledWith("default") // Renamed variable
+    expect(mockTheaTask.api).toBeDefined() // Checks that api was updated // Renamed variable
   })
 
   test("updateCustomInstructions updates context value and current cline", async () => {
     // Setup
     const newInstructions = "New instructions"
-    mockClineStack.getCurrentCline.mockReturnValue(mockCline)
+    mockTheaTaskStack.getCurrentTheaTask.mockReturnValue(mockTheaTask) // Updated to new method name
 
     // Execute
-    await clineProvider.updateCustomInstructions(newInstructions)
+    await theaProvider.updateCustomInstructions(newInstructions) // Renamed variable
 
     // Verify
     expect(mockContextProxy.setValue).toHaveBeenCalledWith("customInstructions", newInstructions)
-    expect(mockCline.customInstructions).toBe(newInstructions)
+    expect(mockTheaTask.customInstructions).toBe(newInstructions) // Renamed variable
   })
 
   test("getTelemetryProperties returns correct properties", async () => {
     // Setup
-    mockClineStateManager.getState.mockResolvedValue({
+    mockTheaStateManager.getState.mockResolvedValue({ // Renamed variable
       mode: "default",
       apiConfiguration: { apiProvider: "test-provider" },
       language: "en",
     })
-    mockClineStack.getCurrentCline.mockReturnValue(mockCline)
+    mockTheaTaskStack.getCurrentTheaTask.mockReturnValue(mockTheaTask) // Updated to new method name
 
     // Execute
-    const result = await clineProvider.getTelemetryProperties()
+    const result = await theaProvider.getTelemetryProperties()
 
     // Verify
     expect(result).toEqual(expect.objectContaining({
@@ -512,30 +514,30 @@ describe("ClineProvider", () => {
   test("proxy methods delegate to the appropriate manager instances", async () => {
     // Setup
     const mockApiConfig = { apiProvider: "test-provider" }
-    mockClineStateManager.getValue.mockReturnValue(mockApiConfig)
-    mockClineStateManager.getState.mockResolvedValue({ mode: "default" })
+    mockTheaStateManager.getValue.mockReturnValue(mockApiConfig) // Renamed variable
+    mockTheaStateManager.getState.mockResolvedValue({ mode: "default" }) // Renamed variable
     mockProviderSettingsManager.loadConfig.mockResolvedValue(mockApiConfig)
-    mockClineStack.getCurrentCline.mockReturnValue(mockCline)
+    mockTheaTaskStack.getCurrentTheaTask.mockReturnValue(mockTheaTask) // Updated to new method name
 
     // Test state manager proxy methods
-    await clineProvider.setValue("currentApiConfigName", "test-config")
-    expect(mockClineStateManager.setValue).toHaveBeenCalledWith("currentApiConfigName", "test-config")
+    await theaProvider.setValue("currentApiConfigName", "test-config") // Renamed variable
+    expect(mockTheaStateManager.setValue).toHaveBeenCalledWith("currentApiConfigName", "test-config") // Renamed variable
     expect(mockProviderSettingsManager.loadConfig).toHaveBeenCalledWith("test-config")
     
     // Use a valid key for ProviderSettings instead of "apiConfig"
-    const value = clineProvider.getValue("apiProvider")
-    expect(mockClineStateManager.getValue).toHaveBeenCalledWith("apiProvider")
+    const value = theaProvider.getValue("apiProvider") // Renamed variable
+    expect(mockTheaStateManager.getValue).toHaveBeenCalledWith("apiProvider") // Renamed variable
     expect(value).toEqual(mockApiConfig)
 
     // Test stack manager proxy methods
-    await clineProvider.addClineToStack(mockCline)
-    expect(mockClineStack.addCline).toHaveBeenCalledWith(mockCline)
+    await theaProvider.addToStack(mockTheaTask) // Updated to new method name
+    expect(mockTheaTaskStack.addTheaTask).toHaveBeenCalledWith(mockTheaTask) // Updated to new method name
     
-    const currentCline = clineProvider.getCurrentCline()
-    expect(mockClineStack.getCurrentCline).toHaveBeenCalled()
-    expect(currentCline).toBe(mockCline)
+    const currentTheaTask = theaProvider.getCurrent() // Updated to new method name
+    expect(mockTheaTaskStack.getCurrentTheaTask).toHaveBeenCalled() // Updated to new method name
+    expect(currentTheaTask).toBe(mockTheaTask) // Renamed variable
     
-    const stackSize = clineProvider.getClineStackSize()
-    expect(mockClineStack.getSize).toHaveBeenCalled()
+    const stackSize = theaProvider.getStackSize() // Updated to new method name
+    expect(mockTheaTaskStack.getSize).toHaveBeenCalled() // Renamed variable
   })
 })

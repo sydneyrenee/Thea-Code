@@ -2,10 +2,10 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import fs from "fs/promises"
-import { ClineTaskHistory } from "../history/ClineTaskHistory"
+import { TheaTaskHistory } from "../history/TheaTaskHistory" // Updated import
 import { ContextProxy } from "../../config/ContextProxy"
 import { fileExistsAtPath } from "../../../utils/fs"
-import { Cline } from "../../Cline"
+import { TheaTask } from "../../TheaTask" // Renamed import
 import { ShadowCheckpointService } from "../../../services/checkpoints/ShadowCheckpointService"
 import { downloadTask } from "../../../integrations/misc/export-markdown"
 import { getWorkspacePath } from "../../../utils/path"
@@ -17,7 +17,7 @@ jest.mock("vscode")
 jest.mock("fs/promises")
 jest.mock("../../config/ContextProxy")
 jest.mock("../../../utils/fs")
-jest.mock("../../Cline")
+jest.mock("../../TheaTask") // Updated mock path
 jest.mock("../../../services/checkpoints/ShadowCheckpointService")
 jest.mock("../../../integrations/misc/export-markdown")
 jest.mock("../../../utils/path")
@@ -27,8 +27,8 @@ jest.mock("../../../shared/storagePathManager", () => ({
 	}),
 }))
 
-describe("ClineTaskHistory", () => {
-	let taskHistory: ClineTaskHistory
+describe("TheaTaskHistory", () => { // Updated describe block
+	let taskHistory: TheaTaskHistory // Updated type
 	let mockContext: vscode.ExtensionContext
 	let mockContextProxy: jest.Mocked<ContextProxy>
 
@@ -54,8 +54,8 @@ describe("ClineTaskHistory", () => {
 		// Mock getWorkspacePath
 		;(getWorkspacePath as jest.Mock).mockReturnValue("/test/workspace")
 
-		// Create instance of ClineTaskHistory
-		taskHistory = new ClineTaskHistory(mockContext, mockContextProxy)
+		// Create instance of TheaTaskHistory
+		taskHistory = new TheaTaskHistory(mockContext, mockContextProxy) // Updated instantiation
 
 		// Mock fs methods
 		;(fs.rm as jest.Mock) = jest.fn().mockImplementation(() => Promise.resolve())
@@ -258,8 +258,8 @@ describe("ClineTaskHistory", () => {
 			const mockGetTaskWithId = jest.spyOn(taskHistory as any, "getTaskWithId")
 				.mockResolvedValue({ historyItem: mockHistoryItem })
 			
-			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" })
-			const mockInitClineWithHistoryItem = jest.fn().mockResolvedValue({ taskId: mockHistoryItem.id })
+			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" }) // Keep as is, represents return value
+			const mockInitClineWithHistoryItem = jest.fn().mockResolvedValue({ taskId: mockHistoryItem.id }) // Keep as is, represents return value
 			const mockPostWebviewAction = jest.fn().mockResolvedValue(undefined)
 
 			// Execute
@@ -276,7 +276,7 @@ describe("ClineTaskHistory", () => {
 			expect(mockPostWebviewAction).toHaveBeenCalledWith("chatButtonClicked")
 		})
 
-		test("doesn't initialize Cline when showing current task", async () => {
+		test("doesn't initialize TheaTask when showing current task", async () => { // Updated test description
 			// Setup
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" })
 			const mockInitClineWithHistoryItem = jest.fn()

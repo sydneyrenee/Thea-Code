@@ -6,6 +6,7 @@ import { Anthropic } from '@anthropic-ai/sdk'; // Assuming this path is correct
 import { HistoryItem } from '../../../shared/HistoryItem'; // Adjusted path
 import { ContextProxy } from '../../config/ContextProxy'; // Adjusted path
 import { GlobalFileNames } from '../../../shared/globalFileNames'; // Adjusted path
+import { getTaskDirectoryPath } from "../../../shared/storagePathManager"; // Added static import
 import { fileExistsAtPath } from '../../../utils/fs'; // Adjusted path
 import { TheaTask } from '../../TheaTask'; // Updated import path and type
 import { ShadowCheckpointService } from '../../../services/checkpoints/ShadowCheckpointService'; // Adjusted path
@@ -72,8 +73,7 @@ export class TheaTaskHistory { // Renamed class
         const historyItem = history.find((item) => item.id === id);
 
         if (historyItem) {
-            // Assuming storagePathManager is available globally or passed differently
-            const { getTaskDirectoryPath } = await import("../../../shared/storagePathManager"); // Adjusted path
+            // Use statically imported function
             const globalStoragePath = this.context.globalStorageUri.fsPath; // Use stored context
             const taskDirPath = await getTaskDirectoryPath(globalStoragePath, id);
             const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory);

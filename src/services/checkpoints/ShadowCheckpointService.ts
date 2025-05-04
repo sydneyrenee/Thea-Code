@@ -67,7 +67,22 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			throw new Error("Shadow git repo already initialized")
 		}
 
-		await fs.mkdir(this.checkpointsDir, { recursive: true })
+		try {
+			// Ensure parent directories exist
+			const parentDir = path.dirname(this.checkpointsDir)
+			await fs.mkdir(parentDir, { recursive: true })
+			
+			// Create the checkpoints directory
+			await fs.mkdir(this.checkpointsDir, { recursive: true })
+			
+			// Instead of using fs.access, we'll check if the directory exists using fileExistsAtPath
+			if (!await fileExistsAtPath(this.checkpointsDir)) {
+				throw new Error(`Checkpoint directory does not exist after creation attempt: ${this.checkpointsDir}`)
+			}
+		} catch (error) {
+			throw new Error(`Cannot initialize git: failed to create checkpoint directory: ${this.checkpointsDir}: ${error.message}`)
+		}
+		
 		const git = simpleGit(this.checkpointsDir)
 		const gitVersion = await git.version()
 		this.log(`[${this.constructor.name}#create] git = ${gitVersion}`)

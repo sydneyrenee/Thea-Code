@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 
 import { SYSTEM_PROMPT } from "../system"
 import { McpHub } from "../../../services/mcp/McpHub"
-import { ClineProvider } from "../../../core/webview/ClineProvider"
+import { TheaProvider } from "../../../core/webview/TheaProvider"
 import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
 import "../../../utils/path" // Import path utils to get access to toPosix string extension.
 import { addCustomInstructions } from "../sections/custom-instructions"
@@ -57,9 +57,9 @@ __setMockImplementation(
 		// Add rules
 		const rules = []
 		if (mode) {
-			rules.push(`# Rules from .clinerules-${mode}:\nMock mode-specific rules`)
+			rules.push(`# Rules from .Thearules-${mode}:\nMock mode-specific rules`)
 		}
-		rules.push(`# Rules from .clinerules:\nMock generic rules`)
+		rules.push(`# Rules from .Thearules:\nMock generic rules`)
 
 		if (rules.length > 0) {
 			sections.push(`Rules:\n${rules.join("\n")}`)
@@ -119,13 +119,13 @@ const mockContext = {
 	},
 } as unknown as vscode.ExtensionContext
 
-// Create a minimal mock of ClineProvider
+// Create a minimal mock of TheaProvider
 const mockProvider = {
 	ensureMcpServersDirectoryExists: async () => "/mock/mcp/path",
 	ensureSettingsDirectoryExists: async () => "/mock/settings/path",
 	postMessageToWebview: async () => {},
 	context: mockContext,
-} as unknown as ClineProvider
+} as unknown as TheaProvider
 
 // Instead of extending McpHub, create a mock that implements just what we need
 const createMockMcpHub = (): McpHub =>

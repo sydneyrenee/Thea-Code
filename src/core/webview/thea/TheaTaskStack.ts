@@ -11,7 +11,7 @@ export class TheaTaskStack { // Renamed class
 	 * Adds a new Cline instance to the stack.
 	 * @param task The TheaTask instance to add to the stack
 	 */
-	async addCline(task: TheaTask): Promise<void> { // Renamed parameter and type
+	async addTheaTask(task: TheaTask): Promise<void> { // Renamed parameter and type
 	 console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`) // Use renamed parameter
 	 // Add this task instance into the stack that represents the order of all the called tasks.
 	 this.stack.push(task) // Use renamed parameter
@@ -22,7 +22,7 @@ export class TheaTaskStack { // Renamed class
 	 * Removes and destroys the top Cline instance (the current finished task).
 	 * @returns The removed TheaTask instance, if any
 	 */
-	async removeCurrentCline(): Promise<TheaTask | undefined> { // Renamed return type
+	async removeCurrentTheaTask(): Promise<TheaTask | undefined> { // Renamed return type
 		if (this.stack.length === 0) {
 			return undefined
 		}
@@ -52,7 +52,7 @@ export class TheaTaskStack { // Renamed class
 	 * Returns the current cline object in the stack (the top one)
 	 * @returns The current TheaTask instance, if any
 	 */
-	getCurrentCline(): TheaTask | undefined { // Renamed return type
+	getCurrentTheaTask(): TheaTask | undefined { // Renamed return type
 		if (this.stack.length === 0) {
 			return undefined
 		}
@@ -82,8 +82,8 @@ export class TheaTaskStack { // Renamed class
 	async finishSubTask(lastMessage?: string): Promise<void> {
 		console.log(`[subtasks] finishing subtask ${lastMessage}`)
 		// remove the last cline instance from the stack (this is the finished sub task)
-		await this.removeCurrentCline()
+		await this.removeCurrentTheaTask()
 		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		this.getCurrentCline()?.resumePausedTask(lastMessage)
+		this.getCurrentTheaTask()?.resumePausedTask(lastMessage)
 	}
 }

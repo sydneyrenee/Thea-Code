@@ -45,13 +45,12 @@ export class API extends EventEmitter<TheaCodeEvents> implements TheaCodeAPI {
 	}
 
 	public async startNewTask(text?: string, images?: string[]) {
-		await this.provider.removeClineFromStack()
+		await this.provider.removeFromStack()
 		await this.provider.postStateToWebview()
 		await this.provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		await this.provider.postMessageToWebview({ type: "invoke", invoke: "newChat", text, images })
 
-		const theaTask = await this.provider.initClineWithTask(text, images) // Renamed variable
-		return theaTask.taskId // Use renamed variable
+		const theaTask = await this.provider.initWithTask(text, images) // Renamed method
 		return theaTask.taskId // Use renamed variable
 	}
 

@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as os from "os"
 import fs from "fs/promises"
-import { ClineMcpManager } from "../mcp/ClineMcpManager"
+import { TheaMcpManager } from "../mcp/TheaMcpManager"
 import { McpHub } from "../../../services/mcp/McpHub"
 import { EXTENSION_DISPLAY_NAME, EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config"
 
@@ -22,8 +22,8 @@ jest.mock("path", () => {
     }
 })
 
-describe("ClineMcpManager", () => {
-	let mcpManager: ClineMcpManager
+describe("TheaMcpManager", () => {
+	let mcpManager: TheaMcpManager
 	let mockContext: vscode.ExtensionContext
 	let mockMcpHub: jest.Mocked<McpHub>
 	const TEST_TEMP_DIR = "/tmp/thea-test"
@@ -59,7 +59,7 @@ describe("ClineMcpManager", () => {
 		} as unknown as jest.Mocked<McpHub>
 
 		// Create instance of ClineMcpManager
-		mcpManager = new ClineMcpManager(mockContext)
+		mcpManager = new TheaMcpManager(mockContext)
 
 		// Mock console to prevent test output noise
 		jest.spyOn(console, "log").mockImplementation(() => {})
@@ -263,6 +263,6 @@ describe("ClineMcpManager", () => {
 
 		// Verify
 		expect(mcpManager.getMcpHub()).toBeUndefined()
-		expect(console.log).toHaveBeenCalledWith(expect.stringContaining("ClineMcpManager disposed"))
+		expect(console.log).toHaveBeenCalledWith(expect.stringContaining("TheaMcpManager disposed"))
 	})
 })

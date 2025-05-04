@@ -5,7 +5,7 @@ import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/ext
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
 import { ReadFileToolUse } from "../assistant-message"
-import { Cline } from "../Cline"
+import { TheaTask } from "../TheaTask"
 
 // Mock dependencies
 jest.mock("../../integrations/misc/line-counter")
@@ -61,7 +61,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	const mockedPathResolve = path.resolve as jest.MockedFunction<typeof path.resolve>
 
 	// Mock instances
-	const mockCline: any = {}
+	const mockThea: any = {}
 	let mockProvider: any
 	let toolResult: string | undefined
 
@@ -86,16 +86,16 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			deref: jest.fn().mockReturnThis(),
 		}
 
-		// Setup Cline instance with mock methods
-		mockCline.cwd = "/"
-		mockCline.task = "Test"
-		mockCline.providerRef = mockProvider
-		mockCline.theaIgnoreController = {
+		// Setup Thea instance with mock methods
+		mockThea.cwd = "/"
+		mockThea.task = "Test"
+		mockThea.providerRef = mockProvider
+		mockThea.theaIgnoreController = {
 			validateAccess: jest.fn().mockReturnValue(true),
 		}
-		mockCline.say = jest.fn().mockResolvedValue(undefined)
-		mockCline.ask = jest.fn().mockResolvedValue(true)
-		mockCline.presentAssistantMessage = jest.fn()
+		mockThea.say = jest.fn().mockResolvedValue(undefined)
+		mockThea.ask = jest.fn().mockResolvedValue(true)
+		mockThea.presentAssistantMessage = jest.fn()
 
 		// Reset tool result
 		toolResult = undefined
@@ -122,9 +122,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 		// Execute the tool
 		await readFileTool(
-			mockCline,
+			mockThea,
 			toolUse,
-			mockCline.ask,
+			mockThea.ask,
 			jest.fn(),
 			(result: string) => {
 				toolResult = result
@@ -164,7 +164,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedReadLines).not.toHaveBeenCalled() // Per implementation line 141
 			expect(mockedParseSourceCodeDefinitionsForFile).toHaveBeenCalledWith(
 				absoluteFilePath,
-				mockCline.theaIgnoreController,
+				mockThea.theaIgnoreController,
 			)
 			expect(result).toContain("[Showing only 0 of 5 total lines")
 			expect(result).toContain(sourceCodeDef)
@@ -186,7 +186,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			expect(mockedReadLines).toHaveBeenCalled()
 			expect(mockedParseSourceCodeDefinitionsForFile).toHaveBeenCalledWith(
 				absoluteFilePath,
-				mockCline.theaIgnoreController,
+				mockThea.theaIgnoreController,
 			)
 			expect(result).toContain("1 | Line 1")
 			expect(result).toContain("2 | Line 2")
@@ -263,9 +263,9 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			// Execute the tool
 			let rangeResult: string | undefined
 			await readFileTool(
-				mockCline,
+				mockThea,
 				rangeToolUse,
-				mockCline.ask,
+				mockThea.ask,
 				jest.fn(),
 				(result: string) => {
 					rangeResult = result

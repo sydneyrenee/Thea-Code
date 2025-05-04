@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import axios from "axios"
-import { ClineApiManager } from "../api/ClineApiManager"
+import { TheaApiManager } from "../api/TheaApiManager"
 import { ContextProxy } from "../../config/ContextProxy"
 import { ProviderSettingsManager } from "../../config/ProviderSettingsManager"
 import {
@@ -21,7 +21,7 @@ jest.mock("../../../api")
 jest.mock("../../../services/telemetry/TelemetryService")
 
 describe("ClineApiManager", () => {
-	let manager: ClineApiManager
+	let manager: TheaApiManager
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockContextProxy: jest.Mocked<ContextProxy>
@@ -76,7 +76,7 @@ describe("ClineApiManager", () => {
 		} as unknown as jest.Mocked<ProviderSettingsManager>
 
 		// Create instance of ClineApiManager
-		manager = new ClineApiManager(
+		manager = new TheaApiManager(
 			mockContext,
 			mockOutputChannel,
 			mockContextProxy,

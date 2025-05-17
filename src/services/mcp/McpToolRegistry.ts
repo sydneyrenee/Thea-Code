@@ -1,4 +1,4 @@
-import { ToolDefinition } from "./EmbeddedMcpServer";
+import { ToolDefinition } from "./types/McpProviderTypes";
 import { EventEmitter } from "events";
 
 /**

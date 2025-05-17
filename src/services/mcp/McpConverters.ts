@@ -5,7 +5,7 @@ import {
   neutralToolUseToOpenAiFunctionCall
 } from "../../utils/json-xml-bridge";
 import { NeutralToolUseRequest, NeutralToolResult } from "./UnifiedMcpToolSystem";
-import { ToolDefinition } from "./EmbeddedMcpServer";
+import { ToolDefinition } from "./types/McpProviderTypes";
 
 /**
  * McpConverters provides utility functions for converting between different tool use formats

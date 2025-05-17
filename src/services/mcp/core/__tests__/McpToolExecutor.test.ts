@@ -8,8 +8,8 @@ import { ToolDefinition, ToolCallResult } from "../../types/McpProviderTypes";
 import { SseTransportConfig } from "../../types/McpTransportTypes";
 import { EventEmitter } from "events";
 
-// Define interface for the mock EmbeddedMcpServer
-interface MockEmbeddedMcpServerInstance extends EventEmitter {
+// Define interface for the mock EmbeddedMcpProvider
+interface MockEmbeddedMcpProviderInstance extends EventEmitter {
   start: jest.Mock;
   stop: jest.Mock;
   registerToolDefinition: jest.Mock;
@@ -18,11 +18,11 @@ interface MockEmbeddedMcpServerInstance extends EventEmitter {
   getServerUrl: jest.Mock;
 }
 
-// Mock the EmbeddedMcpServer module
-jest.mock("../../EmbeddedMcpServer", () => {
+// Mock the EmbeddedMcpProvider module
+jest.mock("../../providers/EmbeddedMcpProvider", () => {
   // Create a mock class that extends EventEmitter
   const MockEmbeddedMcpServer = jest.fn().mockImplementation(() => {
-    const instance = new EventEmitter() as MockEmbeddedMcpServerInstance;
+    const instance = new EventEmitter() as MockEmbeddedMcpProviderInstance;
     
     // Add mock methods
     instance.start = jest.fn().mockImplementation(() => Promise.resolve());
@@ -51,7 +51,7 @@ jest.mock("../../EmbeddedMcpServer", () => {
   });
   
   return {
-    EmbeddedMcpServer: MockEmbeddedMcpServer
+    EmbeddedMcpProvider: MockEmbeddedMcpServer
   };
 });
 
@@ -120,8 +120,8 @@ describe("McpToolExecutor", () => {
       
       await executor.initialize();
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.start).toHaveBeenCalled();
     });
@@ -132,8 +132,8 @@ describe("McpToolExecutor", () => {
       await executor.initialize();
       await executor.initialize(); // Call initialize again
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       // start should only be called once
       expect(mockProvider.start).toHaveBeenCalledTimes(1);
@@ -145,8 +145,8 @@ describe("McpToolExecutor", () => {
       await executor.initialize();
       await executor.shutdown();
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.stop).toHaveBeenCalled();
     });
@@ -156,8 +156,8 @@ describe("McpToolExecutor", () => {
       
       await executor.shutdown();
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.stop).not.toHaveBeenCalled();
     });
@@ -174,8 +174,8 @@ describe("McpToolExecutor", () => {
       
       executor.registerTool(toolDefinition);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.registerToolDefinition).toHaveBeenCalledWith(toolDefinition);
       expect(McpToolRegistry.getInstance().registerTool).toHaveBeenCalledWith(toolDefinition);
@@ -186,8 +186,8 @@ describe("McpToolExecutor", () => {
       
       const result = executor.unregisterTool("test-tool");
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.unregisterTool).toHaveBeenCalledWith("test-tool");
       expect(McpToolRegistry.getInstance().unregisterTool).toHaveBeenCalledWith("test-tool");
@@ -207,8 +207,8 @@ describe("McpToolExecutor", () => {
       
       const result = await executor.executeToolFromNeutralFormat(request);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.executeTool).toHaveBeenCalledWith("test-tool", { param: "value" });
       expect(result).toEqual({
@@ -231,8 +231,8 @@ describe("McpToolExecutor", () => {
       
       const result = await executor.executeToolFromNeutralFormat(request);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.executeTool).toHaveBeenCalledWith("error-tool", {});
       expect(result).toEqual({
@@ -257,8 +257,8 @@ describe("McpToolExecutor", () => {
       
       const result = await executor.executeToolFromNeutralFormat(request);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(mockProvider.executeTool).toHaveBeenCalledWith("throw-error-tool", {});
       expect(result).toEqual({
@@ -283,8 +283,8 @@ describe("McpToolExecutor", () => {
       
       executor.on("tool-registered", eventHandler);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       // Emit the event from the provider
       mockProvider.emit("tool-registered", "test-tool");
@@ -298,8 +298,8 @@ describe("McpToolExecutor", () => {
       
       executor.on("tool-unregistered", eventHandler);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       // Emit the event from the provider
       mockProvider.emit("tool-unregistered", "test-tool");
@@ -313,8 +313,8 @@ describe("McpToolExecutor", () => {
       
       executor.on("started", eventHandler);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       // Emit the event from the provider
       const info = { url: "http://localhost:3000" };
@@ -329,8 +329,8 @@ describe("McpToolExecutor", () => {
       
       executor.on("stopped", eventHandler);
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       // Emit the event from the provider
       mockProvider.emit("stopped");
@@ -351,8 +351,8 @@ describe("McpToolExecutor", () => {
       const executor = McpToolExecutor.getInstance();
       const url = executor.getServerUrl();
       
-      // Get the mock EmbeddedMcpServer instance
-      const mockProvider = require("../../EmbeddedMcpServer").EmbeddedMcpServer.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance
+      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
       
       expect(url).toEqual(mockProvider.getServerUrl());
     });

@@ -1,7 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client';
 import { McpIntegration } from '../McpIntegration';
 import { SseClientFactory } from '../client/SseClientFactory';
-import { McpConverters } from '../McpConverters';
+import { McpConverters } from '../core/McpConverters';
 
 // Mock the OpenAI client
 jest.mock('openai', () => {

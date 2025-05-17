@@ -1,4 +1,4 @@
-import { McpToolRegistry } from '../McpToolRegistry';
+import { McpToolRegistry } from '../core/McpToolRegistry';
 import { ToolDefinition } from '../types/McpProviderTypes';
 
 describe('McpToolRegistry', () => {

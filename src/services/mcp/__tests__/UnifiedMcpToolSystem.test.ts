@@ -1,8 +1,9 @@
-import { UnifiedMcpToolSystem, NeutralToolUseRequest, NeutralToolResult } from '../UnifiedMcpToolSystem';
-import { McpConverters } from '../McpConverters';
-import { McpToolRouter, ToolUseFormat } from '../McpToolRouter';
+import { McpToolExecutor } from '../core/McpToolExecutor';
+import { NeutralToolUseRequest, NeutralToolResult, ToolUseFormat } from '../types/McpToolTypes';
+import { McpConverters } from '../core/McpConverters';
+import { McpToolRouter } from '../core/McpToolRouter';
 import { EmbeddedMcpProvider } from '../providers/EmbeddedMcpProvider';
-import { McpToolRegistry } from '../McpToolRegistry';
+import { McpToolRegistry } from '../core/McpToolRegistry';
 
 // Mock the EmbeddedMcpProvider
 jest.mock('../providers/EmbeddedMcpProvider', () => {
@@ -52,8 +53,8 @@ jest.mock('../McpToolRegistry', () => {
   };
 });
 
-describe('UnifiedMcpToolSystem', () => {
-  let mcpToolSystem: UnifiedMcpToolSystem;
+describe('McpToolExecutor', () => {
+  let mcpToolSystem: McpToolExecutor;
   
   beforeEach(() => {
     // Clear all mocks
@@ -61,8 +62,8 @@ describe('UnifiedMcpToolSystem', () => {
     
     // Get a fresh instance for each test
     // @ts-ignore - Reset the singleton instance
-    UnifiedMcpToolSystem['instance'] = undefined;
-    mcpToolSystem = UnifiedMcpToolSystem.getInstance();
+    (McpToolExecutor as any).instance = undefined;
+    mcpToolSystem = McpToolExecutor.getInstance();
   });
   
   describe('initialization', () => {
@@ -345,7 +346,7 @@ describe('McpToolRouter', () => {
     });
     
     it('should route XML tool use requests', async () => {
-      // Mock the UnifiedMcpToolSystem's executeToolFromNeutralFormat method
+      // Mock the McpToolExecutor's executeToolFromNeutralFormat method
       const mockExecute = jest.fn().mockResolvedValue({
         type: 'tool_result',
         tool_use_id: 'test-123',
@@ -371,7 +372,7 @@ describe('McpToolRouter', () => {
     });
     
     it('should route JSON tool use requests', async () => {
-      // Mock the UnifiedMcpToolSystem's executeToolFromNeutralFormat method
+      // Mock the McpToolExecutor's executeToolFromNeutralFormat method
       const mockExecute = jest.fn().mockResolvedValue({
         type: 'tool_result',
         tool_use_id: 'test-123',
@@ -404,7 +405,7 @@ describe('McpToolRouter', () => {
     });
     
     it('should handle errors in tool routing', async () => {
-      // Mock the UnifiedMcpToolSystem's executeToolFromNeutralFormat method to throw an error
+      // Mock the McpToolExecutor's executeToolFromNeutralFormat method to throw an error
       const mockExecute = jest.fn().mockRejectedValue(new Error('Test error'));
       
       // @ts-ignore - Replace the method

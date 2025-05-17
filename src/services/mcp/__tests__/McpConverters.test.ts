@@ -1,6 +1,6 @@
-import { McpConverters } from '../McpConverters';
+import { McpConverters } from '../core/McpConverters';
 import { ToolDefinition } from '../types/McpProviderTypes';
-import { NeutralToolUseRequest, NeutralToolResult } from '../UnifiedMcpToolSystem';
+import { NeutralToolUseRequest, NeutralToolResult } from '../types/McpToolTypes';
 
 // Mock the json-xml-bridge utilities
 jest.mock('../../../utils/json-xml-bridge', () => ({

@@ -1,5 +1,7 @@
 import { EventEmitter } from "events"
 import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "../transport/config/SseTransportConfig";
+import { SseTransport } from "../transport/SseTransport";
+import { StdioTransport } from "../transport/StdioTransport";
 import {
   ToolCallResult,
   ToolDefinition,
@@ -7,6 +9,7 @@ import {
   ResourceTemplateDefinition,
   IMcpProvider
 } from "../types/McpProviderTypes";
+import { StdioTransportConfig, IMcpTransport } from "../types/McpTransportTypes";
 
 
 /**
@@ -34,25 +37,6 @@ class MockMcpServer {
  * Mock implementation of the StdioServerTransport for type compatibility
  * This will be replaced with the actual implementation when the MCP SDK is installed
  */
-class MockStdioServerTransport {
-  constructor() {}
-}
-
-/**
- * Mock implementation of the SSEServerTransport for type compatibility
- * This will be replaced with the actual implementation when the MCP SDK is installed
- */
-class MockSseServerTransport {
-  constructor(_options?: any) {}
-  
-  getPort(): number {
-    return 0;
-  }
-  
-  close(): Promise<void> {
-    return Promise.resolve();
-  }
-}
 
 export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
   private server: any
@@ -60,18 +44,31 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
   private resources: Map<string, ResourceDefinition> = new Map()
   private resourceTemplates: Map<string, ResourceTemplateDefinition> = new Map()
   private isStarted: boolean = false
-  private transport?: any
+  private transport?: IMcpTransport
   private sseConfig: SseTransportConfig
+  private stdioConfig?: StdioTransportConfig
+  private transportType: 'sse' | 'stdio' = 'sse'
   private serverUrl?: URL
 
   /**
    * Create a new embedded MCP server
    * @param config Optional SSE transport configuration
    */
-  constructor(config?: SseTransportConfig) {
+  constructor(options?: { type: 'sse'; config?: SseTransportConfig } | { type: 'stdio'; config: StdioTransportConfig } | SseTransportConfig) {
     super()
-    
-    this.sseConfig = { ...DEFAULT_SSE_CONFIG, ...config };
+
+    if (options && 'type' in options) {
+      this.transportType = options.type;
+      if (options.type === 'sse') {
+        this.sseConfig = { ...DEFAULT_SSE_CONFIG, ...options.config };
+      } else {
+        this.stdioConfig = options.config;
+        this.sseConfig = { ...DEFAULT_SSE_CONFIG };
+      }
+    } else {
+      this.transportType = 'sse';
+      this.sseConfig = { ...DEFAULT_SSE_CONFIG, ...(options as SseTransportConfig) };
+    }
     
     try {
       // Try to import the MCP SDK dynamically
@@ -311,47 +308,32 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     this.registerHandlers();
     
     try {
-      // Try to import the MCP SDK dynamically
-      if (this.sseConfig.allowExternalConnections) {
-        // Use SSE transport for external connections
-        const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js");
-        this.transport = new SSEServerTransport({
-          port: this.sseConfig.port,
-          hostname: this.sseConfig.hostname,
-          cors: { origin: '*' },
-          eventsPath: this.sseConfig.eventsPath,
-          apiPath: this.sseConfig.apiPath
-        });
-      } else {
-        // Use SSE transport for localhost only
-        const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js");
-        this.transport = new SSEServerTransport({
-          port: this.sseConfig.port,
-          hostname: this.sseConfig.hostname,
-          cors: { origin: 'localhost' },
-          eventsPath: this.sseConfig.eventsPath,
-          apiPath: this.sseConfig.apiPath
-        });
+      if (!this.transport) {
+        if (this.transportType === 'stdio') {
+          this.transport = new StdioTransport(this.stdioConfig!);
+        } else {
+          this.transport = new SseTransport(this.sseConfig);
+        }
       }
       
       // Connect the server to the transport
       await this.server.connect(this.transport);
       
       // Store the server URL for clients to connect to
-      const port = this.transport.getPort();
-      this.serverUrl = new URL(`http://${this.sseConfig.hostname}:${port}`);
+      const port = this.transport.getPort ? this.transport.getPort() : undefined;
+      if (port !== undefined) {
+        const host = this.sseConfig.hostname;
+        this.serverUrl = new URL(`http://${host}:${port}`);
+      }
       
       this.isStarted = true;
-      this.emit('started', { url: this.serverUrl.toString() });
-      console.log(`MCP server started at ${this.serverUrl.toString()}`);
+      this.emit('started', { url: this.serverUrl?.toString() });
+      if (this.serverUrl) {
+        console.log(`MCP server started at ${this.serverUrl.toString()}`);
+      }
     } catch (error) {
       console.error("Failed to start MCP server:", error);
-      
-      // Fall back to mock transport in case of error
-      this.transport = new MockSseServerTransport();
-      this.serverUrl = new URL(`http://localhost:0`);
-      this.isStarted = true;
-      this.emit('started', { url: this.serverUrl.toString() });
+      this.isStarted = false;
     }
   }
 

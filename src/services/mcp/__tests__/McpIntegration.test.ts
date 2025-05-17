@@ -1,9 +1,9 @@
 import { McpIntegration, handleToolUse } from '../McpIntegration';
-import { McpToolRouter } from '../McpToolRouter';
-import { UnifiedMcpToolSystem } from '../UnifiedMcpToolSystem';
+import { McpToolRouter } from '../core/McpToolRouter';
+import { McpToolExecutor } from '../core/McpToolExecutor';
 
 // Mock the McpToolRouter
-jest.mock('../McpToolRouter', () => {
+jest.mock('../core/McpToolRouter', () => {
   const mockInstance = {
     on: jest.fn(),
     initialize: jest.fn().mockResolvedValue(undefined),
@@ -30,8 +30,8 @@ jest.mock('../McpToolRouter', () => {
   };
 });
 
-// Mock the UnifiedMcpToolSystem
-jest.mock('../UnifiedMcpToolSystem', () => {
+// Mock the McpToolExecutor
+jest.mock('../core/McpToolExecutor', () => {
   const mockInstance = {
     registerTool: jest.fn(),
     unregisterTool: jest.fn().mockReturnValue(true),
@@ -50,7 +50,7 @@ jest.mock('../UnifiedMcpToolSystem', () => {
   };
   
   return {
-    UnifiedMcpToolSystem: {
+    McpToolExecutor: {
       getInstance: jest.fn().mockReturnValue(mockInstance)
     }
   };

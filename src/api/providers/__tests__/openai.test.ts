@@ -1,5 +1,6 @@
 import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history";
 import { Anthropic } from "@anthropic-ai/sdk"
 import { API_REFERENCES } from "../../../../dist/thea-config" // Import branded constants
 // Mock OpenAI client
@@ -108,12 +109,12 @@ describe("OpenAiHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
 					{
-						type: "text" as const,
+						type: "text",
 						text: "Hello!",
 					},
 				],
@@ -158,12 +159,12 @@ describe("OpenAiHandler", () => {
 	})
 
 	describe("error handling", () => {
-		const testMessages: Anthropic.Messages.MessageParam[] = [
+		const testMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
 					{
-						type: "text" as const,
+						type: "text",
 						text: "Hello",
 					},
 				],
@@ -241,4 +242,62 @@ describe("OpenAiHandler", () => {
 			expect(model.info).toBeDefined()
 		})
 	})
+
+describe('Tool Use Detection', () => {
+	it('should extract tool calls from delta', () => {
+		const delta = {
+			tool_calls: [
+				{
+					id: 'call_123',
+					function: {
+						name: 'test_tool',
+						arguments: '{"param":"value"}'
+					}
+				}
+			]
+		};
+
+		const toolCalls = handler.extractToolCalls(delta);
+
+		expect(toolCalls).toEqual(delta.tool_calls);
+	});
+
+	it('should return empty array if no tool calls', () => {
+		const delta = {
+			content: 'Hello'
+		};
+
+		const toolCalls = handler.extractToolCalls(delta);
+
+		expect(toolCalls).toEqual([]);
+	});
+
+	it('should detect if delta has tool calls', () => {
+		const delta = {
+			tool_calls: [
+				{
+					id: 'call_123',
+					function: {
+						name: 'test_tool',
+						arguments: '{"param":"value"}'
+					}
+				}
+			]
+		};
+
+		const hasToolCalls = handler.hasToolCalls(delta);
+
+		expect(hasToolCalls).toBe(true);
+	});
+
+	it('should detect if delta has no tool calls', () => {
+		const delta = {
+			content: 'Hello'
+		};
+
+		const hasToolCalls = handler.hasToolCalls(delta);
+
+		expect(hasToolCalls).toBe(false);
+	});
+});
 })

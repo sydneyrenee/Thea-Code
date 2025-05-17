@@ -16,6 +16,8 @@ import { getApiMetrics } from "../shared/getApiMetrics"
 import { combineApiRequests } from "../shared/combineApiRequests"
 import { combineCommandSequences } from "../shared/combineCommandSequences"
 import { TokenUsage } from "../schemas"
+import type { NeutralMessage, NeutralConversationHistory } from "../shared/neutral-history"; // Import neutral history types
+import { convertToNeutralHistory, convertToAnthropicHistory } from "../api/transform/neutral-anthropic-format"; // Import conversion functions
 
 // TODO: Rename types if necessary
 
@@ -24,7 +26,7 @@ interface TaskStateManagerOptions {
 	providerRef: WeakRef<TheaProvider> // Renamed type
 	taskNumber: number
 	onMessagesUpdate?: (messages: TheaMessage[]) => void // Renamed type
-	onHistoryUpdate?: (history: (Anthropic.MessageParam & { ts?: number })[]) => void // Callback for history changes
+	onHistoryUpdate?: (history: NeutralConversationHistory) => void // Callback for history changes
 	onTokenUsageUpdate?: (usage: TokenUsage) => void // Callback for token usage updates
 }
 
@@ -33,11 +35,11 @@ export class TaskStateManager {
 	private providerRef: WeakRef<TheaProvider> // Renamed type
 	private taskNumber: number
 	private onMessagesUpdate?: (messages: TheaMessage[]) => void // Renamed type
-	private onHistoryUpdate?: (history: (Anthropic.MessageParam & { ts?: number })[]) => void
+	private onHistoryUpdate?: (history: NeutralConversationHistory) => void
 	private onTokenUsageUpdate?: (usage: TokenUsage) => void
 
 	// State properties managed by this class
-	public apiConversationHistory: (Anthropic.MessageParam & { ts?: number })[] = []
+	public apiConversationHistory: NeutralConversationHistory = []
 	public theaTaskMessages: TheaMessage[] = [] // Renamed type
 	// private saveTimeout: NodeJS.Timeout | undefined; // Removed debouncing
 
@@ -90,42 +92,49 @@ export class TaskStateManager {
 		const fileExists = await fileExistsAtPath(filePath)
 		if (fileExists) {
 			try {
-				this.apiConversationHistory = JSON.parse(await fs.readFile(filePath, "utf8"))
-				await this.log(`Loaded ${this.apiConversationHistory.length} items from API history.`) // Added await
-				this.onHistoryUpdate?.(this.apiConversationHistory)
+				// Read the raw data (which is in the old Anthropic format)
+				const rawHistory = JSON.parse(await fs.readFile(filePath, "utf8"));
+				// Convert the raw data to the new Neutral format
+				this.apiConversationHistory = convertToNeutralHistory(rawHistory);
+				await this.log(`Loaded ${this.apiConversationHistory.length} items from API history.`);
+				this.onHistoryUpdate?.(this.apiConversationHistory);
 			} catch (error) {
-				await this.log(`Error loading API conversation history: ${error.message}`) // Added await
-				this.apiConversationHistory = []
-				this.onHistoryUpdate?.(this.apiConversationHistory)
+				await this.log(`Error loading API conversation history: ${error.message}`);
+				// If loading or conversion fails, initialize with an empty neutral history
+				this.apiConversationHistory = [];
+				this.onHistoryUpdate?.(this.apiConversationHistory);
 			}
 		} else {
-			await this.log("No saved API conversation history found.") // Added await
-			this.apiConversationHistory = []
-			this.onHistoryUpdate?.(this.apiConversationHistory)
+			await this.log("No saved API conversation history found.");
+			// If no file exists, initialize with an empty neutral history
+			this.apiConversationHistory = [];
+			this.onHistoryUpdate?.(this.apiConversationHistory);
 		}
 	}
-
-	public async addToApiConversationHistory(message: Anthropic.MessageParam) {
-		const messageWithTs = { ...message, ts: Date.now() }
-		this.apiConversationHistory.push(messageWithTs)
-		this.onHistoryUpdate?.(this.apiConversationHistory)
-		await this.saveApiConversationHistory()
+	public async addToApiConversationHistory(message: NeutralMessage) {
+		const messageWithTs = { ...message, ts: Date.now() };
+		this.apiConversationHistory.push(messageWithTs);
+		this.onHistoryUpdate?.(this.apiConversationHistory);
+		await this.saveApiConversationHistory();
 	}
 
-	public async overwriteApiConversationHistory(newHistory: (Anthropic.MessageParam & { ts?: number })[]) {
-		this.apiConversationHistory = newHistory
-		this.onHistoryUpdate?.(this.apiConversationHistory)
-		await this.saveApiConversationHistory()
+	public async overwriteApiConversationHistory(newHistory: NeutralConversationHistory) {
+		this.apiConversationHistory = newHistory;
+		this.onHistoryUpdate?.(this.apiConversationHistory);
+		await this.saveApiConversationHistory();
 	}
+
 
 	private async saveApiConversationHistory() {
 		try {
-			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
-			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
-			await this.log(`Saved ${this.apiConversationHistory.length} items to API history.`) // Added await
+			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory);
+			// Convert the neutral history to the Anthropic format before saving
+			const historyToSave = convertToAnthropicHistory(this.apiConversationHistory);
+			await fs.writeFile(filePath, JSON.stringify(historyToSave));
+			await this.log(`Saved ${this.apiConversationHistory.length} items to API history.`);
 		} catch (error) {
-			await this.log(`Failed to save API conversation history: ${error.message}`) // Added await
-			console.error("Failed to save API conversation history:", error)
+			await this.log(`Failed to save API conversation history: ${error.message}`);
+			console.error("Failed to save API conversation history:", error);
 		}
 	}
 

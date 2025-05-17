@@ -6,7 +6,6 @@ import {
 	ConverseStreamCommandOutput,
 } from "@aws-sdk/client-bedrock-runtime"
 import { fromIni } from "@aws-sdk/credential-providers"
-import { Anthropic } from "@anthropic-ai/sdk"
 import { SingleCompletionHandler } from "../"
 import {
 	ApiHandlerOptions,
@@ -16,8 +15,9 @@ import {
 	bedrockModels,
 	bedrockDefaultPromptRouterModelId,
 } from "../../shared/api"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
-import { convertToBedrockConverseMessages } from "../transform/bedrock-converse-format"
+import { convertToBedrockConverseMessages, convertToBedrockContentBlocks } from "../transform/neutral-bedrock-format"
 import { BaseProvider } from "./base-provider"
 import { logger } from "../../utils/logging"
 
@@ -164,7 +164,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 		this.client = new BedrockRuntimeClient(clientConfig)
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		let modelConfig = this.getModel()
 		// Handle cross-region inference
 		let modelId: string
@@ -564,6 +564,23 @@ Please check:
 			return this.getModelByName(this.options.apiModelId)
 		}
 		return this.getModelByName(bedrockDefaultModelId)
+	}
+
+	/**
+	 * Counts tokens for the given content
+	 *
+	 * @param content The content blocks to count tokens for
+	 * @returns A promise resolving to the token count
+	 */
+	override async countTokens(content: NeutralMessageContent): Promise<number> {
+		try {
+			// Bedrock doesn't have a native token counting API
+			// Use the base provider's implementation
+			return super.countTokens(content);
+		} catch (error) {
+			console.warn("Bedrock token counting error, using fallback", error);
+			return super.countTokens(content);
+		}
 	}
 
 	async completePrompt(prompt: string): Promise<string> {

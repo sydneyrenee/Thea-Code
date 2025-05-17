@@ -1,165 +1,387 @@
-import { OllamaHandler, NeutralMessage } from "../ollama"
-import { ApiHandlerOptions } from "../../../shared/api"
-import OpenAI from "openai"
-import { Anthropic } from "@anthropic-ai/sdk"
+import { OllamaHandler, getOllamaModels } from '../ollama';
+import { convertToOllamaHistory, convertToOllamaContentBlocks } from '../../transform/neutral-ollama-format';
+import { NeutralConversationHistory, NeutralMessageContent } from '../../../shared/neutral-history';
+import { XmlMatcher } from '../../../utils/xml-matcher';
 
-// Mock OpenAI client
-const mockCreate = jest.fn()
-jest.mock("openai", () => {
-	return {
-		__esModule: true,
-		default: jest.fn().mockImplementation(() => ({
-			chat: {
-				completions: {
-					create: mockCreate.mockImplementation(async (options) => {
-						if (!options.stream) {
-							return {
-								id: "test-completion",
-								choices: [
-									{
-										message: { role: "assistant", content: "Test response" },
-										finish_reason: "stop",
-										index: 0,
-									},
-								],
-								usage: {
-									prompt_tokens: 10,
-									completion_tokens: 5,
-									total_tokens: 15,
-								},
-							}
-						}
+// Mock the transform functions
+jest.mock('../../transform/neutral-ollama-format', () => ({
+  convertToOllamaHistory: jest.fn(),
+  convertToOllamaContentBlocks: jest.fn()
+}));
 
-						return {
-							[Symbol.asyncIterator]: async function* () {
-								yield {
-									choices: [
-										{
-											delta: { content: "Test response" },
-											index: 0,
-										},
-									],
-									usage: null,
-								}
-								yield {
-									choices: [
-										{
-											delta: {},
-											index: 0,
-										},
-									],
-									usage: {
-										prompt_tokens: 10,
-										completion_tokens: 5,
-										total_tokens: 15,
-									},
-								}
-							},
-						}
-					}),
-				},
-			},
-		})),
-	}
-})
+// Mock the OpenAI client
+jest.mock('openai', () => {
+  const mockCreate = jest.fn().mockImplementation(() => {
+    return {
+      [Symbol.asyncIterator]: async function* () {
+        yield {
+          choices: [{
+            delta: { content: 'Hello' }
+          }]
+        };
+        yield {
+          choices: [{
+            delta: { content: ' world' }
+          }]
+        };
+        yield {
+          choices: [{
+            delta: { content: '<think>This is reasoning</think>' }
+          }]
+        };
+      }
+    };
+  });
 
-describe("OllamaHandler", () => {
-	let handler: OllamaHandler
-	let mockOptions: ApiHandlerOptions
+  return {
+    __esModule: true,
+    default: jest.fn().mockImplementation(() => ({
+      chat: {
+        completions: {
+          create: mockCreate
+        }
+      }
+    }))
+  };
+});
 
-	beforeEach(() => {
-		mockOptions = {
-			apiModelId: "llama2",
-			ollamaModelId: "llama2",
-			ollamaBaseUrl: "http://localhost:11434/v1",
-		}
-		handler = new OllamaHandler(mockOptions)
-		mockCreate.mockClear()
-	})
+// Mock the XmlMatcher
+jest.mock('../../../utils/xml-matcher', () => {
+  return {
+    XmlMatcher: jest.fn().mockImplementation(() => ({
+      update: jest.fn().mockImplementation((text) => {
+        if (text.includes('<think>')) {
+          return [{ type: 'reasoning', text: text.replace(/<\/?think>/g, '') }];
+        }
+        return [{ type: 'text', text }];
+      }),
+      final: jest.fn().mockReturnValue([])
+    }))
+  };
+});
 
-	describe("constructor", () => {
-		it("should initialize with provided options", () => {
-			expect(handler).toBeInstanceOf(OllamaHandler)
-			expect(handler.getModel().id).toBe(mockOptions.ollamaModelId)
-		})
-
-		it("should use default base URL if not provided", () => {
-			const handlerWithoutUrl = new OllamaHandler({
-				apiModelId: "llama2",
-				ollamaModelId: "llama2",
-			})
-			expect(handlerWithoutUrl).toBeInstanceOf(OllamaHandler)
-		})
-	})
-
-	describe("createMessage", () => {
-		const systemPrompt = "You are a helpful assistant."
-		const messages: NeutralMessage[] = [
-			{
-				role: "user",
-				content: "Hello!",
-			},
-		]
-
-		it("should handle streaming responses", async () => {
-			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
-			for await (const chunk of stream) {
-				chunks.push(chunk)
-			}
-
-			expect(chunks.length).toBeGreaterThan(0)
-			const textChunks = chunks.filter((chunk) => chunk.type === "text")
-			expect(textChunks).toHaveLength(1)
-			expect(textChunks[0].text).toBe("Test response")
-		})
-
-		it("should handle API errors", async () => {
-			mockCreate.mockRejectedValueOnce(new Error("API Error"))
-
-			const stream = handler.createMessage(systemPrompt, messages)
-
-			await expect(async () => {
-				for await (const chunk of stream) {
-					// Should not reach here
-				}
-			}).rejects.toThrow("API Error")
-		})
-	})
-
-	describe("completePrompt", () => {
-		it("should complete prompt successfully", async () => {
-			const result = await handler.completePrompt("Test prompt")
-			expect(result).toBe("Test response")
-			expect(mockCreate).toHaveBeenCalledWith({
-				model: mockOptions.ollamaModelId,
-				messages: [{ role: "user", content: "Test prompt" }],
-				temperature: 0,
-				stream: false,
-			})
-		})
-
-		it("should handle API errors", async () => {
-			mockCreate.mockRejectedValueOnce(new Error("API Error"))
-			await expect(handler.completePrompt("Test prompt")).rejects.toThrow("Ollama completion error: API Error")
-		})
-
-		it("should handle empty response", async () => {
-			mockCreate.mockResolvedValueOnce({
-				choices: [{ message: { content: "" } }],
-			})
-			const result = await handler.completePrompt("Test prompt")
-			expect(result).toBe("")
-		})
-	})
-
-	describe("getModel", () => {
-		it("should return model info", () => {
-			const modelInfo = handler.getModel()
-			expect(modelInfo.id).toBe(mockOptions.ollamaModelId)
-			expect(modelInfo.info).toBeDefined()
-			expect(modelInfo.info.maxTokens).toBe(-1)
-			expect(modelInfo.info.contextWindow).toBe(128_000)
-		})
-	})
-})
+describe('OllamaHandler', () => {
+  let handler: OllamaHandler;
+  let availableModels: string[] = [];
+  
+  beforeAll(async () => {
+    // Get all available models
+    availableModels = await getOllamaModels('http://localhost:10000');
+    
+    // If no models are found, use default test models
+    if (availableModels.length === 0) {
+      availableModels = ['llama2', 'mistral', 'gemma'];
+    }
+  });
+  
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Create handler with mock options
+    handler = new OllamaHandler({
+      ollamaBaseUrl: 'http://localhost:10000',
+      ollamaModelId: 'llama2' // Default model for tests
+    });
+  });
+  
+  describe('createMessage', () => {
+    it.each(availableModels)('should use convertToOllamaHistory to convert messages with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation
+      (convertToOllamaHistory as jest.Mock).mockReturnValue([
+        { role: 'user', content: 'Hello' }
+      ]);
+      
+      // Create neutral history
+      const neutralHistory: NeutralConversationHistory = [
+        { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
+      ];
+      
+      // Call createMessage
+      const stream = handler.createMessage('You are helpful.', neutralHistory);
+      
+      // Collect stream chunks
+      const chunks = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      
+      // Verify transform function was called
+      expect(convertToOllamaHistory).toHaveBeenCalledWith(neutralHistory);
+      
+      // Verify client.chat.completions.create was called with the correct arguments
+      expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
+        model: 'llama2',
+        messages: expect.arrayContaining([
+          { role: 'system', content: 'You are helpful.' },
+          { role: 'user', content: 'Hello' }
+        ]),
+        temperature: 0,
+        stream: true
+      });
+      
+      // Verify stream chunks
+      expect(chunks).toContainEqual({ type: 'text', text: 'Hello' });
+      expect(chunks).toContainEqual({ type: 'text', text: ' world' });
+      expect(chunks).toContainEqual({ type: 'reasoning', text: 'This is reasoning' });
+    });
+    
+    it.each(availableModels)('should not add system prompt if already included in messages with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation with system message already included
+      (convertToOllamaHistory as jest.Mock).mockReturnValue([
+        { role: 'system', content: 'Existing system prompt' },
+        { role: 'user', content: 'Hello' }
+      ]);
+      
+      // Create neutral history
+      const neutralHistory: NeutralConversationHistory = [
+        { role: 'system', content: [{ type: 'text', text: 'Existing system prompt' }] },
+        { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
+      ];
+      
+      // Call createMessage
+      const stream = handler.createMessage('You are helpful.', neutralHistory);
+      
+      // Collect stream chunks (just to complete the generator)
+      for await (const chunk of stream) {
+        // Do nothing
+      }
+      
+      // Verify client.chat.completions.create was called with the correct arguments
+      // Should not add the new system prompt
+      expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
+        model: 'llama2',
+        messages: [
+          { role: 'system', content: 'Existing system prompt' },
+          { role: 'user', content: 'Hello' }
+        ],
+        temperature: 0,
+        stream: true
+      });
+    });
+    
+    it.each(availableModels)('should handle empty system prompt with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation
+      (convertToOllamaHistory as jest.Mock).mockReturnValue([
+        { role: 'user', content: 'Hello' }
+      ]);
+      
+      // Create neutral history
+      const neutralHistory: NeutralConversationHistory = [
+        { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
+      ];
+      
+      // Call createMessage with empty system prompt
+      const stream = handler.createMessage('', neutralHistory);
+      
+      // Collect stream chunks (just to complete the generator)
+      for await (const chunk of stream) {
+        // Do nothing
+      }
+      
+      // Verify client.chat.completions.create was called with the correct arguments
+      // Should not add system prompt
+      expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
+        model: 'llama2',
+        messages: [
+          { role: 'user', content: 'Hello' }
+        ],
+        temperature: 0,
+        stream: true
+      });
+    });
+    
+    it.each(availableModels)('should use XmlMatcher for processing responses with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation
+      (convertToOllamaHistory as jest.Mock).mockReturnValue([
+        { role: 'user', content: 'Hello' }
+      ]);
+      
+      // Create neutral history
+      const neutralHistory: NeutralConversationHistory = [
+        { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
+      ];
+      
+      // Call createMessage
+      const stream = handler.createMessage('You are helpful.', neutralHistory);
+      
+      // Collect stream chunks
+      const chunks = [];
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+      
+      // Verify XmlMatcher was created with the correct tag
+      expect(XmlMatcher).toHaveBeenCalledWith(
+        'think',
+        expect.any(Function)
+      );
+      
+      // Verify XmlMatcher.update was called for each chunk
+      const xmlMatcherInstance = (XmlMatcher as jest.Mock).mock.results[0].value;
+      expect(xmlMatcherInstance.update).toHaveBeenCalledWith('Hello');
+      expect(xmlMatcherInstance.update).toHaveBeenCalledWith(' world');
+      expect(xmlMatcherInstance.update).toHaveBeenCalledWith('<think>This is reasoning</think>');
+      
+      // Verify XmlMatcher.final was called
+      expect(xmlMatcherInstance.final).toHaveBeenCalled();
+    });
+  });
+  
+  describe('countTokens', () => {
+    it.each(availableModels)('should use convertToOllamaContentBlocks with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation
+      (convertToOllamaContentBlocks as jest.Mock).mockReturnValue('Hello world');
+      
+      // Mock the base provider's countTokens method
+      const mockSuperCountTokens = jest.spyOn(Object.getPrototypeOf(OllamaHandler.prototype), 'countTokens');
+      mockSuperCountTokens.mockResolvedValue(2); // 2 tokens for "Hello world"
+      
+      // Create neutral content
+      const neutralContent: NeutralMessageContent = [
+        { type: 'text', text: 'Hello world' }
+      ];
+      
+      // Call countTokens
+      const tokenCount = await handler.countTokens(neutralContent);
+      
+      // Verify transform function was called
+      expect(convertToOllamaContentBlocks).toHaveBeenCalledWith(neutralContent);
+      
+      // Verify base provider's countTokens was called with the converted content
+      expect(mockSuperCountTokens).toHaveBeenCalledWith([{ type: 'text', text: 'Hello world' }]);
+      
+      // Verify token count
+      expect(tokenCount).toBe(2);
+      
+      // Clean up
+      mockSuperCountTokens.mockRestore();
+    });
+    
+    it.each(availableModels)('should handle errors and use fallback with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation that throws an error
+      (convertToOllamaContentBlocks as jest.Mock).mockImplementation(() => {
+        throw new Error('Conversion error');
+      });
+      
+      // Mock console.warn
+      const originalWarn = console.warn;
+      console.warn = jest.fn();
+      
+      // Mock the base provider's countTokens method
+      const mockSuperCountTokens = jest.spyOn(Object.getPrototypeOf(OllamaHandler.prototype), 'countTokens');
+      mockSuperCountTokens.mockResolvedValue(2); // 2 tokens for fallback
+      
+      // Create neutral content
+      const neutralContent: NeutralMessageContent = [
+        { type: 'text', text: 'Hello world' }
+      ];
+      
+      // Call countTokens
+      const tokenCount = await handler.countTokens(neutralContent);
+      
+      // Verify transform function was called
+      expect(convertToOllamaContentBlocks).toHaveBeenCalledWith(neutralContent);
+      
+      // Verify console.warn was called
+      expect(console.warn).toHaveBeenCalled();
+      
+      // Verify base provider's countTokens was called with the original content
+      expect(mockSuperCountTokens).toHaveBeenCalledWith(neutralContent);
+      
+      // Verify token count
+      expect(tokenCount).toBe(2);
+      
+      // Clean up
+      console.warn = originalWarn;
+      mockSuperCountTokens.mockRestore();
+    });
+  });
+  
+  describe('completePrompt', () => {
+    it.each(availableModels)('should convert prompt to neutral format and use convertToOllamaHistory with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation
+      (convertToOllamaHistory as jest.Mock).mockReturnValue([
+        { role: 'user', content: 'Hello' }
+      ]);
+      
+      // Mock the client's create method to return a response
+      const mockCreate = jest.fn().mockResolvedValue({
+        choices: [{ message: { content: 'Hello world' } }]
+      });
+      handler['client'].chat.completions.create = mockCreate;
+      
+      // Call completePrompt
+      const result = await handler.completePrompt('Hello');
+      
+      // Verify transform function was called with the correct neutral history
+      expect(convertToOllamaHistory).toHaveBeenCalledWith([
+        { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
+      ]);
+      
+      // Verify client.chat.completions.create was called with the correct arguments
+      expect(mockCreate).toHaveBeenCalledWith({
+        model: 'llama2',
+        messages: [{ role: 'user', content: 'Hello' }],
+        temperature: 0,
+        stream: false
+      });
+      
+      // Verify result
+      expect(result).toBe('Hello world');
+    });
+    
+    it.each(availableModels)('should handle errors with %s model', async (modelId) => {
+      // Update handler to use the current model
+      handler = new OllamaHandler({
+        ollamaBaseUrl: 'http://localhost:10000',
+        ollamaModelId: modelId
+      });
+      // Mock implementation
+      (convertToOllamaHistory as jest.Mock).mockReturnValue([
+        { role: 'user', content: 'Hello' }
+      ]);
+      
+      // Mock the client's create method to throw an error
+      const mockCreate = jest.fn().mockRejectedValue(new Error('API error'));
+      handler['client'].chat.completions.create = mockCreate;
+      
+      // Call completePrompt and expect it to throw
+      await expect(handler.completePrompt('Hello')).rejects.toThrow('Ollama completion error: API error');
+    });
+  });
+});

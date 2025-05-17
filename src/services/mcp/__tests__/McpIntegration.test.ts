@@ -1,0 +1,226 @@
+import { McpIntegration, handleToolUse } from '../McpIntegration';
+import { McpToolRouter } from '../McpToolRouter';
+import { UnifiedMcpToolSystem } from '../UnifiedMcpToolSystem';
+
+// Mock the McpToolRouter
+jest.mock('../McpToolRouter', () => {
+  const mockInstance = {
+    on: jest.fn(),
+    initialize: jest.fn().mockResolvedValue(undefined),
+    shutdown: jest.fn().mockResolvedValue(undefined),
+    detectFormat: jest.fn().mockReturnValue('xml'),
+    routeToolUse: jest.fn().mockImplementation(async (request) => {
+      return {
+        format: request.format,
+        content: `Routed ${request.format} request`
+      };
+    })
+  };
+  
+  return {
+    ToolUseFormat: {
+      XML: 'xml',
+      JSON: 'json',
+      OPENAI: 'openai',
+      NEUTRAL: 'neutral'
+    },
+    McpToolRouter: {
+      getInstance: jest.fn().mockReturnValue(mockInstance)
+    }
+  };
+});
+
+// Mock the UnifiedMcpToolSystem
+jest.mock('../UnifiedMcpToolSystem', () => {
+  const mockInstance = {
+    registerTool: jest.fn(),
+    unregisterTool: jest.fn().mockReturnValue(true),
+    processXmlToolUse: jest.fn().mockImplementation(async (content) => {
+      return `Processed XML: ${content}`;
+    }),
+    processJsonToolUse: jest.fn().mockImplementation(async (content) => {
+      return `Processed JSON: ${typeof content === 'string' ? content : JSON.stringify(content)}`;
+    }),
+    processOpenAiFunctionCall: jest.fn().mockImplementation(async (content) => {
+      return {
+        role: 'tool',
+        content: `Processed OpenAI: ${JSON.stringify(content)}`
+      };
+    })
+  };
+  
+  return {
+    UnifiedMcpToolSystem: {
+      getInstance: jest.fn().mockReturnValue(mockInstance)
+    }
+  };
+});
+
+describe('McpIntegration', () => {
+  let mcpIntegration: McpIntegration;
+  
+  beforeEach(() => {
+    // Clear all mocks
+    jest.clearAllMocks();
+    
+    // Get a fresh instance for each test
+    // @ts-ignore - Reset the singleton instance
+    McpIntegration['instance'] = undefined;
+    mcpIntegration = McpIntegration.getInstance();
+  });
+  
+  describe('initialization', () => {
+    it('should initialize the MCP tool router', async () => {
+      await mcpIntegration.initialize();
+      
+      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      expect(mcpToolRouter.initialize).toHaveBeenCalled();
+    });
+    
+    it('should not initialize the MCP tool router if already initialized', async () => {
+      // Initialize once
+      await mcpIntegration.initialize();
+      
+      // Clear the mock
+      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      mcpToolRouter.initialize.mockClear();
+      
+      // Initialize again
+      await mcpIntegration.initialize();
+      
+      // Should not call initialize again
+      expect(mcpToolRouter.initialize).not.toHaveBeenCalled();
+    });
+  });
+  
+  describe('tool registration', () => {
+    it('should register a tool with the MCP tool system', () => {
+      const toolDefinition = {
+        name: 'test_tool',
+        description: 'A test tool',
+        paramSchema: { type: 'object' },
+        handler: async () => ({ content: [], isError: false })
+      };
+      
+      mcpIntegration.registerTool(toolDefinition);
+      
+      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
+      expect(mcpToolSystem.registerTool).toHaveBeenCalledWith(toolDefinition);
+    });
+    
+    it('should unregister a tool from the MCP tool system', () => {
+      const result = mcpIntegration.unregisterTool('test_tool');
+      
+      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
+      expect(mcpToolSystem.unregisterTool).toHaveBeenCalledWith('test_tool');
+      expect(result).toBe(true);
+    });
+  });
+  
+  describe('tool processing', () => {
+    beforeEach(async () => {
+      await mcpIntegration.initialize();
+    });
+    
+    it('should process XML tool use requests', async () => {
+      const xmlContent = '<test_tool>\n<param1>value1</param1>\n</test_tool>';
+      
+      const result = await mcpIntegration.processXmlToolUse(xmlContent);
+      
+      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
+      expect(mcpToolSystem.processXmlToolUse).toHaveBeenCalledWith(xmlContent);
+      expect(result).toBe(`Processed XML: ${xmlContent}`);
+    });
+    
+    it('should process JSON tool use requests', async () => {
+      const jsonContent = {
+        type: 'tool_use',
+        id: 'test-123',
+        name: 'test_tool',
+        input: {
+          param1: 'value1'
+        }
+      };
+      
+      const result = await mcpIntegration.processJsonToolUse(jsonContent);
+      
+      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
+      expect(mcpToolSystem.processJsonToolUse).toHaveBeenCalledWith(jsonContent);
+      expect(result).toBe(`Processed JSON: ${JSON.stringify(jsonContent)}`);
+    });
+    
+    it('should process OpenAI function call requests', async () => {
+      const functionCall = {
+        function_call: {
+          name: 'test_tool',
+          arguments: '{"param1":"value1"}',
+          id: 'call_abc123'
+        }
+      };
+      
+      const result = await mcpIntegration.processOpenAiFunctionCall(functionCall);
+      
+      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
+      expect(mcpToolSystem.processOpenAiFunctionCall).toHaveBeenCalledWith(functionCall);
+      expect(result).toEqual({
+        role: 'tool',
+        content: `Processed OpenAI: ${JSON.stringify(functionCall)}`
+      });
+    });
+    
+    it('should route tool use requests based on format', async () => {
+      const content = '<test_tool>\n<param1>value1</param1>\n</test_tool>';
+      
+      const result = await mcpIntegration.routeToolUse(content);
+      
+      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      expect(mcpToolRouter.detectFormat).toHaveBeenCalledWith(content);
+      expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
+        format: 'xml',
+        content
+      });
+      expect(result).toBe('Routed xml request');
+    });
+  });
+});
+
+describe('handleToolUse', () => {
+  beforeEach(() => {
+    // Clear all mocks
+    jest.clearAllMocks();
+    
+    // Reset the singleton instance
+    // @ts-ignore
+    McpIntegration['instance'] = undefined;
+  });
+  
+  it('should initialize the MCP integration if not already initialized', async () => {
+    const content = '<test_tool>\n<param1>value1</param1>\n</test_tool>';
+    
+    await handleToolUse(content);
+    
+    // Get the instance that was created
+    const mcpIntegration = McpIntegration.getInstance();
+    
+    // Check that initialize was called
+    const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+    expect(mcpToolRouter.initialize).toHaveBeenCalled();
+  });
+  
+  it('should route the tool use request', async () => {
+    const content = '<test_tool>\n<param1>value1</param1>\n</test_tool>';
+    
+    const result = await handleToolUse(content);
+    
+    // Get the instance that was created
+    const mcpIntegration = McpIntegration.getInstance();
+    
+    // Check that routeToolUse was called
+    const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+    expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
+      format: 'xml',
+      content
+    });
+    expect(result).toBe('Routed xml request');
+  });
+});

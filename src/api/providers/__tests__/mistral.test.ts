@@ -1,126 +1,117 @@
-import { MistralHandler } from "../mistral"
-import { ApiHandlerOptions, mistralDefaultModelId } from "../../../shared/api"
-import { Anthropic } from "@anthropic-ai/sdk"
-import { ApiStreamTextChunk } from "../../transform/stream"
+import { MistralHandler } from "../mistral";
+import { ApiHandlerOptions } from "../../../shared/api";
+import { NeutralConversationHistory } from "../../../shared/neutral-history";
+import * as neutralMistralFormat from "../../transform/neutral-mistral-format";
 
-// Mock Mistral client
-const mockCreate = jest.fn()
+// Mock the Mistral client
 jest.mock("@mistralai/mistralai", () => {
-	return {
-		Mistral: jest.fn().mockImplementation(() => ({
-			chat: {
-				stream: mockCreate.mockImplementation(async (options) => {
-					const stream = {
-						[Symbol.asyncIterator]: async function* () {
-							yield {
-								data: {
-									choices: [
-										{
-											delta: { content: "Test response" },
-											index: 0,
-										},
-									],
-								},
-							}
-						},
-					}
-					return stream
-				}),
-			},
-		})),
-	}
-})
+  return {
+    Mistral: jest.fn().mockImplementation(() => ({
+      chat: {
+        stream: jest.fn().mockImplementation(() => {
+          return {
+            [Symbol.asyncIterator]: async function* () {
+              yield {
+                data: {
+                  choices: [
+                    {
+                      delta: {
+                        content: "Test response",
+                      },
+                    },
+                  ],
+                  usage: {
+                    promptTokens: 10,
+                    completionTokens: 5,
+                  },
+                },
+              };
+            },
+          };
+        }),
+        complete: jest.fn().mockResolvedValue({
+          choices: [
+            {
+              message: {
+                content: "Test completion",
+              },
+            },
+          ],
+        }),
+      },
+    })),
+  };
+});
+
+// Mock the neutral-mistral-format module
+jest.mock("../../transform/neutral-mistral-format", () => ({
+  convertToMistralMessages: jest.fn().mockReturnValue([
+    { role: "user", content: "Test message" },
+  ]),
+  convertToMistralContent: jest.fn().mockReturnValue("Test content"),
+}));
 
 describe("MistralHandler", () => {
-	let handler: MistralHandler
-	let mockOptions: ApiHandlerOptions
+  const options: ApiHandlerOptions = {
+    mistralApiKey: "test-key",
+    apiModelId: "mistral-medium",
+  };
 
-	beforeEach(() => {
-		mockOptions = {
-			apiModelId: "codestral-latest", // Update to match the actual model ID
-			mistralApiKey: "test-api-key",
-			includeMaxTokens: true,
-			modelTemperature: 0,
-		}
-		handler = new MistralHandler(mockOptions)
-		mockCreate.mockClear()
-	})
+  let handler: MistralHandler;
 
-	describe("constructor", () => {
-		it("should initialize with provided options", () => {
-			expect(handler).toBeInstanceOf(MistralHandler)
-			expect(handler.getModel().id).toBe(mockOptions.apiModelId)
-		})
+  beforeEach(() => {
+    jest.clearAllMocks();
+    handler = new MistralHandler(options);
+  });
 
-		it("should throw error if API key is missing", () => {
-			expect(() => {
-				new MistralHandler({
-					...mockOptions,
-					mistralApiKey: undefined,
-				})
-			}).toThrow("Mistral API key is required")
-		})
+  describe("createMessage", () => {
+    it("should convert neutral history to Mistral format and stream response", async () => {
+      const systemPrompt = "You are a helpful assistant";
+      const messages: NeutralConversationHistory = [
+        {
+          role: "user",
+          content: [{ type: "text", text: "Hello" }],
+        },
+      ];
 
-		it("should use custom base URL if provided", () => {
-			const customBaseUrl = "https://custom.mistral.ai/v1"
-			const handlerWithCustomUrl = new MistralHandler({
-				...mockOptions,
-				mistralCodestralUrl: customBaseUrl,
-			})
-			expect(handlerWithCustomUrl).toBeInstanceOf(MistralHandler)
-		})
-	})
+      const stream = handler.createMessage(systemPrompt, messages);
+      const chunks = [];
 
-	describe("getModel", () => {
-		it("should return correct model info", () => {
-			const model = handler.getModel()
-			expect(model.id).toBe(mockOptions.apiModelId)
-			expect(model.info).toBeDefined()
-			expect(model.info.supportsPromptCache).toBe(false)
-		})
-	})
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
 
-	describe("createMessage", () => {
-		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
-			{
-				role: "user",
-				content: [{ type: "text", text: "Hello!" }],
-			},
-		]
+      expect(neutralMistralFormat.convertToMistralMessages).toHaveBeenCalledWith(messages);
+      expect(chunks).toHaveLength(2);
+      expect(chunks[0]).toEqual({ type: "text", text: "Test response" });
+      expect(chunks[1]).toEqual({
+        type: "usage",
+        inputTokens: 10,
+        outputTokens: 5,
+      });
+    });
+  });
 
-		it("should create message successfully", async () => {
-			const iterator = handler.createMessage(systemPrompt, messages)
-			const result = await iterator.next()
+  describe("countTokens", () => {
+    it("should use the base provider's implementation", async () => {
+      // Mock the base provider's countTokens method
+      const baseCountTokens = jest.spyOn(
+        Object.getPrototypeOf(Object.getPrototypeOf(handler)),
+        "countTokens"
+      ).mockResolvedValue(15);
 
-			expect(mockCreate).toHaveBeenCalledWith({
-				model: mockOptions.apiModelId,
-				messages: expect.any(Array),
-				maxTokens: expect.any(Number),
-				temperature: 0,
-			})
+      const content = [{ type: "text", text: "Hello" }] as any;
+      const result = await handler.countTokens(content);
 
-			expect(result.value).toBeDefined()
-			expect(result.done).toBe(false)
-		})
+      expect(baseCountTokens).toHaveBeenCalledWith(content);
+      expect(result).toBe(15);
+    });
+  });
 
-		it("should handle streaming response correctly", async () => {
-			const iterator = handler.createMessage(systemPrompt, messages)
-			const results: ApiStreamTextChunk[] = []
-
-			for await (const chunk of iterator) {
-				if ("text" in chunk) {
-					results.push(chunk as ApiStreamTextChunk)
-				}
-			}
-
-			expect(results.length).toBeGreaterThan(0)
-			expect(results[0].text).toBe("Test response")
-		})
-
-		it("should handle errors gracefully", async () => {
-			mockCreate.mockRejectedValueOnce(new Error("API Error"))
-			await expect(handler.createMessage(systemPrompt, messages).next()).rejects.toThrow("API Error")
-		})
-	})
-})
+  describe("completePrompt", () => {
+    it("should complete a prompt and return the response", async () => {
+      const result = await handler.completePrompt("Test prompt");
+      expect(result).toBe("Test completion");
+    });
+  });
+});

@@ -24,4 +24,5 @@ yarn-error.log*
 
 *storybook.log
 
-tsconfig.tsbuildinfo
+# Ignore tsbuildinfo
+/tsconfig.tsbuildinfo

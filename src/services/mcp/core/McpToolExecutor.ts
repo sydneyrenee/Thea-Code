@@ -1,0 +1,154 @@
+import { EventEmitter } from "events";
+import { ToolDefinition, ToolCallResult } from "../types/McpProviderTypes";
+import { NeutralToolUseRequest, NeutralToolResult } from "../types/McpToolTypes";
+import { McpToolRegistry } from "./McpToolRegistry";
+import { SseTransportConfig } from "../types/McpTransportTypes";
+
+/**
+ * McpToolExecutor provides a unified interface for tool use across different AI models.
+ * It leverages the Model Context Protocol (MCP) as the underlying mechanism for tool execution.
+ */
+export class McpToolExecutor extends EventEmitter {
+  private static instance: McpToolExecutor;
+  private mcpProvider: any; // This will be EmbeddedMcpProvider once it's refactored
+  private toolRegistry: McpToolRegistry;
+  private isInitialized: boolean = false;
+  private sseConfig?: SseTransportConfig;
+
+  /**
+   * Get the singleton instance of the McpToolExecutor
+   * @param config Optional SSE transport configuration
+   */
+  public static getInstance(config?: SseTransportConfig): McpToolExecutor {
+    if (!McpToolExecutor.instance) {
+      McpToolExecutor.instance = new McpToolExecutor(config);
+    } else if (config) {
+      // Update config if provided
+      McpToolExecutor.instance.sseConfig = config;
+    }
+    return McpToolExecutor.instance;
+  }
+
+  /**
+   * Private constructor to enforce singleton pattern
+   * @param config Optional SSE transport configuration
+   */
+  private constructor(config?: SseTransportConfig) {
+    super();
+    this.sseConfig = config;
+    // Note: EmbeddedMcpServer will be renamed to EmbeddedMcpProvider in a future task
+    // For now, we're just updating the reference name
+    this.mcpProvider = new (require("../EmbeddedMcpServer").EmbeddedMcpServer)(config);
+    this.toolRegistry = McpToolRegistry.getInstance();
+    
+    // Forward events from the MCP provider
+    this.mcpProvider.on('tool-registered', (name: string) => this.emit('tool-registered', name));
+    this.mcpProvider.on('tool-unregistered', (name: string) => this.emit('tool-unregistered', name));
+    this.mcpProvider.on('started', (info: unknown) => this.emit('started', info));
+    this.mcpProvider.on('stopped', () => this.emit('stopped'));
+  }
+
+  /**
+   * Initialize the unified tool system
+   */
+  public async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      return;
+    }
+
+    // Start the MCP provider
+    await this.mcpProvider.start();
+    this.isInitialized = true;
+  }
+
+  /**
+   * Shutdown the unified tool system
+   */
+  public async shutdown(): Promise<void> {
+    if (!this.isInitialized) {
+      return;
+    }
+
+    // Stop the MCP provider
+    await this.mcpProvider.stop();
+    this.isInitialized = false;
+  }
+
+  /**
+   * Register a tool with the unified tool system
+   * @param definition The tool definition
+   */
+  public registerTool(definition: ToolDefinition): void {
+    // Register with both the MCP provider and the tool registry
+    this.mcpProvider.registerToolDefinition(definition);
+    this.toolRegistry.registerTool(definition);
+  }
+
+  /**
+   * Unregister a tool from the unified tool system
+   * @param name The name of the tool to unregister
+   * @returns true if the tool was unregistered, false if it wasn't found
+   */
+  public unregisterTool(name: string): boolean {
+    // Unregister from both the MCP provider and the tool registry
+    const mcpResult = this.mcpProvider.unregisterTool(name);
+    const registryResult = this.toolRegistry.unregisterTool(name);
+    
+    return mcpResult && registryResult;
+  }
+
+  /**
+   * Execute a tool from a neutral format request
+   * @param request The tool use request in neutral format
+   * @returns The tool result in neutral format
+   */
+  public async executeToolFromNeutralFormat(request: NeutralToolUseRequest): Promise<NeutralToolResult> {
+    const { name, input, id } = request;
+    
+    try {
+      // Execute the tool using the MCP provider
+      const result = await this.mcpProvider.executeTool(name, input);
+      
+      // Convert the result to neutral format
+      return {
+        type: 'tool_result',
+        tool_use_id: id,
+        content: result.content,
+        status: result.isError ? 'error' : 'success',
+        error: result.isError ? {
+          message: result.content[0]?.text || 'Unknown error'
+        } : undefined
+      };
+    } catch (error) {
+      // Handle errors
+      return {
+        type: 'tool_result',
+        tool_use_id: id,
+        content: [{
+          type: 'text',
+          text: `Error executing tool '${name}': ${error instanceof Error ? error.message : String(error)}`
+        }],
+        status: 'error',
+        error: {
+          message: error instanceof Error ? error.message : String(error)
+        }
+      };
+    }
+  }
+
+  /**
+   * Get the tool registry
+   * @returns The tool registry
+   */
+  public getToolRegistry(): McpToolRegistry {
+    return this.toolRegistry;
+  }
+
+  /**
+   * Get the server URL if the MCP provider is running
+   * @returns The URL of the server, or undefined if not started
+   */
+  public getServerUrl(): URL | undefined {
+    return this.mcpProvider.getServerUrl();
+  }
+}

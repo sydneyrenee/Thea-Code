@@ -1,0 +1,178 @@
+flowchart TB
+    classDef inputClass fill:#FFD700,stroke:#FF8C00,stroke-width:2px,color:#000
+    classDef embeddingClass fill:#98FB98,stroke:#006400,stroke-width:2px,color:#000
+    classDef rwkvClass fill:#E6E6FA,stroke:#483D8B,stroke-width:2px,color:#000
+    classDef ffnClass fill:#FFA07A,stroke:#8B0000,stroke-width:2px,color:#000
+    classDef normClass fill:#D8BFD8,stroke:#9400D3,stroke-width:2px,color:#000
+    classDef outputClass fill:#F08080,stroke:#CD5C5C,stroke-width:2px,color:#000
+    
+    %% Input Processing
+    subgraph InputProcessing["Input Processing Layer"]
+        direction TB
+        Input[/"Input Tokens"/]:::inputClass
+        TokenEmbed["Token Embeddings<br/>(d_model)"]:::embeddingClass
+        TimeEmbed["Time Embeddings<br/>(d_model)"]:::embeddingClass
+        
+        Input --> TokenEmbed
+        TokenEmbed --> InputEmbed
+        TimeEmbed --> InputEmbed
+        
+        InputEmbed["Input Embeddings<br/>(batch_size × seq_len × d_model)"]:::embeddingClass
+    end
+    
+    %% Annotation for Input Processing
+    InputAnnotation["<b>Input Processing</b><br/>- Tokens converted to embeddings<br/>- Time embeddings instead of positional<br/>- Dimensions: batch_size × seq_len × d_model"]
+    InputProcessing -.-> InputAnnotation
+    
+    %% First RWKV Layer
+    subgraph Layer1["RWKV Layer 1"]
+        direction TB
+        
+        %% Time-mixing Block (Alternative to Attention)
+        subgraph TMB1["Time Mixing Block"]
+            direction TB
+            
+            %% Time Mixing Components
+            TMNorm1["Layer Normalization"]:::normClass
+            TMLinear1["Linear Projection"]:::rwkvClass
+            TMWKV1["WKV Mechanism<br/>(Receptance & Decay)"]:::rwkvClass
+            TMOutput1["Time-Mixed Output"]:::rwkvClass
+            
+            %% Time Mixing Flow
+            TMNorm1 --> TMLinear1
+            TMLinear1 --> TMWKV1
+            TMWKV1 --> TMOutput1
+        end
+        
+        %% Channel Mixing Block (FFN alternative)
+        subgraph CMB1["Channel Mixing Block"]
+            direction TB
+            CMNorm1["Layer Normalization"]:::normClass
+            CMRLinear1["Receptance Gate"]:::rwkvClass
+            CMKLinear1["Key Projection"]:::rwkvClass
+            CMVLinear1["Value Projection"]:::rwkvClass
+            CMOutput1["Channel-Mixed Output"]:::rwkvClass
+            
+            %% Channel Mixing Flow
+            CMNorm1 --> CMRLinear1 & CMKLinear1 & CMVLinear1
+            CMRLinear1 & CMKLinear1 & CMVLinear1 --> CMOutput1
+        end
+        
+        %% Residual Connections
+        Add1(("+"))
+        Add2(("+"))
+    end
+    
+    %% Annotation for Time Mixing
+    TMAnnotation["<b>Time Mixing Block</b><br/>- Linear attention alternative<br/>- Recurrent formulation with tokens<br/>- WKV mechanism with exponential decay<br/>- O(1) complexity per token vs O(n²)"]
+    TMB1 -.-> TMAnnotation
+    
+    %% Annotation for Channel Mixing
+    CMAnnotation["<b>Channel Mixing Block</b><br/>- FFN replacement with gating<br/>- Mixes information across channels<br/>- Uses receptance gating mechanism<br/>- Similar to SwiGLU in transformers"]
+    CMB1 -.-> CMAnnotation
+    
+    %% Second RWKV Layer
+    subgraph Layer2["RWKV Layer 2"]
+        direction TB
+        
+        %% Time Mixing Block
+        subgraph TMB2["Time Mixing Block"]
+            direction TB
+            TMNorm2["Layer Normalization"]:::normClass
+            TMLinear2["Linear Projection"]:::rwkvClass
+            TMWKV2["WKV Mechanism<br/>(Receptance & Decay)"]:::rwkvClass
+            TMOutput2["Time-Mixed Output"]:::rwkvClass
+            
+            TMNorm2 --> TMLinear2
+            TMLinear2 --> TMWKV2
+            TMWKV2 --> TMOutput2
+        end
+        
+        %% Channel Mixing Block
+        subgraph CMB2["Channel Mixing Block"]
+            direction TB
+            CMNorm2["Layer Normalization"]:::normClass
+            CMRLinear2["Receptance Gate"]:::rwkvClass
+            CMKLinear2["Key Projection"]:::rwkvClass
+            CMVLinear2["Value Projection"]:::rwkvClass
+            CMOutput2["Channel-Mixed Output"]:::rwkvClass
+            
+            CMNorm2 --> CMRLinear2 & CMKLinear2 & CMVLinear2
+            CMRLinear2 & CMKLinear2 & CMVLinear2 --> CMOutput2
+        end
+        
+        %% Residual Connections
+        Add3(("+"))
+        Add4(("+"))
+    end
+    
+    %% Nth RWKV Layer (Abbreviated)
+    subgraph LayerN["RWKV Layer N"]
+        direction TB
+        
+        %% Abbreviated components
+        TMBN["Time<br/>Mixing<br/>Block"]:::rwkvClass
+        CMBN["Channel<br/>Mixing<br/>Block"]:::rwkvClass
+        
+        %% Residual Connections
+        AddN1(("+"))
+        AddN2(("+"))
+        
+        %% Connections
+        TMBN --> AddN1
+        AddN1 --> CMBN
+        CMBN --> AddN2
+    end
+    
+    %% Output Processing
+    subgraph OutputProcessing["Output Processing"]
+        direction TB
+        FinalLayerNorm["Final Layer Normalization"]:::normClass
+        OutputProjection["Output Projection<br/>(token prediction)"]:::outputClass
+        FinalOutput[/"Next Token Output"/]:::outputClass
+        
+        FinalLayerNorm --> OutputProjection
+        OutputProjection --> FinalOutput
+    end
+    
+    %% Annotation for RWKV Formula
+    RWKVFormula["<b>RWKV Formula</b><br/>- WKV(t) = ∑(k=1 to t) W_k × V_k × exp(-decay × (t-k))<br/>- Output = sigmoid(R) ⊙ WKV / (∑exp(-decay))<br/>- Linear time & constant memory complexity<br/>- Parallelizable in training, recursive in inference"]
+    Layer2 -.-> RWKVFormula
+    
+    %% Annotation for Architecture Comparison
+    ComparisonAnnotation["<b>RWKV vs Transformer</b><br/>- Linear O(n) vs Quadratic O(n²) complexity<br/>- State-based vs All-to-all attention<br/>- Can run as CNN or RNN<br/>- Channel mixing vs FFN<br/>- Comparable quality at higher efficiency"]
+    LayerN -.-> ComparisonAnnotation
+    
+    %% Main Flow Connections
+    InputProcessing --> Layer1
+    InputEmbed --> Add1
+    
+    %% Layer 1 Connections
+    Add1 --> TMNorm1
+    TMOutput1 --> Add1
+    Add1 --> Add2
+    Add2 --> CMNorm1
+    CMOutput1 --> Add2
+    
+    %% Between Layer 1 and Layer 2
+    Add2 --> Layer2
+    Add2 --> Add3
+    
+    %% Layer 2 Connections
+    Add3 --> TMNorm2
+    TMOutput2 --> Add3
+    Add3 --> Add4
+    Add4 --> CMNorm2
+    CMOutput2 --> Add4
+    
+    %% Between Layer 2 and Layer N
+    Add4 --> LayerN
+    Add4 --> AddN1
+    
+    %% Layer N Connections
+    AddN2 --> OutputProcessing
+    AddN2 --> FinalLayerNorm
+    
+    %% Dual Mode Annotation
+    DualModeAnnotation["<b>RWKV Dual Mode</b><br/>- Training: Parallel mode (CNN-like)<br/>- Inference: Recurrent mode (RNN-like)<br/>- Same parameters, two execution strategies<br/>- Enables both training efficiency and<br/>  inference performance"]
+    OutputProcessing -.-> DualModeAnnotation

@@ -2,8 +2,9 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
 
 import { ApiConfiguration, ModelInfo, ApiHandlerOptions } from "../shared/api"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../shared/neutral-history"; // Import neutral history types
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./providers/constants"
-import { GlamaHandler } from "./providers/glama"
+// import { GlamaHandler } from "./providers/glama" // Temporarily commented out until updated to use neutral format
 import { AnthropicHandler } from "./providers/anthropic"
 import { AwsBedrockHandler } from "./providers/bedrock"
 import { OpenRouterHandler } from "./providers/openrouter"
@@ -27,7 +28,8 @@ export interface SingleCompletionHandler {
 }
 
 export interface ApiHandler {
-	createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream
+	// Updated to use NeutralConversationHistory
+	createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream
 	getModel(): { id: string; info: ModelInfo }
 
 	/**
@@ -35,10 +37,11 @@ export interface ApiHandler {
 	 * All providers extend BaseProvider which provides a default tiktoken implementation,
 	 * but they can override this to use their native token counting endpoints
 	 *
-	 * @param content The content to count tokens for
+	 * @param content The content to count tokens for (using NeutralMessageContent)
 	 * @returns A promise resolving to the token count
 	 */
-	countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number>
+	// Updated to use NeutralMessageContent
+	countTokens(content: NeutralMessageContent): Promise<number>
 }
 
 export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
@@ -79,6 +82,7 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 		case "fake-ai":
 			return new FakeAIHandler(options)
 		default:
+			// Default to AnthropicHandler, but it will now expect NeutralHistory
 			return new AnthropicHandler(options)
 	}
 }

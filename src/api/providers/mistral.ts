@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import { Mistral } from "@mistralai/mistralai"
 import { SingleCompletionHandler } from "../"
 import {
@@ -7,11 +6,9 @@ import {
 	MistralModelId,
 	mistralModels,
 	ModelInfo,
-	openAiNativeDefaultModelId,
-	OpenAiNativeModelId,
-	openAiNativeModels,
 } from "../../shared/api"
-import { convertToMistralMessages } from "../transform/mistral-format"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
+import { convertToMistralMessages, convertToMistralContent } from "../transform/neutral-mistral-format"
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
@@ -50,7 +47,7 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 		return "https://api.mistral.ai"
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const response = await this.client.chat.stream({
 			model: this.options.apiModelId || mistralDefaultModelId,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToMistralMessages(messages)],
@@ -92,6 +89,23 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 		return {
 			id: mistralDefaultModelId,
 			info: mistralModels[mistralDefaultModelId],
+		}
+	}
+
+	/**
+	 * Counts tokens for the given content
+	 *
+	 * @param content The content blocks to count tokens for
+	 * @returns A promise resolving to the token count
+	 */
+	override async countTokens(content: NeutralMessageContent): Promise<number> {
+		try {
+			// For now, use the base provider's implementation
+			// Mistral doesn't have a native token counting API
+			return super.countTokens(content);
+		} catch (error) {
+			console.warn("Mistral token counting error, using fallback", error);
+			return super.countTokens(content);
 		}
 	}
 

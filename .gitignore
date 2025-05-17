@@ -39,3 +39,35 @@ dist/
 
 # Logs
 *.log
+
+# Ignore all JS and map files in src and subfolders
+/src/**/*.js
+/src/**/*.js.map
+# Ignore all JS and map files in scripts and subfolders
+/scripts/**/*.js
+/scripts/**/*.js.map
+# Ignore all JS and map files in core, services, integrations, shared, etc.
+/src/core/**/*.js
+/src/core/**/*.js.map
+/src/services/**/*.js
+/src/services/**/*.js.map
+/src/integrations/**/*.js
+/src/integrations/**/*.js.map
+/src/shared/**/*.js
+/src/shared/**/*.js.map
+# Ignore all JS and map files in __tests__ and __mocks__
+/src/**/__tests__/**/*.js
+/src/**/__tests__/**/*.js.map
+/src/**/__mocks__/**/*.js
+/src/**/__mocks__/**/*.js.map
+# Ignore tsbuildinfo
+/tsconfig.tsbuildinfo
+/scripts/**/*.js.map
+/scripts/**/*.js
+# Ignore build output in webview-ui
+/webview-ui/build/
+/webview-ui/tsconfig.tsbuildinfo
+/webview-ui/src/**/*.js
+/webview-ui/src/**/*.js.map
+# Ignore temp images
+/assets/images/temp_image_*.png

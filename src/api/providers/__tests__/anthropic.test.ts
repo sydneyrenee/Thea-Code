@@ -2,6 +2,7 @@
 
 import { AnthropicHandler } from "../anthropic"
 import { ApiHandlerOptions } from "../../../shared/api"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 
 const mockCreate = jest.fn()
 
@@ -100,20 +101,23 @@ describe("AnthropicHandler", () => {
 		const systemPrompt = "You are a helpful assistant."
 
 		it("should handle prompt caching for supported models", async () => {
-			const stream = handler.createMessage(systemPrompt, [
+			// Use neutral format for messages
+			const neutralMessages: NeutralConversationHistory = [
 				{
 					role: "user",
-					content: [{ type: "text" as const, text: "First message" }],
+					content: [{ type: "text", text: "First message" }],
 				},
 				{
 					role: "assistant",
-					content: [{ type: "text" as const, text: "Response" }],
+					content: [{ type: "text", text: "Response" }],
 				},
 				{
 					role: "user",
-					content: [{ type: "text" as const, text: "Second message" }],
+					content: [{ type: "text", text: "Second message" }],
 				},
-			])
+			];
+			
+			const stream = handler.createMessage(systemPrompt, neutralMessages)
 
 			const chunks: any[] = []
 			for await (const chunk of stream) {
@@ -222,5 +226,61 @@ describe("AnthropicHandler", () => {
 			expect(result.thinking).toBeUndefined()
 			expect(result.temperature).toBe(0)
 		})
+	})
+
+	describe("countTokens", () => {
+		it("should count tokens using Anthropic API", async () => {
+			// Mock the countTokens response
+			const mockCountTokensResponse = {
+				input_tokens: 42
+			};
+			
+			// Setup the mock
+			const mockCountTokens = jest.fn().mockResolvedValue(mockCountTokensResponse);
+			(handler as any).client.messages.countTokens = mockCountTokens;
+			
+			// Create neutral content for testing
+			const neutralContent = [
+				{ type: "text" as const, text: "Test message" }
+			];
+			
+			// Call the method
+			const result = await handler.countTokens(neutralContent);
+			
+			// Verify the result
+			expect(result).toBe(42);
+			
+			// Verify the API was called with converted content
+			expect(mockCountTokens).toHaveBeenCalled();
+			const callArg = mockCountTokens.mock.calls[0][0];
+			expect(callArg.messages[0].role).toBe("user");
+			expect(callArg.messages[0].content).toEqual([
+				{ type: "text", text: "Test message" }
+			]);
+		});
+		
+		it("should fall back to base provider implementation on error", async () => {
+			// Mock the countTokens to throw an error
+			const mockCountTokens = jest.fn().mockRejectedValue(new Error("API Error"));
+			(handler as any).client.messages.countTokens = mockCountTokens;
+			
+			// Mock the base provider's countTokens method
+			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+				.mockResolvedValue(24);
+			
+			// Create neutral content for testing
+			const neutralContent = [
+				{ type: "text" as const, text: "Test message" }
+			];
+			
+			// Call the method
+			const result = await handler.countTokens(neutralContent);
+			
+			// Verify the result comes from the base implementation
+			expect(result).toBe(24);
+			
+			// Verify the base method was called with the original neutral content
+			expect(mockBaseCountTokens).toHaveBeenCalledWith(neutralContent);
+		});
 	})
 })

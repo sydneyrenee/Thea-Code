@@ -1,6 +1,6 @@
 import { GeminiHandler } from "../gemini"
-import { Anthropic } from "@anthropic-ai/sdk"
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 
 // Mock the Google Generative AI SDK
 jest.mock("@google/generative-ai", () => ({
@@ -44,14 +44,14 @@ describe("GeminiHandler", () => {
 	})
 
 	describe("createMessage", () => {
-		const mockMessages: Anthropic.Messages.MessageParam[] = [
+		const mockMessages: NeutralConversationHistory = [
 			{
 				role: "user",
-				content: "Hello",
+				content: [{ type: "text", text: "Hello" }],
 			},
 			{
 				role: "assistant",
-				content: "Hi there!",
+				content: [{ type: "text", text: "Hi there!" }],
 			},
 		]
 
@@ -216,5 +216,129 @@ describe("GeminiHandler", () => {
 			const modelInfo = invalidHandler.getModel()
 			expect(modelInfo.id).toBe("gemini-2.0-flash-001") // Default model
 		})
+	})
+
+	describe("countTokens", () => {
+		it("should count tokens for text content", async () => {
+			// Mock the base provider's countTokens method
+			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+				.mockResolvedValue(10);
+			
+			// Create neutral content for testing
+			const neutralContent = [
+				{ type: "text" as const, text: "Test message" }
+			];
+			
+			// Call the method
+			const result = await handler.countTokens(neutralContent);
+			
+			// Verify the result
+			expect(result).toBe(10);
+			
+			// Verify the base method was called with the original neutral content
+			expect(mockBaseCountTokens).toHaveBeenCalledWith(neutralContent);
+			
+			// Restore the original implementation
+			mockBaseCountTokens.mockRestore();
+		});
+		
+		it("should handle mixed content including images", async () => {
+			// Mock the base provider's countTokens method
+			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+				.mockImplementation(async (content) => {
+					// Return 5 tokens for text content
+					if (Array.isArray(content) && content.length === 1 && content[0].type === "text") {
+						return 5;
+					}
+					return 0;
+				});
+			
+			// Create mixed content with text and image
+			const mixedContent = [
+				{ type: "text" as const, text: "Test message" },
+				{
+					type: "image" as const,
+					source: {
+						type: "base64" as const,
+						media_type: "image/png",
+						data: "base64data"
+					}
+				}
+			];
+			
+			// Call the method
+			const result = await handler.countTokens(mixedContent);
+			
+			// Verify the result (5 for text + 258 for image)
+			expect(result).toBe(263);
+			
+			// Restore the original implementation
+			mockBaseCountTokens.mockRestore();
+		});
+		
+		it("should handle tool use content", async () => {
+			// Mock the base provider's countTokens method
+			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+				.mockImplementation(async (content) => {
+					// Return 15 tokens for the JSON string representation
+					if (Array.isArray(content) && content.length === 1 && content[0].type === "text") {
+						return 15;
+					}
+					return 0;
+				});
+			
+			// Create tool use content
+			const toolUseContent = [
+				{
+					type: "tool_use" as const,
+					id: "calculator-123",
+					name: "calculator",
+					input: { a: 5, b: 10, operation: "add" }
+				}
+			];
+			
+			// Call the method
+			const result = await handler.countTokens(toolUseContent);
+			
+			// Verify the result
+			expect(result).toBe(15);
+			
+			// Restore the original implementation
+			mockBaseCountTokens.mockRestore();
+		});
+		
+		it("should handle errors by falling back to base implementation", async () => {
+			// Mock the implementation to throw an error first time, then succeed second time
+			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+				.mockResolvedValue(8);
+			
+			// Create a spy on console.warn
+			const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+			
+			// Create content that will cause an error in our custom logic
+			const content = [{ type: "text" as const, text: "Test content" }];
+			
+			// Force an error in the try block
+			const mockError = new Error("Test error");
+			jest.spyOn(handler as any, 'countTokens').mockImplementationOnce(() => {
+				throw mockError;
+			});
+			
+			// Call the method (this will throw and then call the original)
+			const result = await handler.countTokens(content);
+			
+			// Verify the warning was logged
+			expect(consoleWarnSpy).toHaveBeenCalledWith(
+				"Gemini token counting error, using fallback",
+				mockError
+			);
+			
+			// Verify the result from the fallback
+			expect(result).toBe(8);
+			
+			// Restore the original implementations
+			mockBaseCountTokens.mockRestore();
+			consoleWarnSpy.mockRestore();
+		});
 	})
 })

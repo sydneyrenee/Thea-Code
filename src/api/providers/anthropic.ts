@@ -8,6 +8,8 @@ import {
 	ApiHandlerOptions,
 	ModelInfo,
 } from "../../shared/api"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types
+import { convertToAnthropicHistory, convertToAnthropicContentBlocks } from "../transform/neutral-anthropic-format"; // Import conversion functions
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
@@ -26,7 +28,11 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		})
 	}
 
-	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	// Updated to accept NeutralConversationHistory
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// Convert neutral history to Anthropic format
+		const anthropicMessages = convertToAnthropicHistory(messages);
+
 		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
 		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
 		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
@@ -41,7 +47,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 				 * The latest message will be the new user message, one before will
 				 * be the assistant message from a previous request, and the user message before that will be a previously cached user message. So we need to mark the latest user message as ephemeral to cache it for the next request, and mark the second to last user message as ephemeral to let the server know the last message to retrieve from the cache for the current request..
 				 */
-				const userMsgIndices = messages.reduce(
+				// Use the converted Anthropic messages
+				const userMsgIndices = anthropicMessages.reduce(
 					(acc, msg, index) => (msg.role === "user" ? [...acc, index] : acc),
 					[] as number[],
 				)
@@ -57,7 +64,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 						thinking,
 						// Setting cache breakpoint for system prompt so new tasks can reuse it.
 						system: [{ text: systemPrompt, type: "text", cache_control: cacheControl }],
-						messages: messages.map((message, index) => {
+						// Use the converted Anthropic messages
+						messages: anthropicMessages.map((message, index) => {
 							if (index === lastUserMsgIndex || index === secondLastMsgUserIndex) {
 								return {
 									...message,
@@ -114,7 +122,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 					max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 					temperature,
 					system: [{ text: systemPrompt, type: "text" }],
-					messages,
+					// Use the converted Anthropic messages
+					messages: anthropicMessages,
 					// tools,
 					// tool_choice: { type: "auto" },
 					stream: true,
@@ -185,7 +194,26 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 
 					break
 				case "content_block_stop":
-					break
+					break;
+				case "content_block_start":
+					// Check if the content block is a tool use block
+					if (chunk.content_block.type === "tool_use") {
+						// Process tool use using MCP integration
+						const toolUseBlock = chunk.content_block as Anthropic.ToolUseBlock;
+						const toolResult = await this.processToolUse({
+							id: toolUseBlock.id,
+							name: toolUseBlock.name,
+							input: toolUseBlock.input
+						});
+						
+						// Yield tool result
+						yield {
+							type: 'tool_result',
+							id: toolUseBlock.id,
+							content: toolResult
+						};
+					}
+					break;
 			}
 		}
 	}
@@ -235,8 +263,11 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	 * @param content The content blocks to count tokens for
 	 * @returns A promise resolving to the token count
 	 */
-	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
+	override async countTokens(content: NeutralMessageContent): Promise<number> {
 		try {
+			// Convert neutral content to Anthropic content blocks for API call
+			const anthropicContentBlocks = convertToAnthropicContentBlocks(content);
+
 			// Use the current model
 			const actualModelId = this.getModel().id
 
@@ -245,7 +276,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 				messages: [
 					{
 						role: "user",
-						content: content,
+						content: anthropicContentBlocks, // Use the converted content blocks
 					},
 				],
 			})
@@ -255,8 +286,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			// Log error but fallback to tiktoken estimation
 			console.warn("Anthropic token counting failed, using fallback", error)
 
-			// Use the base provider's implementation as fallback
-			return super.countTokens(content)
+			// Use the base provider's implementation as fallback (which now expects NeutralMessageContent)
+			return super.countTokens(content) // Pass the original neutral content
 		}
 	}
 }

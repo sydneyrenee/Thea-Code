@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import { SingleCompletionHandler } from "../"
 import {
@@ -8,7 +7,11 @@ import {
 	OpenAiNativeModelId,
 	openAiNativeModels,
 } from "../../shared/api"
-import { convertToOpenAiMessages } from "../transform/openai-format"
+import type {
+	NeutralConversationHistory,
+	NeutralMessageContent
+} from "../../shared/neutral-history" // Import neutral history types
+import { convertToOpenAiHistory } from "../transform/neutral-openai-format" // Import conversion function
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
@@ -25,30 +28,44 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		this.client = new OpenAI({ apiKey })
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const modelId = this.getModel().id
 
+		// Convert neutral history to OpenAI format
+		const openAiMessages = convertToOpenAiHistory(messages);
+
+		// Add system prompt if not already included
+		const hasSystemMessage = openAiMessages.some(msg => msg.role === 'system');
+		const messagesWithSystem: OpenAI.Chat.ChatCompletionMessageParam[] = hasSystemMessage ? openAiMessages : [
+			{ role: 'system' as const, content: systemPrompt },
+			...openAiMessages
+		];
+
 		if (modelId.startsWith("o1")) {
-			yield* this.handleO1FamilyMessage(modelId, systemPrompt, messages)
+			yield* this.handleO1FamilyMessage(modelId, systemPrompt, messagesWithSystem)
 			return
 		}
 
 		if (modelId.startsWith("o3-mini")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
+			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messagesWithSystem)
 			return
 		}
 
-		yield* this.handleDefaultModelMessage(modelId, systemPrompt, messages)
+		yield* this.handleDefaultModelMessage(modelId, systemPrompt, messagesWithSystem)
 	}
 
 	private async *handleO1FamilyMessage(
 		modelId: string,
 		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
+		messages: Array<OpenAI.Chat.ChatCompletionMessageParam>,
 	): ApiStream {
 		// o1 supports developer prompt with formatting
 		// o1-preview and o1-mini only support user messages
 		const isOriginalO1 = modelId === "o1"
+		
+		// For o1 models, we need to handle the system prompt specially
+		const messagesWithoutSystem = messages.filter(msg => msg.role !== 'system');
+		
 		const response = await this.client.chat.completions.create({
 			model: modelId,
 			messages: [
@@ -56,7 +73,7 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 					role: isOriginalO1 ? "developer" : "user",
 					content: isOriginalO1 ? `Formatting re-enabled\n${systemPrompt}` : systemPrompt,
 				},
-				...convertToOpenAiMessages(messages),
+				...messagesWithoutSystem,
 			],
 			stream: true,
 			stream_options: { include_usage: true },
@@ -68,34 +85,44 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 	private async *handleO3FamilyMessage(
 		modelId: string,
 		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
+		messages: Array<OpenAI.Chat.ChatCompletionMessageParam>,
 	): ApiStream {
-		const stream = await this.client.chat.completions.create({
+		// For o3-mini models, we need to handle the system prompt specially
+		const messagesWithoutSystem = messages.filter(msg => msg.role !== 'system');
+		
+		// Create request options with reasoning_effort if available
+		const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 			model: "o3-mini",
 			messages: [
 				{
 					role: "developer",
 					content: `Formatting re-enabled\n${systemPrompt}`,
 				},
-				...convertToOpenAiMessages(messages),
+				...messagesWithoutSystem,
 			],
 			stream: true,
 			stream_options: { include_usage: true },
-			reasoning_effort: this.getModel().info.reasoningEffort,
-		})
-
+		};
+		
+		// Add reasoning_effort if it's available in the model info
+		const reasoningEffort = this.getModel().info.reasoningEffort;
+		if (reasoningEffort !== undefined) {
+			(requestOptions as any).reasoning_effort = reasoningEffort;
+		}
+		
+		const stream = await this.client.chat.completions.create(requestOptions);
 		yield* this.handleStreamResponse(stream)
 	}
 
 	private async *handleDefaultModelMessage(
 		modelId: string,
 		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
+		messages: Array<OpenAI.Chat.ChatCompletionMessageParam>,
 	): ApiStream {
 		const stream = await this.client.chat.completions.create({
 			model: modelId,
 			temperature: this.options.modelTemperature ?? OPENAI_NATIVE_DEFAULT_TEMPERATURE,
-			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
+			messages: messages, // Already includes system message
 			stream: true,
 			stream_options: { include_usage: true },
 		})
@@ -142,6 +169,47 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 			return { id, info: openAiNativeModels[id] }
 		}
 		return { id: openAiNativeDefaultModelId, info: openAiNativeModels[openAiNativeDefaultModelId] }
+	}
+	
+	/**
+	 * Counts tokens for the given content using OpenAI's API
+	 * Falls back to the base provider's implementation if the API call fails
+	 *
+	 * @param content The content blocks to count tokens for
+	 * @returns A promise resolving to the token count
+	 */
+	override async countTokens(content: NeutralMessageContent): Promise<number> {
+		try {
+			// Convert neutral content to OpenAI format
+			const openAiContentBlocks = convertToOpenAiHistory([{
+				role: 'user',
+				content: content
+			}]);
+			
+			// Use the current model
+			const actualModelId = this.getModel().id;
+			
+			// Create a completion request with the content
+			const response = await this.client.chat.completions.create({
+				model: actualModelId,
+				messages: openAiContentBlocks,
+				stream: false
+			});
+			
+			// If usage information is available, return the prompt tokens
+			if (response.usage) {
+				return response.usage.prompt_tokens;
+			}
+			
+			// Fallback to base implementation if no usage information
+			return super.countTokens(content);
+		} catch (error) {
+			// Log error but fallback to tiktoken estimation
+			console.warn("OpenAI Native token counting failed, using fallback", error);
+			
+			// Use the base provider's implementation as fallback
+			return super.countTokens(content);
+		}
 	}
 
 	async completePrompt(prompt: string): Promise<string> {

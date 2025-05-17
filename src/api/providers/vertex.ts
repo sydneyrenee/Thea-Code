@@ -5,8 +5,16 @@ import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
 import { VertexAI } from "@google-cloud/vertexai"
 
 import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
-import { convertAnthropicMessageToVertexGemini } from "../transform/vertex-gemini-format"
+import {
+    convertToVertexGeminiMessage,
+    convertToVertexGeminiHistory,
+    convertToVertexClaudeHistory,
+    convertToVertexClaudeMessage,
+    formatMessageForCache,
+    convertToVertexClaudeContentBlocks
+} from "../transform/neutral-vertex-format"
 import { BaseProvider } from "./base-provider"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
@@ -53,8 +61,10 @@ interface VertexUsage {
 	cache_read_input_tokens?: number
 }
 
-interface VertexMessage extends Omit<Anthropic.Messages.MessageParam, "content"> {
-	content: string | VertexContentBlock[]
+interface VertexMessage {
+	role: "user" | "assistant" | "system" | "tool";
+	content: string | VertexContentBlock[];
+	ts?: number;
 }
 
 interface VertexMessageCreateParams {
@@ -173,7 +183,9 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-	private formatMessageForCache(message: Anthropic.Messages.MessageParam, shouldCache: boolean): VertexMessage {
+	// This method is no longer needed as we're using the function from neutral-vertex-format.ts
+	// Keeping it for reference but it's not used anymore
+	private formatMessageForCacheOld(message: VertexMessage, shouldCache: boolean): VertexMessage {
 		// Assistant messages are kept as-is since they can't be cached
 		if (message.role === "assistant") {
 			return message as VertexMessage
@@ -195,40 +207,40 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		}
 
 		// For array content, find the last text block index once before mapping
-		const lastTextBlockIndex = message.content.reduce(
-			(lastIndex, content, index) => (content.type === "text" ? index : lastIndex),
+		const lastTextBlockIndex = Array.isArray(message.content) ? message.content.reduce(
+			(lastIndex: number, content: any, index: number) => (content.type === "text" ? index : lastIndex),
 			-1,
-		)
+		) : -1;
 
 		// Then use this pre-calculated index in the map function
 		return {
 			...message,
-			content: message.content.map((content, contentIndex) => {
+			content: Array.isArray(message.content) ? message.content.map((content: any, contentIndex: number) => {
 				// Images and other non-text content are passed through unchanged
 				if (content.type === "image") {
-					return content as VertexImageBlock
+					return content as VertexImageBlock;
 				}
 
 				// Check if this is the last text block using our pre-calculated index
-				const isLastTextBlock = contentIndex === lastTextBlockIndex
+				const isLastTextBlock = contentIndex === lastTextBlockIndex;
 
 				return {
 					type: "text" as const,
 					text: (content as { text: string }).text,
 					...(shouldCache && isLastTextBlock && { cache_control: { type: "ephemeral" } }),
-				}
-			}),
-		}
+				};
+			}) : message.content,
+		};
 	}
 
-	private async *createGeminiMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	private async *createGeminiMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const model = this.geminiClient.getGenerativeModel({
 			model: this.getModel().id,
 			systemInstruction: systemPrompt,
 		})
 
 		const result = await model.generateContentStream({
-			contents: messages.map(convertAnthropicMessageToVertexGemini),
+			contents: convertToVertexGeminiHistory(messages),
 			generationConfig: {
 				maxOutputTokens: this.getModel().info.maxTokens ?? undefined,
 				temperature: this.options.modelTemperature ?? 0,
@@ -257,7 +269,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-	private async *createClaudeMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	private async *createClaudeMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const model = this.getModel()
 		let { id, info, temperature, maxTokens, thinking } = model
 		const useCache = model.info.supportsPromptCache
@@ -287,16 +299,16 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 						},
 					]
 				: systemPrompt,
-			messages: messages.map((message, index) => {
+			messages: convertToVertexClaudeHistory(messages).map((message, index) => {
 				// Only cache the last two user messages
 				const shouldCache = useCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
-				return this.formatMessageForCache(message, shouldCache)
+				return formatMessageForCache(message, shouldCache)
 			}),
 			stream: true,
 		}
 
 		const stream = (await this.anthropicClient.messages.create(
-			params as Anthropic.Messages.MessageCreateParamsStreaming,
+			params as any, // Cast to any to avoid type errors
 		)) as unknown as AnthropicStream<VertexMessageStreamEvent>
 
 		// Process the stream chunks
@@ -375,7 +387,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		switch (this.modelType) {
 			case this.MODEL_CLAUDE: {
 				yield* this.createClaudeMessage(systemPrompt, messages)
@@ -415,8 +427,17 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				model: this.getModel().id,
 			})
 
+			// Create a neutral history with a single message
+			const neutralHistory = [{
+				role: "user" as const,
+				content: prompt
+			}];
+
+			// Convert the neutral history to Vertex Gemini format
+			const geminiMessages = convertToVertexGeminiHistory(neutralHistory);
+
 			const result = await model.generateContent({
-				contents: [{ role: "user", parts: [{ text: prompt }] }],
+				contents: geminiMessages,
 				generationConfig: {
 					temperature: this.options.modelTemperature ?? 0,
 				},
@@ -443,26 +464,27 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			let { id, info, temperature, maxTokens, thinking } = this.getModel()
 			const useCache = info.supportsPromptCache
 
-			const params: Anthropic.Messages.MessageCreateParamsNonStreaming = {
+			// Create a neutral history with a single message
+			const neutralHistory = [{
+				role: "user" as const,
+				content: prompt
+			}];
+
+			// Convert the neutral history to Vertex Claude format
+			const claudeMessages = convertToVertexClaudeHistory(neutralHistory);
+
+			// Apply cache control if needed
+			const messagesWithCache = claudeMessages.map(message =>
+				useCache ? formatMessageForCache(message, true) : message
+			);
+
+			const params: any = { // Use any type to avoid dependency on Anthropic types
 				model: id,
 				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 				temperature,
 				thinking,
 				system: "", // No system prompt needed for single completions
-				messages: [
-					{
-						role: "user",
-						content: useCache
-							? [
-									{
-										type: "text" as const,
-										text: prompt,
-										cache_control: { type: "ephemeral" },
-									},
-								]
-							: prompt,
-					},
-				],
+				messages: messagesWithCache,
 				stream: false,
 			}
 
@@ -480,6 +502,38 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			throw error
+		}
+	}
+
+	/**
+	 * Counts tokens for the given content
+	 *
+	 * @param content The content blocks to count tokens for
+	 * @returns A promise resolving to the token count
+	 */
+	override async countTokens(content: NeutralMessageContent): Promise<number> {
+		try {
+			// For Claude models, convert to Vertex Claude content blocks
+			if (this.modelType === this.MODEL_CLAUDE) {
+				// Convert neutral content to Vertex Claude content blocks
+				const vertexContentBlocks = convertToVertexClaudeContentBlocks(content);
+				
+				// Create a mock message to simulate token counting
+				const mockMessage = {
+					role: "user" as const,
+					content: vertexContentBlocks
+				};
+				
+				// Use the base provider's implementation with the converted content
+				// Vertex doesn't have a native token counting API
+				return super.countTokens(content);
+			} else {
+				// For Gemini models, use the base provider's implementation directly
+				return super.countTokens(content);
+			}
+		} catch (error) {
+			console.warn("Vertex token counting error, using fallback", error);
+			return super.countTokens(content);
 		}
 	}
 

@@ -36,9 +36,7 @@ export class McpToolExecutor extends EventEmitter {
   private constructor(config?: SseTransportConfig) {
     super();
     this.sseConfig = config;
-    // Note: EmbeddedMcpServer will be renamed to EmbeddedMcpProvider in a future task
-    // For now, we're just updating the reference name
-    this.mcpProvider = new (require("../EmbeddedMcpServer").EmbeddedMcpServer)(config);
+    this.mcpProvider = new (require("../providers/EmbeddedMcpProvider").EmbeddedMcpProvider)(config);
     this.toolRegistry = McpToolRegistry.getInstance();
     
     // Forward events from the MCP provider

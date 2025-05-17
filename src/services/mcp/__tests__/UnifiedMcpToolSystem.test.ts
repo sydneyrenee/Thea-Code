@@ -1,13 +1,13 @@
 import { UnifiedMcpToolSystem, NeutralToolUseRequest, NeutralToolResult } from '../UnifiedMcpToolSystem';
 import { McpConverters } from '../McpConverters';
 import { McpToolRouter, ToolUseFormat } from '../McpToolRouter';
-import { EmbeddedMcpServer } from '../EmbeddedMcpServer';
+import { EmbeddedMcpProvider } from '../providers/EmbeddedMcpProvider';
 import { McpToolRegistry } from '../McpToolRegistry';
 
-// Mock the EmbeddedMcpServer
-jest.mock('../EmbeddedMcpServer', () => {
+// Mock the EmbeddedMcpProvider
+jest.mock('../providers/EmbeddedMcpProvider', () => {
   return {
-    EmbeddedMcpServer: jest.fn().mockImplementation(() => {
+    EmbeddedMcpProvider: jest.fn().mockImplementation(() => {
       return {
         on: jest.fn(),
         start: jest.fn().mockResolvedValue(undefined),

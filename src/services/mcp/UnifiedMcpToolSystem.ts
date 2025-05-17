@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
-import { ToolDefinition, ToolCallResult, EmbeddedMcpServer } from "./EmbeddedMcpServer";
+import { ToolDefinition, ToolCallResult } from "./types/McpProviderTypes";
+import { EmbeddedMcpProvider } from "./providers/EmbeddedMcpProvider";
 import { McpToolRegistry } from "./McpToolRegistry";
 import { 
   jsonToolUseToXml, 
@@ -7,7 +8,7 @@ import {
   openAiFunctionCallToNeutralToolUse,
   neutralToolUseToOpenAiFunctionCall
 } from "../../utils/json-xml-bridge";
-import { SseTransportConfig } from "./config/SseTransportConfig";
+import { SseTransportConfig } from "./transport/config/SseTransportConfig";
 
 /**
  * Interface for tool use request in a neutral format
@@ -44,7 +45,7 @@ export interface NeutralToolResult {
  */
 export class UnifiedMcpToolSystem extends EventEmitter {
   private static instance: UnifiedMcpToolSystem;
-  private mcpServer: EmbeddedMcpServer;
+  private mcpServer: EmbeddedMcpProvider;
   private toolRegistry: McpToolRegistry;
   private isInitialized: boolean = false;
   private sseConfig?: SseTransportConfig;
@@ -70,7 +71,7 @@ export class UnifiedMcpToolSystem extends EventEmitter {
   private constructor(config?: SseTransportConfig) {
     super();
     this.sseConfig = config;
-    this.mcpServer = new EmbeddedMcpServer(config);
+    this.mcpServer = new EmbeddedMcpProvider(config);
     this.toolRegistry = McpToolRegistry.getInstance();
     
     // Forward events from the MCP server

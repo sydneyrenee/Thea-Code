@@ -1,5 +1,5 @@
 import { McpConverters } from '../McpConverters';
-import { ToolDefinition } from '../EmbeddedMcpServer';
+import { ToolDefinition } from '../types/McpProviderTypes';
 import { NeutralToolUseRequest, NeutralToolResult } from '../UnifiedMcpToolSystem';
 
 // Mock the json-xml-bridge utilities

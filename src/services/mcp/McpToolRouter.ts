@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { UnifiedMcpToolSystem, NeutralToolUseRequest, NeutralToolResult } from "./UnifiedMcpToolSystem";
 import { McpConverters } from "./McpConverters";
-import { SseTransportConfig } from "./config/SseTransportConfig";
+import { SseTransportConfig } from "./transport/config/SseTransportConfig";
 
 /**
  * Enum for supported tool use formats

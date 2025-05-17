@@ -1,13 +1,13 @@
-import { EmbeddedMcpServer } from '../EmbeddedMcpServer';
+import { EmbeddedMcpProvider } from '../providers/EmbeddedMcpProvider';
 import { SseClientFactory } from '../client/SseClientFactory';
-import { SseTransportConfig } from '../config/SseTransportConfig';
+import { SseTransportConfig } from '../transport/config/SseTransportConfig';
 
 describe('SSE Transport', () => {
-  let server: EmbeddedMcpServer;
+  let server: EmbeddedMcpProvider;
   
   beforeEach(() => {
     // Create a new server with a random port for each test
-    server = new EmbeddedMcpServer({
+    server = new EmbeddedMcpProvider({
       port: 0, // Use random port for tests
       hostname: 'localhost'
     });
@@ -143,7 +143,7 @@ describe('SSE Transport', () => {
       apiPath: '/custom/api'
     };
     
-    const customServer = new EmbeddedMcpServer(customConfig);
+    const customServer = new EmbeddedMcpProvider(customConfig);
     
     try {
       // Start the server

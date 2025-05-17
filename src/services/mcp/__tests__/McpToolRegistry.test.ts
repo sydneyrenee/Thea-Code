@@ -1,5 +1,5 @@
 import { McpToolRegistry } from '../McpToolRegistry';
-import { ToolDefinition } from '../EmbeddedMcpServer';
+import { ToolDefinition } from '../types/McpProviderTypes';
 
 describe('McpToolRegistry', () => {
   let registry: McpToolRegistry;

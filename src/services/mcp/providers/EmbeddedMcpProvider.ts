@@ -1,54 +1,16 @@
 import { EventEmitter } from "events"
-import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "./config/SseTransportConfig";
+import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "../transport/config/SseTransportConfig";
+import {
+  ToolCallResult,
+  ToolDefinition,
+  ResourceDefinition,
+  ResourceTemplateDefinition,
+  IMcpProvider
+} from "../types/McpProviderTypes";
+
 
 /**
- * Interface for tool call result
- */
-export interface ToolCallResult {
-  content: Array<{
-    type: string;
-    text?: string;
-    [key: string]: unknown;
-  }>;
-  isError?: boolean;
-  _meta?: Record<string, unknown>;
-  [key: string]: unknown;
-}
-
-/**
- * Interface for tool definitions that can be registered with the embedded MCP server
- */
-export interface ToolDefinition {
-  name: string
-  description?: string
-  paramSchema?: Record<string, any>
-  handler: (args: Record<string, unknown>) => Promise<ToolCallResult>
-}
-
-/**
- * Interface for resource definitions that can be registered with the embedded MCP server
- */
-export interface ResourceDefinition {
-  uri: string
-  name: string
-  mimeType?: string
-  description?: string
-  handler: () => Promise<string | Buffer>
-}
-
-/**
- * Interface for resource template definitions that can be registered with the embedded MCP server
- */
-export interface ResourceTemplateDefinition {
-  uriTemplate: string
-  name: string
-  description?: string
-  mimeType?: string
-  handler: (params: Record<string, string>) => Promise<string | Buffer>
-}
-
-/**
- * EmbeddedMcpServer provides a local MCP server implementation that hosts tools
+ * EmbeddedMcpProvider provides a local MCP server implementation that hosts tools
  * from various sources including XML and JSON tool definitions.
  * 
  * This server acts as a unified tool system that can be used by models
@@ -92,7 +54,7 @@ class MockSseServerTransport {
   }
 }
 
-export class EmbeddedMcpServer extends EventEmitter {
+export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
   private server: any
   private tools: Map<string, ToolDefinition> = new Map()
   private resources: Map<string, ResourceDefinition> = new Map()
@@ -115,14 +77,14 @@ export class EmbeddedMcpServer extends EventEmitter {
       // Try to import the MCP SDK dynamically
       const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
       this.server = new McpServer({
-        name: "EmbeddedMcpServer",
+        name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     } catch (error) {
       // If the MCP SDK is not installed, use the mock implementation
       console.warn("MCP SDK not found, using mock implementation");
       this.server = new MockMcpServer({
-        name: "EmbeddedMcpServer",
+        name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     }

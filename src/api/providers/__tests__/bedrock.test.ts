@@ -2,15 +2,24 @@ import { AwsBedrockHandler } from "../bedrock";
 import { ApiHandlerOptions } from "../../../shared/api";
 import { NeutralConversationHistory } from "../../../shared/neutral-history";
 import * as neutralBedrockFormat from "../../transform/neutral-bedrock-format";
+import type { ApiStreamChunk } from '../../transform/stream'; // Import ApiStreamChunk
+
+// Explicitly import the mocked module to access its exports within the mock
+import * as BedrockRuntimeClientMock from "@aws-sdk/client-bedrock-runtime";
 
 // Mock the AWS SDK
+
 jest.mock("@aws-sdk/client-bedrock-runtime", () => {
+  const mockConverseStreamCommand = jest.fn();
+  const mockConverseCommand = jest.fn();
+
   const mockSend = jest.fn().mockImplementation(async (command) => {
-    if (command.constructor.name === "ConverseStreamCommand") {
+    // Check if the command is an instance of the mocked constructors from the imported mock
+    if (command instanceof BedrockRuntimeClientMock.ConverseStreamCommand) {
       return {
         stream: {
           [Symbol.asyncIterator]: async function* () {
-            // Metadata event
+            // Metadata event (object)
             yield {
               metadata: {
                 usage: {
@@ -19,7 +28,7 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => {
                 },
               },
             };
-            // Content block start
+            // Content block start (object)
             yield {
               contentBlockStart: {
                 start: {
@@ -27,14 +36,14 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => {
                 },
               },
             };
-            // Message stop
+            // Message stop (object)
             yield {
               messageStop: {},
             };
           },
         },
       };
-    } else if (command.constructor.name === "ConverseCommand") {
+    } else if (command instanceof BedrockRuntimeClientMock.ConverseCommand) {
       return {
         output: new TextEncoder().encode(
           JSON.stringify({ content: "Test completion" })
@@ -52,8 +61,8 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => {
         region: "us-east-1",
       },
     })),
-    ConverseStreamCommand: jest.fn(),
-    ConverseCommand: jest.fn(),
+    ConverseStreamCommand: mockConverseStreamCommand,
+    ConverseCommand: mockConverseCommand,
   };
 });
 
@@ -92,21 +101,21 @@ describe("AwsBedrockHandler", () => {
       ];
 
       const stream = handler.createMessage(systemPrompt, messages);
-      const chunks = [];
+      const chunks: ApiStreamChunk[] = [];
 
-      for await (const chunk of stream) {
-        chunks.push(chunk);
-      }
+     for await (const chunk of stream) {
+       chunks.push(chunk);
+     }
 
-      expect(neutralBedrockFormat.convertToBedrockConverseMessages).toHaveBeenCalledWith(messages);
-      expect(chunks).toHaveLength(2);
-      expect(chunks[0]).toEqual({
-        type: "usage",
-        inputTokens: 10,
-        outputTokens: 5,
-      });
-      expect(chunks[1]).toEqual({ type: "text", text: "Test response" });
-    });
+     expect(neutralBedrockFormat.convertToBedrockConverseMessages).toHaveBeenCalledWith(messages);
+     expect(chunks).toHaveLength(2);
+     expect(chunks[0]).toEqual({
+       type: "usage",
+       inputTokens: 10,
+       outputTokens: 5,
+     });
+     expect(chunks[1]).toEqual({ type: "text", text: "Test response" });
+   });
   });
 
   describe("countTokens", () => {

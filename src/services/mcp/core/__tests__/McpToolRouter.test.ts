@@ -12,22 +12,47 @@ import {
   ToolResultWithFormat 
 } from "../../types/McpToolTypes";
 import { SseTransportConfig } from "../../types/McpTransportTypes";
-import { EventEmitter } from "events";
 
 // Mock the McpToolExecutor
+
+// Import EventEmitter outside the factory
+
+// Create a class that extends EventEmitter and includes the mocked methods
+class MockEventEmitterExecutor extends EventEmitter {
+    initialize = jest.fn().mockImplementation(() => Promise.resolve());
+    shutdown = jest.fn().mockImplementation(() => Promise.resolve());
+    executeToolFromNeutralFormat = jest.fn();
+    // Explicitly type the mocked method to match EventEmitter's signature
+    removeAllListeners = jest.fn().mockReturnThis() as (eventName?: string | symbol) => this;
+
+    // Add mock methods for McpIntegration tests and make them Jest mock functions
+    processXmlToolUse = jest.fn().mockImplementation(async (xmlContent: unknown) => {
+      // Simulate processing and returning a result
+      return { type: 'tool_result', tool_use_id: 'mock-xml-id', content: [{ type: 'text', text: `Processed XML: ${xmlContent}` }], status: 'success' };
+    }) as jest.Mock; // Cast to jest.Mock
+
+    processJsonToolUse = jest.fn().mockImplementation(async (jsonContent: unknown) => {
+      // Simulate processing and returning a result
+      return { type: 'tool_result', tool_use_id: 'mock-json-id', content: [{ type: 'text', text: `Processed JSON: ${JSON.stringify(jsonContent)}` }], status: 'success' };
+    }) as jest.Mock; // Cast to jest.Mock
+
+    processOpenAiFunctionCall = jest.fn().mockImplementation(async (functionCall: unknown) => {
+      // Simulate processing and returning a result
+      // Need to cast functionCall to access properties like 'id'
+      const callId = (functionCall as any)?.id || 'mock-openai-id';
+      return { type: 'tool_result', tool_use_id: callId, content: [{ type: 'text', text: `Processed OpenAI: ${JSON.stringify(functionCall)}` }], status: 'success' };
+    }) as jest.Mock; // Cast to jest.Mock
+
+
+    // The 'on' method is inherited from EventEmitter
+}
+
+
 jest.mock("../McpToolExecutor", () => {
-  const mockExecutor = {
-    getInstance: jest.fn(),
-    initialize: jest.fn().mockImplementation(() => Promise.resolve()),
-    shutdown: jest.fn().mockImplementation(() => Promise.resolve()),
-    executeToolFromNeutralFormat: jest.fn(),
-    on: jest.fn(),
-    removeAllListeners: jest.fn()
-  };
-  
   return {
     McpToolExecutor: {
-      getInstance: jest.fn().mockReturnValue(mockExecutor)
+      // getInstance will be mocked in beforeEach
+      getInstance: jest.fn(),
     }
   };
 });
@@ -47,7 +72,7 @@ jest.mock("../McpConverters", () => {
 });
 
 describe("McpToolRouter", () => {
-  // Reset the singleton instance before each test
+  // Reset the singleton instance and explicitly create it after mock setup
   beforeEach(() => {
     // Access private static instance property using type assertion
     (McpToolRouter as any).instance = undefined;
@@ -55,10 +80,18 @@ describe("McpToolRouter", () => {
     // Reset all mocks
     jest.clearAllMocks();
     
-    // Set up default mock implementations
+    // Define the mock implementation for getInstance after clearAllMocks
+    (McpToolExecutor.getInstance as jest.Mock).mockImplementation(() => {
+      const instance = new MockEventEmitterExecutor();
+      // Spy on the 'on' method of the created instance
+      jest.spyOn(instance, 'on' as any).mockReturnThis(); // Cast to any to resolve type mismatch
+      return instance;
+    });
+
+    // Get the mock executor instance using the now correctly mocked getInstance
     const mockExecutor = McpToolExecutor.getInstance();
     
-    // Make the mock executor an event emitter
+    // Make the mock executor an event emitter (this is already done by extending EventEmitter, but the emit mock is needed)
     (mockExecutor as any).emit = jest.fn();
     
     // Set up default mock implementations for McpConverters
@@ -87,7 +120,7 @@ describe("McpToolRouter", () => {
       `<tool_result tool_use_id="${result.tool_use_id}" status="${result.status}">Success</tool_result>`
     );
     
-    (McpConverters.mcpToJson as jest.Mock).mockImplementation((result) => 
+    (McpConverters.mcpToJson as jest.Mock).mockImplementation((result) =>
       JSON.stringify(result)
     );
     
@@ -104,6 +137,9 @@ describe("McpToolRouter", () => {
       content: [{ type: "text", text: "Success" }],
       status: "success"
     }));
+
+    // Explicitly create the McpToolRouter instance AFTER mock setup
+    McpToolRouter.getInstance();
   });
   
   afterEach(() => {
@@ -133,434 +169,434 @@ describe("McpToolRouter", () => {
       expect(instance1).toBe(instance2);
       // We can't directly test the private sseConfig property, but we can verify
       // that the same instance is returned
-    });
-  });
-  
-  describe("Initialization and Shutdown", () => {
-    it("should initialize the MCP tool executor when initialize is called", async () => {
-      const router = McpToolRouter.getInstance();
-      
-      await router.initialize();
-      
-      const mockExecutor = McpToolExecutor.getInstance();
-      expect(mockExecutor.initialize).toHaveBeenCalled();
+      });
     });
     
-    it("should shutdown the MCP tool executor when shutdown is called", async () => {
-      const router = McpToolRouter.getInstance();
-      
-      await router.shutdown();
-      
-      const mockExecutor = McpToolExecutor.getInstance();
-      expect(mockExecutor.shutdown).toHaveBeenCalled();
-    });
-  });
-  
-  describe("Format Detection", () => {
-    it("should detect XML format from string content", () => {
-      const router = McpToolRouter.getInstance();
-      const content = "<read_file><path>test.txt</path></read_file>";
-      
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.XML);
-    });
-    
-    it("should detect JSON format from string content", () => {
-      const router = McpToolRouter.getInstance();
-      const content = JSON.stringify({
-        name: "execute_command",
-        input: { command: "ls -la" }
+    describe("Initialization and Shutdown", () => {
+      it("should initialize the MCP tool executor when initialize is called", async () => {
+        const router = McpToolRouter.getInstance();
+        
+        await router.initialize();
+        
+        const mockExecutor = McpToolExecutor.getInstance();
+        expect(mockExecutor.initialize).toHaveBeenCalled();
       });
       
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.JSON);
+      it("should shutdown the MCP tool executor when shutdown is called", async () => {
+        const router = McpToolRouter.getInstance();
+        
+        await router.shutdown();
+        
+        const mockExecutor = McpToolExecutor.getInstance();
+        expect(mockExecutor.shutdown).toHaveBeenCalled();
+      });
     });
     
-    it("should detect OpenAI format from string content", () => {
-      const router = McpToolRouter.getInstance();
-      const content = JSON.stringify({
-        function_call: {
-          name: "execute_command",
-          arguments: JSON.stringify({ command: "ls -la" })
-        }
+    describe("Format Detection", () => {
+      it("should detect XML format from string content", () => {
+        const router = McpToolRouter.getInstance();
+        const content = "<read_file><path>test.txt</path></read_file>";
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.XML);
       });
       
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.OPENAI);
-    });
-    
-    it("should detect neutral format from string content", () => {
-      const router = McpToolRouter.getInstance();
-      const content = JSON.stringify({
-        type: "tool_use",
-        id: "test-123",
-        name: "execute_command",
-        input: { command: "ls -la" }
-      });
-      
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.NEUTRAL);
-    });
-    
-    it("should detect OpenAI format from object content", () => {
-      const router = McpToolRouter.getInstance();
-      const content = {
-        function_call: {
-          name: "execute_command",
-          arguments: JSON.stringify({ command: "ls -la" })
-        }
-      };
-      
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.OPENAI);
-    });
-    
-    it("should detect neutral format from object content", () => {
-      const router = McpToolRouter.getInstance();
-      const content = {
-        type: "tool_use",
-        id: "test-123",
-        name: "execute_command",
-        input: { command: "ls -la" }
-      };
-      
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.NEUTRAL);
-    });
-    
-    it("should default to JSON format for object content that doesn't match other formats", () => {
-      const router = McpToolRouter.getInstance();
-      const content = {
-        name: "execute_command",
-        input: { command: "ls -la" }
-      };
-      
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.JSON);
-    });
-    
-    it("should default to XML format for string content that can't be parsed as JSON", () => {
-      const router = McpToolRouter.getInstance();
-      const content = "This is not valid JSON or XML";
-      
-      const format = router.detectFormat(content);
-      
-      expect(format).toBe(ToolUseFormat.XML);
-    });
-  });
-  
-  describe("Tool Use Routing", () => {
-    it("should route XML format tool use requests", async () => {
-      const router = McpToolRouter.getInstance();
-      const request: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.XML,
-        content: "<read_file><path>test.txt</path></read_file>"
-      };
-      
-      const result = await router.routeToolUse(request);
-      
-      // Verify conversion to MCP format
-      expect(McpConverters.xmlToMcp).toHaveBeenCalledWith(request.content);
-      
-      // Verify execution
-      const mockExecutor = McpToolExecutor.getInstance();
-      expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalled();
-      
-      // Verify conversion back to XML
-      expect(McpConverters.mcpToXml).toHaveBeenCalled();
-      
-      // Verify result format
-      expect(result.format).toBe(ToolUseFormat.XML);
-    });
-    
-    it("should route JSON format tool use requests", async () => {
-      const router = McpToolRouter.getInstance();
-      const request: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.JSON,
-        content: JSON.stringify({
+      it("should detect JSON format from string content", () => {
+        const router = McpToolRouter.getInstance();
+        const content = JSON.stringify({
           name: "execute_command",
           input: { command: "ls -la" }
-        })
-      };
+        });
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.JSON);
+      });
       
-      const result = await router.routeToolUse(request);
-      
-      // Verify conversion to MCP format
-      expect(McpConverters.jsonToMcp).toHaveBeenCalledWith(request.content);
-      
-      // Verify execution
-      const mockExecutor = McpToolExecutor.getInstance();
-      expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalled();
-      
-      // Verify conversion back to JSON
-      expect(McpConverters.mcpToJson).toHaveBeenCalled();
-      
-      // Verify result format
-      expect(result.format).toBe(ToolUseFormat.JSON);
-    });
-    
-    it("should route OpenAI format tool use requests", async () => {
-      const router = McpToolRouter.getInstance();
-      const request: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.OPENAI,
-        content: {
+      it("should detect OpenAI format from string content", () => {
+        const router = McpToolRouter.getInstance();
+        const content = JSON.stringify({
           function_call: {
-            name: "search_files",
-            arguments: JSON.stringify({ path: ".", regex: "test" })
+            name: "execute_command",
+            arguments: JSON.stringify({ command: "ls -la" })
           }
-        }
-      };
+        });
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.OPENAI);
+      });
       
-      const result = await router.routeToolUse(request);
+      it("should detect neutral format from string content", () => {
+        const router = McpToolRouter.getInstance();
+        const content = JSON.stringify({
+          type: "tool_use",
+          id: "test-123",
+          name: "execute_command",
+          input: { path: "." }
+        });
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.NEUTRAL);
+      });
       
-      // Verify conversion to MCP format
-      expect(McpConverters.openAiToMcp).toHaveBeenCalledWith(request.content);
+      it("should detect OpenAI format from object content", () => {
+        const router = McpToolRouter.getInstance();
+        const content = {
+          function_call: {
+            name: "execute_command",
+            arguments: JSON.stringify({ command: "ls -la" })
+          }
+        };
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.OPENAI);
+      });
       
-      // Verify execution
-      const mockExecutor = McpToolExecutor.getInstance();
-      expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalled();
+      it("should detect neutral format from object content", () => {
+        const router = McpToolRouter.getInstance();
+        const content = {
+          type: "tool_use",
+          id: "test-123",
+          name: "execute_command",
+          input: { path: "." }
+        };
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.NEUTRAL);
+      });
       
-      // Verify conversion back to OpenAI
-      expect(McpConverters.mcpToOpenAi).toHaveBeenCalled();
+      it("should default to JSON format for object content that doesn't match other formats", () => {
+        const router = McpToolRouter.getInstance();
+        const content = {
+          name: "execute_command",
+          input: { command: "ls -la" }
+        };
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.JSON);
+      });
       
-      // Verify result format
-      expect(result.format).toBe(ToolUseFormat.OPENAI);
+      it("should default to XML format for string content that can't be parsed as JSON", () => {
+        const router = McpToolRouter.getInstance();
+        const content = "This is not valid JSON or XML";
+        
+        const format = router.detectFormat(content);
+        
+        expect(format).toBe(ToolUseFormat.XML);
+      });
     });
     
-    it("should route neutral format tool use requests (string)", async () => {
-      const router = McpToolRouter.getInstance();
-      const neutralRequest: NeutralToolUseRequest = {
-        type: "tool_use",
-        id: "neutral-123",
-        name: "list_files",
-        input: { path: "." }
-      };
+    describe("Tool Use Routing", () => {
+      it("should route XML format tool use requests", async () => {
+        const router = McpToolRouter.getInstance();
+        const request: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.XML,
+          content: "<read_file><path>test.txt</path></read_file>"
+        };
+        
+        const result = await router.routeToolUse(request);
+        
+        // Verify conversion to MCP format
+        expect(McpConverters.xmlToMcp).toHaveBeenCalledWith(request.content);
+        
+        // Verify execution
+        const mockExecutor = McpToolExecutor.getInstance();
+        expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalled();
+        
+        // Verify conversion back to XML
+        expect(McpConverters.mcpToXml).toHaveBeenCalled();
+        
+        // Verify result format
+        expect(result.format).toBe(ToolUseFormat.XML);
+      });
       
-      const request: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.NEUTRAL,
-        content: JSON.stringify(neutralRequest)
-      };
-      
-      const result = await router.routeToolUse(request);
-      
-      // Verify execution
-      const mockExecutor = McpToolExecutor.getInstance();
-      expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalledWith(neutralRequest);
-      
-      // Verify result format
-      expect(result.format).toBe(ToolUseFormat.NEUTRAL);
-    });
-    
-    it("should route neutral format tool use requests (object)", async () => {
-      const router = McpToolRouter.getInstance();
-      const neutralRequest: NeutralToolUseRequest = {
-        type: "tool_use",
-        id: "neutral-123",
-        name: "list_files",
-        input: { path: "." }
-      };
-      
-      const request: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.NEUTRAL,
-        content: neutralRequest as unknown as Record<string, unknown>
-      };
-      
-      const result = await router.routeToolUse(request);
-      
-      // Verify execution
-      const mockExecutor = McpToolExecutor.getInstance();
-      expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalledWith(neutralRequest);
-      
-      // Verify result format
-      expect(result.format).toBe(ToolUseFormat.NEUTRAL);
-    });
-    
-    it("should throw an error for invalid neutral format (missing properties)", async () => {
-      const router = McpToolRouter.getInstance();
-      const invalidRequest: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.NEUTRAL,
-        content: {
-          // Missing required properties
-          type: "tool_use"
-        }
-      };
-      
-      await expect(router.routeToolUse(invalidRequest)).resolves.toEqual({
-        format: ToolUseFormat.NEUTRAL,
-        content: expect.objectContaining({
-          type: "tool_result",
-          status: "error",
-          error: expect.objectContaining({
-            message: expect.stringContaining("Invalid tool use request format")
+      it("should route JSON format tool use requests", async () => {
+        const router = McpToolRouter.getInstance();
+        const request: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.JSON,
+          content: JSON.stringify({
+            name: "execute_command",
+            input: { command: "ls -la" }
           })
-        })
+        };
+        
+        const result = await router.routeToolUse(request);
+        
+        // Verify conversion to MCP format
+        expect(McpConverters.jsonToMcp).toHaveBeenCalledWith(request.content);
+        
+        // Verify execution
+        const mockExecutor = McpToolExecutor.getInstance();
+        expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalled();
+        
+        // Verify conversion back to JSON
+        expect(McpConverters.mcpToJson).toHaveBeenCalled();
+        
+        // Verify result format
+        expect(result.format).toBe(ToolUseFormat.JSON);
       });
-    });
-    
-    it("should throw an error for unsupported format", async () => {
-      const router = McpToolRouter.getInstance();
-      const invalidRequest = {
-        format: "invalid-format" as ToolUseFormat,
-        content: "invalid content"
-      };
       
-      await expect(router.routeToolUse(invalidRequest)).resolves.toEqual({
-        format: "invalid-format",
-        content: expect.objectContaining({
-          type: "tool_result",
-          status: "error",
-          error: expect.objectContaining({
-            message: expect.stringContaining("Unsupported format")
+      it("should route OpenAI format tool use requests", async () => {
+        const router = McpToolRouter.getInstance();
+        const request: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.OPENAI,
+          content: {
+            function_call: {
+              name: "search_files",
+              arguments: JSON.stringify({ path: ".", regex: "test" })
+            }
+          }
+        };
+        
+        const result = await router.routeToolUse(request);
+        
+        // Verify conversion to MCP format
+        expect(McpConverters.openAiToMcp).toHaveBeenCalledWith(request.content);
+        
+        // Verify execution
+        const mockExecutor = McpToolExecutor.getInstance();
+        expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalled();
+        
+        // Verify conversion back to OpenAI
+        expect(McpConverters.mcpToOpenAi).toHaveBeenCalled();
+        
+        // Verify result format
+        expect(result.format).toBe(ToolUseFormat.OPENAI);
+      });
+      
+      it("should route neutral format tool use requests (string)", async () => {
+        const router = McpToolRouter.getInstance();
+        const neutralRequest: NeutralToolUseRequest = {
+          type: "tool_use",
+          id: "neutral-123",
+          name: "list_files",
+          input: { path: "." }
+        };
+        
+        const request: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.NEUTRAL,
+          content: JSON.stringify(neutralRequest)
+        };
+        
+        const result = await router.routeToolUse(request);
+        
+        // Verify execution
+        const mockExecutor = McpToolExecutor.getInstance();
+        expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalledWith(neutralRequest);
+        
+        // Verify result format
+        expect(result.format).toBe(ToolUseFormat.NEUTRAL);
+      });
+      
+      it("should route neutral format tool use requests (object)", async () => {
+        const router = McpToolRouter.getInstance();
+        const neutralRequest: NeutralToolUseRequest = {
+          type: "tool_use",
+          id: "neutral-123",
+          name: "list_files",
+          input: { path: "." }
+        };
+        
+        const request: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.NEUTRAL,
+          content: neutralRequest as unknown as Record<string, unknown>
+        };
+        
+        const result = await router.routeToolUse(request);
+        
+        // Verify execution
+        const mockExecutor = McpToolExecutor.getInstance();
+        expect(mockExecutor.executeToolFromNeutralFormat).toHaveBeenCalledWith(neutralRequest);
+        
+        // Verify result format
+        expect(result.format).toBe(ToolUseFormat.NEUTRAL);
+      });
+      
+      it("should throw an error for invalid neutral format (missing properties)", async () => {
+        const router = McpToolRouter.getInstance();
+        const invalidRequest: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.NEUTRAL,
+          content: {
+            // Missing required properties
+            type: "tool_use"
+          }
+        };
+        
+        await expect(router.routeToolUse(invalidRequest)).resolves.toEqual({
+          format: ToolUseFormat.NEUTRAL,
+          content: expect.objectContaining({
+            type: "tool_result",
+            status: "error",
+            error: expect.objectContaining({
+              message: expect.stringContaining("Invalid tool use request format")
+            })
           })
-        })
-      });
-    });
-  });
-  
-  describe("Error Handling", () => {
-    it("should handle conversion errors", async () => {
-      const router = McpToolRouter.getInstance();
-      
-      // Set up mock to throw an error
-      (McpConverters.xmlToMcp as jest.Mock).mockImplementationOnce(() => {
-        throw new Error("Conversion error");
+        });
       });
       
-      const request: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.XML,
-        content: "<invalid>xml</invalid>"
-      };
-      
-      const result = await router.routeToolUse(request);
-      
-      expect(result.format).toBe(ToolUseFormat.XML);
-      expect(result.content).toContain("Conversion error");
+      it("should throw an error for unsupported format", async () => {
+        const router = McpToolRouter.getInstance();
+        const invalidRequest = {
+          format: "invalid-format" as ToolUseFormat,
+          content: "invalid content"
+        };
+        
+        await expect(router.routeToolUse(invalidRequest)).resolves.toEqual({
+          format: "invalid-format",
+          content: expect.objectContaining({
+            type: "tool_result",
+            status: "error",
+            error: expect.objectContaining({
+              message: expect.stringContaining("Unsupported format")
+            })
+          })
+        });
+      });
     });
     
-    it("should handle execution errors", async () => {
-      const router = McpToolRouter.getInstance();
-      const mockExecutor = McpToolExecutor.getInstance();
-      
-      // Set up mock to throw an error
-      (mockExecutor.executeToolFromNeutralFormat as jest.Mock).mockImplementationOnce(() => {
-        throw new Error("Execution error");
+    describe("Error Handling", () => {
+      it("should handle conversion errors", async () => {
+        const router = McpToolRouter.getInstance();
+        
+        // Set up mock to throw an error
+        (McpConverters.xmlToMcp as jest.Mock).mockImplementationOnce(() => {
+          throw new Error("Conversion error");
+        });
+        
+        const request: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.XML,
+          content: "<invalid>xml</invalid>"
+        };
+        
+        const result = await router.routeToolUse(request);
+        
+        expect(result.format).toBe(ToolUseFormat.XML);
+        expect(result.content).toContain("Conversion error");
       });
       
-      const request: ToolUseRequestWithFormat = {
-        format: ToolUseFormat.XML,
-        content: "<read_file><path>test.txt</path></read_file>"
-      };
-      
-      const result = await router.routeToolUse(request);
-      
-      expect(result.format).toBe(ToolUseFormat.XML);
-      expect(result.content).toContain("Execution error");
-    });
-  });
-  
-  describe("Event Forwarding", () => {
-    it("should forward tool-registered events from the MCP tool executor", () => {
-      const router = McpToolRouter.getInstance();
-      const eventHandler = jest.fn();
-      
-      router.on("tool-registered", eventHandler);
-      
-      // Get the event handler registered with the executor
-      const mockExecutor = McpToolExecutor.getInstance();
-      const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
-        call => call[0] === "tool-registered"
-      );
-      
-      if (!onCall) {
-        fail("No tool-registered event handler registered");
-        return;
-      }
-      
-      // Call the event handler
-      const eventCallback = onCall[1] as any;
-      eventCallback("test-tool");
-      
-      expect(eventHandler).toHaveBeenCalledWith("test-tool");
+      it("should handle execution errors", async () => {
+        const router = McpToolRouter.getInstance();
+        const mockExecutor = McpToolExecutor.getInstance();
+        
+        // Set up mock to throw an error
+        (mockExecutor.executeToolFromNeutralFormat as jest.Mock).mockImplementationOnce(() => {
+          throw new Error("Execution error");
+        });
+        
+        const request: ToolUseRequestWithFormat = {
+          format: ToolUseFormat.XML,
+          content: "<read_file><path>test.txt</path></read_file>"
+        };
+        
+        const result = await router.routeToolUse(request);
+        
+        expect(result.format).toBe(ToolUseFormat.XML);
+        expect(result.content).toContain("Execution error");
+      });
     });
     
-    it("should forward tool-unregistered events from the MCP tool executor", () => {
-      const router = McpToolRouter.getInstance();
-      const eventHandler = jest.fn();
+    describe("Event Forwarding", () => {
+      it("should forward tool-registered events from the MCP tool executor", () => {
+        const router = McpToolRouter.getInstance();
+        const eventHandler = jest.fn();
+        
+        router.on("tool-registered", eventHandler);
+        
+        // Get the event handler registered with the executor
+        const mockExecutor = McpToolExecutor.getInstance();
+        const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
+          call => call[0] === "tool-registered"
+        );
+        
+        if (!onCall) {
+          fail("No tool-registered event handler registered");
+          return;
+        }
+        
+        // Call the event handler
+        const eventCallback = onCall[1] as any;
+        eventCallback("test-tool");
+        
+        expect(eventHandler).toHaveBeenCalledWith("test-tool");
+      });
       
-      router.on("tool-unregistered", eventHandler);
+      it("should forward tool-unregistered events from the MCP tool executor", () => {
+        const router = McpToolRouter.getInstance();
+        const eventHandler = jest.fn();
+        
+        router.on("tool-unregistered", eventHandler);
+        
+        // Get the event handler registered with the executor
+        const mockExecutor = McpToolExecutor.getInstance();
+        const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
+          call => call[0] === "tool-unregistered"
+        );
+        
+        if (!onCall) {
+          fail("No tool-unregistered event handler registered");
+          return;
+        }
+        
+        // Call the event handler
+        const eventCallback = onCall[1] as any;
+        eventCallback("test-tool");
+        
+        expect(eventHandler).toHaveBeenCalledWith("test-tool");
+      });
       
-      // Get the event handler registered with the executor
-      const mockExecutor = McpToolExecutor.getInstance();
-      const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
-        call => call[0] === "tool-unregistered"
-      );
+      it("should forward started events from the MCP tool executor", () => {
+        const router = McpToolRouter.getInstance();
+        const eventHandler = jest.fn();
+        
+        router.on("started", eventHandler);
+        
+        // Get the event handler registered with the executor
+        const mockExecutor = McpToolExecutor.getInstance();
+        const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
+          call => call[0] === "started"
+        );
+        
+        if (!onCall) {
+          fail("No started event handler registered");
+          return;
+        }
+        
+        // Call the event handler
+        const eventCallback = onCall[1] as any;
+        const info = { url: "http://localhost:3000" };
+        eventCallback(info);
+        
+        expect(eventHandler).toHaveBeenCalledWith(info);
+      });
       
-      if (!onCall) {
-        fail("No tool-unregistered event handler registered");
-        return;
-      }
-      
-      // Call the event handler
-      const eventCallback = onCall[1] as any;
-      eventCallback("test-tool");
-      
-      expect(eventHandler).toHaveBeenCalledWith("test-tool");
-    });
-    
-    it("should forward started events from the MCP tool executor", () => {
-      const router = McpToolRouter.getInstance();
-      const eventHandler = jest.fn();
-      
-      router.on("started", eventHandler);
-      
-      // Get the event handler registered with the executor
-      const mockExecutor = McpToolExecutor.getInstance();
-      const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
-        call => call[0] === "started"
-      );
-      
-      if (!onCall) {
-        fail("No started event handler registered");
-        return;
-      }
-      
-      // Call the event handler
-      const eventCallback = onCall[1] as any;
-      const info = { url: "http://localhost:3000" };
-      eventCallback(info);
-      
-      expect(eventHandler).toHaveBeenCalledWith(info);
-    });
-    
-    it("should forward stopped events from the MCP tool executor", () => {
-      const router = McpToolRouter.getInstance();
-      const eventHandler = jest.fn();
-      
-      router.on("stopped", eventHandler);
-      
-      // Get the event handler registered with the executor
-      const mockExecutor = McpToolExecutor.getInstance();
-      const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
-        call => call[0] === "stopped"
-      );
-      
-      if (!onCall) {
-        fail("No stopped event handler registered");
-        return;
-      }
-      
-      // Call the event handler
-      const eventCallback = onCall[1] as any;
-      eventCallback();
-      
-      expect(eventHandler).toHaveBeenCalled();
-    });
-  });
+      it("should forward stopped events from the MCP tool executor", () => {
+        const router = McpToolRouter.getInstance();
+        const eventHandler = jest.fn();
+        
+        router.on("stopped", eventHandler);
+        
+        // Get the event handler registered with the executor
+        const mockExecutor = McpToolExecutor.getInstance();
+        const onCall = (mockExecutor.on as jest.Mock).mock.calls.find(
+          call => call[0] === "stopped"
+        );
+        
+        if (!onCall) {
+          fail("No stopped event handler registered");
+          return;
+        }
+        
+        // Call the event handler
+        const eventCallback = onCall[1] as any;
+        eventCallback();
+        
+        expect(eventHandler).toHaveBeenCalled();
+      });
+});
 });

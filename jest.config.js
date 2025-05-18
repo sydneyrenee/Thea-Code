@@ -39,4 +39,6 @@ module.exports = {
 	modulePathIgnorePatterns: [".vscode-test"],
 	reporters: [["jest-simple-dot-reporter", {}]],
 	setupFiles: ["<rootDir>/src/__mocks__/jest.setup.ts"],
+	globalSetup: "<rootDir>/test/ollama-mock-server/setup.ts",
+	globalTeardown: "<rootDir>/test/ollama-mock-server/teardown.ts",
 }

@@ -35,17 +35,8 @@ jest.mock('openai', () => {
 
 describe('Ollama System Role Handling', () => {
   let handler: OllamaHandler;
-  let availableModels: string[] = [];
-  
-  beforeAll(async () => {
-    // Get all available models
-    availableModels = await getOllamaModels('http://localhost:10000');
-    
-    // If no models are found, use default test models
-    if (availableModels.length === 0) {
-      availableModels = ['llama2', 'mistral', 'gemma'];
-    }
-  });
+  // Define availableModels as a const directly for .each
+  const availableModels: string[] = ['llama2', 'mistral', 'gemma'];
   
   beforeEach(() => {
     jest.clearAllMocks();

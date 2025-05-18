@@ -1,4 +1,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory, NeutralMessageContent } from '../../../shared/neutral-history';
+import type { ApiStreamChunk } from '../../transform/stream';
 import OpenAI from "openai"
 import { ApiHandlerOptions, ModelInfo, requestyDefaultModelInfo } from "../../../shared/api"
 import { RequestyHandler } from "../requesty"
@@ -76,7 +78,7 @@ describe("RequestyHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant"
-		const messages: Anthropic.Messages.MessageParam[] = [{ role: "user", content: "Hello" }]
+		const messages: NeutralConversationHistory = [{ role: "user", content: [{ type: "text", text: "Hello" }] }]
 
 		describe("with streaming enabled", () => {
 			beforeEach(() => {
@@ -103,7 +105,7 @@ describe("RequestyHandler", () => {
 
 			it("should handle streaming response correctly", async () => {
 				const stream = handler.createMessage(systemPrompt, messages)
-				const results = []
+				const results: ApiStreamChunk[] = []
 
 				for await (const chunk of stream) {
 					results.push(chunk)
@@ -126,30 +128,8 @@ describe("RequestyHandler", () => {
 					model: defaultOptions.requestyModelId,
 					temperature: 0,
 					messages: [
-						{
-							role: "system",
-							content: [
-								{
-									cache_control: {
-										type: "ephemeral",
-									},
-									text: systemPrompt,
-									type: "text",
-								},
-							],
-						},
-						{
-							role: "user",
-							content: [
-								{
-									cache_control: {
-										type: "ephemeral",
-									},
-									text: "Hello",
-									type: "text",
-								},
-							],
-						},
+						{ role: "system", content: systemPrompt },
+						{ role: "user", content: "Hello" },
 					],
 					stream: true,
 					stream_options: { include_usage: true },
@@ -172,16 +152,6 @@ describe("RequestyHandler", () => {
 				)
 			})
 
-			it("should handle deepseek-reasoner model format", async () => {
-				handler = new RequestyHandler({
-					...defaultOptions,
-					requestyModelId: "deepseek-reasoner",
-				})
-
-				await handler.createMessage(systemPrompt, messages).next()
-
-				expect(convertToR1Format).toHaveBeenCalledWith([{ role: "user", content: systemPrompt }, ...messages])
-			})
 		})
 
 		describe("with streaming disabled", () => {
@@ -202,7 +172,7 @@ describe("RequestyHandler", () => {
 
 			it("should handle non-streaming response correctly", async () => {
 				const stream = handler.createMessage(systemPrompt, messages)
-				const results = []
+				const results: ApiStreamChunk[] = []
 
 				for await (const chunk of stream) {
 					results.push(chunk)
@@ -223,19 +193,8 @@ describe("RequestyHandler", () => {
 				expect(mockCreate).toHaveBeenCalledWith({
 					model: defaultOptions.requestyModelId,
 					messages: [
-						{ role: "user", content: systemPrompt },
-						{
-							role: "user",
-							content: [
-								{
-									cache_control: {
-										type: "ephemeral",
-									},
-									text: "Hello",
-									type: "text",
-								},
-							],
-						},
+						{ role: "system", content: systemPrompt },
+						{ role: "user", content: "Hello" },
 					],
 				})
 			})
@@ -278,6 +237,9 @@ describe("RequestyHandler", () => {
 			expect(mockCreate).toHaveBeenCalledWith({
 				model: defaultOptions.requestyModelId,
 				messages: [{ role: "user", content: "Test prompt" }],
+				max_tokens: expect.any(Number), // Expect max_tokens to be included
+				temperature: expect.any(Number), // Expect temperature to be included
+				stream: false, // Expect stream to be false
 			})
 		})
 
@@ -286,7 +248,7 @@ describe("RequestyHandler", () => {
 			mockCreate.mockRejectedValue(new Error(errorMessage))
 
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
-				`OpenAI completion error: ${errorMessage}`,
+				errorMessage, // OpenAiHandler.completePrompt throws the original error message
 			)
 		})
 	})

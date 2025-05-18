@@ -206,12 +206,15 @@ describe("OpenAiHandler", () => {
 			expect(mockCreate).toHaveBeenCalledWith({
 				model: mockOptions.openAiModelId,
 				messages: [{ role: "user", content: "Test prompt" }],
+				max_tokens: expect.any(Number), // Expect max_tokens to be included
+				temperature: expect.any(Number), // Expect temperature to be included
+				stream: false, // Expect stream to be false
 			})
 		})
 
 		it("should handle API errors", async () => {
 			mockCreate.mockRejectedValueOnce(new Error("API Error"))
-			await expect(handler.completePrompt("Test prompt")).rejects.toThrow("OpenAI completion error: API Error")
+			await expect(handler.completePrompt("Test prompt")).rejects.toThrow("OpenAI completion error: API Error") // Expect the prefixed error message
 		})
 
 		it("should handle empty response", async () => {

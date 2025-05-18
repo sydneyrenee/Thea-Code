@@ -6,12 +6,12 @@ import { describe, expect, it, beforeEach, jest, afterEach } from "@jest/globals
 import { McpToolRouter } from "../McpToolRouter";
 import { McpToolExecutor } from "../McpToolExecutor";
 import { McpConverters } from "../McpConverters";
-import { 
-  NeutralToolUseRequest, 
-  NeutralToolResult, 
-  ToolUseFormat, 
-  ToolUseRequestWithFormat, 
-  ToolResultWithFormat 
+import {
+  NeutralToolUseRequest,
+  NeutralToolResult,
+  ToolUseFormat,
+  ToolUseRequestWithFormat,
+  ToolResultWithFormat
 } from "../../types/McpToolTypes";
 import { SseTransportConfig } from "../../types/McpTransportTypes";
 
@@ -23,37 +23,6 @@ import { SseTransportConfig } from "../../types/McpTransportTypes";
 // Create a mock class that extends EventEmitter and includes the mocked methods
 
 
-jest.mock("../McpToolExecutor", () => {
-  // Create a mock object with all necessary methods
-  const mockExecutor = {
-    initialize: jest.fn(async () => {}),
-    shutdown: jest.fn(async () => {}),
-    executeToolFromNeutralFormat: jest.fn(async (request: any) => {
-      if (request.error) {
-        const error = new Error(request.error);
-        error.name = request.errorType || 'Error';
-        throw error;
-      }
-      return {
-        type: 'tool_result',
-        tool_use_id: request.id || 'test-id',
-        content: [{ type: 'text', text: 'Success' }],
-        status: 'success'
-      };
-    }),
-    // Explicitly mock EventEmitter methods that return 'this'
-    on: jest.fn().mockReturnThis(),
-    emit: jest.fn(),
-    removeAllListeners: jest.fn().mockReturnThis(),
-    setMaxListeners: jest.fn(), // Mock setMaxListeners as well
-  };
-
-  return {
-    McpToolExecutor: {
-      getInstance: jest.fn(() => mockExecutor as any) // Use any to bypass complex type issues
-    }
-  };
-});
 
 // Mock the McpConverters
 jest.mock("../McpConverters", () => {
@@ -72,18 +41,43 @@ jest.mock("../McpConverters", () => {
 describe("McpToolRouter", () => {
   // Reset the singleton instance and explicitly create it after mock setup
   beforeEach(async () => {
+    // Create a mock object with all necessary methods, including EventEmitter methods
+    const mockExecutor = {
+      initialize: jest.fn(async () => {}),
+      shutdown: jest.fn(async () => {}),
+      executeToolFromNeutralFormat: jest.fn(async (request: any) => {
+        if (request.error) {
+          const error = new Error(request.error);
+          error.name = request.errorType || 'Error';
+          throw error;
+        }
+        return {
+          type: 'tool_result',
+          tool_use_id: request.id || 'test-id',
+          content: [{ type: 'text', text: 'Success' }],
+          status: 'success'
+        };
+      }),
+      // Explicitly mock EventEmitter methods that return 'this'
+      on: jest.fn().mockReturnThis(),
+      emit: jest.fn(),
+      removeAllListeners: jest.fn().mockReturnThis(),
+      setMaxListeners: jest.fn(), // Mock setMaxListeners as well
+    };
+
+    // Mock the static getInstance method to return the mock executor
+    jest.spyOn(McpToolExecutor, 'getInstance').mockReturnValue(mockExecutor as any);
+
     // Access private static instance property using type assertion
     (McpToolRouter as any).instance = undefined;
     
     // Reset all mocks
     jest.clearAllMocks();
 
-    // Clean up the mock executor
-    const mockExecutor = McpToolExecutor.getInstance();
+    // Clean up the mock executor (using the mock instance directly)
     mockExecutor.removeAllListeners();
     
     // Initialize the router and wait for event handlers to be set up
-    const router = McpToolRouter.getInstance();
     await new Promise(resolve => setTimeout(resolve, 0));
 
     // Set up default mock implementations for McpConverters
@@ -138,6 +132,8 @@ describe("McpToolRouter", () => {
     // Clean up any event listeners
     const instance = McpToolRouter.getInstance();
     instance.removeAllListeners();
+    // Restore the original implementation of getInstance
+    jest.restoreAllMocks();
   });
   
   describe("Singleton Pattern", () => {
@@ -161,7 +157,6 @@ describe("McpToolRouter", () => {
       expect(instance1).toBe(instance2);
       // We can't directly test the private sseConfig property, but we can verify
       // that the same instance is returned
-      });
     });
     
     describe("Initialization and Shutdown", () => {
@@ -304,7 +299,7 @@ describe("McpToolRouter", () => {
             errorType: "FormatError"
           }
         };
-
+        
         const result = await router.routeToolUse(invalidRequest);
         
         expect(result).toEqual({
@@ -329,7 +324,7 @@ describe("McpToolRouter", () => {
           }</tool_result>`
         );
       });
-
+      
       it("should handle conversion errors", async () => {
         const router = McpToolRouter.getInstance();
         
@@ -371,6 +366,15 @@ describe("McpToolRouter", () => {
     });
     
     describe("Event Forwarding", () => {
+      beforeEach(() => {
+        // Override the default success XML template
+        (McpConverters.mcpToXml as jest.Mock).mockImplementation((result: any) =>
+          `<tool_result tool_use_id="${result.tool_use_id}" status="${result.status}">${
+            result.error ? result.error.message : "Success"
+          }</tool_result>`
+        );
+      });
+      
       it("should forward tool-registered events from the MCP tool executor", async () => {
         const router = McpToolRouter.getInstance();
         const eventHandler = jest.fn();
@@ -435,5 +439,11 @@ describe("McpToolRouter", () => {
 
         expect(eventHandler).toHaveBeenCalled();
       });
-});
+    });
+  });
+  
+  // Restore the original implementation of getInstance in afterEach
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
 });

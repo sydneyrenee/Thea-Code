@@ -4,7 +4,7 @@ describe("main", () => {
 	let strategy: NewUnifiedDiffStrategy
 
 	beforeEach(() => {
-		strategy = new NewUnifiedDiffStrategy(0.97)
+		strategy = new NewUnifiedDiffStrategy(0.95) // Adjusted threshold for cmpstr
 	})
 
 	describe("constructor", () => {

@@ -1,4 +1,4 @@
-import { compareTwoStrings } from "string-similarity"
+import { CmpStr } from "cmpstr"
 import { closest } from "fastest-levenshtein"
 import { diff_match_patch } from "diff-match-patch"
 import { Change, Hunk } from "./types"
@@ -50,7 +50,8 @@ export function prepareSearchString(changes: Change[]): string {
 
 // Helper function to evaluate similarity between two texts
 export function evaluateSimilarity(original: string, modified: string): number {
-	return compareTwoStrings(original, modified)
+	const cmp = new CmpStr();
+	return cmp.compare('dice', original, modified);
 }
 
 // Helper function to validate using diff-match-patch
@@ -244,7 +245,8 @@ export function findSimilarityMatch(
 
 	for (let i = startIndex; i < content.length - searchLines.length + 1; i++) {
 		const windowStr = content.slice(i, i + searchLines.length).join("\n")
-		const score = compareTwoStrings(searchStr, windowStr)
+		const cmp = new CmpStr();
+		const score = cmp.compare('dice', searchStr, windowStr);
 		if (score > bestScore && score >= confidenceThreshold) {
 			const similarity = getDMPSimilarity(searchStr, windowStr)
 			const contextSimilarity = validateContextLines(searchStr, windowStr, confidenceThreshold)
@@ -272,7 +274,7 @@ export function findLevenshteinMatch(
 	confidenceThreshold: number = 0.97,
 ): SearchResult {
 	const searchLines = searchStr.split("\n")
-	const candidates = []
+	const candidates: string[] = []
 
 	for (let i = startIndex; i < content.length - searchLines.length + 1; i++) {
 		candidates.push(content.slice(i, i + searchLines.length).join("\n"))

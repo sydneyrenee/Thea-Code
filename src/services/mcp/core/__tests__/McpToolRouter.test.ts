@@ -24,15 +24,11 @@ import { SseTransportConfig } from "../../types/McpTransportTypes";
 
 
 jest.mock("../McpToolExecutor", () => {
-  // Create a singleton EventEmitter instance first
-  const mockExecutor = new EventEmitter();
-  mockExecutor.setMaxListeners(100);
-
-  // Add methods directly to the instance
-  const mock = Object.assign(mockExecutor, {
-    initialize: jest.fn().mockReturnValue(Promise.resolve()),
-    shutdown: jest.fn().mockReturnValue(Promise.resolve()),
-    executeToolFromNeutralFormat: jest.fn().mockImplementation(async (request: any) => {
+  // Create a mock object with all necessary methods
+  const mockExecutor = {
+    initialize: jest.fn(async () => {}),
+    shutdown: jest.fn(async () => {}),
+    executeToolFromNeutralFormat: jest.fn(async (request: any) => {
       if (request.error) {
         const error = new Error(request.error);
         error.name = request.errorType || 'Error';
@@ -44,13 +40,17 @@ jest.mock("../McpToolExecutor", () => {
         content: [{ type: 'text', text: 'Success' }],
         status: 'success'
       };
-    })
-  });
+    }),
+    // Explicitly mock EventEmitter methods that return 'this'
+    on: jest.fn().mockReturnThis(),
+    emit: jest.fn(),
+    removeAllListeners: jest.fn().mockReturnThis(),
+    setMaxListeners: jest.fn(), // Mock setMaxListeners as well
+  };
 
-  // Use type assertion to help TypeScript understand the mock methods
   return {
     McpToolExecutor: {
-      getInstance: jest.fn(() => mock as any)
+      getInstance: jest.fn(() => mockExecutor as any) // Use any to bypass complex type issues
     }
   };
 });

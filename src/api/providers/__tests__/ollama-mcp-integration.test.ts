@@ -1,5 +1,5 @@
 import { OllamaHandler, getOllamaModels } from '../ollama';
-import { McpIntegration } from '../../../services/mcp/McpIntegration';
+import { McpIntegration } from '../../../services/mcp/integration/McpIntegration';
 import { NeutralConversationHistory } from '../../../shared/neutral-history';
 import { HybridMatcher } from '../../../utils/json-xml-bridge';
 import { OpenAiHandler } from '../openai';
@@ -30,7 +30,7 @@ jest.mock('../openai', () => {
 });
 
 // Mock the McpIntegration
-jest.mock('../../../services/mcp/McpIntegration', () => {
+jest.mock('../../../services/mcp/integration/McpIntegration', () => {
   const mockRouteToolUse = jest.fn().mockImplementation((content) => {
     // For OpenAI-compatible providers like Ollama, only JSON format is supported
     return Promise.resolve(JSON.stringify({

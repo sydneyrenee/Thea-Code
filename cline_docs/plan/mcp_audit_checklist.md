@@ -3,7 +3,7 @@
 This checklist tracks progress on the MCP refactoring tasks defined in the plan documents under `cline_docs/plan/`.
 
 ## Phase 1: Foundation & Core MCP Refactoring
-- [ ] 1.1 Establish new directory structure under `src/services/mcp/` (integration/ and management/ missing)
+- [x] 1.1 Establish new directory structure under `src/services/mcp/` (integration/ and management/ missing)
 - [x] 1.2 Define core type files (`McpToolTypes.ts`, `McpProviderTypes.ts`, `McpTransportTypes.ts`)
 - [x] 1.3 Migrate/refactor core components (`McpToolRegistry`, `McpToolExecutor`, `McpToolRouter`, `McpConverters`)
 
@@ -13,8 +13,8 @@ This checklist tracks progress on the MCP refactoring tasks defined in the plan 
 - [x] 2.3 Update `EmbeddedMcpProvider` for transport integration
 
 - [x] 3.1 Implement `McpClient` base class and refactor `SseClientFactory`
-- [ ] 3.2 Create integration layer (`McpIntegration`, `ProviderIntegration`, `WebviewIntegration`)
-- [ ] 3.3 Update references across the codebase
+- [x] 3.2 Create integration layer (`McpIntegration`, `ProviderIntegration`, `WebviewIntegration`)
+- [x] 3.3 Update references across the codebase
 
 ## Phase 4: Handler Updates & Feature Integration
 - [ ] 4.1 Update `BaseProvider`
@@ -35,3 +35,4 @@ This checklist tracks progress on the MCP refactoring tasks defined in the plan 
 - [ ] 6.1 Update architectural notes
 - [ ] 6.2 Update/create developer documentation
 - [ ] 6.3 Update code comments
+

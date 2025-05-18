@@ -16,10 +16,10 @@ import * as fs from "fs/promises"
 import * as path from "path"
 import * as vscode from "vscode"
 import { z } from "zod"
-import { t } from "../../i18n"
-import { EXTENSION_DISPLAY_NAME, CONFIG_DIR_NAME } from "../../../dist/thea-config" // Import branded constants
-import { TheaProvider } from "../../core/webview/TheaProvider" // Renamed import
-import { GlobalFileNames } from "../../shared/globalFileNames"
+import { t } from "../../../i18n"
+import { EXTENSION_DISPLAY_NAME, CONFIG_DIR_NAME } from "../../../../dist/thea-config" // Import branded constants
+import { TheaProvider } from "../../../core/webview/TheaProvider" // Renamed import
+import { GlobalFileNames } from "../../../shared/globalFileNames"
 import {
 	McpResource,
 	McpResourceResponse,
@@ -27,9 +27,9 @@ import {
 	McpServer,
 	McpTool,
 	McpToolCallResponse,
-} from "../../shared/mcp"
-import { fileExistsAtPath } from "../../utils/fs"
-import { arePathsEqual } from "../../utils/path"
+} from "../../../shared/mcp"
+import { fileExistsAtPath } from "../../../utils/fs"
+import { arePathsEqual } from "../../../utils/path"
 
 export type McpConnection = {
 	server: McpServer

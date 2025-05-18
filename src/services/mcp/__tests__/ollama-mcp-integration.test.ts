@@ -1,5 +1,5 @@
 import { Client } from '@modelcontextprotocol/sdk/client';
-import { McpIntegration } from '../McpIntegration';
+import { McpIntegration } from '../integration/McpIntegration';
 import { SseClientFactory } from '../client/SseClientFactory';
 import { McpConverters } from '../core/McpConverters';
 

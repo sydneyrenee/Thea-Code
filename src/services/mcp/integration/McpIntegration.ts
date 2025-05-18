@@ -1,9 +1,9 @@
 import { EventEmitter } from "events";
-import { McpToolExecutor } from "./core/McpToolExecutor";
-import { McpToolRouter } from "./core/McpToolRouter";
-import { ToolDefinition } from "./types/McpProviderTypes";
-import { ToolUseFormat } from "./types/McpToolTypes";
-import { SseTransportConfig } from "./types/McpTransportTypes";
+import { McpToolExecutor } from "../core/McpToolExecutor";
+import { McpToolRouter } from "../core/McpToolRouter";
+import { ToolDefinition } from "../types/McpProviderTypes";
+import { ToolUseFormat } from "../types/McpToolTypes";
+import { SseTransportConfig } from "../types/McpTransportTypes";
 
 /**
  * McpIntegration provides a facade for the MCP integration system.

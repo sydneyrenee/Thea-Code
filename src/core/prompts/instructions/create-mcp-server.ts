@@ -1,4 +1,4 @@
-import { McpHub } from "../../../services/mcp/McpHub"
+import { McpHub } from "../../../services/mcp/management/McpHub"
 import { DiffStrategy } from "../../diff/DiffStrategy"
 
 export async function createMCPServerInstructions(

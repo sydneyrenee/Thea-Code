@@ -1,4 +1,4 @@
-import { McpIntegration, handleToolUse } from '../McpIntegration';
+import { McpIntegration, handleToolUse } from '../integration/McpIntegration';
 import { McpToolRouter } from '../core/McpToolRouter';
 import { McpToolExecutor } from '../core/McpToolExecutor';
 

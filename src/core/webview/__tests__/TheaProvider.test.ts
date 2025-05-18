@@ -11,7 +11,7 @@ import { ContextProxy } from "../../config/ContextProxy"
 import { ProviderSettingsManager } from "../../config/ProviderSettingsManager"
 import { CustomModesManager } from "../../config/CustomModesManager"
 import { TheaTask } from "../../TheaTask" // Renamed import
-import { McpServerManager } from "../../../services/mcp/McpServerManager"
+import { McpServerManager } from "../../../services/mcp/management/McpServerManager"
 import { defaultModeSlug } from "../../../shared/modes"
 import { HistoryItem } from "../../../shared/HistoryItem"
 import { t } from "../../../i18n"
@@ -30,8 +30,8 @@ jest.mock("../../config/CustomModesManager")
 jest.mock("../../TheaTask") // Updated mock path
 jest.mock("../webviewMessageHandler")
 jest.mock("../../../services/telemetry/TelemetryService")
-jest.mock("../../../services/mcp/McpServerManager")
-jest.mock("../../../services/mcp/McpHub")
+jest.mock("../../../services/mcp/management/McpServerManager")
+jest.mock("../../../services/mcp/management/McpHub")
 jest.mock("../../../services/checkpoints/ShadowCheckpointService")
 jest.mock("../../../utils/sound")
 jest.mock("../../../utils/tts")

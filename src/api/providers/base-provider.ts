@@ -1,5 +1,5 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { McpIntegration, handleToolUse } from '../../services/mcp/McpIntegration';
+import { McpIntegration, handleToolUse } from '../../services/mcp/integration/McpIntegration';
 import { ApiHandler } from ".."
 import { ModelInfo } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types

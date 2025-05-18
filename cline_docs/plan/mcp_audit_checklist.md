@@ -17,9 +17,9 @@ This checklist tracks progress on the MCP refactoring tasks defined in the plan 
 - [x] 3.3 Update references across the codebase
 
 ## Phase 4: Handler Updates & Feature Integration
-- [ ] 4.1 Update `BaseProvider`
-- [ ] 4.2 Update `OpenAiHandler`
-- [ ] 4.3 Update `OllamaHandler`
+- [x] 4.1 Update `BaseProvider`
+- [x] 4.2 Update `OpenAiHandler`
+- [x] 4.3 Update `OllamaHandler`
 - [ ] 4.4 Update other provider handlers (e.g., `AnthropicHandler`)
 - [ ] 4.5 Update references
 

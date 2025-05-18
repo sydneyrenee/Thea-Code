@@ -102,14 +102,3 @@ export const stopServer = (): Promise<void> => {
     }
   });
 };
-
-// Allow running directly for testing
-if (require.main === module) {
-  startServer().catch(console.error);
-  process.on('SIGINT', () => {
-    stopServer().then(() => process.exit(0)).catch(console.error);
-  });
-  process.on('SIGTERM', () => {
-    stopServer().then(() => process.exit(0)).catch(console.error);
-  });
-}

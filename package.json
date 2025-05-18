@@ -75,6 +75,7 @@
       "thea-code-ActivityBar": [
         {
           "type": "webview",
+          "icon": "assets/icons/icon.svg",
           "id": "thea-code.SidebarProvider",
           "name": ""
         }

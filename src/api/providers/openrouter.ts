@@ -13,6 +13,7 @@ import { convertToR1Format } from "../transform/r1-format"
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { getModelParams, SingleCompletionHandler } from ".."
 import { BaseProvider } from "./base-provider"
+import { OpenAiHandler } from "./openai"
 // Removed import of defaultHeaders from openai.ts
 import { API_REFERENCES } from "../../../dist/thea-config" // Import API_REFERENCES
 
@@ -26,26 +27,34 @@ type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 }
 
 export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
-	protected options: ApiHandlerOptions
-	private client: OpenAI
+        protected options: ApiHandlerOptions
+        private client: OpenAI
+        private openAiHandler: OpenAiHandler
 
-	constructor(options: ApiHandlerOptions) {
-		super()
-		this.options = options
+        constructor(options: ApiHandlerOptions) {
+                super()
+                this.options = options
 
-		const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
-		const apiKey = this.options.openRouterApiKey ?? "not-provided"
+                const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
+                const apiKey = this.options.openRouterApiKey ?? "not-provided"
 
 		// Define headers directly using API_REFERENCES
 		this.client = new OpenAI({
 			baseURL,
 			apiKey,
-			defaultHeaders: {
-				"HTTP-Referer": API_REFERENCES.HOMEPAGE,
-				"X-Title": API_REFERENCES.APP_TITLE,
-			},
-		})
-	}
+                        defaultHeaders: {
+                                "HTTP-Referer": API_REFERENCES.HOMEPAGE,
+                                "X-Title": API_REFERENCES.APP_TITLE,
+                        },
+                })
+
+                // Instantiate an OpenAI handler solely for tool use detection logic
+                this.openAiHandler = new OpenAiHandler({
+                        openAiApiKey: apiKey,
+                        openAiBaseUrl: baseURL,
+                        openAiModelId: this.options.openRouterModelId ?? "",
+                })
+        }
 
 	override async *createMessage(
 		systemPrompt: string,
@@ -142,10 +151,28 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 				yield { type: "reasoning", text: delta.reasoning } as ApiStreamChunk
 			}
 
-			if (delta?.content) {
-				fullResponseText += delta.content
-				yield { type: "text", text: delta.content } as ApiStreamChunk
-			}
+                        if (delta?.content) {
+                                fullResponseText += delta.content
+                                yield { type: "text", text: delta.content } as ApiStreamChunk
+                        }
+
+                        // Detect OpenAI-style tool calls using the helper
+                        const toolCalls = this.openAiHandler.extractToolCalls(delta)
+                        for (const toolCall of toolCalls) {
+                                if (toolCall.function) {
+                                        const toolResult = await this.processToolUse({
+                                                id: toolCall.id,
+                                                name: toolCall.function.name,
+                                                input: JSON.parse(toolCall.function.arguments || '{}'),
+                                        })
+
+                                        yield {
+                                                type: 'tool_result',
+                                                id: toolCall.id,
+                                                content: toolResult,
+                                        } as ApiStreamChunk
+                                }
+                        }
 
 			if (chunk.usage) {
 				lastUsage = chunk.usage

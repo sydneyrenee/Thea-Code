@@ -315,13 +315,52 @@ describe("OpenRouterHandler", () => {
 		await expect(handler.completePrompt("test prompt")).rejects.toThrow("OpenRouter API Error 500: API Error")
 	})
 
-	test("completePrompt handles unexpected errors", async () => {
-		const handler = new OpenRouterHandler(mockOptions)
-		const mockCreate = jest.fn().mockRejectedValue(new Error("Unexpected error"))
-		;(OpenAI as jest.MockedClass<typeof OpenAI>).prototype.chat = {
-			completions: { create: mockCreate },
-		} as any
+        test("completePrompt handles unexpected errors", async () => {
+                const handler = new OpenRouterHandler(mockOptions)
+                const mockCreate = jest.fn().mockRejectedValue(new Error("Unexpected error"))
+                ;(OpenAI as jest.MockedClass<typeof OpenAI>).prototype.chat = {
+                        completions: { create: mockCreate },
+                } as any
 
-		await expect(handler.completePrompt("test prompt")).rejects.toThrow("Unexpected error")
-	})
+                await expect(handler.completePrompt("test prompt")).rejects.toThrow("Unexpected error")
+        })
+
+        test("createMessage processes OpenAI tool calls", async () => {
+                const handler = new OpenRouterHandler(mockOptions)
+                const mockStream = {
+                        async *[Symbol.asyncIterator]() {
+                                yield {
+                                        id: "test-id",
+                                        choices: [
+                                                {
+                                                        delta: {
+                                                                tool_calls: [
+                                                                        {
+                                                                                id: "call1",
+                                                                                function: { name: "testTool", arguments: '{"foo":1}' },
+                                                                        },
+                                                                ],
+                                                        },
+                                                },
+                                        ],
+                                }
+                        },
+                }
+
+                const mockCreate = jest.fn().mockResolvedValue(mockStream)
+                ;(OpenAI as jest.MockedClass<typeof OpenAI>).prototype.chat = {
+                        completions: { create: mockCreate },
+                } as any
+
+                const processSpy = jest.spyOn(handler as any, "processToolUse").mockResolvedValue({ result: "ok" })
+
+                const generator = handler.createMessage("test", [])
+                const chunks = [] as any[]
+                for await (const chunk of generator) {
+                        chunks.push(chunk)
+                }
+
+                expect(processSpy).toHaveBeenCalledWith({ id: "call1", name: "testTool", input: { foo: 1 } })
+                expect(chunks).toContainEqual({ type: "tool_result", id: "call1", content: { result: "ok" } })
+        })
 })

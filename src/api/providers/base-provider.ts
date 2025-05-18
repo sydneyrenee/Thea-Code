@@ -1,5 +1,4 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-import { McpIntegration, handleToolUse } from '../../services/mcp/integration/McpIntegration';
+import { McpIntegration } from '../../services/mcp/integration/McpIntegration';
 import { ApiHandler } from ".."
 import { ModelInfo } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types
@@ -74,15 +73,157 @@ export abstract class BaseProvider implements ApiHandler {
 		return 0; // Return 0 for unexpected content types
 	}
 
-	protected registerTools(): void {
-		// Register common tools
-		// Specific tools will be registered by individual providers
-	}
+        protected registerTools(): void {
+                // Register common tools with basic parameter schemas. The actual
+                // execution for these tools is handled by the MCP provider.
 
-	protected async processToolUse(content: string | Record<string, unknown>): Promise<string> {
-		// Process tool use using MCP integration
-		const result = await this.mcpIntegration.routeToolUse(content);
-		// Ensure we return a string
-		return typeof result === 'string' ? result : JSON.stringify(result);
-	}
+                this.mcpIntegration.registerTool({
+                        name: 'read_file',
+                        description: 'Read the contents of a file',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        path: {
+                                                type: 'string',
+                                                description: 'Relative path to the file'
+                                        },
+                                        start_line: {
+                                                type: 'integer',
+                                                description: 'Optional starting line (1-based)'
+                                        },
+                                        end_line: {
+                                                type: 'integer',
+                                                description: 'Optional ending line (1-based, inclusive)'
+                                        }
+                                },
+                                required: ['path']
+                        },
+                        handler: async () => {
+                                throw new Error('read_file execution handled by MCP provider');
+                        }
+                });
+
+                this.mcpIntegration.registerTool({
+                        name: 'write_to_file',
+                        description: 'Write full content to a file',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        path: { type: 'string', description: 'Relative path to write' },
+                                        content: { type: 'string', description: 'Content to write' },
+                                        line_count: { type: 'integer', description: 'Number of lines in the file' }
+                                },
+                                required: ['path', 'content', 'line_count']
+                        },
+                        handler: async () => {
+                                throw new Error('write_to_file execution handled by MCP provider');
+                        }
+                });
+
+                this.mcpIntegration.registerTool({
+                        name: 'list_files',
+                        description: 'List files in a directory',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        path: { type: 'string', description: 'Directory path' },
+                                        recursive: { type: 'boolean', description: 'List recursively' }
+                                },
+                                required: ['path']
+                        },
+                        handler: async () => {
+                                throw new Error('list_files execution handled by MCP provider');
+                        }
+                });
+
+                this.mcpIntegration.registerTool({
+                        name: 'search_files',
+                        description: 'Search files using a regular expression',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        path: { type: 'string', description: 'Directory path' },
+                                        regex: { type: 'string', description: 'Regular expression to search' },
+                                        file_pattern: { type: 'string', description: 'Optional glob to filter files' }
+                                },
+                                required: ['path', 'regex']
+                        },
+                        handler: async () => {
+                                throw new Error('search_files execution handled by MCP provider');
+                        }
+                });
+
+                this.mcpIntegration.registerTool({
+                        name: 'apply_diff',
+                        description: 'Apply a unified diff to a file',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        path: { type: 'string', description: 'File path to apply the diff to' },
+                                        diff: { type: 'string', description: 'Unified diff content' }
+                                },
+                                required: ['path', 'diff']
+                        },
+                        handler: async () => {
+                                throw new Error('apply_diff execution handled by MCP provider');
+                        }
+                });
+
+                this.mcpIntegration.registerTool({
+                        name: 'insert_content',
+                        description: 'Insert content into a file using operations',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        path: { type: 'string', description: 'File path' },
+                                        operations: { type: 'string', description: 'Operations to perform' }
+                                },
+                                required: ['path', 'operations']
+                        },
+                        handler: async () => {
+                                throw new Error('insert_content execution handled by MCP provider');
+                        }
+                });
+
+                this.mcpIntegration.registerTool({
+                        name: 'search_and_replace',
+                        description: 'Search and replace content in a file',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        path: { type: 'string', description: 'File path' },
+                                        operations: { type: 'string', description: 'Replace operations' }
+                                },
+                                required: ['path', 'operations']
+                        },
+                        handler: async () => {
+                                throw new Error('search_and_replace execution handled by MCP provider');
+                        }
+                });
+
+                this.mcpIntegration.registerTool({
+                        name: 'ask_followup_question',
+                        description: 'Request additional information from the user',
+                        paramSchema: {
+                                type: 'object',
+                                properties: {
+                                        question: { type: 'string', description: 'Question to ask' },
+                                        follow_up: { type: 'string', description: 'Optional follow up suggestion' }
+                                },
+                                required: ['question']
+                        },
+                        handler: async () => {
+                                throw new Error('ask_followup_question execution handled by MCP provider');
+                        }
+                });
+
+                // Specific tools will be registered by individual providers as needed
+        }
+
+        protected async processToolUse(content: string | Record<string, unknown>): Promise<string | Record<string, unknown>> {
+                // Delegate tool use processing to the MCP integration. The returned
+                // value may be a string or structured object depending on the
+                // format detected.
+                return this.mcpIntegration.routeToolUse(content);
+        }
 }

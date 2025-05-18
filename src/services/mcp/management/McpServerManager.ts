@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { McpHub } from "./McpHub"
-import { TheaProvider } from "../../core/webview/TheaProvider" // Renamed import
+import { TheaProvider } from "../../../core/webview/TheaProvider" // Renamed import
 
 /**
  * Singleton manager for MCP server instances.

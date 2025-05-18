@@ -1,5 +1,5 @@
 import { DiffStrategy } from "../../diff/DiffStrategy"
-import { McpHub } from "../../../services/mcp/McpHub"
+import { McpHub } from "../../../services/mcp/management/McpHub"
 
 export type ToolArgs = {
 	cwd: string

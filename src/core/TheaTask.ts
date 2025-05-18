@@ -56,7 +56,7 @@ import { truncateConversationIfNeeded } from "./sliding-window"
 import { TheaProvider, TheaProviderEvents } from "./webview/TheaProvider" // Import TheaProviderEvents
 import { BrowserSession } from "../services/browser/BrowserSession"
 import { formatLanguage } from "../shared/language"
-import { McpHub } from "../services/mcp/McpHub"
+import { McpHub } from "../services/mcp/management/McpHub"
 import { DiffStrategy, getDiffStrategy } from "./diff/DiffStrategy"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { validateToolUse, isToolAllowedForMode, ToolName } from "./mode-validator"

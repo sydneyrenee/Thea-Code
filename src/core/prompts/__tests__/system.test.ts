@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 
 import { SYSTEM_PROMPT } from "../system"
-import { McpHub } from "../../../services/mcp/McpHub"
+import { McpHub } from "../../../services/mcp/management/McpHub"
 import { TheaProvider } from "../../../core/webview/TheaProvider"
 import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
 import "../../../utils/path" // Import path utils to get access to toPosix string extension.

@@ -3,14 +3,14 @@ import * as path from "path"
 import * as os from "os"
 import fs from "fs/promises"
 import { TheaMcpManager } from "../mcp/TheaMcpManager"
-import { McpHub } from "../../../services/mcp/McpHub"
+import { McpHub } from "../../../services/mcp/management/McpHub"
 import { EXTENSION_DISPLAY_NAME, EXTENSION_CONFIG_DIR } from "../../../../dist/thea-config"
 
 // Mock dependencies
 jest.mock("vscode")
 jest.mock("os")
 jest.mock("fs/promises")
-jest.mock("../../../services/mcp/McpHub")
+jest.mock("../../../services/mcp/management/McpHub")
 jest.mock("path", () => {
 	const originalPath = jest.requireActual("path")
 	return {

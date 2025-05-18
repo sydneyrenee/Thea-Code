@@ -18,7 +18,7 @@ import { initializeI18n } from "./i18n"
 import { TheaProvider } from "./core/webview/TheaProvider" // Renamed import
 import { CodeActionProvider } from "./core/CodeActionProvider"
 import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
-import { McpServerManager } from "./services/mcp/McpServerManager"
+import { McpServerManager } from "./services/mcp/management/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"

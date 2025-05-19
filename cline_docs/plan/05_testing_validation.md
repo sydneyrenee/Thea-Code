@@ -23,9 +23,9 @@
 **Details:**
 *   **Scope:** All files within `src/services/mcp/` (core, providers, transport, client, integration, management, types) and relevant API handlers in `src/api/providers/`.
 *   **Actions:**
-    1.  **Update Existing Tests:** Locate existing Jest tests (`__tests__` directories) for components that were moved or renamed (e.g., `UnifiedMcpToolSystem` -> `McpToolExecutor`, `EmbeddedMcpServer` -> `EmbeddedMcpProvider`). Update file paths, import statements, class names, and method calls to match the refactored code.
+    1.  **Update Existing Tests:** Locate existing Jest tests (`__tests__` directories) for components that were moved or renamed (e.g., `McpToolExecutor` -> `McpToolExecutor`, `EmbeddedMcpProvider` -> `EmbeddedMcpProvider`). Update file paths, import statements, class names, and method calls to match the refactored code.
     2.  **Create New Tests:** Write new Jest unit tests for all newly created components:
-        *   `core/McpToolExecutor.ts` (if significantly changed from `UnifiedMcpToolSystem`)
+        *   `core/McpToolExecutor.ts` (if significantly changed from `McpToolExecutor`)
         *   `providers/MockMcpProvider.ts`
         *   `providers/RemoteMcpProvider.ts`
         *   `transport/SseTransport.ts`

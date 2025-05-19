@@ -18,8 +18,8 @@ graph TD
     B -- "routes through" --> D[McpIntegration]
     C -- "routes through" --> D
     D -- "routes to" --> E[McpToolRouter]
-    E -- "executes via" --> F[UnifiedMcpToolSystem]
-    F -- "executes on" --> G[EmbeddedMcpServer]
+    E -- "executes via" --> F[McpToolExecutor]
+    F -- "executes on" --> G[EmbeddedMcpProvider]
     
     classDef base fill:#f9f,stroke:#333,stroke-width:2px;
     classDef handler fill:#bbf,stroke:#333,stroke-width:2px;
@@ -39,8 +39,8 @@ sequenceDiagram
     participant OAH as OpenAiHandler
     participant MCP as McpIntegration
     participant Router as McpToolRouter
-    participant System as UnifiedMcpToolSystem
-    participant Server as EmbeddedMcpServer
+    participant System as McpToolExecutor
+    participant Server as EmbeddedMcpProvider
 
     Model->>OH: Stream with tool use
     

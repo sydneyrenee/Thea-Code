@@ -18,8 +18,8 @@ graph TD
     B -- "routes through" --> D[McpIntegration]
     C -- "routes through" --> D
     D -- "routes to" --> E[McpToolRouter]
-    E -- "executes via" --> F[UnifiedMcpToolSystem]
-    F -- "executes on" --> G[EmbeddedMcpServer]
+    E -- "executes via" --> F[McpToolExecutor]
+    F -- "executes on" --> G[EmbeddedMcpProvider]
 ```
 
 ### 2.2 Key Components
@@ -34,9 +34,9 @@ graph TD
 
 5. **McpToolRouter**: Routes tool use requests to the appropriate handler based on their format.
 
-6. **UnifiedMcpToolSystem**: Provides a unified interface for tool use across different AI models.
+6. **McpToolExecutor**: Provides a unified interface for tool use across different AI models.
 
-7. **EmbeddedMcpServer**: Executes tool use requests and returns results.
+7. **EmbeddedMcpProvider**: Executes tool use requests and returns results.
 
 ## 3. Tool Use Processing Flow
 
@@ -47,8 +47,8 @@ sequenceDiagram
     participant OAH as OpenAiHandler
     participant MCP as McpIntegration
     participant Router as McpToolRouter
-    participant System as UnifiedMcpToolSystem
-    participant Server as EmbeddedMcpServer
+    participant System as McpToolExecutor
+    participant Server as EmbeddedMcpProvider
 
     Model->>OH: Stream with tool use
     
@@ -90,8 +90,8 @@ sequenceDiagram
    b. It calls the `processToolUse` method inherited from BaseProvider.
    c. The `processToolUse` method routes the tool call through McpIntegration's `routeToolUse` method.
    d. McpIntegration detects the format and routes to the appropriate handler in McpToolRouter.
-   e. McpToolRouter converts the tool call to a neutral format and executes it via UnifiedMcpToolSystem.
-   f. UnifiedMcpToolSystem executes the tool on the EmbeddedMcpServer.
+   e. McpToolRouter converts the tool call to a neutral format and executes it via McpToolExecutor.
+   f. McpToolExecutor executes the tool on the EmbeddedMcpProvider.
    g. The result is returned back through the chain.
    h. The Ollama handler yields the tool result to the model.
 

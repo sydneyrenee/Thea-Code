@@ -57,7 +57,10 @@ export class SseTransport implements IMcpTransport {
   }
 
   getPort(): number {
-    return this.transport.getPort();
+    if (this.transport && typeof this.transport.getPort === "function") {
+      return this.transport.getPort();
+    }
+    return this.config.port ?? 0;
   }
 
   set onerror(handler: (error: Error) => void) {

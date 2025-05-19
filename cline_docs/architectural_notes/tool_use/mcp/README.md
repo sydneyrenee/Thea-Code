@@ -30,6 +30,8 @@ The MCP implementation in Thea Code consists of several key components:
 - **McpIntegration**: A class that integrates MCP with the rest of the system
 - **McpConverters**: A class that converts between different tool formats
 - **McpToolRouter**: A class that routes tool use requests to the appropriate handler
+- **SSETransport**: Handles communication with the MCP server using Server-Sent Events
+- **OpenAI Function Call Support**: Enables models to invoke MCP tools via function calls
 
 ## Integration Points
 
@@ -44,19 +46,17 @@ The MCP system integrates with several other components in Thea Code:
 The MCP implementation is currently in development, with the following status:
 
 - **Core Components**: Implemented and tested
-- **SSE Transport**: Planned for implementation
-- **OpenAI Function Format Integration**: Planned for implementation
+- **SSE Transport**: Implemented and tested
+- **OpenAI Function Format Integration**: Implemented and tested
 - **Provider Handler Integration**: Partially implemented
 
 ## Next Steps
 
 The following steps are planned for the MCP implementation:
 
-1. Implement the SSE transport to replace the StdioTransport
-2. Integrate the OpenAI function format with the MCP system
-3. Update all provider handlers to use the MCP system
-4. Add comprehensive testing for all components
-5. Document the API for tool developers
+1. Update all provider handlers to use the MCP system
+2. Add comprehensive testing for all components
+3. Document the API for tool developers
 
 ## Contributing
 

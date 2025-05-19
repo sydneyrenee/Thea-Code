@@ -61,15 +61,15 @@ export const DEFAULT_SSE_CONFIG: SseTransportConfig = {
 };
 ```
 
-### 2.2 Modify EmbeddedMcpServer to Use SSETransport
+### 2.2 Modify EmbeddedMcpProvider to Use SSETransport
 
 ```typescript
-// src/services/mcp/EmbeddedMcpServer.ts
+// src/services/mcp/EmbeddedMcpProvider.ts
 
 // Add imports
 import { SseTransportConfig, DEFAULT_SSE_CONFIG } from './config/SseTransportConfig';
 
-export class EmbeddedMcpServer extends EventEmitter {
+export class EmbeddedMcpProvider extends EventEmitter {
   // Add new properties
   private sseConfig: SseTransportConfig;
   private serverUrl?: URL;
@@ -87,14 +87,14 @@ export class EmbeddedMcpServer extends EventEmitter {
       // Try to import the MCP SDK dynamically
       const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
       this.server = new McpServer({
-        name: "EmbeddedMcpServer",
+        name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     } catch (error) {
       // If the MCP SDK is not installed, use the mock implementation
       console.warn("MCP SDK not found, using mock implementation");
       this.server = new MockMcpServer({
-        name: "EmbeddedMcpServer",
+        name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     }
@@ -205,30 +205,30 @@ class MockSseServerTransport {
 }
 ```
 
-### 2.3 Update UnifiedMcpToolSystem to Pass Configuration
+### 2.3 Update McpToolExecutor to Pass Configuration
 
 ```typescript
-// src/services/mcp/UnifiedMcpToolSystem.ts
+// src/services/mcp/McpToolExecutor.ts
 
 // Add imports
 import { SseTransportConfig } from './config/SseTransportConfig';
 
-export class UnifiedMcpToolSystem extends EventEmitter {
+export class McpToolExecutor extends EventEmitter {
   // Add new property
   private sseConfig?: SseTransportConfig;
   
   /**
-   * Get the singleton instance of the UnifiedMcpToolSystem
+   * Get the singleton instance of the McpToolExecutor
    * @param config Optional SSE transport configuration
    */
-  public static getInstance(config?: SseTransportConfig): UnifiedMcpToolSystem {
-    if (!UnifiedMcpToolSystem.instance) {
-      UnifiedMcpToolSystem.instance = new UnifiedMcpToolSystem(config);
+  public static getInstance(config?: SseTransportConfig): McpToolExecutor {
+    if (!McpToolExecutor.instance) {
+      McpToolExecutor.instance = new McpToolExecutor(config);
     } else if (config) {
       // Update config if provided
-      UnifiedMcpToolSystem.instance.sseConfig = config;
+      McpToolExecutor.instance.sseConfig = config;
     }
-    return UnifiedMcpToolSystem.instance;
+    return McpToolExecutor.instance;
   }
   
   /**
@@ -238,7 +238,7 @@ export class UnifiedMcpToolSystem extends EventEmitter {
   private constructor(config?: SseTransportConfig) {
     super();
     this.sseConfig = config;
-    this.mcpServer = new EmbeddedMcpServer(config);
+    this.mcpServer = new EmbeddedMcpProvider(config);
     this.toolRegistry = McpToolRegistry.getInstance();
     
     // Forward events from the MCP server
@@ -293,7 +293,7 @@ export class McpToolRouter extends EventEmitter {
   private constructor(config?: SseTransportConfig) {
     super();
     this.sseConfig = config;
-    this.mcpToolSystem = UnifiedMcpToolSystem.getInstance(config);
+    this.mcpToolSystem = McpToolExecutor.getInstance(config);
     
     // Forward events from the MCP tool system
     this.mcpToolSystem.on('tool-registered', (name) => this.emit('tool-registered', name));
@@ -340,7 +340,7 @@ export class McpIntegration extends EventEmitter {
     super();
     this.sseConfig = config;
     this.mcpToolRouter = McpToolRouter.getInstance(config);
-    this.mcpToolSystem = UnifiedMcpToolSystem.getInstance(config);
+    this.mcpToolSystem = McpToolExecutor.getInstance(config);
     
     // Forward events from the MCP tool router
     this.mcpToolRouter.on('tool-registered', (name) => this.emit('tool-registered', name));
@@ -457,16 +457,16 @@ describe('SseTransportConfig', () => {
 ```typescript
 // src/services/mcp/__tests__/SseTransport.test.ts
 
-import { EmbeddedMcpServer } from '../EmbeddedMcpServer';
+import { EmbeddedMcpProvider } from '../EmbeddedMcpProvider';
 import { SseClientFactory } from '../client/SseClientFactory';
 import { SseTransportConfig } from '../config/SseTransportConfig';
 
 describe('SSE Transport', () => {
-  let server: EmbeddedMcpServer;
+  let server: EmbeddedMcpProvider;
   
   beforeEach(() => {
     // Create a new server with a random port for each test
-    server = new EmbeddedMcpServer({
+    server = new EmbeddedMcpProvider({
       port: 0, // Use random port for tests
       hostname: 'localhost'
     });
@@ -602,7 +602,7 @@ describe('SSE Transport', () => {
       apiPath: '/custom/api'
     };
     
-    const customServer = new EmbeddedMcpServer(customConfig);
+    const customServer = new EmbeddedMcpProvider(customConfig);
     
     try {
       // Start the server
@@ -706,12 +706,12 @@ To migrate existing code to use the new SSE transport:
 
 1. **Phase 1: Core Implementation**
    - Implement the SSE transport configuration
-   - Update the EmbeddedMcpServer to use SSE transport
+   - Update the EmbeddedMcpProvider to use SSE transport
    - Create the SSE client factory
    - Write tests for the new implementation
 
 2. **Phase 2: Integration**
-   - Update the UnifiedMcpToolSystem to pass configuration
+   - Update the McpToolExecutor to pass configuration
    - Update the McpToolRouter to pass configuration
    - Update the McpIntegration to pass configuration
    - Update existing tests to work with the new implementation
@@ -751,11 +751,11 @@ export class McpIntegration {
     // Use SSE transport if the feature flag is enabled
     if (FEATURES.USE_SSE_TRANSPORT) {
       this.mcpToolRouter = McpToolRouter.getInstance(config);
-      this.mcpToolSystem = UnifiedMcpToolSystem.getInstance(config);
+      this.mcpToolSystem = McpToolExecutor.getInstance(config);
     } else {
       // Use the old implementation
       this.mcpToolRouter = McpToolRouter.getInstance();
-      this.mcpToolSystem = UnifiedMcpToolSystem.getInstance();
+      this.mcpToolSystem = McpToolExecutor.getInstance();
     }
     
     // ...

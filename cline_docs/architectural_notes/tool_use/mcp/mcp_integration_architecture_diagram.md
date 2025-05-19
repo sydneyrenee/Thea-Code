@@ -41,12 +41,12 @@ graph TD
     subgraph "MCP Integration"
         MI[McpIntegration]
         MTR[McpToolRouter]
-        UMTS[UnifiedMcpToolSystem]
+        UMTS[McpToolExecutor]
         MC[McpConverters]
     end
     
     subgraph "MCP Server"
-        EMCP[EmbeddedMcpServer]
+        EMCP[EmbeddedMcpProvider]
         MTReg[McpToolRegistry]
     end
     
@@ -133,7 +133,7 @@ sequenceDiagram
     participant TP as TheaProvider
     participant PH as Provider Handler
     participant MI as McpIntegration
-    participant EMCP as EmbeddedMcpServer
+    participant EMCP as EmbeddedMcpProvider
     participant TE as Tool Executor
     
     User->>WA: User input
@@ -170,15 +170,15 @@ sequenceDiagram
 
 - Detects the format of tool use requests
 - Routes requests to the appropriate converter
-- Executes tools through the UnifiedMcpToolSystem
+- Executes tools through the McpToolExecutor
 
-### 5.3 UnifiedMcpToolSystem
+### 5.3 McpToolExecutor
 
 - Provides a unified interface for tool use
 - Manages the embedded MCP server
 - Executes tools and processes results
 
-### 5.4 EmbeddedMcpServer
+### 5.4 EmbeddedMcpProvider
 
 - Hosts tools from various sources
 - Provides a standardized interface for tool execution

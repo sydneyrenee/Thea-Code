@@ -20,11 +20,11 @@
 
 **Details:**
 
-1.  **Migrate and Rename `EmbeddedMcpServer.ts` to `providers/EmbeddedMcpProvider.ts`:**
-    *   **Source:** `src/services/mcp/EmbeddedMcpServer.ts`
+1.  **Migrate and Rename `EmbeddedMcpProvider.ts` to `providers/EmbeddedMcpProvider.ts`:**
+    *   **Source:** `src/services/mcp/EmbeddedMcpProvider.ts`
     *   **Destination:** `src/services/mcp/providers/EmbeddedMcpProvider.ts`
     *   **Changes:**
-        *   Rename the class from `EmbeddedMcpServer` to `EmbeddedMcpProvider`.
+        *   Rename the class from `EmbeddedMcpProvider` to `EmbeddedMcpProvider`.
         *   Implement the `IMcpProvider` interface defined in `../types/McpProviderTypes.ts`.
         *   Update internal imports for types (`../types/`) and core components (`../core/`).
         *   **Crucially:** Remove all transport-specific logic (SSE and Stdio setup, connection handling, port management). This logic will move to the dedicated transport classes (Task 2.2).
@@ -37,7 +37,7 @@
     *   **Destination:** `src/services/mcp/providers/MockMcpProvider.ts`
     *   **Implementation:**
         *   Create a new class `MockMcpProvider` implementing `IMcpProvider`.
-        *   Extract the mock server logic previously embedded within `EmbeddedMcpServer.ts` (or `mcp_refactoring_implementation_details.md`).
+        *   Extract the mock server logic previously embedded within `EmbeddedMcpProvider.ts` (or `mcp_refactoring_implementation_details.md`).
         *   Implement the `IMcpProvider` methods (`start`, `stop`, `registerToolDefinition`, `unregisterTool`, `executeTool`, `getServerUrl`, `isRunning`) with minimal mock behavior suitable for testing components that depend on a provider. It should manage a simple in-memory map of registered tools.
 
 3.  **Create `providers/RemoteMcpProvider.ts`:**
@@ -63,7 +63,7 @@
 
 ## Task 2.2: Implement Transport Components
 
-**Objective:** Create dedicated classes for handling SSE and Stdio transport mechanisms, extracting logic from the old `EmbeddedMcpServer`.
+**Objective:** Create dedicated classes for handling SSE and Stdio transport mechanisms, extracting logic from the old `EmbeddedMcpProvider`.
 
 **Details:**
 
@@ -80,7 +80,7 @@
         *   Create a class `SseTransport` implementing `IMcpTransport` (from `../types/McpTransportTypes.ts`).
         *   Import `SseTransportConfig` from `./config/SseTransportConfig.ts`.
         *   The constructor should accept `SseTransportConfig`.
-        *   Encapsulate the logic for creating, starting, and managing an SSE server using `@modelcontextprotocol/sdk/server/sse.js` (or its mock equivalent). This includes setting up the HTTP server, handling `/events` and `/api` paths, CORS configuration, etc. This logic is extracted from the old `EmbeddedMcpServer.ts` and `sse_transport_implementation_plan.md`.
+        *   Encapsulate the logic for creating, starting, and managing an SSE server using `@modelcontextprotocol/sdk/server/sse.js` (or its mock equivalent). This includes setting up the HTTP server, handling `/events` and `/api` paths, CORS configuration, etc. This logic is extracted from the old `EmbeddedMcpProvider.ts` and `sse_transport_implementation_plan.md`.
         *   Implement `start()`: Initialize and start the underlying SSE server.
         *   Implement `close()`: Properly shut down the underlying SSE server and release the port.
         *   Implement `getPort()`: Return the actual port the server is listening on.
@@ -92,7 +92,7 @@
         *   Create a class `StdioTransport` implementing `IMcpTransport`.
         *   Import `StdioTransportConfig` from `../types/McpTransportTypes.ts`.
         *   The constructor should accept `StdioTransportConfig`.
-        *   Encapsulate the logic for creating and managing a Stdio transport using `@modelcontextprotocol/sdk/server/stdio.js` (or its mock equivalent). This includes spawning the child process and managing stdin/stdout/stderr. This logic might need to be inferred or adapted if not explicitly present in the old `EmbeddedMcpServer`.
+        *   Encapsulate the logic for creating and managing a Stdio transport using `@modelcontextprotocol/sdk/server/stdio.js` (or its mock equivalent). This includes spawning the child process and managing stdin/stdout/stderr. This logic might need to be inferred or adapted if not explicitly present in the old `EmbeddedMcpProvider`.
         *   Implement `start()`: Start the underlying Stdio transport/process.
         *   Implement `close()`: Properly terminate the underlying process and close streams.
         *   Implement `getPort()`: This might return `undefined` or `0` as Stdio doesn't use network ports.

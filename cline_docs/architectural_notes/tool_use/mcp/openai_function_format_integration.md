@@ -21,8 +21,8 @@ graph TD
     A[BaseProvider] --> B[Provider Handlers]
     B -- "registers" --> C[McpIntegration]
     C -- "registers with" --> D[McpToolRegistry]
-    C -- "registers with" --> E[UnifiedMcpToolSystem]
-    E -- "registers with" --> F[EmbeddedMcpServer]
+    C -- "registers with" --> E[McpToolExecutor]
+    E -- "registers with" --> F[EmbeddedMcpProvider]
     G[McpConverters] -- "converts to" --> H[OpenAI Function Format]
     B -- "uses" --> G
     I[OllamaHandler] -- "includes functions in" --> J[Model Prompt]
@@ -52,8 +52,8 @@ sequenceDiagram
     participant OAH as OpenAiHandler
     participant MCP as McpIntegration
     participant Router as McpToolRouter
-    participant System as UnifiedMcpToolSystem
-    participant Server as EmbeddedMcpServer
+    participant System as McpToolExecutor
+    participant Server as EmbeddedMcpProvider
     
     Model->>OH: Stream with function call
     OH->>OAH: extractToolCalls(delta)
@@ -118,12 +118,12 @@ public getToolRegistry(): McpToolRegistry {
 }
 ```
 
-### 3.3 Update UnifiedMcpToolSystem to Expose Tool Registry
+### 3.3 Update McpToolExecutor to Expose Tool Registry
 
-The `UnifiedMcpToolSystem` class should be updated to expose the tool registry:
+The `McpToolExecutor` class should be updated to expose the tool registry:
 
 ```typescript
-// src/services/mcp/UnifiedMcpToolSystem.ts
+// src/services/mcp/McpToolExecutor.ts
 
 /**
  * Get the tool registry

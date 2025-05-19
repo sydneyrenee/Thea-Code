@@ -12,9 +12,9 @@ The MCP integration provides a unified tool system for handling tool use across 
 
 1. **McpIntegration**: A facade that provides a simple interface for the rest of the application
 2. **McpToolRouter**: Detects format and routes tool use requests to appropriate handlers
-3. **UnifiedMcpToolSystem**: Core component for tool use across different AI models
+3. **McpToolExecutor**: Core component for tool use across different AI models
 4. **McpConverters**: Utility functions for converting between different formats and MCP protocol
-5. **EmbeddedMcpServer**: Hosts tools from various sources
+5. **EmbeddedMcpProvider**: Hosts tools from various sources
 6. **McpToolRegistry**: Central registry for all tools in the system
 
 ### 1.2 Integration Flow
@@ -25,8 +25,8 @@ sequenceDiagram
     participant MI as McpIntegration
     participant MTR as McpToolRouter
     participant MC as McpConverters
-    participant UMTS as UnifiedMcpToolSystem
-    participant EMCP as EmbeddedMcpServer
+    participant UMTS as McpToolExecutor
+    participant EMCP as EmbeddedMcpProvider
     participant MTReg as McpToolRegistry
     
     PH->>MI: Initialize MCP integration
@@ -301,16 +301,16 @@ The `McpIntegration` class serves as a facade for the MCP system:
 // src/services/mcp/McpIntegration.ts
 
 import { McpToolRouter } from './McpToolRouter';
-import { UnifiedMcpToolSystem } from './UnifiedMcpToolSystem';
+import { McpToolExecutor } from './McpToolExecutor';
 import { ToolDefinition } from './types';
 
 export class McpIntegration {
   private mcpToolRouter: McpToolRouter;
-  private mcpToolSystem: UnifiedMcpToolSystem;
+  private mcpToolSystem: McpToolExecutor;
   private isInitialized: boolean = false;
   
   constructor() {
-    this.mcpToolSystem = new UnifiedMcpToolSystem();
+    this.mcpToolSystem = new McpToolExecutor();
     this.mcpToolRouter = new McpToolRouter(this.mcpToolSystem);
   }
   
@@ -349,16 +349,16 @@ The `McpToolRouter` class detects the format and routes tool use requests:
 ```typescript
 // src/services/mcp/McpToolRouter.ts
 
-import { UnifiedMcpToolSystem } from './UnifiedMcpToolSystem';
+import { McpToolExecutor } from './McpToolExecutor';
 import { McpConverters } from './McpConverters';
 import { FormatDetector } from '../../utils/json-xml-bridge';
 import { NeutralToolUseRequest, NeutralToolResult } from './types';
 
 export class McpToolRouter {
-  private mcpToolSystem: UnifiedMcpToolSystem;
+  private mcpToolSystem: McpToolExecutor;
   private formatDetector: FormatDetector;
   
-  constructor(mcpToolSystem: UnifiedMcpToolSystem) {
+  constructor(mcpToolSystem: McpToolExecutor) {
     this.mcpToolSystem = mcpToolSystem;
     this.formatDetector = new FormatDetector();
   }
@@ -426,25 +426,25 @@ export class McpToolRouter {
 }
 ```
 
-### 3.3 UnifiedMcpToolSystem
+### 3.3 McpToolExecutor
 
-The `UnifiedMcpToolSystem` class provides a unified interface for tool use:
+The `McpToolExecutor` class provides a unified interface for tool use:
 
 ```typescript
-// src/services/mcp/UnifiedMcpToolSystem.ts
+// src/services/mcp/McpToolExecutor.ts
 
-import { EmbeddedMcpServer } from './EmbeddedMcpServer';
+import { EmbeddedMcpProvider } from './EmbeddedMcpProvider';
 import { McpToolRegistry } from './McpToolRegistry';
 import { ToolDefinition, NeutralToolUseRequest, NeutralToolResult } from './types';
 
-export class UnifiedMcpToolSystem {
-  private mcpServer: EmbeddedMcpServer;
+export class McpToolExecutor {
+  private mcpServer: EmbeddedMcpProvider;
   private toolRegistry: McpToolRegistry;
   private isInitialized: boolean = false;
   
   constructor() {
     this.toolRegistry = new McpToolRegistry();
-    this.mcpServer = new EmbeddedMcpServer(this.toolRegistry);
+    this.mcpServer = new EmbeddedMcpProvider(this.toolRegistry);
   }
   
   async initialize(): Promise<void> {

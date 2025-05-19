@@ -24,9 +24,9 @@ The documentation is organized into several documents, each focusing on a specif
 
 The MCP implementation in Thea Code consists of several key components:
 
-- **EmbeddedMcpServer**: A server implementation that runs in the same process as the client
+- **EmbeddedMcpProvider**: A server implementation that runs in the same process as the client
 - **McpToolRegistry**: A registry of tools that can be called by the server
-- **UnifiedMcpToolSystem**: A system that manages tools from multiple sources
+- **McpToolExecutor**: A system that manages tools from multiple sources
 - **McpIntegration**: A class that integrates MCP with the rest of the system
 - **McpConverters**: A class that converts between different tool formats
 - **McpToolRouter**: A class that routes tool use requests to the appropriate handler

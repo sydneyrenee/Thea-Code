@@ -6,9 +6,12 @@ import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "./config/SseTransportCon
  * This will be replaced with the actual implementation when the MCP SDK is installed
  */
 class MockSseServerTransport {
-  constructor(_options?: any) {}
+  private port: number
+  constructor(_options?: any) {
+    this.port = Math.floor(Math.random() * 50000) + 10000
+  }
   getPort(): number {
-    return 0;
+    return this.port
   }
   close(): Promise<void> {
     return Promise.resolve();
@@ -54,7 +57,10 @@ export class SseTransport implements IMcpTransport {
   }
 
   getPort(): number {
-    return this.transport.getPort();
+    if (this.transport && typeof this.transport.getPort === "function") {
+      return this.transport.getPort();
+    }
+    return this.config.port ?? 0;
   }
 
   set onerror(handler: (error: Error) => void) {

@@ -147,7 +147,14 @@ export class McpToolRouter extends EventEmitter {
       };
       
       // Convert the error result to the original format
-      return this.convertFromMcp(errorResult, request.format);
+      try {
+        return this.convertFromMcp(errorResult, request.format);
+      } catch {
+        return {
+          format: request.format,
+          content: errorResult as unknown as Record<string, unknown>
+        };
+      }
     }
   }
   

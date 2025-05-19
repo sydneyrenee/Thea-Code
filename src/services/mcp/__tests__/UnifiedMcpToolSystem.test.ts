@@ -93,7 +93,12 @@ jest.mock('../core/McpToolExecutor', () => {
     toolRegistry: mockToolRegistry,
 
     // Mocked methods
-    initialize: jest.fn().mockResolvedValue(undefined),
+    initialize: jest.fn().mockImplementation(async () => {
+        await mockMcpServer.start()
+    }),
+    shutdown: jest.fn().mockImplementation(async () => {
+        await mockMcpServer.stop()
+    }),
     registerTool: jest.fn().mockImplementation((def) => {
         mockMcpServer.registerToolDefinition(def);
         mockToolRegistry.registerTool(def);

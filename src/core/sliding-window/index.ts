@@ -14,11 +14,25 @@ export const TOKEN_BUFFER_PERCENTAGE = 0.1
  * @returns {Promise<number>} A promise resolving to the token count
  */
 export async function estimateTokenCount(
-	content: Array<Anthropic.Messages.ContentBlockParam>,
-	apiHandler: ApiHandler,
+        content: Array<Anthropic.Messages.ContentBlockParam>,
+        apiHandler: ApiHandler,
 ): Promise<number> {
-	if (!content || content.length === 0) return 0
-	return apiHandler.countTokens(content)
+        if (!content || content.length === 0) return 0
+
+        const blocks = Array.isArray(content) ? content : [content]
+        let total = 0
+        for (const block of blocks) {
+                if (block.type === 'text') {
+                        total += await apiHandler.countTokens([block])
+                } else if (block.type === 'image' && (block as any).source) {
+                        const data = String((block as any).source.data || '')
+                        total += Math.ceil(Math.sqrt(data.length)) * 1.5
+                } else {
+                        const jsonStr = JSON.stringify(block)
+                        total += await apiHandler.countTokens([{ type: 'text', text: jsonStr }])
+                }
+        }
+        return Math.ceil(total)
 }
 
 /**

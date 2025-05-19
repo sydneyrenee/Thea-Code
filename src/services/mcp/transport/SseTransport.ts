@@ -6,9 +6,12 @@ import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "./config/SseTransportCon
  * This will be replaced with the actual implementation when the MCP SDK is installed
  */
 class MockSseServerTransport {
-  constructor(_options?: any) {}
+  private port: number
+  constructor(_options?: any) {
+    this.port = Math.floor(Math.random() * 50000) + 10000
+  }
   getPort(): number {
-    return 0;
+    return this.port
   }
   close(): Promise<void> {
     return Promise.resolve();

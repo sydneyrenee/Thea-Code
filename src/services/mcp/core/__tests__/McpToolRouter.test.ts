@@ -42,7 +42,8 @@ describe("McpToolRouter", () => {
   // Reset the singleton instance and explicitly create it after mock setup
   beforeEach(async () => {
     // Create a mock object with all necessary methods, including EventEmitter methods
-    const mockExecutor = {
+    const mockExecutor = new EventEmitter() as any
+    Object.assign(mockExecutor, {
       initialize: jest.fn(async () => {}),
       shutdown: jest.fn(async () => {}),
       executeToolFromNeutralFormat: jest.fn(async (request: any) => {
@@ -57,13 +58,8 @@ describe("McpToolRouter", () => {
           content: [{ type: 'text', text: 'Success' }],
           status: 'success'
         };
-      }),
-      // Explicitly mock EventEmitter methods that return 'this'
-      on: jest.fn().mockReturnThis(),
-      emit: jest.fn(),
-      removeAllListeners: jest.fn().mockReturnThis(),
-      setMaxListeners: jest.fn(), // Mock setMaxListeners as well
-    };
+      })
+    })
 
     // Mock the static getInstance method to return the mock executor
     jest.spyOn(McpToolExecutor, 'getInstance').mockReturnValue(mockExecutor as any);

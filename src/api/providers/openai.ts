@@ -330,24 +330,26 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-	async completePrompt(prompt: string): Promise<string> {
-		const modelId = this.getModel().id;
-		const modelTemp = this.options.modelTemperature ?? 0; // Default to 0 if not specified
-		
-		// This method is for single completion, not full conversation history.
-		// It might need to be updated to accept NeutralMessageContent if used with structured prompts.
-		// For now, assuming prompt is a simple string.
-		const message = await this.client.chat.completions.create({
-			model: modelId,
-			max_tokens: ANTHROPIC_DEFAULT_MAX_TOKENS, // This should probably come from modelInfo or options
-			temperature: modelTemp,
-			messages: [{ role: "user", content: prompt }], // Assuming simple string prompt
-			stream: false,
-		})
-
-		const content = message.choices[0]?.message.content
-		return content || ""
-	}
+        async completePrompt(prompt: string): Promise<string> {
+                try {
+                        const modelId = this.getModel().id
+                        const modelTemp = this.options.modelTemperature ?? 0
+                        const message = await this.client.chat.completions.create({
+                                model: modelId,
+                                max_tokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+                                temperature: modelTemp,
+                                messages: [{ role: 'user', content: prompt }],
+                                stream: false,
+                        })
+                        const content = message.choices[0]?.message.content
+                        return content || ''
+                } catch (error) {
+                        if (error instanceof Error) {
+                                throw new Error(`OpenAI completion error: ${error.message}`)
+                        }
+                        throw error
+                }
+        }
 
 	private async *handleO3FamilyMessage(
 		modelId: string,

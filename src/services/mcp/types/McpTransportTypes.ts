@@ -18,10 +18,12 @@ export interface SseTransportConfig {
 export interface IMcpTransport {
   start(): Promise<void>;
   close(): Promise<void>;
-  getPort?(): number; // Optional as StdioTransport might not have a port
+  getPort?(): number | undefined; // Explicitly allow undefined
   onerror?: (error: Error) => void;
   onclose?: () => void;
   // Add other transport-specific methods/properties if needed
+  // For SDK compatibility, the connect method in McpServer might expect a transport with `send`
+  send?: (message: any) => Promise<void>;
 }
 
 // Add StdioTransportConfig if needed

@@ -167,9 +167,9 @@ When a client calls a tool, the following sequence occurs:
 
 In the Thea Code project, MCP is implemented as follows:
 
-1. **EmbeddedMcpServer**: A server implementation that runs in the same process as the client
+1. **EmbeddedMcpProvider**: A provider implementation that runs in the same process as the client
 2. **McpToolRegistry**: A registry of tools that can be called by the server
-3. **UnifiedMcpToolSystem**: A system that manages tools from multiple sources
+3. **McpToolExecutor**: A system that manages tools from multiple sources
 4. **McpIntegration**: A class that integrates MCP with the rest of the system
 5. **McpConverters**: A class that converts between different tool formats
 6. **McpToolRouter**: A class that routes tool use requests to the appropriate handler
@@ -181,8 +181,8 @@ graph TD
     A[BaseProvider] --> B[Provider Handlers]
     B -- "registers" --> C[McpIntegration]
     C -- "registers with" --> D[McpToolRegistry]
-    C -- "registers with" --> E[UnifiedMcpToolSystem]
-    E -- "registers with" --> F[EmbeddedMcpServer]
+    C -- "registers with" --> E[McpToolExecutor]
+    E -- "registers with" --> F[EmbeddedMcpProvider]
     G[McpConverters] -- "converts to" --> H[OpenAI Function Format]
     B -- "uses" --> G
 ```
@@ -193,9 +193,9 @@ graph TD
 sequenceDiagram
     participant BP as BaseProvider
     participant MI as McpIntegration
-    participant UMTS as UnifiedMcpToolSystem
+    participant UMTS as McpToolExecutor
     participant MTR as McpToolRegistry
-    participant EMCP as EmbeddedMcpServer
+    participant EMCP as EmbeddedMcpProvider
     
     BP->>MI: registerTool(definition)
     MI->>UMTS: registerTool(definition)
@@ -211,8 +211,8 @@ sequenceDiagram
     participant MI as McpIntegration
     participant MTR as McpToolRouter
     participant MC as McpConverters
-    participant UMTS as UnifiedMcpToolSystem
-    participant EMCP as EmbeddedMcpServer
+    participant UMTS as McpToolExecutor
+    participant EMCP as EmbeddedMcpProvider
     
     PH->>MI: Process tool use
     MI->>MTR: Route tool use
@@ -285,9 +285,9 @@ export const DEFAULT_SSE_CONFIG: SseTransportConfig = {
 };
 ```
 
-### 6.3 Updating EmbeddedMcpServer
+### 6.3 Updating EmbeddedMcpProvider
 
-The `EmbeddedMcpServer` class needs to be updated to use SSETransport:
+The `EmbeddedMcpProvider` class needs to be updated to use SSETransport:
 
 ```typescript
 /**
@@ -518,8 +518,8 @@ graph TD
     B -- "routes through" --> D[McpIntegration]
     C -- "routes through" --> D
     D -- "routes to" --> E[McpToolRouter]
-    E -- "executes via" --> F[UnifiedMcpToolSystem]
-    F -- "executes on" --> G[EmbeddedMcpServer]
+    E -- "executes via" --> F[McpToolExecutor]
+    F -- "executes on" --> G[EmbeddedMcpProvider]
 ```
 
 ### 8.2 Tool Use Processing Flow
@@ -531,8 +531,8 @@ sequenceDiagram
     participant OAH as OpenAiHandler
     participant MCP as McpIntegration
     participant Router as McpToolRouter
-    participant System as UnifiedMcpToolSystem
-    participant Server as EmbeddedMcpServer
+    participant System as McpToolExecutor
+    participant Server as EmbeddedMcpProvider
 
     Model->>OH: Stream with tool use
     

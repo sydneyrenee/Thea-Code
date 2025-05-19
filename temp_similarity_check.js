@@ -1,5 +1,5 @@
-const { compareTwoStrings } = require('string-similarity');
 const { CmpStr } = require('cmpstr');
+const { closest } = require('fastest-levenshtein');
 
 const cmp = new CmpStr();
 
@@ -13,10 +13,10 @@ const testPairs = [
 
 console.log('Comparing string similarity:');
 testPairs.forEach(([str1, str2]) => {
-  const originalSimilarity = compareTwoStrings(str1, str2);
   const cmpstrSimilarity = cmp.compare('dice', str1, str2);
+  const levenDist = closest(str1, [str2]);
   console.log(`"${str1}" vs "${str2}":`);
-  console.log(`  string-similarity: ${originalSimilarity}`);
-  console.log(`  cmpstr (dice):     ${cmpstrSimilarity}`);
+  console.log(`  cmpstr (dice):        ${cmpstrSimilarity}`);
+  console.log(`  fastest-levenshtein:  ${levenDist === str2 ? 1 : 0}`);
   console.log('---');
 });

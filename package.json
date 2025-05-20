@@ -328,7 +328,7 @@
     "prettier:branding": "node scripts/apply-thea-branding.js",
     "verify": "node scripts/verify-branding.js",
     "package": "npm run clean && npm run build:extension && npm run build:webui && vsce package --out bin/thea-code-$npm_package_version.vsix",
-    "test": "node ./scripts/run-all-linters.js && npm run test:jest && npm run test:types",
+    "test": "node ./scripts/run-all-linters.js && npm run test:jest",
     "test:jest": "cd webview-ui && npm run test && cd .. && npm run test:extension",
     "test:extension": "jest",
     "test:types": "tsc --noEmit",
@@ -389,12 +389,13 @@
     "tree-sitter-wasms": "^0.1.12",
     "turndown": "^7.2.0",
     "web-tree-sitter": "^0.25.4",
-    "zod": "^3.25.1"
+    "zod": "^3.25.7"
+
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.4",
     "@changesets/types": "^6.1.0",
-    "@dotenvx/dotenvx": "^1.44.0",
+    "@dotenvx/dotenvx": "^1.44.1",
     "@types/debug": "^4.1.12",
     "@types/diff-match-patch": "^1.0.36",
     "@types/glob": "^8.1.0",

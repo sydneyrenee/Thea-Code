@@ -53,64 +53,6 @@ jest.mock('../core/McpToolRegistry', () => {
   };
 });
 
-// Mock the McpToolExecutor
-jest.mock('../core/McpToolExecutor', () => {
-  const mockMcpServer = { // Use the existing mock EmbeddedMcpProvider
-    on: jest.fn(),
-    start: jest.fn().mockResolvedValue(undefined),
-    stop: jest.fn().mockResolvedValue(undefined),
-    registerToolDefinition: jest.fn(),
-    unregisterTool: jest.fn().mockReturnValue(true),
-    executeTool: jest.fn().mockImplementation(async (name, args) => {
-      if (name === 'test_tool') {
-        return {
-          content: [{ type: 'text', text: `Executed test_tool with args: ${JSON.stringify(args)}` }],
-          isError: false
-        };
-      } else if (name === 'error_tool') {
-        return {
-          content: [{ type: 'text', text: 'Error executing tool' }],
-          isError: true
-        };
-      } else {
-        throw new Error(`Tool '${name}' not found`);
-      }
-    })
-  };
-
-  const mockToolRegistry = { // Use the existing mock McpToolRegistry instance
-    registerTool: jest.fn(),
-    unregisterTool: jest.fn().mockReturnValue(true),
-    getTool: jest.fn(),
-    getAllTools: jest.fn(),
-    hasTool: jest.fn(),
-    executeTool: jest.fn()
-  };
-
-  const mockInstance = {
-    // Mocked properties
-    mcpServer: mockMcpServer,
-    toolRegistry: mockToolRegistry,
-
-    // Mocked methods
-    initialize: jest.fn().mockResolvedValue(undefined),
-    registerTool: jest.fn().mockImplementation((def) => {
-        mockMcpServer.registerToolDefinition(def);
-        mockToolRegistry.registerTool(def);
-    }),
-    unregisterTool: jest.fn().mockImplementation((name) => {
-        const serverResult = mockMcpServer.unregisterTool(name);
-        const registryResult = mockToolRegistry.unregisterTool(name);
-        return serverResult && registryResult; // Assuming both need to succeed
-    }),
-  };
-
-  return {
-    McpToolExecutor: {
-      getInstance: jest.fn().mockReturnValue(mockInstance)
-    }
-  };
-});
 describe('McpToolExecutor', () => {
   let mcpToolSystem: McpToolExecutor;
   
@@ -128,8 +70,8 @@ describe('McpToolExecutor', () => {
     it('should initialize the MCP server', async () => {
       await mcpToolSystem.initialize();
       
-      const mcpServer = (mcpToolSystem as any).mcpServer;
-      expect(mcpServer.start).toHaveBeenCalled();
+      const mcpProvider = (mcpToolSystem as any).mcpProvider;
+      expect(mcpProvider.start).toHaveBeenCalled();
     });
     
     it('should not initialize the MCP server if already initialized', async () => {
@@ -137,14 +79,14 @@ describe('McpToolExecutor', () => {
       await mcpToolSystem.initialize();
       
       // Clear the mock
-      const mcpServer = (mcpToolSystem as any).mcpServer;
-      mcpServer.start.mockClear();
+      const mcpProvider = (mcpToolSystem as any).mcpProvider;
+      mcpProvider.start.mockClear();
       
       // Initialize again
       await mcpToolSystem.initialize();
       
       // Should not call start again
-      expect(mcpServer.start).not.toHaveBeenCalled();
+      expect(mcpProvider.start).not.toHaveBeenCalled();
     });
   });
   
@@ -159,20 +101,20 @@ describe('McpToolExecutor', () => {
       
       mcpToolSystem.registerTool(toolDefinition);
       
-      const mcpServer = (mcpToolSystem as any).mcpServer;
+      const mcpProvider = (mcpToolSystem as any).mcpProvider;
       const toolRegistry = (mcpToolSystem as any).toolRegistry;
-      
-      expect(mcpServer.registerToolDefinition).toHaveBeenCalledWith(toolDefinition);
+
+      expect(mcpProvider.registerToolDefinition).toHaveBeenCalledWith(toolDefinition);
       expect(toolRegistry.registerTool).toHaveBeenCalledWith(toolDefinition);
     });
     
     it('should unregister a tool from both the MCP server and the tool registry', () => {
       const result = mcpToolSystem.unregisterTool('test_tool');
       
-      const mcpServer = (mcpToolSystem as any).mcpServer;
+      const mcpProvider = (mcpToolSystem as any).mcpProvider;
       const toolRegistry = (mcpToolSystem as any).toolRegistry;
-      
-      expect(mcpServer.unregisterTool).toHaveBeenCalledWith('test_tool');
+
+      expect(mcpProvider.unregisterTool).toHaveBeenCalledWith('test_tool');
       expect(toolRegistry.unregisterTool).toHaveBeenCalledWith('test_tool');
       expect(result).toBe(true);
     });

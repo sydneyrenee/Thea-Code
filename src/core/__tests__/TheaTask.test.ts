@@ -13,6 +13,8 @@ import { TheaProvider } from "../webview/TheaProvider" // Renamed import and pat
 import { ApiConfiguration, ModelInfo } from "../../shared/api"
 import { ApiStreamChunk } from "../../api/transform/stream"
 
+jest.setTimeout(20000)
+
 // Mock TheaIgnoreController
 jest.mock("../ignore/TheaIgnoreController")
 

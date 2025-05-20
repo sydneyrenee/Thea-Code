@@ -309,8 +309,9 @@ describe("GeminiHandler", () => {
 		
 		it("should handle errors by falling back to base implementation", async () => {
 			// Mock the implementation to throw an error first time, then succeed second time
-			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
-				.mockResolvedValue(8);
+                        const mockBaseCountTokens = jest
+                                .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+                                .mockResolvedValue(8);
 			
 			// Create a spy on console.warn
 			const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -318,11 +319,11 @@ describe("GeminiHandler", () => {
 			// Create content that will cause an error in our custom logic
 			const content = [{ type: "text" as const, text: "Test content" }];
 			
-			// Force an error in the try block
-			const mockError = new Error("Test error");
-			jest.spyOn(handler as any, 'countTokens').mockImplementationOnce(() => {
-				throw mockError;
-			});
+                        // Force an error in the try block
+                        const mockError = new Error("Test error");
+                        mockBaseCountTokens.mockImplementationOnce(() => {
+                                throw mockError;
+                        });
 			
 			// Call the method (this will throw and then call the original)
 			const result = await handler.countTokens(content);

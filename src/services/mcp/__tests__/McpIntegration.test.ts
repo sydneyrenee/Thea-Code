@@ -124,12 +124,15 @@ describe('McpIntegration', () => {
     
     it('should process XML tool use requests', async () => {
       const xmlContent = '<test_tool>\n<param1>value1</param1>\n</test_tool>';
-      
+
       const result = await mcpIntegration.processXmlToolUse(xmlContent);
-      
-      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
-      expect(mcpToolSystem.processXmlToolUse).toHaveBeenCalledWith(xmlContent);
-      expect(result).toBe(`Processed XML: ${xmlContent}`);
+
+      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
+        format: 'xml',
+        content: xmlContent
+      });
+      expect(result).toBe('Routed xml request');
     });
     
     it('should process JSON tool use requests', async () => {
@@ -141,12 +144,15 @@ describe('McpIntegration', () => {
           param1: 'value1'
         }
       };
-      
+
       const result = await mcpIntegration.processJsonToolUse(jsonContent);
-      
-      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
-      expect(mcpToolSystem.processJsonToolUse).toHaveBeenCalledWith(jsonContent);
-      expect(result).toBe(`Processed JSON: ${JSON.stringify(jsonContent)}`);
+
+      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
+        format: 'json',
+        content: jsonContent
+      });
+      expect(result).toBe('Routed json request');
     });
     
     it('should process OpenAI function call requests', async () => {
@@ -157,15 +163,15 @@ describe('McpIntegration', () => {
           id: 'call_abc123'
         }
       };
-      
+
       const result = await mcpIntegration.processOpenAiFunctionCall(functionCall);
-      
-      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
-      expect(mcpToolSystem.processOpenAiFunctionCall).toHaveBeenCalledWith(functionCall);
-      expect(result).toEqual({
-        role: 'tool',
-        content: `Processed OpenAI: ${JSON.stringify(functionCall)}`
+
+      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
+        format: 'openai',
+        content: functionCall
       });
+      expect(result).toEqual('Routed openai request');
     });
     
     it('should route tool use requests based on format', async () => {

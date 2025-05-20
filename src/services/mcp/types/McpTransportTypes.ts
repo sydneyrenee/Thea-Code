@@ -18,7 +18,7 @@ export interface SseTransportConfig {
 export interface IMcpTransport {
   start(): Promise<void>;
   close(): Promise<void>;
-  getPort?(): number; // Optional as StdioTransport might not have a port
+  getPort?(): number | undefined; // Optional as StdioTransport might not have a port
   onerror?: (error: Error) => void;
   onclose?: () => void;
   // Add other transport-specific methods/properties if needed

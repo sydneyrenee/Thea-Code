@@ -437,14 +437,14 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
       // Try to import the MCP SDK dynamically
       const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
       this.server = new McpServer({
-        name: "EmbeddedMcpServer",
+        name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     } catch (error) {
       // If the MCP SDK is not installed, use the mock implementation
       console.warn("MCP SDK not found, using mock implementation");
       this.server = new MockMcpServer({
-        name: "EmbeddedMcpServer",
+        name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     }

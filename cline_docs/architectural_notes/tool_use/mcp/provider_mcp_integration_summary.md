@@ -31,7 +31,7 @@ flowchart TD
     subgraph "MCP Integration"
         MI[McpIntegration]
         MTR[McpToolRouter]
-        UMTS[UnifiedMcpToolSystem]
+        UMTS[McpToolExecutor]
     end
     
     BP --> MI

@@ -226,13 +226,13 @@
         *   Ensure the singleton pattern (`getInstance`) is correctly implemented.
         *   No major functional changes expected, primarily relocation and import updates.
 
-2.  **Migrate and Rename `UnifiedMcpToolSystem.ts` to `McpToolExecutor.ts`:**
-    *   **Source:** `src/services/mcp/UnifiedMcpToolSystem.ts`
+2.  **Migrate and Rename `McpToolExecutor.ts` to `McpToolExecutor.ts`:**
+    *   **Source:** `src/services/mcp/McpToolExecutor.ts`
     *   **Destination:** `src/services/mcp/core/McpToolExecutor.ts`
     *   **Changes:**
-        *   Rename the class from `UnifiedMcpToolSystem` to `McpToolExecutor`.
+        *   Rename the class from `McpToolExecutor` to `McpToolExecutor`.
         *   Update internal imports for types (from `../types/`) and other components (e.g., `../providers/EmbeddedMcpProvider`, `../core/McpToolRegistry`).
-        *   **Crucially:** Update references to `EmbeddedMcpServer` to use the *new* name `EmbeddedMcpProvider` (this provider will be refactored in Phase 2, but update the reference here).
+        *   **Crucially:** Update references to `EmbeddedMcpProvider` to use the *new* name `EmbeddedMcpProvider` (this provider will be refactored in Phase 2, but update the reference here).
         *   Update the constructor and `getInstance` method (if using singleton) to reflect the new class name.
         *   Review methods like `executeToolFromNeutralFormat` to ensure they interact correctly with the (future refactored) `EmbeddedMcpProvider`.
         *   Remove any format conversion logic that should now reside solely in `McpConverters`.
@@ -242,7 +242,7 @@
     *   **Destination:** `src/services/mcp/core/McpToolRouter.ts`
     *   **Changes:**
         *   Update internal imports for types (from `../types/`) and other components (e.g., `../core/McpToolExecutor`, `../core/McpConverters`).
-        *   Update references to `UnifiedMcpToolSystem` to use the *new* name `McpToolExecutor`.
+        *   Update references to `McpToolExecutor` to use the *new* name `McpToolExecutor`.
         *   Ensure methods like `routeToolUse`, `convertToMcp`, `convertFromMcp` correctly reference `McpConverters` and `McpToolExecutor`.
 
 4.  **Migrate `McpConverters.ts`:**
@@ -253,7 +253,7 @@
         *   Ensure all format conversion logic (XML<->MCP, JSON<->MCP, OpenAI<->MCP, ToolDef->OpenAI Func) resides here.
         *   Verify method signatures match the plan in `mcp_refactoring_implementation_details.md`.
 
-5.  **Update References:** After moving/renaming, search the codebase (especially within `src/services/mcp/`) for old paths or class names (`UnifiedMcpToolSystem`) and update them to point to the new locations and names (`McpToolExecutor`).
+5.  **Update References:** After moving/renaming, search the codebase (especially within `src/services/mcp/`) for old paths or class names (`McpToolExecutor`) and update them to point to the new locations and names (`McpToolExecutor`).
 
 **Verification:**
 *   Confirm the four core component files exist in `src/services/mcp/core/`.

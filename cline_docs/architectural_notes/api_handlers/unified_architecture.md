@@ -79,12 +79,12 @@ flowchart TB
     subgraph "MCP Integration"
         L[McpIntegration]
         M[McpToolRouter]
-        N[UnifiedMcpToolSystem]
+        N[McpToolExecutor]
         O[McpConverters]
     end
     
     subgraph "MCP Server"
-        P[EmbeddedMcpServer]
+        P[EmbeddedMcpProvider]
         Q[McpToolRegistry]
     end
     
@@ -124,12 +124,12 @@ flowchart TB
 
 - **McpIntegration**: A facade that provides a simple interface for the rest of the application
 - **McpToolRouter**: Detects format and routes tool use requests to appropriate handlers
-- **UnifiedMcpToolSystem**: Core component for tool use across different AI models
+- **McpToolExecutor**: Core component for tool use across different AI models
 - **McpConverters**: Utility functions for converting between different formats and MCP protocol
 
 #### 2.2.4 MCP Server
 
-- **EmbeddedMcpServer**: Hosts tools from various sources
+- **EmbeddedMcpProvider**: Hosts tools from various sources
 - **McpToolRegistry**: Central registry for all tools in the system
 
 ### 2.3 Format Conversion Flow
@@ -156,7 +156,7 @@ flowchart LR
     JSON <--"McpConverters.jsonToMcp()"--> MCP
     OpenAI <--"McpConverters.openAiToMcp()"--> MCP
     
-    MCP --> EMCP["EmbeddedMcpServer\n(Tool Execution)"]
+    MCP --> EMCP["EmbeddedMcpProvider\n(Tool Execution)"]
     EMCP --> Result["NeutralToolResult"]
     
     Result <--"McpConverters.mcpToXml()"--> XMLResult["XML Result"]
@@ -200,7 +200,7 @@ Provider handlers now integrate with the MCP system:
 
 3. **Format Conversion**: Handlers use the `McpConverters` to convert between formats.
 
-4. **Tool Execution**: Handlers route tool execution through the `UnifiedMcpToolSystem`.
+4. **Tool Execution**: Handlers route tool execution through the `McpToolExecutor`.
 
 ## 4. Implementation Plan
 
@@ -218,8 +218,8 @@ Provider handlers now integrate with the MCP system:
 ### 4.2 Phase 2: MCP Integration
 
 1. **Implement MCP Components**:
-   - Create the `EmbeddedMcpServer` and `McpToolRegistry`
-   - Implement the `UnifiedMcpToolSystem` and `McpConverters`
+   - Create the `EmbeddedMcpProvider` and `McpToolRegistry`
+   - Implement the `McpToolExecutor` and `McpConverters`
    - Create the `McpToolRouter` and `McpIntegration` facade
 
 2. **Update Handlers to Use MCP**:

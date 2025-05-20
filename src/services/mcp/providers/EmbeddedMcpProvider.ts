@@ -1,4 +1,4 @@
-import { EventEmitter } from "events"
+import { EventEmitter } from "events";
 import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "../transport/config/SseTransportConfig";
 import { SseTransport } from "../transport/SseTransport";
 import { StdioTransport } from "../transport/StdioTransport";
@@ -11,87 +11,78 @@ import {
 } from "../types/McpProviderTypes";
 import { StdioTransportConfig, IMcpTransport } from "../types/McpTransportTypes";
 
-
-/**
- * EmbeddedMcpProvider provides a local MCP server implementation that hosts tools
- * from various sources including XML and JSON tool definitions.
- * 
- * This server acts as a unified tool system that can be used by models
- * regardless of whether they use XML or JSON formats for tool calls.
- */
-/**
- * Mock implementation of the MCP Server for type compatibility
- * This will be replaced with the actual implementation when the MCP SDK is installed
- */
-class MockMcpServer {
-  constructor(_options: any) {}
-  
-  tool(_name: string, _description: string, _schema: any, _handler: any) {}
-  
-  connect(_transport: any): Promise<void> {
-    return Promise.resolve();
-  }
+// Define a more specific type for the MCP server instance from the SDK
+// This needs to align with the actual SDK's McpServer class structure
+interface SdkMcpServer {
+  tool: (name: string, description: string, schema: any, handler: any) => void;
+  connect: (transport: any) => Promise<void>; // Use 'any' for SDK transport type for now
 }
 
-/**
- * Mock implementation of the StdioServerTransport for type compatibility
- * This will be replaced with the actual implementation when the MCP SDK is installed
- */
-
 export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
-  private server: any
-  private tools: Map<string, ToolDefinition> = new Map()
-  private resources: Map<string, ResourceDefinition> = new Map()
-  private resourceTemplates: Map<string, ResourceTemplateDefinition> = new Map()
-  private isStarted: boolean = false
-  private transport?: IMcpTransport
-  private sseConfig: SseTransportConfig
-  private stdioConfig?: StdioTransportConfig
-  private transportType: 'sse' | 'stdio' = 'sse'
-  private serverUrl?: URL
+  private server!: SdkMcpServer; // Definite assignment in create()
+  private tools: Map<string, ToolDefinition> = new Map();
+  private resources: Map<string, ResourceDefinition> = new Map();
+  private resourceTemplates: Map<string, ResourceTemplateDefinition> = new Map();
+  private isStarted: boolean = false;
+  private transport?: IMcpTransport;
+  private sseConfig: SseTransportConfig;
+  private stdioConfig?: StdioTransportConfig;
+  private transportType: 'sse' | 'stdio' = 'sse';
+  private serverUrl?: URL;
 
-  /**
-   * Create a new embedded MCP server
-   * @param config Optional SSE transport configuration
-   */
-  constructor(options?: { type: 'sse'; config?: SseTransportConfig } | { type: 'stdio'; config: StdioTransportConfig } | SseTransportConfig) {
-    super()
-
-    if (options && 'type' in options) {
-      this.transportType = options.type;
-      if (options.type === 'sse') {
-        this.sseConfig = { ...DEFAULT_SSE_CONFIG, ...options.config };
-      } else {
-        this.stdioConfig = options.config;
-        this.sseConfig = { ...DEFAULT_SSE_CONFIG };
-      }
-    } else {
-      this.transportType = 'sse';
-      this.sseConfig = { ...DEFAULT_SSE_CONFIG, ...(options as SseTransportConfig) };
-    }
-    
+  private static async createServerInstance(): Promise<SdkMcpServer> {
     try {
-      // Try to import the MCP SDK dynamically
-      const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
-      this.server = new McpServer({
+      // Correctly import McpServer from the SDK's CJS distribution
+      const { McpServer } = require("@modelcontextprotocol/sdk/dist/cjs/server/mcp.js");
+      if (!McpServer) {
+        throw new Error("MCP SDK McpServer not found");
+      }
+      console.log("Initializing MCP Server...");
+      return new McpServer({
         name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     } catch (error) {
-      // If the MCP SDK is not installed, use the mock implementation
-      console.warn("MCP SDK not found, using mock implementation");
-      this.server = new MockMcpServer({
-        name: "EmbeddedMcpProvider",
-        version: "1.0.0"
-      });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Failed to initialize MCP server:", errorMessage);
+      throw error;
     }
   }
 
-  /**
-   * Register all tools, resources, and resource templates with the server
-   */
+  static async create(options?: { type: 'sse'; config?: SseTransportConfig } | { type: 'stdio'; config: StdioTransportConfig } | SseTransportConfig): Promise<EmbeddedMcpProvider> {
+    const instance = new EmbeddedMcpProvider();
+    
+    if (options && 'type' in options) {
+      instance.transportType = options.type;
+      if (options.type === 'sse') {
+        instance.sseConfig = { ...DEFAULT_SSE_CONFIG, ...options.config };
+      } else {
+        instance.stdioConfig = options.config;
+        // Ensure sseConfig has defaults even if stdio is primary
+        instance.sseConfig = { ...DEFAULT_SSE_CONFIG }; 
+      }
+    } else {
+      instance.transportType = 'sse';
+      instance.sseConfig = { ...DEFAULT_SSE_CONFIG, ...(options as SseTransportConfig) };
+    }
+
+    instance.server = await EmbeddedMcpProvider.createServerInstance();
+    return instance;
+  }
+
+  private constructor() {
+    super();
+    // Initialize sseConfig with defaults, will be overridden in create()
+    this.sseConfig = { ...DEFAULT_SSE_CONFIG }; 
+    // Server is initialized in the static create method, so mark as definitely assigned or handle null
+    // For now, using definite assignment assertion, assuming create() is always called.
+  }
+
   private registerHandlers(): void {
-    // Register all tools
+    if (!this.server) {
+      throw new Error("Cannot register handlers: MCP Server not initialized");
+    }
+
     for (const [name, definition] of this.tools.entries()) {
       try {
         this.server.tool(
@@ -117,10 +108,8 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
       }
     }
 
-    // Register resource handlers as tools
     for (const [uri, definition] of this.resources.entries()) {
       const resourceName = `resource:${uri}`;
-      
       try {
         this.server.tool(
           resourceName,
@@ -151,14 +140,10 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
       }
     }
 
-    // Register resource template handlers
     for (const [uriTemplate, definition] of this.resourceTemplates.entries()) {
       const templateName = `template:${uriTemplate}`;
-      
-      // Create a schema for the template parameters
       const paramNames = this.extractParamNames(uriTemplate);
       const paramSchema: Record<string, any> = {};
-      
       for (const param of paramNames) {
         paramSchema[param] = { type: "string" };
       }
@@ -194,166 +179,155 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     }
   }
 
-  /**
-   * Extract parameter names from a URI template
-   * @param template The URI template with {param} placeholders
-   * @returns An array of parameter names
-   */
   private extractParamNames(template: string): string[] {
-    const paramRegex = /{([^}]+)}/g
-    const params: string[] = []
-    let match
-    
+    const paramRegex = /{([^}]+)}/g;
+    const params: string[] = [];
+    let match;
     while ((match = paramRegex.exec(template)) !== null) {
-      params.push(match[1])
+      params.push(match[1]);
     }
-    
-    return params
+    return params;
   }
 
-  /**
-   * Match a URI against a URI template and extract parameters
-   * @param template The URI template with {param} placeholders
-   * @param uri The actual URI to match
-   * @returns A map of parameter names to values, or null if no match
-   */
   private matchUriTemplate(template: string, uri: string): Record<string, string> | null {
-    // Convert template to regex by replacing {param} with named capture groups
-    const regexStr = template.replace(/{([^}]+)}/g, '(?<$1>[^/]+)')
-    const regex = new RegExp(`^${regexStr}$`)
-    
-    const match = regex.exec(uri)
+    const regexStr = template.replace(/{([^}]+)}/g, '(?<$1>[^/]+)');
+    const regex = new RegExp(`^${regexStr}$`);
+    const match = regex.exec(uri);
     if (!match || !match.groups) {
-      return null
+      return null;
     }
-    
-    return match.groups
+    return match.groups;
   }
 
-  /**
-   * Register a tool with the embedded MCP server using a definition object
-   * @param definition The tool definition
-   */
-  registerToolDefinition(definition: ToolDefinition): void {
-    this.tools.set(definition.name, definition)
-    this.emit('tool-registered', definition.name)
+  public registerToolDefinition(definition: ToolDefinition): void {
+    this.tools.set(definition.name, definition);
+    this.emit('tool-registered', definition.name);
   }
 
-  /**
-   * Register a resource with the embedded MCP server
-   * @param definition The resource definition
-   */
-  registerResource(definition: ResourceDefinition): void {
-    this.resources.set(definition.uri, definition)
-    this.emit('resource-registered', definition.uri)
+  public registerResource(definition: ResourceDefinition): void {
+    this.resources.set(definition.uri, definition);
+    this.emit('resource-registered', definition.uri);
   }
 
-  /**
-   * Register a resource template with the embedded MCP server
-   * @param definition The resource template definition
-   */
-  registerResourceTemplate(definition: ResourceTemplateDefinition): void {
-    this.resourceTemplates.set(definition.uriTemplate, definition)
-    this.emit('resource-template-registered', definition.uriTemplate)
+  public registerResourceTemplate(definition: ResourceTemplateDefinition): void {
+    this.resourceTemplates.set(definition.uriTemplate, definition);
+    this.emit('resource-template-registered', definition.uriTemplate);
   }
 
-  /**
-   * Unregister a tool from the embedded MCP server
-   * @param name The name of the tool to unregister
-   * @returns true if the tool was unregistered, false if it wasn't found
-   */
-  unregisterTool(name: string): boolean {
-    const result = this.tools.delete(name)
+  public unregisterTool(name: string): boolean {
+    const result = this.tools.delete(name);
     if (result) {
-      this.emit('tool-unregistered', name)
+      this.emit('tool-unregistered', name);
     }
-    return result
+    return result;
   }
 
-  /**
-   * Unregister a resource from the embedded MCP server
-   * @param uri The URI of the resource to unregister
-   * @returns true if the resource was unregistered, false if it wasn't found
-   */
-  unregisterResource(uri: string): boolean {
-    const result = this.resources.delete(uri)
+  public unregisterResource(uri: string): boolean {
+    const result = this.resources.delete(uri);
     if (result) {
-      this.emit('resource-unregistered', uri)
+      this.emit('resource-unregistered', uri);
     }
-    return result
+    return result;
   }
 
-  /**
-   * Unregister a resource template from the embedded MCP server
-   * @param uriTemplate The URI template of the resource template to unregister
-   * @returns true if the resource template was unregistered, false if it wasn't found
-   */
-  unregisterResourceTemplate(uriTemplate: string): boolean {
-    const result = this.resourceTemplates.delete(uriTemplate)
+  public unregisterResourceTemplate(uriTemplate: string): boolean {
+    const result = this.resourceTemplates.delete(uriTemplate);
     if (result) {
-      this.emit('resource-template-unregistered', uriTemplate)
+      this.emit('resource-template-unregistered', uriTemplate);
     }
-    return result
+    return result;
   }
 
-  /**
-   * Start the embedded MCP server
-   */
-  async start(): Promise<void> {
+  public async start(): Promise<void> {
     if (this.isStarted) {
       return;
     }
-    
-    // Register all handlers
-    this.registerHandlers();
-    
+    if (!this.server) {
+      throw new Error("MCP Server not initialized. Call EmbeddedMcpProvider.create() first.");
+    }
+
     try {
+      if (this.transportType === 'stdio') {
+        this.transport = new StdioTransport(this.stdioConfig!);
+      } else {
+        // SSE Transport
+        this.transport = new SseTransport(this.sseConfig);
+      }
+
       if (!this.transport) {
-        if (this.transportType === 'stdio') {
-          this.transport = new StdioTransport(this.stdioConfig!);
-        } else {
-          this.transport = new SseTransport(this.sseConfig);
+        throw new Error(`Failed to initialize ${this.transportType} transport`);
+      }
+
+      this.registerHandlers();
+      // The SDK's connect method expects the raw SDK transport instance.
+      // It will also start the underlying HTTP server for SSE.
+      await this.server.connect(this.transport as any);
+
+      // After connect, if SSE, the port should be determined and available.
+      if (this.transportType === 'sse') {
+        const sdkSseTransportInstance = this.transport as any;
+        
+        let actualPort: number | undefined;
+        // The SDK's SSEServerTransport has an `httpServer` which is a Node `http.Server`
+        // The `address()` method returns an `AddressInfo` object or string.
+        if (sdkSseTransportInstance.httpServer && typeof sdkSseTransportInstance.httpServer.address === 'function') {
+          const address = sdkSseTransportInstance.httpServer.address();
+          if (address && typeof address === 'object' && 'port' in address) { // Check if it's AddressInfo
+            actualPort = address.port;
+          }
+        }
+        
+        if (!actualPort && typeof sdkSseTransportInstance.port === 'number' && sdkSseTransportInstance.port !== 0) {
+          // Fallback to .port property if httpServer.address() didn't yield a port
+          // This might be the case if the SDK sets .port directly after listening.
+          actualPort = sdkSseTransportInstance.port;
+          console.warn("Retrieved port from sdkSseTransportInstance.port");
+        }
+
+        if (!actualPort) {
+          throw new Error("SSE Transport failed to determine the listening port after connect.");
+        }
+        
+        const host = this.sseConfig.hostname || 'localhost';
+        this.serverUrl = new URL(`http://${host}:${actualPort}`);
+        console.log(`MCP server (SSE) started at ${this.serverUrl.toString()}`);
+      } else {
+        console.log(`MCP server started with ${this.transportType} transport`);
+      }
+
+      this.isStarted = true;
+      const eventData: { url?: string; type: string; port?: number } = {
+        url: this.serverUrl?.toString(),
+        type: this.transportType,
+        port: this.serverUrl ? parseInt(this.serverUrl.port, 10) : undefined
+      };
+      this.emit('started', eventData);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Failed to start MCP server:", errorMessage);
+      this.isStarted = false;
+      if (this.transport) {
+        try {
+          await this.transport.close();
+        } catch (closeError) {
+          console.error("Error closing transport:", closeError);
         }
       }
-      
-      // Connect the server to the transport
-      await this.server.connect(this.transport);
-      
-      // Store the server URL for clients to connect to
-      const port = this.transport.getPort ? this.transport.getPort() : undefined;
-      if (port !== undefined) {
-        const host = this.sseConfig.hostname;
-        this.serverUrl = new URL(`http://${host}:${port}`);
-      }
-      
-      this.isStarted = true;
-      this.emit('started', { url: this.serverUrl?.toString() });
-      if (this.serverUrl) {
-        console.log(`MCP server started at ${this.serverUrl.toString()}`);
-      }
-    } catch (error) {
-      console.error("Failed to start MCP server:", error);
-      this.isStarted = false;
+      throw error;
     }
   }
 
-  /**
-   * Stop the embedded MCP server
-   */
-  async stop(): Promise<void> {
+  public async stop(): Promise<void> {
     if (!this.isStarted) {
       return;
     }
-    
     try {
-      // Close the server connection
-      if (this.transport && typeof this.transport.close === 'function') {
+      if (this.transport?.close) {
         await this.transport.close();
       }
     } catch (error) {
       console.error("Error stopping MCP server:", error);
     } finally {
-      // Clean up resources
       this.transport = undefined;
       this.serverUrl = undefined;
       this.isStarted = false;
@@ -361,67 +335,36 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     }
   }
 
-  /**
-   * Get the URL of the running MCP server
-   * @returns The URL of the server, or undefined if not started
-   */
-  getServerUrl(): URL | undefined {
+  public getServerUrl(): URL | undefined {
     return this.serverUrl;
   }
 
-  /**
-   * Get all registered tools
-   * @returns A map of tool names to tool definitions
-   */
-  getTools(): Map<string, ToolDefinition> {
-    return new Map(this.tools)
+  public getTools(): Map<string, ToolDefinition> {
+    return new Map(this.tools);
   }
 
-  /**
-   * Get all registered resources
-   * @returns A map of resource URIs to resource definitions
-   */
-  getResources(): Map<string, ResourceDefinition> {
-    return new Map(this.resources)
+  public getResources(): Map<string, ResourceDefinition> {
+    return new Map(this.resources);
   }
 
-  /**
-   * Get all registered resource templates
-   * @returns A map of resource template URIs to resource template definitions
-   */
-  getResourceTemplates(): Map<string, ResourceTemplateDefinition> {
-    return new Map(this.resourceTemplates)
+  public getResourceTemplates(): Map<string, ResourceTemplateDefinition> {
+    return new Map(this.resourceTemplates);
   }
 
-  /**
-   * Check if the server is started
-   * @returns true if the server is started, false otherwise
-   */
-  isRunning(): boolean {
-    return this.isStarted
+  public isRunning(): boolean {
+    return this.isStarted;
   }
 
-  /**
-   * Execute a tool directly (without going through the MCP protocol)
-   * @param name The name of the tool to execute
-   * @param args The arguments to pass to the tool
-   * @returns The result of the tool execution
-   */
-  async executeTool(name: string, args: Record<string, unknown>): Promise<ToolCallResult> {
-    const tool = this.tools.get(name)
-    
+  public async executeTool(name: string, args: Record<string, unknown>): Promise<ToolCallResult> {
+    const tool = this.tools.get(name);
     if (!tool) {
       return {
-        content: [{
-          type: "text",
-          text: `Tool '${name}' not found`
-        }],
+        content: [{ type: "text", text: `Tool '${name}' not found` }],
         isError: true
-      }
+      };
     }
-
     try {
-      return await tool.handler(args || {})
+      return await tool.handler(args || {});
     } catch (error) {
       return {
         content: [{
@@ -429,32 +372,18 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           text: `Error executing tool '${name}': ${error instanceof Error ? error.message : String(error)}`
         }],
         isError: true
-      }
+      };
     }
   }
 
-  /**
-   * Register a tool with the embedded MCP server
-   * @param name The name of the tool
-   * @param description The description of the tool
-   * @param paramSchema The schema for the tool's parameters
-   * @param handler The function that handles the tool execution
-   */
-  registerTool(
+  public registerTool(
     name: string,
     description: string,
     paramSchema: Record<string, any>,
     handler: (args: Record<string, unknown>) => Promise<ToolCallResult>
   ): void {
-    this.tools.set(name, {
-      name,
-      description,
-      paramSchema,
-      handler
-    });
-    
-    // If the server is already started, register the tool directly
-    if (this.isStarted) {
+    this.tools.set(name, { name, description, paramSchema, handler });
+    if (this.isStarted && this.server) {
       try {
         this.server.tool(
           name,
@@ -478,49 +407,30 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
         console.error(`Failed to register tool ${name}:`, error);
       }
     }
-    
     this.emit('tool-registered', name);
   }
 
-  /**
-   * Access a resource directly (without going through the MCP protocol)
-   * @param uri The URI of the resource to access
-   * @returns The resource content
-   */
-  async accessResource(uri: string): Promise<{
-    content: string | Buffer
-    mimeType?: string
-  }> {
-    const resource = this.resources.get(uri)
-    
+  public async accessResource(uri: string): Promise<{ content: string | Buffer; mimeType?: string }> {
+    const resource = this.resources.get(uri);
     if (!resource) {
-      // Check if this URI matches any resource template
       for (const [template, definition] of this.resourceTemplates.entries()) {
-        const match = this.matchUriTemplate(template, uri)
+        const match = this.matchUriTemplate(template, uri);
         if (match) {
           try {
-            const content = await definition.handler(match)
-            return {
-              content,
-              mimeType: definition.mimeType
-            }
+            const content = await definition.handler(match);
+            return { content, mimeType: definition.mimeType };
           } catch (error) {
-            throw new Error(`Error reading resource template '${template}': ${error instanceof Error ? error.message : String(error)}`)
+            throw new Error(`Error reading resource template '${template}': ${error instanceof Error ? error.message : String(error)}`);
           }
         }
       }
-      
-      throw new Error(`Resource '${uri}' not found`)
+      throw new Error(`Resource '${uri}' not found`);
     }
-
     try {
-      const content = await resource.handler()
-      return {
-        content,
-        mimeType: resource.mimeType
-      }
+      const content = await resource.handler();
+      return { content, mimeType: resource.mimeType };
     } catch (error) {
-      throw new Error(`Error reading resource '${uri}': ${error instanceof Error ? error.message : String(error)}`)
+      throw new Error(`Error reading resource '${uri}': ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

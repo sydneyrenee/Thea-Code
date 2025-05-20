@@ -383,7 +383,6 @@
     "serialize-error": "^12.0.0",
     "simple-git": "^3.27.0",
     "sound-play": "^1.1.0",
-    "string-similarity": "^4.0.4",
     "strip-ansi": "^7.1.0",
     "strip-bom": "^5.0.0",
     "tmp": "^0.2.3",
@@ -391,6 +390,7 @@
     "turndown": "^7.2.0",
     "web-tree-sitter": "^0.25.4",
     "zod": "^3.25.7"
+
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.4",
@@ -401,7 +401,6 @@
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
     "@types/node": "22.x",
-    "@types/string-similarity": "^4.0.2",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
     "cmpstr": "^2.0.3",

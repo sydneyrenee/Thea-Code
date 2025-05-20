@@ -78,7 +78,7 @@ module.exports = {
 		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|globby|serialize-error|strip-ansi|default-shell|os-name|strip-bom)/)",
 	],
 	modulePathIgnorePatterns: [".vscode-test"],
-	reporters: [["jest-simple-dot-reporter", {}]],
-	globalSetup: "<rootDir>/test/ollama-mock-server/setup.ts",
-	globalTeardown: "<rootDir>/test/ollama-mock-server/teardown.ts",
+        reporters: [["jest-simple-dot-reporter", {}]],
+        globalSetup: "<rootDir>/test/globalSetup.ts",
+        globalTeardown: "<rootDir>/test/globalTeardown.ts",
 }

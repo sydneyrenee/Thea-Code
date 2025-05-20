@@ -1,56 +1,37 @@
+import { EventEmitter } from 'events';
 import { McpToolExecutor } from '../core/McpToolExecutor';
 import { NeutralToolUseRequest, NeutralToolResult, ToolUseFormat } from '../types/McpToolTypes';
 import { McpConverters } from '../core/McpConverters';
 import { McpToolRouter } from '../core/McpToolRouter';
 import { EmbeddedMcpProvider } from '../providers/EmbeddedMcpProvider';
 import { McpToolRegistry } from '../core/McpToolRegistry';
+import { ToolDefinition } from '../types/McpProviderTypes';
 
-// Mock the EmbeddedMcpProvider
-jest.mock('../providers/EmbeddedMcpProvider', () => {
-  return {
-    EmbeddedMcpProvider: jest.fn().mockImplementation(() => {
-      return {
-        on: jest.fn(),
-        start: jest.fn().mockResolvedValue(undefined),
-        stop: jest.fn().mockResolvedValue(undefined),
-        registerToolDefinition: jest.fn(),
-        unregisterTool: jest.fn().mockReturnValue(true),
-        executeTool: jest.fn().mockImplementation(async (name, args) => {
-          if (name === 'test_tool') {
-            return {
-              content: [{ type: 'text', text: `Executed test_tool with args: ${JSON.stringify(args)}` }],
-              isError: false
-            };
-          } else if (name === 'error_tool') {
-            return {
-              content: [{ type: 'text', text: 'Error executing tool' }],
-              isError: true
-            };
-          } else {
-            throw new Error(`Tool '${name}' not found`);
-          }
-        })
-      };
-    })
-  };
-});
+interface MockServerInterface extends EventEmitter {
+  start: jest.Mock;
+  stop: jest.Mock;
+  registerToolDefinition: jest.Mock;
+  unregisterTool: jest.Mock;
+  executeTool: jest.Mock;
+}
 
-// Mock the McpToolRegistry
-jest.mock('../core/McpToolRegistry', () => {
-  const mockInstance = {
-    registerTool: jest.fn(),
-    unregisterTool: jest.fn().mockReturnValue(true),
-    getTool: jest.fn(),
-    getAllTools: jest.fn(),
-    hasTool: jest.fn(),
-    executeTool: jest.fn()
-  };
-  
-  return {
-    McpToolRegistry: {
-      getInstance: jest.fn().mockReturnValue(mockInstance)
-    }
-  };
+interface MockToolRegistry {
+  registerTool: jest.Mock;
+  unregisterTool: jest.Mock;
+  getTool: jest.Mock;
+  getAllTools: jest.Mock;
+  hasTool: jest.Mock;
+  executeTool: jest.Mock;
+}
+
+// Create mock registry
+const createMockToolRegistry = (): MockToolRegistry => ({
+  registerTool: jest.fn(),
+  unregisterTool: jest.fn().mockReturnValue(true),
+  getTool: jest.fn(),
+  getAllTools: jest.fn(),
+  hasTool: jest.fn(),
+  executeTool: jest.fn()
 });
 
 describe('McpToolExecutor', () => {

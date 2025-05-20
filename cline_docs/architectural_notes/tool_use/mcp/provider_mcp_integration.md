@@ -335,8 +335,8 @@ sequenceDiagram
     participant BP as BaseProvider
     participant MI as McpIntegration
     participant MTR as McpToolRouter
-    participant UMTS as UnifiedMcpToolSystem
-    participant EMCP as EmbeddedMcpServer
+    participant UMTS as McpToolExecutor
+    participant EMCP as EmbeddedMcpProvider
     
     PH->>PSH: Detect tool use in model response
     PSH->>BP: processToolUse(toolUseObj)

@@ -118,6 +118,7 @@ Your diff here
                         if (!cleanDiff.endsWith("\n")) {
                                 cleanDiff += "\n"
                         }
+
                         const result = applyPatch(originalContent, cleanDiff)
 			if (result === false) {
 				return {

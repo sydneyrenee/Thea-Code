@@ -39,7 +39,7 @@ classDiagram
         -executeTool()
     }
     
-    class UnifiedMcpToolSystem {
+    class McpToolExecutor {
         +initialize()
         +shutdown()
         +registerTool()
@@ -51,7 +51,7 @@ classDiagram
         -convertToolResultToXml()
     }
     
-    class EmbeddedMcpServer {
+    class EmbeddedMcpProvider {
         +start()
         +stop()
         +registerToolDefinition()
@@ -124,13 +124,13 @@ classDiagram
     }
     
     McpIntegration --> McpToolRouter : uses
-    McpIntegration --> UnifiedMcpToolSystem : uses
-    McpToolRouter --> UnifiedMcpToolSystem : uses
+    McpIntegration --> McpToolExecutor : uses
+    McpToolRouter --> McpToolExecutor : uses
     McpToolRouter --> McpConverters : uses
-    UnifiedMcpToolSystem --> EmbeddedMcpServer : uses
-    UnifiedMcpToolSystem --> McpToolRegistry : uses
-    UnifiedMcpToolSystem --> McpConverters : uses
-    EmbeddedMcpServer --> SseTransportConfig : uses
+    McpToolExecutor --> EmbeddedMcpProvider : uses
+    McpToolExecutor --> McpToolRegistry : uses
+    McpToolExecutor --> McpConverters : uses
+    EmbeddedMcpProvider --> SseTransportConfig : uses
     McpHub --> SseClientFactory : uses
     McpServerManager --> McpHub : manages
     TheaMcpManager --> McpHub : uses
@@ -145,14 +145,14 @@ src/services/mcp/
 │   └── SseClientFactory.ts    # Factory for SSE clients
 ├── config/                    # Configuration
 │   └── SseTransportConfig.ts  # SSE transport configuration
-├── EmbeddedMcpServer.ts       # MCP server implementation
+├── EmbeddedMcpProvider.ts       # MCP server implementation
 ├── McpConverters.ts           # Format conversion utilities
 ├── McpHub.ts                  # Central hub for MCP instances
 ├── McpIntegration.ts          # Facade for the MCP system
 ├── McpServerManager.ts        # Server lifecycle management
 ├── McpToolRegistry.ts         # Tool registry
 ├── McpToolRouter.ts           # Request routing
-└── UnifiedMcpToolSystem.ts    # Tool system management
+└── McpToolExecutor.ts    # Tool system management
 ```
 
 ## Proposed Architecture
@@ -364,12 +364,12 @@ classDiagram
 src/services/mcp/
 ├── core/                           # Core MCP functionality
 │   ├── McpToolRegistry.ts          # Tool registration and management
-│   ├── McpToolExecutor.ts          # (renamed from UnifiedMcpToolSystem)
+│   ├── McpToolExecutor.ts          # (renamed from McpToolExecutor)
 │   ├── McpToolRouter.ts            # Format detection and routing
 │   └── McpConverters.ts            # Format conversion utilities
 │
 ├── providers/                      # MCP server implementations
-│   ├── EmbeddedMcpProvider.ts      # (renamed from EmbeddedMcpServer)
+│   ├── EmbeddedMcpProvider.ts      # (renamed from EmbeddedMcpProvider)
 │   ├── RemoteMcpProvider.ts        # For connecting to external MCP servers
 │   └── MockMcpProvider.ts          # For testing
 │
@@ -410,13 +410,13 @@ src/services/mcp/
   - Import types from new types directory
   - No functional changes needed
 
-#### 2. McpToolExecutor.ts (renamed from UnifiedMcpToolSystem.ts)
-- **Source**: `src/services/mcp/UnifiedMcpToolSystem.ts`
+#### 2. McpToolExecutor.ts (renamed from McpToolExecutor.ts)
+- **Source**: `src/services/mcp/McpToolExecutor.ts`
 - **Destination**: `src/services/mcp/core/McpToolExecutor.ts`
 - **Changes**:
-  - Rename class from `UnifiedMcpToolSystem` to `McpToolExecutor`
+  - Rename class from `McpToolExecutor` to `McpToolExecutor`
   - Update imports to reflect new file structure
-  - Update references to `EmbeddedMcpServer` to use `EmbeddedMcpProvider`
+  - Update references to `EmbeddedMcpProvider` to use `EmbeddedMcpProvider`
   - Move type definitions to `types/McpToolTypes.ts`
   - Update all references to this class in other files
 
@@ -425,7 +425,7 @@ src/services/mcp/
 - **Destination**: `src/services/mcp/core/McpToolRouter.ts`
 - **Changes**:
   - Update imports to reflect new file structure
-  - Update references to `UnifiedMcpToolSystem` to use `McpToolExecutor`
+  - Update references to `McpToolExecutor` to use `McpToolExecutor`
   - Move type definitions to `types/McpToolTypes.ts`
 
 #### 4. McpConverters.ts
@@ -438,11 +438,11 @@ src/services/mcp/
 
 ### Provider Components
 
-#### 5. EmbeddedMcpProvider.ts (renamed from EmbeddedMcpServer.ts)
-- **Source**: `src/services/mcp/EmbeddedMcpServer.ts`
+#### 5. EmbeddedMcpProvider.ts (renamed from EmbeddedMcpProvider.ts)
+- **Source**: `src/services/mcp/EmbeddedMcpProvider.ts`
 - **Destination**: `src/services/mcp/providers/EmbeddedMcpProvider.ts`
 - **Changes**:
-  - Rename class from `EmbeddedMcpServer` to `EmbeddedMcpProvider`
+  - Rename class from `EmbeddedMcpProvider` to `EmbeddedMcpProvider`
   - Update imports to reflect new file structure
   - Move type definitions to `types/McpProviderTypes.ts`
   - Extract transport-specific code to `transport/SseTransport.ts` and `transport/StdioTransport.ts`
@@ -452,7 +452,7 @@ src/services/mcp/
 - **Source**: New file
 - **Destination**: `src/services/mcp/providers/MockMcpProvider.ts`
 - **Implementation**:
-  - Extract mock implementations from `EmbeddedMcpServer.ts`
+  - Extract mock implementations from `EmbeddedMcpProvider.ts`
   - Create a proper mock provider for testing
   - Implement the same interface as `EmbeddedMcpProvider`
 
@@ -511,8 +511,8 @@ src/services/mcp/
 - **Destination**: `src/services/mcp/integration/McpIntegration.ts`
 - **Changes**:
   - Update imports to reflect new file structure
-  - Update references to `UnifiedMcpToolSystem` to use `McpToolExecutor`
-  - Update references to `EmbeddedMcpServer` to use `EmbeddedMcpProvider`
+  - Update references to `McpToolExecutor` to use `McpToolExecutor`
+  - Update references to `EmbeddedMcpProvider` to use `EmbeddedMcpProvider`
 
 #### 14. ProviderIntegration.ts
 - **Source**: New file
@@ -552,7 +552,7 @@ src/services/mcp/
 - **Source**: New file
 - **Destination**: `src/services/mcp/types/McpToolTypes.ts`
 - **Implementation**:
-  - Extract tool-related types from `UnifiedMcpToolSystem.ts` and `McpToolRouter.ts`
+  - Extract tool-related types from `McpToolExecutor.ts` and `McpToolRouter.ts`
   - Define interfaces for tool-related operations
 
 #### 19. McpTransportTypes.ts
@@ -566,7 +566,7 @@ src/services/mcp/
 - **Source**: New file
 - **Destination**: `src/services/mcp/types/McpProviderTypes.ts`
 - **Implementation**:
-  - Extract provider-related types from `EmbeddedMcpServer.ts`
+  - Extract provider-related types from `EmbeddedMcpProvider.ts`
   - Define interfaces for provider-related operations
 
 ## Implementation Strategy
@@ -600,12 +600,12 @@ flowchart TD
 
 ### Phase 3: Migrate Core Components
 1. Migrate `McpToolRegistry.ts` to the core directory
-2. Rename and migrate `UnifiedMcpToolSystem.ts` to `McpToolExecutor.ts`
+2. Rename and migrate `McpToolExecutor.ts` to `McpToolExecutor.ts`
 3. Migrate `McpToolRouter.ts` to the core directory
 4. Migrate `McpConverters.ts` to the core directory
 
 ### Phase 4: Migrate Provider Components
-1. Rename and migrate `EmbeddedMcpServer.ts` to `EmbeddedMcpProvider.ts`
+1. Rename and migrate `EmbeddedMcpProvider.ts` to `EmbeddedMcpProvider.ts`
 2. Create `MockMcpProvider.ts`
 3. Create `RemoteMcpProvider.ts`
 
@@ -694,11 +694,11 @@ gantt
     Create Type Definitions              :a2, after a1, 2d
     section Core Components
     Migrate McpToolRegistry              :b1, after a2, 1d
-    Migrate UnifiedMcpToolSystem         :b2, after b1, 2d
+    Migrate McpToolExecutor         :b2, after b1, 2d
     Migrate McpToolRouter                :b3, after b2, 1d
     Migrate McpConverters                :b4, after b3, 1d
     section Provider Components
-    Migrate EmbeddedMcpServer            :c1, after b4, 2d
+    Migrate EmbeddedMcpProvider            :c1, after b4, 2d
     Create MockMcpProvider               :c2, after c1, 1d
     Create RemoteMcpProvider             :c3, after c2, 2d
     section Transport Components

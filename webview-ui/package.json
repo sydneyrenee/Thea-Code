@@ -33,7 +33,6 @@
 		"@radix-ui/react-tooltip": "^1.2.6",
 		"@tailwindcss/vite": "^4.1.7",
 		"@tanstack/react-query": "^5.76.1",
-		"@vscode/webview-ui-toolkit": "^1.4.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.1.1",
@@ -79,7 +78,6 @@
 		"@types/react": "^19.1.4",
 		"@types/react-dom": "^19.1.5",
 		"@types/shell-quote": "^1.7.5",
-		"@types/testing-library__jest-dom": "^6.0.0",
 		"@types/vscode-webview": "^1.57.5",
 		"@typescript-eslint/eslint-plugin": "^8.32.1",
 		"@typescript-eslint/parser": "^8.32.1",
@@ -98,5 +96,9 @@
 		"ts-jest": "^29.3.4",
 		"typescript": "^5.8.3",
 		"vite": "6.3.5"
+	},
+	"overrides": {
+		"glob": "^11.0.2",
+		"jsdom": "^26.1.0"
 	}
 }

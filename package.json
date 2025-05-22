@@ -372,6 +372,7 @@
     "isbinaryfile": "^5.0.4",
     "js-tiktoken": "^1.0.20",
     "jsdom": "^26.1.0",
+    "lru-cache": "^11.1.0",
     "mammoth": "^1.9.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "npm-check-updates": "^18.0.1",
@@ -382,7 +383,6 @@
     "pkce-challenge": "^5.0.0",
     "posthog-node": "^4.17.2",
     "pretty-bytes": "^7.0.0",
-    "puppeteer-chromium-resolver": "^24.0.1",
     "puppeteer-core": "^24.8.2",
     "react": "^19.1.0",
     "reconnecting-eventsource": "^1.6.4",
@@ -444,6 +444,9 @@
   },
   "extensionSecretsPrefix": "thea_code_config_",
   "overrides": {
-    "node-domexception": "^2.0.0"
+    "node-domexception": "^2.0.0",
+    "jsdom": "^26.1.0",
+    "formdata-node": "^6.0.3",
+    "glob": "^11.0.2"
   }
 }

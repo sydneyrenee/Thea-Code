@@ -1,4 +1,4 @@
-import { ToolDefinition } from "../types/McpProviderTypes";
+import { ToolDefinition, ToolCallResult } from "../types/McpProviderTypes";
 import { EventEmitter } from "events";
 
 /**
@@ -81,7 +81,10 @@ export class McpToolRegistry extends EventEmitter {
    * @param args The arguments to pass to the tool
    * @returns The result of the tool execution
    */
-  public async executeTool(name: string, args: Record<string, unknown> = {}): Promise<any> {
+  public async executeTool(
+    name: string,
+    args: Record<string, unknown> = {}
+  ): Promise<ToolCallResult> {
     const tool = this.tools.get(name);
     if (!tool) {
       throw new Error(`Tool '${name}' not found`);

@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { ToolDefinition, ToolCallResult } from "../types/McpProviderTypes";
+import { ToolDefinition } from "../types/McpProviderTypes";
 import { NeutralToolUseRequest, NeutralToolResult } from "../types/McpToolTypes";
 import { McpToolRegistry } from "./McpToolRegistry";
 import { SseTransportConfig } from "../types/McpTransportTypes";
@@ -85,7 +85,7 @@ export class McpToolExecutor extends EventEmitter {
       throw new Error('McpToolExecutor not initialized');
     }
     // Register with both the MCP provider and the tool registry
-    this.mcpProvider!.registerToolDefinition(definition);
+    this.mcpProvider.registerToolDefinition(definition);
     this.toolRegistry.registerTool(definition);
   }
 
@@ -99,7 +99,7 @@ export class McpToolExecutor extends EventEmitter {
       throw new Error('McpToolExecutor not initialized');
     }
     // Unregister from both the MCP provider and the tool registry
-    const mcpResult = this.mcpProvider!.unregisterTool(name);
+    const mcpResult = this.mcpProvider.unregisterTool(name);
     const registryResult = this.toolRegistry.unregisterTool(name);
     
     return mcpResult && registryResult;

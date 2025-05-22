@@ -80,13 +80,17 @@ export class McpToolRouter extends EventEmitter {
       
       try {
         // Try to parse as JSON
-        const parsed = JSON.parse(content);
-        
+        const parsed = JSON.parse(content) as {
+          function_call?: unknown;
+          tool_calls?: unknown;
+          type?: string;
+        };
+
         // Check for OpenAI format
-        if (parsed.function_call || parsed.tool_calls) {
+        if (parsed.function_call !== undefined || parsed.tool_calls !== undefined) {
           return ToolUseFormat.OPENAI;
         }
-        
+
         // Check for neutral format
         if (parsed.type === 'tool_use') {
           return ToolUseFormat.NEUTRAL;
@@ -94,7 +98,7 @@ export class McpToolRouter extends EventEmitter {
         
         // Default to JSON
         return ToolUseFormat.JSON;
-      } catch (error) {
+      } catch {
         // If parsing fails, assume it's XML
         return ToolUseFormat.XML;
       }
@@ -191,7 +195,7 @@ export class McpToolRouter extends EventEmitter {
         }
       
       default:
-        throw new Error(`Unsupported format: ${request.format}`);
+        throw new Error(`Unsupported format: ${String(request.format)}`);
     }
   }
   
@@ -228,7 +232,7 @@ export class McpToolRouter extends EventEmitter {
         };
       
       default:
-        throw new Error(`Unsupported format: ${format}`);
+        throw new Error(`Unsupported format: ${String(format)}`);
     }
   }
   
@@ -238,7 +242,7 @@ export class McpToolRouter extends EventEmitter {
    * @returns The tool result in MCP format
    */
   private async executeTool(request: NeutralToolUseRequest): Promise<NeutralToolResult> {
-    const { name, input, id } = request;
+    const { name, id } = request;
     
     try {
       // Execute the tool using the MCP server

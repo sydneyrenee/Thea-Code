@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@jest/globals";
 import { McpConverters } from "../McpConverters";
-import { NeutralToolUseRequest, NeutralToolResult } from "../../types/McpToolTypes";
+import { NeutralToolResult } from "../../types/McpToolTypes";
 import { ToolDefinition } from "../../types/McpProviderTypes";
 
 describe("McpConverters", () => {
@@ -229,7 +229,7 @@ describe("McpConverters", () => {
         };
 
         const result = McpConverters.mcpToJson(neutralResult);
-        const parsedResult = JSON.parse(result);
+        const parsedResult = JSON.parse(result) as Record<string, unknown>;
 
         expect(parsedResult).toEqual({
           type: "tool_result",
@@ -253,7 +253,7 @@ describe("McpConverters", () => {
         };
 
         const result = McpConverters.mcpToJson(neutralResult);
-        const parsedResult = JSON.parse(result);
+        const parsedResult = JSON.parse(result) as Record<string, unknown>;
 
         expect(parsedResult).toEqual({
           type: "tool_result",
@@ -392,7 +392,7 @@ describe("McpConverters", () => {
           },
           required: ["path"]
         },
-        handler: async () => ({ content: [] })
+        handler: () => Promise.resolve({ content: [] })
       });
       
       toolDefinitions.set("execute_command", {
@@ -405,7 +405,7 @@ describe("McpConverters", () => {
           },
           required: ["command"]
         },
-        handler: async () => ({ content: [] })
+        handler: () => Promise.resolve({ content: [] })
       });
 
       const result = McpConverters.toolDefinitionsToOpenAiFunctions(toolDefinitions);
@@ -443,7 +443,7 @@ describe("McpConverters", () => {
       
       toolDefinitions.set("minimal_tool", {
         name: "minimal_tool",
-        handler: async () => ({ content: [] })
+        handler: () => Promise.resolve({ content: [] })
       });
 
       const result = McpConverters.toolDefinitionsToOpenAiFunctions(toolDefinitions);

@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import { userInfo } from "os"
 import { getShell } from "../shell"
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment */
 
 describe("Shell Detection Tests", () => {
 	let originalPlatform: string

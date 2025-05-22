@@ -10,6 +10,7 @@ export const EXPERIMENT_IDS = {
 	POWER_STEERING: "powerSteering",
 } as const satisfies Record<string, ExperimentId>
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _AssertExperimentIds = AssertEqual<Equals<ExperimentId, Values<typeof EXPERIMENT_IDS>>>
 
 type ExperimentKey = Keys<typeof EXPERIMENT_IDS>
@@ -25,12 +26,12 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 	POWER_STEERING: { enabled: false },
 }
 
-export const experimentDefault = Object.fromEntries(
-	Object.entries(experimentConfigsMap).map(([_, config]) => [
-		EXPERIMENT_IDS[_ as keyof typeof EXPERIMENT_IDS] as ExperimentId,
-		config.enabled,
-	]),
-) as Record<ExperimentId, boolean>
+export const experimentDefault: Record<ExperimentId, boolean> = Object.fromEntries(
+        Object.entries(experimentConfigsMap).map(([key, config]) => [
+                EXPERIMENT_IDS[key as ExperimentKey],
+                config.enabled,
+        ]),
+)
 
 export const experiments = {
 	get: (id: ExperimentKey): ExperimentConfig | undefined => experimentConfigsMap[id],

@@ -13,10 +13,10 @@ export async function getStorageBasePath(defaultPath: string): Promise<string> {
 	// Get user-configured custom storage path
 	let customStoragePath = ""
 
-	try {
-		// This is the line causing the error in tests
-		const config = vscode.workspace.getConfiguration(configSection())
-		customStoragePath = config.get<string>("customStoragePath", "")
+        try {
+                const section = (configSection as () => string)()
+                const config = vscode.workspace.getConfiguration(section)
+                customStoragePath = config.get<string>("customStoragePath", "")
 	} catch {
 		console.warn("Could not access VSCode configuration - using default path")
 		return defaultPath
@@ -85,9 +85,10 @@ export async function promptForCustomStoragePath(): Promise<void> {
 	// No need for explicit checks for vscode.window or vscode.workspace
 
 	let currentPath = ""
-	try {
-		const currentConfig = vscode.workspace.getConfiguration(configSection())
-		currentPath = currentConfig.get<string>("customStoragePath", "")
+        try {
+                const section = (configSection as () => string)()
+                const currentConfig = vscode.workspace.getConfiguration(section)
+                currentPath = currentConfig.get<string>("customStoragePath", "")
 	} catch {
 		console.error("Could not access configuration")
 		return
@@ -120,9 +121,10 @@ export async function promptForCustomStoragePath(): Promise<void> {
 
 	// If user canceled the operation, result will be undefined
 	if (result !== undefined) {
-		try {
-			const currentConfig = vscode.workspace.getConfiguration(configSection())
-			await currentConfig.update("customStoragePath", result, vscode.ConfigurationTarget.Global)
+                try {
+                        const section = (configSection as () => string)()
+                        const currentConfig = vscode.workspace.getConfiguration(section)
+                        await currentConfig.update("customStoragePath", result, vscode.ConfigurationTarget.Global)
 
 			if (result) {
 				try {

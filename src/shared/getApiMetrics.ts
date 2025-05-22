@@ -34,8 +34,13 @@ export function getApiMetrics(messages: TheaMessage[]) {
 	const getTotalTokensFromMessage = (message: TheaMessage): number => {
 		// Renamed type
 		if (!message.text) return 0
-		try {
-			const { tokensIn, tokensOut, cacheWrites, cacheReads } = JSON.parse(message.text)
+                try {
+                        const { tokensIn, tokensOut, cacheWrites, cacheReads } = JSON.parse(message.text) as {
+                                tokensIn?: number
+                                tokensOut?: number
+                                cacheWrites?: number
+                                cacheReads?: number
+                        }
 			return (tokensIn || 0) + (tokensOut || 0) + (cacheWrites || 0) + (cacheReads || 0)
 		} catch {
 			return 0
@@ -54,7 +59,13 @@ export function getApiMetrics(messages: TheaMessage[]) {
 	messages.forEach((message) => {
 		if (message.type === "say" && message.say === "api_req_started" && message.text) {
 			try {
-				const { tokensIn, tokensOut, cacheWrites, cacheReads, cost } = JSON.parse(message.text)
+                                const { tokensIn, tokensOut, cacheWrites, cacheReads, cost } = JSON.parse(message.text) as {
+                                        tokensIn?: number
+                                        tokensOut?: number
+                                        cacheWrites?: number
+                                        cacheReads?: number
+                                        cost?: number
+                                }
 
 				if (typeof tokensIn === "number") {
 					result.totalTokensIn += tokensIn

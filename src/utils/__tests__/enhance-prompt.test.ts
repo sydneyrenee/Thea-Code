@@ -37,8 +37,9 @@ describe("enhancePrompt", () => {
 		const result = await singleCompletionHandler(mockApiConfig, "Test prompt")
 
 		expect(result).toBe("Enhanced prompt")
-		const handler = buildApiHandler(mockApiConfig)
-		expect((handler as any).completePrompt).toHaveBeenCalledWith(`Test prompt`)
+                const handler = buildApiHandler(mockApiConfig) as SingleCompletionHandler
+                // eslint-disable-next-line @typescript-eslint/unbound-method
+                expect(handler.completePrompt).toHaveBeenCalledWith(`Test prompt`)
 	})
 
 	it("enhances prompt using custom enhancement prompt when provided", async () => {
@@ -59,8 +60,9 @@ describe("enhancePrompt", () => {
 		)
 
 		expect(result).toBe("Enhanced prompt")
-		const handler = buildApiHandler(mockApiConfig)
-		expect((handler as any).completePrompt).toHaveBeenCalledWith(`${customEnhancePrompt}\n\nTest prompt`)
+                const handler = buildApiHandler(mockApiConfig) as SingleCompletionHandler
+                // eslint-disable-next-line @typescript-eslint/unbound-method
+                expect(handler.completePrompt).toHaveBeenCalledWith(`${customEnhancePrompt}\n\nTest prompt`)
 	})
 
 	it("throws error for empty prompt input", async () => {

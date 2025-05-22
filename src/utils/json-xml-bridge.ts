@@ -12,6 +12,7 @@
  * 5. OpenAI function call conversion to neutral format
  */
 import { XmlMatcher, XmlMatcherResult } from './xml-matcher';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-base-to-string, @typescript-eslint/restrict-template-expressions */
 
 
 export interface GenericParsedJson {
@@ -22,8 +23,8 @@ export interface GenericParsedJson {
 }
 
 export interface FormatDetectedJson extends GenericParsedJson {
-  tool_calls?: any;
-  function_call?: any;
+  tool_calls?: unknown;
+  function_call?: unknown;
 }
 
 export interface ThinkingJsonObject {
@@ -35,7 +36,7 @@ export interface ToolUseJsonObject {
   type: 'tool_use';
   id?: string;
   name: string;
-  input: Record<string, any>;
+  input: Record<string, unknown>;
 }
 
 export interface ToolResultContentItem {
@@ -55,7 +56,7 @@ export interface ToolResultJsonObject {
   content: ToolResultContentItem[];
   error?: {
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }
 
@@ -199,7 +200,7 @@ export class JsonMatcher {
       // Process JSON object
       const jsonStr = this.buffer.substring(objectStart, objectEnd + 1);
       try {
-        const jsonObj: GenericParsedJson = JSON.parse(jsonStr);
+        const jsonObj = JSON.parse(jsonStr) as unknown as GenericParsedJson;
         
         // Check if this is a matching object type
         if (jsonObj.type === this.matchType) {
@@ -320,7 +321,7 @@ export class FormatDetector {
           const sample = content.substring(startIndex, endIndex + 1);
           // Attempt to parse only if it looks like a complete JSON object
           if (sample.startsWith('{') && sample.endsWith('}')) {
-            const jsonObj: FormatDetectedJson = JSON.parse(sample);
+            const jsonObj = JSON.parse(sample) as unknown as FormatDetectedJson;
             
             // Check if it's a tool use or tool result JSON
             if (jsonObj.type === 'tool_use' || jsonObj.type === 'tool_result' ||
@@ -433,7 +434,7 @@ export function xmlToolUseToJson(xmlContent: string): string {
     outerContent = outerContent.replace(new RegExp(`\\s*</${toolName}>`), '');
     
     // Now parse each parameter
-    const params: Record<string, any> = {};
+    const params: Record<string, unknown> = {};
     const paramRegex = /<(\w+)>([\s\S]*?)<\/\1>/g;
     let match;
     
@@ -569,7 +570,7 @@ export function xmlToolResultToJson(xmlContent: string): string {
     const errorRegex = /<error\s+message="([^"]+)"(?:\s+details="([^"]+)")?\s*\/>/;
     const errorMatch = errorRegex.exec(xmlContent);
     
-    let error: { message: string; details?: any } | undefined = undefined;
+    let error: { message: string; details?: unknown } | undefined = undefined;
     
     if (errorMatch) {
       error = {
@@ -618,7 +619,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFun
   if (openAiFunctionCall.function_call) {
     // Handle single function call
     try {
-      const args: Record<string, any> = JSON.parse(openAiFunctionCall.function_call.arguments);
+      const args: Record<string, unknown> = JSON.parse(openAiFunctionCall.function_call.arguments);
       
       return {
         type: 'tool_use',
@@ -727,7 +728,7 @@ export class ToolUseMatcher<Result extends JsonMatcherResult | XmlMatcherResult 
       for (const result of xmlResults) {
         if (result.matched) {
           // Attempt to parse XML content to extract tool name
-          const toolNameMatch = /<(\w+)>/.exec(result.data as string);
+          const toolNameMatch = /<(\w+)>/.exec(result.data);
           if (toolNameMatch && toolNameMatch[1] && toolNameMatch[1] !== 'think' && toolNameMatch[1] !== 'tool_result') {
             const toolName = toolNameMatch[1];
             const toolId = `${toolName}-${Date.now()}`;

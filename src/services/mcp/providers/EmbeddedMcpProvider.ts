@@ -153,7 +153,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     for (const [uriTemplate, definition] of this.resourceTemplates.entries()) {
       const templateName = `template:${uriTemplate}`;
       const paramNames = this.extractParamNames(uriTemplate);
-      const paramSchema: Record<string, any> = {};
+      const paramSchema: Record<string, { type: string }> = {};
       for (const param of paramNames) {
         paramSchema[param] = { type: "string" };
       }
@@ -399,7 +399,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
   public registerTool(
     name: string,
     description: string,
-    paramSchema: Record<string, any>,
+    paramSchema: Record<string, unknown>,
     handler: (args: Record<string, unknown>) => Promise<ToolCallResult>
   ): void {
     this.tools.set(name, { name, description, paramSchema, handler });

@@ -1,7 +1,6 @@
 import * as vscode from "vscode"
 import * as childProcess from "child_process"
 import * as path from "path"
-import * as fs from "fs"
 import * as readline from "readline"
 import { TheaIgnoreController } from "../../core/ignore/TheaIgnoreController"
 import { fileExistsAtPath } from "../../utils/fs"
@@ -95,8 +94,8 @@ export async function getBinPath(vscodeAppRoot: string): Promise<string | undefi
 	)
 }
 
-async function execRipgrep(bin: string, args: string[]): Promise<string> {
-	return new Promise((resolve, reject) => {
+function execRipgrep(bin: string, args: string[]): Promise<string> {
+        return new Promise((resolve, reject) => {
 		const rgProcess = childProcess.spawn(bin, args)
 		// cross-platform alternative to head, which is ripgrep author's recommendation for limiting output.
 		const rl = readline.createInterface({
@@ -119,8 +118,8 @@ async function execRipgrep(bin: string, args: string[]): Promise<string> {
 		})
 
 		let errorOutput = ""
-		rgProcess.stderr.on("data", (data) => {
-			errorOutput += data.toString()
+                rgProcess.stderr.on("data", (data: Buffer) => {
+                        errorOutput += data.toString()
 		})
 		rl.on("close", () => {
 			if (errorOutput) {
@@ -159,19 +158,28 @@ export async function regexSearchFiles(
 		return "No results found"
 	}
 
-	const results: SearchFileResult[] = []
-	let currentResult: Partial<SearchResult> | null = null
+        const results: SearchFileResult[] = []
 	let currentFile: SearchFileResult | null = null
 
 	output.split("\n").forEach((line) => {
 		if (line) {
 			try {
-				const parsed = JSON.parse(line)
+                            interface RipgrepJson {
+                                    type: string
+                                    data: {
+                                            path?: { text: string }
+                                            line_number: number
+                                            lines: { text: string }
+                                            absolute_offset: number
+                                    }
+                            }
+
+                            const parsed = JSON.parse(line) as RipgrepJson
 				if (parsed.type === "begin") {
-					currentFile = {
-						file: parsed.data.path.text.toString(),
-						searchResults: [],
-					}
+                                        currentFile = {
+                                                file: parsed.data.path?.text ?? "",
+                                                searchResults: [],
+                                        }
 				} else if (parsed.type === "end") {
 					// Reset the current result when a new file is encountered
 					results.push(currentFile as SearchFileResult)

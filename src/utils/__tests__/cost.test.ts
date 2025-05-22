@@ -1,5 +1,5 @@
-import { calculateApiCostAnthropic, calculateApiCostOpenAI } from "../cost.ts"
-import { ModelInfo } from "../../shared/api"
+import { calculateApiCostAnthropic, calculateApiCostOpenAI } from "../cost"
+import { ModelInfo } from "../../schemas"
 
 describe("Cost Utility", () => {
 	describe("calculateApiCostAnthropic", () => {

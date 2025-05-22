@@ -82,7 +82,7 @@ function normalizePath(p: string): string {
 
 // Browser-compatible basename function (moved here for better locality)
 function getBasenameBrowser(p: string): string {
-	p = p.replace(/[\\\/]+$/, "") // Remove trailing slashes
+	p = p.replace(/[\\/]$/, "") // Remove trailing slashes
 	const lastSlashIndex = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"))
 	return lastSlashIndex === -1 ? p : p.slice(lastSlashIndex + 1)
 }

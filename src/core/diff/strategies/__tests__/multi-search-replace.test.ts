@@ -2148,12 +2148,12 @@ function two() {
 
 		it("should include the current working directory", async () => {
 			const cwd = "/test/dir"
-			const description = await strategy.getToolDescription({ cwd })
+			const description = strategy.getToolDescription({ cwd })
 			expect(description).toContain(`relative to the current working directory ${cwd}`)
 		})
 
 		it("should include required format elements", async () => {
-			const description = await strategy.getToolDescription({ cwd: "/test" })
+			const description = strategy.getToolDescription({ cwd: "/test" })
 			expect(description).toContain("<<<<<<< SEARCH")
 			expect(description).toContain("=======")
 			expect(description).toContain(">>>>>>> REPLACE")

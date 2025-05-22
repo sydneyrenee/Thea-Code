@@ -132,7 +132,7 @@ describe("PromptsView", () => {
 		// Find and click the role definition reset button
 		const resetButton = screen.getByTestId("role-definition-reset")
 		expect(resetButton).toBeInTheDocument()
-		await fireEvent.click(resetButton)
+		fireEvent.click(resetButton)
 
 		// Verify it only resets role definition
 		expect(vscode.postMessage).toHaveBeenCalledWith({

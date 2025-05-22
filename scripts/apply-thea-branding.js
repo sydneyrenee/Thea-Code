@@ -64,15 +64,6 @@ try {
 }
 
 // --- Backup ---
-const packageJsonBackupPath = `${packageJsonPath}.bak-${new Date().toISOString().replace(/[:.]/g, "-")}`
-try {
-	console.log(`Creating backup: ${packageJsonBackupPath}`)
-	fs.copyFileSync(packageJsonPath, packageJsonBackupPath)
-	console.log("Backup created.")
-} catch (err) {
-	console.error(`Failed to create backup: ${err.message}`)
-	process.exit(1)
-}
 
 // --- Define String Replacements (Old -> New, sourced DIRECTLY from branding.json) ---
 const showIgnoredFilesKey = `show${brandingJson.displayName.replace(/\s+/g, "")}IgnoredFiles`

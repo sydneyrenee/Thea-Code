@@ -97,19 +97,19 @@ Thea Code 有一个明确的开发路线图，指导我们的优先事项和未�
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **安装依赖**：
+1. **安装依赖**：
 
 ```sh
 npm run install:all
 ```
 
-3. **启动 webview（Vite/React 应用，具有热模块替换）**：
+1. **启动 webview（Vite/React 应用，具有热模块替换）**：
 
 ```sh
 npm run dev
 ```
 
-4. **调试**：
+1. **调试**：
    在 VSCode 中按 `F5`（或**运行** → **开始调试**）打开一个加载了 Thea Code 的新会话。
 
 对 webview 的更改将立即显示。对核心扩展的更改将需要重新启动扩展主机。

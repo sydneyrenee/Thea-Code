@@ -1,7 +1,11 @@
 import { OpenAiNativeHandler } from "../openai-native"
 import { ApiHandlerOptions } from "../../../shared/api"
-import OpenAI from "openai"
-import { Anthropic } from "@anthropic-ai/sdk"
+import { ChatCompletionCreateParams } from "openai/resources/chat/completions"
+import { NeutralMessage } from "../../../shared/neutral-history"
+import { ApiStreamTextChunk, ApiStreamUsageChunk, ApiStreamReasoningChunk, ApiStreamToolUseChunk, ApiStreamToolResultChunk } from "../../transform/stream"
+
+// Define types for streamed chunks
+type StreamChunk = ApiStreamTextChunk | ApiStreamUsageChunk | ApiStreamReasoningChunk | ApiStreamToolUseChunk | ApiStreamToolResultChunk
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -11,7 +15,8 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: mockCreate.mockImplementation(async (options) => {
+					create: mockCreate.mockImplementation(async (options: ChatCompletionCreateParams) => {
+						await Promise.resolve() // Satisfy @typescript-eslint/require-await
 						if (!options.stream) {
 							return {
 								id: "test-completion",
@@ -32,6 +37,7 @@ jest.mock("openai", () => {
 
 						return {
 							[Symbol.asyncIterator]: async function* () {
+								await Promise.resolve() // Satisfy @typescript-eslint/require-await
 								yield {
 									choices: [
 										{
@@ -67,7 +73,7 @@ describe("OpenAiNativeHandler", () => {
 	let handler: OpenAiNativeHandler
 	let mockOptions: ApiHandlerOptions
 	const systemPrompt = "You are a helpful assistant."
-	const messages: Anthropic.Messages.MessageParam[] = [
+	const messages: NeutralMessage[] = [
 		{
 			role: "user",
 			content: "Hello!",
@@ -101,13 +107,13 @@ describe("OpenAiNativeHandler", () => {
 	describe("createMessage", () => {
 		it("should handle streaming responses", async () => {
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: StreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
 
 			expect(chunks.length).toBeGreaterThan(0)
-			const textChunks = chunks.filter((chunk) => chunk.type === "text")
+			const textChunks = chunks.filter((chunk): chunk is ApiStreamTextChunk => chunk.type === "text")
 			expect(textChunks).toHaveLength(1)
 			expect(textChunks[0].text).toBe("Test response")
 		})
@@ -116,7 +122,7 @@ describe("OpenAiNativeHandler", () => {
 			mockCreate.mockRejectedValueOnce(new Error("API Error"))
 			const stream = handler.createMessage(systemPrompt, messages)
 			await expect(async () => {
-				for await (const chunk of stream) {
+				for await (const _ of stream) {
 					// Should not reach here
 				}
 			}).rejects.toThrow("API Error")
@@ -131,6 +137,7 @@ describe("OpenAiNativeHandler", () => {
 
 			mockCreate.mockResolvedValueOnce({
 				[Symbol.asyncIterator]: async function* () {
+					await Promise.resolve() // Satisfy @typescript-eslint/require-await
 					yield {
 						choices: [
 							{
@@ -174,7 +181,7 @@ describe("OpenAiNativeHandler", () => {
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: StreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -209,6 +216,7 @@ describe("OpenAiNativeHandler", () => {
 
 			mockCreate.mockResolvedValueOnce(
 				(async function* () {
+					await Promise.resolve() // Satisfy @typescript-eslint/require-await
 					for (const chunk of mockStream) {
 						yield chunk
 					}
@@ -249,6 +257,7 @@ describe("OpenAiNativeHandler", () => {
 
 			mockCreate.mockResolvedValueOnce(
 				(async function* () {
+					await Promise.resolve() // Satisfy @typescript-eslint/require-await
 					for (const chunk of mockStream) {
 						yield chunk
 					}

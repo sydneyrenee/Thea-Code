@@ -17,7 +17,7 @@ async function checkGitRepo(cwd: string): Promise<boolean> {
 	try {
 		await execAsync("git rev-parse --git-dir", { cwd })
 		return true
-	} catch (error) {
+	} catch {
 		return false
 	}
 }
@@ -26,7 +26,7 @@ async function checkGitInstalled(): Promise<boolean> {
 	try {
 		await execAsync("git --version")
 		return true
-	} catch (error) {
+	} catch {
 		return false
 	}
 }
@@ -35,14 +35,12 @@ export async function searchCommits(query: string, cwd: string): Promise<GitComm
 	try {
 		const isInstalled = await checkGitInstalled()
 		if (!isInstalled) {
-			console.error("Git is not installed")
-			return []
+			throw new Error("Git is not installed.");
 		}
 
 		const isRepo = await checkGitRepo(cwd)
 		if (!isRepo) {
-			console.error("Not a git repository")
-			return []
+			throw new Error("Not a git repository.");
 		}
 
 		// Search commits by hash or message, limiting to 10 results
@@ -57,7 +55,13 @@ export async function searchCommits(query: string, cwd: string): Promise<GitComm
 			const { stdout: hashStdout } = await execAsync(
 				`git log -n 10 --format="%H%n%h%n%s%n%an%n%ad" --date=short ` + `--author-date-order ${query}`,
 				{ cwd },
-			).catch(() => ({ stdout: "" }))
+			).catch((error) => {
+				// If the error indicates no such revision, return empty stdout
+				if ((error as Error).message.includes("unknown revision") || (error as Error).message.includes("bad object")) {
+					return { stdout: "" };
+				}
+				throw error; // Re-throw other errors
+			});
 
 			if (!hashStdout.trim()) {
 				return []
@@ -84,8 +88,8 @@ export async function searchCommits(query: string, cwd: string): Promise<GitComm
 
 		return commits
 	} catch (error) {
-		console.error("Error searching commits:", error)
-		return []
+		console.error("Error searching commits:", error);
+		throw error;
 	}
 }
 
@@ -93,12 +97,12 @@ export async function getCommitInfo(hash: string, cwd: string): Promise<string> 
 	try {
 		const isInstalled = await checkGitInstalled()
 		if (!isInstalled) {
-			return "Git is not installed"
+			throw new Error("Git is not installed.");
 		}
 
 		const isRepo = await checkGitRepo(cwd)
 		if (!isRepo) {
-			return "Not a git repository"
+			throw new Error("Not a git repository.");
 		}
 
 		// Get commit info, stats, and diff separately
@@ -111,22 +115,19 @@ export async function getCommitInfo(hash: string, cwd: string): Promise<string> 
 
 		const { stdout: diff } = await execAsync(`git show --format="" ${hash}`, { cwd })
 
-		const summary = [
-			`Commit: ${shortHash} (${fullHash})`,
-			`Author: ${author}`,
-			`Date: ${date}`,
-			`\nMessage: ${subject}`,
-			body ? `\nDescription:\n${body}` : "",
-			"\nFiles Changed:",
-			stats.trim(),
-			"\nFull Changes:",
-		].join("\n")
+		const summary = `Commit: ${shortHash} (${fullHash})\n` +
+			`Author: ${author}\n` +
+			`Date: ${date}\n\n` +
+			`Message: ${subject}\n` +
+			(body ? `\nDescription:\n${body}\n` : "") +
+			`\nFiles Changed:\n${stats.trim()}\n` +
+			`\nFull Changes:`;
 
 		const output = summary + "\n\n" + diff.trim()
 		return truncateOutput(output, GIT_OUTPUT_LINE_LIMIT)
 	} catch (error) {
-		console.error("Error getting commit info:", error)
-		return `Failed to get commit info: ${error instanceof Error ? error.message : String(error)}`
+		console.error("Error getting commit info:", error);
+		throw error;
 	}
 }
 
@@ -134,12 +135,12 @@ export async function getWorkingState(cwd: string): Promise<string> {
 	try {
 		const isInstalled = await checkGitInstalled()
 		if (!isInstalled) {
-			return "Git is not installed"
+			throw new Error("Git is not installed.");
 		}
 
 		const isRepo = await checkGitRepo(cwd)
 		if (!isRepo) {
-			return "Not a git repository"
+			throw new Error("Not a git repository.");
 		}
 
 		// Get status of working directory
@@ -154,7 +155,7 @@ export async function getWorkingState(cwd: string): Promise<string> {
 		const output = `Working directory changes:\n\n${status}\n\n${diff}`.trim()
 		return truncateOutput(output, lineLimit)
 	} catch (error) {
-		console.error("Error getting working state:", error)
-		return `Failed to get working state: ${error instanceof Error ? error.message : String(error)}`
+		console.error("Error getting working state:", error);
+		throw error;
 	}
 }

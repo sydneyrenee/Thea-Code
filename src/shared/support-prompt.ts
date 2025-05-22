@@ -1,20 +1,40 @@
 // Support prompts
-type PromptParams = Record<string, string | any[]>
+import * as vscode from "vscode" // Import vscode for Diagnostic type
 
-const generateDiagnosticText = (diagnostics?: any[]) => {
+// Support prompts
+type PromptParams = {
+	userInput?: string;
+	filePath?: string;
+	startLine?: string;
+	endLine?: string;
+	selectedText?: string;
+	terminalContent?: string;
+	diagnostics?: vscode.Diagnostic[];
+	[key: string]: string | vscode.Diagnostic[] | undefined;
+}
+
+const generateDiagnosticText = (diagnostics?: vscode.Diagnostic[]): string => {
 	if (!diagnostics?.length) return ""
-	return `\nCurrent problems detected:\n${diagnostics
-		.map((d) => `- [${d.source || "Error"}] ${d.message}${d.code ? ` (${d.code})` : ""}`)
+	return `Current problems detected:\n${diagnostics
+		.map((d) => `- [${d.source || "Error"}] ${d.message}${d.code ? ` (${typeof d.code === 'object' ? JSON.stringify(d.code) : String(d.code)})` : ""}`)
 		.join("\n")}`
 }
 
 export const createPrompt = (template: string, params: PromptParams): string => {
 	let result = template
 	for (const [key, value] of Object.entries(params)) {
+		if (value === undefined) {
+			// Remove placeholders for undefined values
+			result = result.replaceAll(`\${${key}}`, "")
+			continue
+		}
+
 		if (key === "diagnostics") {
-			result = result.replaceAll("${diagnosticText}", generateDiagnosticText(value as any[]))
-		} else {
-			result = result.replaceAll(`\${${key}}`, value as string)
+			if (Array.isArray(value)) {
+				result = result.replaceAll("${diagnosticText}", generateDiagnosticText(value))
+			}
+		} else if (typeof value === 'string') {
+			result = result.replaceAll(`\${${key}}`, value)
 		}
 	}
 
@@ -124,10 +144,11 @@ type SupportPromptType = keyof typeof supportPromptConfigs
 
 export const supportPrompt = {
 	default: Object.fromEntries(Object.entries(supportPromptConfigs).map(([key, config]) => [key, config.template])),
-	get: (customSupportPrompts: Record<string, any> | undefined, type: SupportPromptType): string => {
-		return customSupportPrompts?.[type] ?? supportPromptConfigs[type].template
+	get: (customSupportPrompts: Record<string, unknown> | undefined, type: SupportPromptType): string => {
+		const customTemplate = customSupportPrompts?.[type]
+		return typeof customTemplate === 'string' ? customTemplate : supportPromptConfigs[type].template
 	},
-	create: (type: SupportPromptType, params: PromptParams, customSupportPrompts?: Record<string, any>): string => {
+	create: (type: SupportPromptType, params: PromptParams, customSupportPrompts?: Record<string, unknown>): string => {
 		const template = supportPrompt.get(customSupportPrompts, type)
 		return createPrompt(template, params)
 	},

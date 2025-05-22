@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
 
 import { ApiConfiguration, ModelInfo, ApiHandlerOptions } from "../shared/api"
@@ -9,19 +8,19 @@ import { AnthropicHandler } from "./providers/anthropic"
 import { AwsBedrockHandler } from "./providers/bedrock"
 import { OpenRouterHandler } from "./providers/openrouter"
 import { VertexHandler } from "./providers/vertex"
-import { OpenAiHandler } from "./providers/openai"
-import { OllamaHandler } from "./providers/ollama"
-import { LmStudioHandler } from "./providers/lmstudio"
+// import { OpenAiHandler } from "./providers/openai" // Temporarily commented out until updated to use neutral format
+// import { OllamaHandler } from "./providers/ollama" // Temporarily commented out until updated to use neutral format
+// import { LmStudioHandler } from "./providers/lmstudio" // Temporarily commented out until updated to use neutral format
 import { GeminiHandler } from "./providers/gemini"
-import { OpenAiNativeHandler } from "./providers/openai-native"
-import { DeepSeekHandler } from "./providers/deepseek"
-import { MistralHandler } from "./providers/mistral"
-import { VsCodeLmHandler } from "./providers/vscode-lm"
+// import { OpenAiNativeHandler } from "./providers/openai-native" // Temporarily commented out until updated to use neutral format
+// import { DeepSeekHandler } from "./providers/deepseek" // Temporarily commented out until updated to use neutral format
+// import { MistralHandler } from "./providers/mistral" // Temporarily commented out until updated to use neutral format
+// import { VsCodeLmHandler } from "./providers/vscode-lm" // Temporarily commented out until updated to use neutral format
 import { ApiStream } from "./transform/stream"
-import { UnboundHandler } from "./providers/unbound"
-import { RequestyHandler } from "./providers/requesty"
-import { HumanRelayHandler } from "./providers/human-relay"
-import { FakeAIHandler } from "./providers/fake-ai"
+// import { UnboundHandler } from "./providers/unbound" // Temporarily commented out until updated to use neutral format
+// import { RequestyHandler } from "./providers/requesty" // Temporarily commented out until updated to use neutral format
+// import { HumanRelayHandler } from "./providers/human-relay" // Temporarily commented out until updated to use neutral format
+// import { FakeAIHandler } from "./providers/fake-ai" // Temporarily commented out until updated to use neutral format
 
 export interface SingleCompletionHandler {
 	completePrompt(prompt: string): Promise<string>
@@ -50,7 +49,8 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 		case "anthropic":
 			return new AnthropicHandler(options)
 		case "glama":
-			return new GlamaHandler(options)
+			// return new GlamaHandler(options) // Temporarily commented out
+			throw new Error("GlamaHandler is temporarily disabled.")
 		case "openrouter":
 			return new OpenRouterHandler(options)
 		case "bedrock":
@@ -58,29 +58,40 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 		case "vertex":
 			return new VertexHandler(options)
 		case "openai":
-			return new OpenAiHandler(options)
+			// return new OpenAiHandler(options) // Temporarily commented out
+			throw new Error("OpenAiHandler is temporarily disabled.")
 		case "ollama":
-			return new OllamaHandler(options)
+			// return new OllamaHandler(options) // Temporarily commented out
+			throw new Error("OllamaHandler is temporarily disabled.")
 		case "lmstudio":
-			return new LmStudioHandler(options)
+			// return new LmStudioHandler(options) // Temporarily commented out
+			throw new Error("LmStudioHandler is temporarily disabled.")
 		case "gemini":
 			return new GeminiHandler(options)
 		case "openai-native":
-			return new OpenAiNativeHandler(options)
+			// return new OpenAiNativeHandler(options) // Temporarily commented out
+			throw new Error("OpenAiNativeHandler is temporarily disabled.")
 		case "deepseek":
-			return new DeepSeekHandler(options)
+			// return new DeepSeekHandler(options) // Temporarily commented out
+			throw new Error("DeepSeekHandler is temporarily disabled.")
 		case "vscode-lm":
-			return new VsCodeLmHandler(options)
+			// return new VsCodeLmHandler(options) // Temporarily commented out
+			throw new Error("VsCodeLmHandler is temporarily disabled.")
 		case "mistral":
-			return new MistralHandler(options)
+			// return new MistralHandler(options) // Temporarily commented out
+			throw new Error("MistralHandler is temporarily disabled.")
 		case "unbound":
-			return new UnboundHandler(options)
+			// return new UnboundHandler(options) // Temporarily commented out
+			throw new Error("UnboundHandler is temporarily disabled.")
 		case "requesty":
-			return new RequestyHandler(options)
+			// return new RequestyHandler(options) // Temporarily commented out
+			throw new Error("RequestyHandler is temporarily disabled.")
 		case "human-relay":
-			return new HumanRelayHandler(options)
+			// return new HumanRelayHandler(options) // Temporarily commented out
+			throw new Error("HumanRelayHandler is temporarily disabled.")
 		case "fake-ai":
-			return new FakeAIHandler(options)
+			// return new FakeAIHandler(options) // Temporarily commented out
+			throw new Error("FakeAIHandler is temporarily disabled.")
 		default:
 			// Default to AnthropicHandler, but it will now expect NeutralHistory
 			return new AnthropicHandler(options)

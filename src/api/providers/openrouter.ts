@@ -1,20 +1,26 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
-import axios, { AxiosRequestConfig } from "axios"
+import axios from "axios"
 import OpenAI from "openai"
-import delay from "delay"
 
 import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
+
 import { convertToR1Format } from "../transform/r1-format"
+import type {
+  NeutralConversationHistory,
+  NeutralImageContentBlock,
+  NeutralToolUseContentBlock,
+  NeutralToolResultContentBlock
+} from "../../shared/neutral-history"
 
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
-import { getModelParams, SingleCompletionHandler } from ".."
+import { getModelParams, SingleCompletionHandler, ApiHandler } from ".."
 import { BaseProvider } from "./base-provider"
 import { OpenAiHandler } from "./openai"
-// Removed import of defaultHeaders from openai.ts
+
 import { API_REFERENCES } from "../../../dist/thea-config" // Import API_REFERENCES
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
@@ -26,64 +32,115 @@ type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
 	thinking?: BetaThinkingConfigParam
 }
 
-export class OpenRouterHandler extends BaseProvider implements SingleCompletionHandler {
-        protected options: ApiHandlerOptions
-        private client: OpenAI
-        private openAiHandler: OpenAiHandler
+export class OpenRouterHandler extends BaseProvider implements ApiHandler, SingleCompletionHandler {
+	protected options: ApiHandlerOptions
+	private client: OpenAI
+	private openAiHandler: OpenAiHandler
 
-        constructor(options: ApiHandlerOptions) {
-                super()
-                this.options = options
+	constructor(options: ApiHandlerOptions) {
+		super()
+		this.options = options
 
-                const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
-                const apiKey = this.options.openRouterApiKey ?? "not-provided"
+		const baseURL = this.options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
+		const apiKey = this.options.openRouterApiKey ?? "not-provided"
 
 		// Define headers directly using API_REFERENCES
 		this.client = new OpenAI({
 			baseURL,
 			apiKey,
-                        defaultHeaders: {
-                                "HTTP-Referer": API_REFERENCES.HOMEPAGE,
-                                "X-Title": API_REFERENCES.APP_TITLE,
-                        },
-                })
+			defaultHeaders: {
+				"HTTP-Referer": API_REFERENCES.HOMEPAGE,
+				"X-Title": API_REFERENCES.APP_TITLE,
+			},
+		})
 
-                // Instantiate an OpenAI handler solely for tool use detection logic
-                this.openAiHandler = new OpenAiHandler({
-                        openAiApiKey: apiKey,
-                        openAiBaseUrl: baseURL,
-                        openAiModelId: this.options.openRouterModelId ?? "",
-                })
-        }
+		this.openAiHandler = new OpenAiHandler({
+			...options,
+			openAiApiKey: apiKey,
+			openAiBaseUrl: baseURL,
+			openAiModelId: this.options.openRouterModelId || "",
+		})
+	}
 
 	override async *createMessage(
 		systemPrompt: string,
-		messages: Anthropic.Messages.MessageParam[],
+		messages: NeutralConversationHistory,
 	): AsyncGenerator<ApiStreamChunk> {
 		let { id: modelId, maxTokens, thinking, temperature, topP } = this.getModel()
 
-		// Convert Anthropic messages to OpenAI format.
-		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-			{ role: "system", content: systemPrompt },
-			...convertToOpenAiMessages(messages),
-		]
+		// Convert NeutralConversationHistory to Anthropic messages.
+		const anthropicMessages: Anthropic.Messages.MessageParam[] = messages.map((neutralMessage) => {
+			let content: string | Anthropic.Messages.ContentBlockParam[]
+
+			if (typeof neutralMessage.content === "string") {
+				content = neutralMessage.content
+			} else if (Array.isArray(neutralMessage.content)) {
+				content = neutralMessage.content.map((block) => {
+					if (block.type === "text") {
+						return { type: "text", text: block.text } as Anthropic.Messages.TextBlockParam
+					} else if (block.type === "image_url" || block.type === "image_base64") {
+						return {
+							type: "image",
+							source: (block as NeutralImageContentBlock).source,
+						} as Anthropic.Messages.ImageBlockParam
+					} else if (block.type === "tool_use") {
+						return {
+							type: "tool_use",
+							id: (block as NeutralToolUseContentBlock).id,
+							name: (block as NeutralToolUseContentBlock).name,
+							input: (block as NeutralToolUseContentBlock).input,
+						} as Anthropic.Messages.ToolUseBlockParam
+					} else if (block.type === "tool_result") {
+						return {
+							type: "tool_result",
+							tool_use_id: (block as NeutralToolResultContentBlock).tool_use_id,
+							content: (block as NeutralToolResultContentBlock).content,
+						} as Anthropic.Messages.ToolResultBlockParam
+					}
+					return { type: "text", text: `[Unknown block type: ${block.type}]` } as Anthropic.Messages.TextBlockParam
+				})
+			} else {
+				content = ""
+			}
+
+			return {
+				role: neutralMessage.role,
+				content: content,
+			} as Anthropic.Messages.MessageParam
+		})
+
+		// Prepend system prompt to the first user message if it exists
+		if (systemPrompt) {
+			const firstUserMessage = anthropicMessages.find((msg) => msg.role === "user")
+			if (firstUserMessage) {
+				if (typeof firstUserMessage.content === "string") {
+					firstUserMessage.content = systemPrompt + "\n" + firstUserMessage.content
+				} else {
+					firstUserMessage.content.unshift({ type: "text", text: systemPrompt })
+				}
+			} else {
+				anthropicMessages.unshift({ role: "user", content: systemPrompt })
+			}
+		}
+
+		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiMessages(anthropicMessages)
 
 		// DeepSeek highly recommends using user instead of system role.
 		if (modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning") {
-			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...messages])
+			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...anthropicMessages])
 		}
 
 		// prompt caching: https://openrouter.ai/docs/prompt-caching
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
 		switch (true) {
-			case modelId.startsWith("anthropic/"):
+			case modelId.startsWith("anthropic/"): {
 				openAiMessages[0] = {
 					role: "system",
 					content: [
 						{
 							type: "text",
 							text: systemPrompt,
-							// @ts-ignore-next-line
+							// @ts-expect-error - Anthropic SDK doesn't expose cache_control in type definitions
 							cache_control: { type: "ephemeral" },
 						},
 					],
@@ -103,18 +160,17 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 							lastTextPart = { type: "text", text: "..." }
 							msg.content.push(lastTextPart)
 						}
-						// @ts-ignore-next-line
+						// @ts-expect-error - Adding cache_control property not defined in type
 						lastTextPart["cache_control"] = { type: "ephemeral" }
 					}
 				})
 				break
+			}
 			default:
 				break
 		}
 
 		// https://openrouter.ai/docs/transforms
-		let fullResponseText = ""
-
 		const completionParams: OpenRouterChatCompletionParams = {
 			model: modelId,
 			max_tokens: maxTokens,
@@ -151,28 +207,37 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 				yield { type: "reasoning", text: delta.reasoning } as ApiStreamChunk
 			}
 
-                        if (delta?.content) {
-                                fullResponseText += delta.content
-                                yield { type: "text", text: delta.content } as ApiStreamChunk
-                        }
-
-                        // Detect OpenAI-style tool calls using the helper
-                        const toolCalls = this.openAiHandler.extractToolCalls(delta)
-                        for (const toolCall of toolCalls) {
-                                if (toolCall.function) {
-                                        const toolResult = await this.processToolUse({
-                                                id: toolCall.id,
-                                                name: toolCall.function.name,
-                                                input: JSON.parse(toolCall.function.arguments || '{}'),
-                                        })
-
-                                        yield {
-                                                type: 'tool_result',
-                                                id: toolCall.id,
-                                                content: toolResult,
-                                        } as ApiStreamChunk
-                                }
-                        }
+			if (delta?.content) {
+				// Check for tool calls using the OpenAI handler's method
+				const toolCalls = this.openAiHandler.extractToolCalls(delta);
+				
+				if (toolCalls.length > 0) {
+					// Process tool calls using the OpenAI handler's logic
+					for (const toolCall of toolCalls) {
+						if (toolCall.function) {
+							// Process tool use using MCP integration
+							const toolResult = await this.processToolUse({
+								id: toolCall.id,
+								name: toolCall.function.name,
+								input: JSON.parse(toolCall.function.arguments || '{}')
+							});
+							
+							// Ensure the tool result content is a string
+							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+							
+							// Yield tool result
+							yield {
+								type: 'tool_result',
+								id: toolCall.id,
+								content: toolResultString
+							};
+						}
+					}
+				} else {
+					// Regular content handling
+					yield { type: "text", text: delta.content } as ApiStreamChunk
+				}
+			}
 
 			if (chunk.usage) {
 				lastUsage = chunk.usage
@@ -184,7 +249,11 @@ export class OpenRouterHandler extends BaseProvider implements SingleCompletionH
 		}
 	}
 
-	processUsageMetrics(usage: any): ApiStreamUsageChunk {
+	processUsageMetrics(usage: {
+		prompt_tokens?: number;
+		completion_tokens?: number;
+		cost?: number;
+	}): ApiStreamUsageChunk {
 		return {
 			type: "usage",
 			inputTokens: usage?.prompt_tokens || 0,

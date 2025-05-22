@@ -97,19 +97,19 @@ Thea Code 有一個明確的開發路線圖，指導我們的優先事項和未�
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **安裝依賴項**：
+1. **安裝依賴項**：
 
 ```sh
 npm run install:all
 ```
 
-3. **啟動網頁視圖（帶有 HMR 的 Vite/React 應用）**：
+1. **啟動網頁視圖（帶有 HMR 的 Vite/React 應用）**：
 
 ```sh
 npm run dev
 ```
 
-4. **調試**：
+1. **調試**：
    在 VSCode 中按 `F5`（或**運行** → **開始調試**）打開一個加載了 Thea Code 的新會話。
 
 網頁視圖的更改將立即顯示。核心擴展的更改將需要重新啟動擴展主機。

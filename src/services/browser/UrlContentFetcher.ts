@@ -22,7 +22,7 @@ export class UrlContentFetcher {
 		this.context = context
 	}
 
-	private async ensureChromiumExists(): Promise<PCRStats> {
+	async ensureChromiumExists(): Promise<PCRStats> {
 		const globalStoragePath = this.context?.globalStorageUri?.fsPath
 		if (!globalStoragePath) {
 			throw new Error("Global storage uri is invalid")

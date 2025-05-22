@@ -130,19 +130,19 @@ MCP 通过允许您添加无限自定义工具来扩展 Thea Code 的能力。�
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **安装依赖**：
+1. **安装依赖**：
 
 ```sh
 npm run install:all
 ```
 
-3. **启动网页视图（Vite/React 应用，带热模块替换）**：
+1. **启动网页视图（Vite/React 应用，带热模块替换）**：
 
 ```sh
 npm run dev
 ```
 
-4. **调试**：
+1. **调试**：
    在 VSCode 中按 `F5`（或**运行** → **开始调试**）打开一个加载了 Thea Code 的新会话。
 
 网页视图的更改将立即显示。核心扩展的更改将需要重启扩展主机。

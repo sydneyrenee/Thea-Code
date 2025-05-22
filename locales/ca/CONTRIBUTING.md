@@ -97,19 +97,19 @@ Donem especialment la benvinguda a contribucions que avancin els nostres objecti
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **Instal·leu les dependències**:
+1. **Instal·leu les dependències**:
 
 ```sh
 npm run install:all
 ```
 
-3. **Inicieu la vista web (aplicació Vite/React amb HMR)**:
+1. **Inicieu la vista web (aplicació Vite/React amb HMR)**:
 
 ```sh
 npm run dev
 ```
 
-4. **Depuració**:
+1. **Depuració**:
    Premeu `F5` (o **Execució** → **Inicia la depuració**) a VSCode per obrir una nova sessió amb Thea Code carregat.
 
 Els canvis a la vista web apareixeran immediatament. Els canvis a l'extensió principal requeriran reiniciar l'amfitrió de l'extensió.

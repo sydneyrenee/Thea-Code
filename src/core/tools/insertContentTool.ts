@@ -155,7 +155,7 @@ export async function insertContentTool(
 		)
 		await theaTask.diffViewProvider.reset()
 	} catch (error) {
-		handleError("insert content", error)
+		await handleError("insert content", error)
 		await theaTask.diffViewProvider.reset()
 	}
 }

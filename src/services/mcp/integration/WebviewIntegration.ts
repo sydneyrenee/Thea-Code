@@ -23,10 +23,6 @@ export class WebviewIntegration extends EventEmitter {
   /** Set the McpHub instance to delegate operations to. */
   public setMcpHub(hub: McpHub): void {
     this.mcpHub = hub;
-    hub.on('tool-registered', (name) => this.emit('tool-registered', name));
-    hub.on('tool-unregistered', (name) => this.emit('tool-unregistered', name));
-    hub.on('started', (info) => this.emit('started', info));
-    hub.on('stopped', () => this.emit('stopped'));
   }
 
   /** Get the McpHub instance. */

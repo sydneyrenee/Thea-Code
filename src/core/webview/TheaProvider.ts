@@ -461,7 +461,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			throw new Error(t("common:errors.retrieve_current_mode"))
 		}
 		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
-		this.log(
+		await this.log(
 			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
 		return theaTask // Return renamed variable
@@ -504,12 +504,12 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 					workspaceDir,
 				})
 
-				this.log(
+				await this.log(
 					`[TheaProvider#initWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`, // TODO: Rename
 				)
 			} catch (error) {
 				checkpoints.enableCheckpoints = false
-				this.log(`[TheaProvider#initWithHistoryItem] Error getting task storage: ${error.message}`) // TODO: Rename
+				await this.log(`[TheaProvider#initWithHistoryItem] Error getting task storage: ${error.message}`) // TODO: Rename
 			}
 		}
 
@@ -534,7 +534,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			throw new Error(t("common:errors.retrieve_current_mode"))
 		}
 		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
-		this.log(
+		await this.log(
 			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
 		return theaTask // Return renamed variable
@@ -763,7 +763,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		const rootTask = theaTask.rootTask // Use renamed variable
 		const parentTask = theaTask.parentTask // Use renamed variable
 
-		theaTask.abortTask() // Use renamed variable
+		await theaTask.abortTask() // Use renamed variable
 
 		await pWaitFor(
 			() =>
@@ -862,7 +862,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	async postStateToWebview() {
 		const state = await this.getStateToPostToWebview()
 		console.log("Posting state to webview:", state)
-		this.postMessageToWebview({ type: "state", state })
+		await this.postMessageToWebview({ type: "state", state })
 	}
 
 	async getStateToPostToWebview() {

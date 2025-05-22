@@ -1,21 +1,11 @@
 import * as vscode from "vscode"
-import * as fs from "fs/promises"
-import * as path from "path"
-import { Browser, Page, ScreenshotOptions, TimeoutError, launch, connect } from "puppeteer-core"
-// @ts-ignore
-import PCR from "puppeteer-chromium-resolver"
+import { Browser, Page, ScreenshotOptions, TimeoutError, connect } from "puppeteer-core"
 import pWaitFor from "p-wait-for"
 import delay from "delay"
-import axios from "axios"
-import { fileExistsAtPath } from "../../utils/fs"
 import { BrowserActionResult } from "../../shared/ExtensionMessage"
 import { discoverChromeHostUrl, tryChromeHostUrl } from "./browserDiscovery"
-import { EXTENSION_CONFIG_DIR } from "../../../dist/thea-config" // Correct import path
-
-interface PCRStats {
-	puppeteer: { launch: typeof launch }
-	executablePath: string
-}
+import { UrlContentFetcher } from "./UrlContentFetcher" // adjust path as needed
+import { ConsoleMessage } from "puppeteer-core"
 
 export class BrowserSession {
 	private context: vscode.ExtensionContext
@@ -23,31 +13,13 @@ export class BrowserSession {
 	private page?: Page
 	private currentMousePosition?: string
 	private lastConnectionAttempt?: number
+	private urlContentFetcher: UrlContentFetcher
 
 	constructor(context: vscode.ExtensionContext) {
 		this.context = context
+		this.urlContentFetcher = new UrlContentFetcher(context)
 	}
 
-	private async ensureChromiumExists(): Promise<PCRStats> {
-		const globalStoragePath = this.context?.globalStorageUri?.fsPath
-		if (!globalStoragePath) {
-			throw new Error("Global storage uri is invalid")
-		}
-
-		const puppeteerDir = path.join(globalStoragePath, "puppeteer")
-		const dirExists = await fileExistsAtPath(puppeteerDir)
-		if (!dirExists) {
-			await fs.mkdir(puppeteerDir, { recursive: true })
-		}
-
-		// if chromium doesn't exist, this will download it to path.join(puppeteerDir, ".chromium-browser-snapshots")
-		// if it does exist it will return the path to existing chromium
-		const stats: PCRStats = await PCR({
-			downloadPath: puppeteerDir,
-		})
-
-		return stats
-	}
 
 	/**
 	 * Gets the viewport size from global state or returns default
@@ -63,7 +35,7 @@ export class BrowserSession {
 	 */
 	private async launchLocalBrowser(): Promise<void> {
 		console.log("Launching local browser")
-		const stats = await this.ensureChromiumExists()
+		const stats = await this.urlContentFetcher.ensureChromiumExists()
 		this.browser = await stats.puppeteer.launch({
 			args: [
 				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
@@ -226,7 +198,7 @@ export class BrowserSession {
 		const logs: string[] = []
 		let lastLogTs = Date.now()
 
-		const consoleListener = (msg: any) => {
+		const consoleListener = (msg: ConsoleMessage) => {
 			if (msg.type() === "log") {
 				logs.push(msg.text())
 			} else {
@@ -311,7 +283,7 @@ export class BrowserSession {
 			const urlObj = new URL(url)
 			// Remove www. prefix if present
 			return urlObj.host.replace(/^www\./, "")
-		} catch (error) {
+		} catch {
 			// If URL parsing fails, return the original URL
 			return url
 		}
@@ -373,7 +345,7 @@ export class BrowserSession {
 			} catch (error) {
 				// Skip pages that might have been closed or have errors
 				console.log(`Error checking page URL: ${error}`)
-				continue
+
 			}
 		}
 
@@ -383,7 +355,7 @@ export class BrowserSession {
 
 			// Update the active page
 			this.page = existingPage
-			existingPage.bringToFront()
+			await existingPage.bringToFront()
 
 			// Navigate to the new URL if it's different]
 			const currentUrl = existingPage.url().replace(/\/$/, "") // Remove trailing / if present

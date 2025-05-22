@@ -21,6 +21,7 @@
     "docker:clean": "npm run docker:stop && npm run docker:rm"
   },
   "devDependencies": {
+    "@types/node": "^22.15.21",
     "@vscode/test-electron": "^2.4.0",
     "gluegun": "^5.1.2",
     "tsx": "^4.19.3",

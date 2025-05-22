@@ -238,7 +238,7 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			coreDumpPossible: coreDumpPossible.has(signal),
 		}
 	}
-	private hotTimer: NodeJS.Timeout | null = null
+	private hotTimer: ReturnType<typeof setTimeout> | null = null
 
 	async run(command: string) {
 		this.command = command

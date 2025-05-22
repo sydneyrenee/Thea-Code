@@ -3,7 +3,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 interface UseAutosizeTextAreaProps {
-	textAreaRef: React.MutableRefObject<HTMLTextAreaElement | null>
+	textAreaRef: React.RefObject<HTMLTextAreaElement | null>
 	minHeight?: number
 	maxHeight?: number
 	triggerAutoSize: string

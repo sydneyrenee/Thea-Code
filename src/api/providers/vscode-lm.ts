@@ -1,14 +1,14 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
-
 import { SingleCompletionHandler } from "../"
 import { calculateApiCostAnthropic } from "../../utils/cost"
 import { ApiStream } from "../transform/stream"
 import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
 import { SELECTOR_SEPARATOR, stringifyVsCodeLmModelSelector } from "../../shared/vsCodeSelectorUtils"
-import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
 import { BaseProvider } from "./base-provider"
-import { TEXT_PATTERNS, EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config" // Import branded constants
+import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
+import { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
+import { TEXT_PATTERNS, EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config"
 /**
  * Handles interaction with VS Code's Language Model API for chat-based operations.
  * This handler extends BaseProvider to provide VS Code LM specific functionality.
@@ -41,6 +41,9 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	private client: vscode.LanguageModelChat | null
 	private disposable: vscode.Disposable | null
 	private currentRequestCancellation: vscode.CancellationTokenSource | null
+
+	// This is a placeholder for the actual implementation of completePrompt
+	// It is required by the SingleCompletionHandler interface
 
 	constructor(options: ApiHandlerOptions) {
 		super()
@@ -146,28 +149,37 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			this.currentRequestCancellation.dispose()
 		}
 	}
-
 	/**
 	 * Implements the ApiHandler countTokens interface method
-	 * Provides token counting for Anthropic content blocks
+	 * Provides token counting for neutral message content blocks
 	 *
 	 * @param content The content blocks to count tokens for
 	 * @returns A promise resolving to the token count
 	 */
-	override async countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
-		// Convert Anthropic content blocks to a string for VSCode LM token counting
+	override async countTokens(content: NeutralMessageContent): Promise<number> {
+		// Convert neutral content blocks to a string for VSCode LM token counting
 		let textContent = ""
 
-		for (const block of content) {
-			if (block.type === "text") {
-				textContent += block.text || ""
-			} else if (block.type === "image") {
-				// VSCode LM doesn't support images directly, so we'll just use a placeholder
-				textContent += "[IMAGE]"
+		if (typeof content === "string") {
+			textContent = content
+		} else {
+			for (const block of content) {
+				if (block.type === "text") {
+					textContent += block.text || ""
+				} else if (block.type === "image_url" || block.type === "image_base64") {
+					// VSCode LM doesn't support images directly, so we'll just use a placeholder
+					textContent += "[IMAGE]"
+				} else if (block.type === "tool_use" || block.type === "tool_result") {
+					// Add representation of tool usage
+					textContent += `[${block.type.toUpperCase()}]`
+				}
 			}
 		}
 
-		return this.internalCountTokens(textContent)
+		// VSCode LM doesn't have a direct token counting API for images or tool use,
+		// so we'll just count the text content for now.
+		// TODO: Implement more accurate token counting for images and tool use if VSCode LM API supports it in the future.
+		return await this.internalCountTokens(textContent)
 	}
 
 	/**
@@ -347,23 +359,85 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		return content
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		// Ensure clean state before starting a new request
 		this.ensureCleanState()
 		const client: vscode.LanguageModelChat = await this.getClient()
 
 		// Clean system prompt and messages
 		const cleanedSystemPrompt = this.cleanTerminalOutput(systemPrompt)
-		const cleanedMessages = messages.map((msg) => ({
-			...msg,
-			content: this.cleanMessageContent(msg.content),
-		}))
 
-		// Convert Anthropic messages to VS Code LM messages
-		const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = [
-			vscode.LanguageModelChatMessage.Assistant(cleanedSystemPrompt),
-			...convertToVsCodeLmMessages(cleanedMessages),
-		]
+		// Convert NeutralConversationHistory to Anthropic format - only keeping user and assistant roles
+		// as Anthropic only supports these roles
+		const anthropicMessages: Anthropic.Messages.MessageParam[] = messages
+			.filter((msg) => msg.role === "user" || msg.role === "assistant")
+			.map((neutralMessage) => {
+				let content: string | Anthropic.Messages.ContentBlockParam[]
+
+				if (typeof neutralMessage.content === "string") {
+					content = neutralMessage.content
+				} else if (Array.isArray(neutralMessage.content)) {
+					// Convert each content block to Anthropic format
+					content = neutralMessage.content.map((block) => {
+						if (block.type === "text") {
+							return { type: "text", text: block.text } as Anthropic.Messages.TextBlockParam
+						} else if (block.type === "image_url" || block.type === "image_base64") {
+							// Convert image blocks
+							return {
+								type: "image",
+								source: (block as any).source,
+							} as Anthropic.Messages.ImageBlockParam
+						} else if (block.type === "tool_use") {
+							// Convert tool use blocks
+							return {
+								type: "tool_use",
+								id: (block as any).id,
+								name: (block as any).name,
+								input: (block as any).input,
+							} as Anthropic.Messages.ToolUseBlockParam
+						} else if (block.type === "tool_result") {
+							// Convert tool result blocks
+							return {
+								type: "tool_result",
+								tool_use_id: (block as any).tool_use_id,
+								content: (block as any).content,
+							} as Anthropic.Messages.ToolResultBlockParam
+						}
+						// Fallback for unknown types
+						return { type: "text", text: `[Unknown block type: ${(block as any).type}]` } as Anthropic.Messages.TextBlockParam
+					})
+				} else {
+					content = ""
+				}
+
+				return {
+					role: neutralMessage.role,
+					content: content,
+				} as Anthropic.Messages.MessageParam // Explicitly cast to MessageParam
+			})
+
+		// Prepend system prompt to the first user message if it exists
+		if (cleanedSystemPrompt) {
+			const firstUserMessage = anthropicMessages.find(msg => msg.role === 'user');
+			if (firstUserMessage) {
+				if (typeof firstUserMessage.content === 'string') {
+					firstUserMessage.content = cleanedSystemPrompt + '\n' + firstUserMessage.content;
+				} else {
+					firstUserMessage.content.unshift({ type: 'text', text: cleanedSystemPrompt });
+				}
+			} else {
+				// If no user message, add system prompt as a new user message
+				anthropicMessages.unshift({ role: 'user', content: cleanedSystemPrompt });
+			}
+		}
+
+		const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = convertToVsCodeLmMessages(anthropicMessages);
+		
+		// If we had any system or tool messages filtered out, log them
+		const filteredMessages = messages.filter((msg) => msg.role !== "user" && msg.role !== "assistant" && msg.role !== "system" && msg.role !== "tool")
+		if (filteredMessages.length > 0) {
+			console.debug(`${TEXT_PATTERNS.logPrefix()} Filtered out ${filteredMessages.length} messages with incompatible roles for Anthropic format`)
+		}
 
 		// Initialize cancellation token for the request
 		this.currentRequestCancellation = new vscode.CancellationTokenSource()
@@ -377,7 +451,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		try {
 			// Create the response stream with minimal required options
 			const requestOptions: vscode.LanguageModelChatRequestOptions = {
-				justification: `${EXTENSION_DISPLAY_NAME} would like to use '${client.name}' from '${client.vendor}', Click 'Allow' to proceed.`,
+				justification: `${EXTENSION_DISPLAY_NAME} would like to use '${client.name}' from '${client.vendor}', Click 'Allow' to proceed.`, // Use constant
 			}
 
 			// Note: Tool support is currently provided by the VSCode Language Model API directly
@@ -386,24 +460,24 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			const response: vscode.LanguageModelChatResponse = await client.sendRequest(
 				vsCodeLmMessages,
 				requestOptions,
-				this.currentRequestCancellation.token,
+				this.currentRequestCancellation?.token || new vscode.CancellationTokenSource().token,
 			)
 
 			// Consume the stream and handle both text and tool call chunks
 			for await (const chunk of response.stream) {
-				if (chunk instanceof vscode.LanguageModelTextPart) {
-					// Validate text part value
-					if (typeof chunk.value !== "string") {
-						console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid text part value received:`, chunk.value)
-						continue
-					}
+			if (chunk instanceof vscode.LanguageModelTextPart) {
+				// Validate text part value
+				if (typeof chunk.value !== "string") {
+					console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid text part value received:`, chunk.value)
+					continue
+				}
 
-					accumulatedText += chunk.value
-					yield {
-						type: "text",
-						text: chunk.value,
-					}
-				} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
+				accumulatedText += chunk.value
+				yield {
+					type: "text",
+					text: chunk.value
+				}
+			} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
 					try {
 						// Validate tool call parameters
 						if (!chunk.name || typeof chunk.name !== "string") {
@@ -427,7 +501,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 							type: "tool_call",
 							name: chunk.name,
 							arguments: chunk.input,
-							callId: chunk.callId,
+							callId: chunk.callId
 						}
 
 						const toolCallText = JSON.stringify(toolCall)
@@ -437,12 +511,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 						console.debug(`${TEXT_PATTERNS.logPrefix()} Processing tool call:`, {
 							name: chunk.name,
 							callId: chunk.callId,
-							inputSize: JSON.stringify(chunk.input).length,
+							inputSize: JSON.stringify(chunk.input).length
 						})
 
 						yield {
 							type: "text",
-							text: toolCallText,
+							text: toolCallText
 						}
 					} catch (error) {
 						console.error(`${TEXT_PATTERNS.logPrefix()} Failed to process tool call:`, error)
@@ -462,7 +536,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				type: "usage",
 				inputTokens: totalInputTokens,
 				outputTokens: totalOutputTokens,
-				totalCost: calculateApiCostAnthropic(this.getModel().info, totalInputTokens, totalOutputTokens),
+				totalCost: calculateApiCostAnthropic(this.getModel().info, totalInputTokens, totalOutputTokens)
 			}
 		} catch (error: unknown) {
 			this.ensureCleanState()
@@ -475,16 +549,11 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error details:`, {
 					message: error.message,
 					stack: error.stack,
-					name: error.name,
-				})
-
-				// Return original error if it's already an Error instance
-				throw error
+					name: error.name
+				});
+				throw error;
 			} else if (typeof error === "object" && error !== null) {
-				// Handle error-like objects
-				const errorDetails = JSON.stringify(error, null, 2)
-				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error object:`, errorDetails)
-				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorDetails}`)
+				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${String(error)}`)
 			} else {
 				// Fallback for unknown error types
 				const errorMessage = String(error)
@@ -493,6 +562,30 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			}
 		}
 	}
+
+	async completePrompt(prompt: string): Promise<string> {
+		try {
+			const client = await this.getClient()
+			const response = await client.sendRequest(
+				[vscode.LanguageModelChatMessage.User(prompt)],
+				{},
+				new vscode.CancellationTokenSource().token,
+			)
+			let result = ""
+			for await (const chunk of response.stream) {
+				if (chunk instanceof vscode.LanguageModelTextPart) {
+					result += chunk.value
+				}
+			}
+			return result
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`VSCode LM completion error: ${error.message}`)
+			}
+			throw error
+		}
+	}
+
 
 	// Return model information based on the current client state
 	override getModel(): { id: string; info: ModelInfo } {
@@ -551,28 +644,6 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		}
 	}
 
-	async completePrompt(prompt: string): Promise<string> {
-		try {
-			const client = await this.getClient()
-			const response = await client.sendRequest(
-				[vscode.LanguageModelChatMessage.User(prompt)],
-				{},
-				new vscode.CancellationTokenSource().token,
-			)
-			let result = ""
-			for await (const chunk of response.stream) {
-				if (chunk instanceof vscode.LanguageModelTextPart) {
-					result += chunk.value
-				}
-			}
-			return result
-		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(`VSCode LM completion error: ${error.message}`)
-			}
-			throw error
-		}
-	}
 }
 
 export async function getVsCodeLmModels() {

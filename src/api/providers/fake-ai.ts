@@ -1,12 +1,12 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import { ApiHandler, SingleCompletionHandler } from ".."
 import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
+import { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 
 interface FakeAI {
-	createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream
+	createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream
 	getModel(): { id: string; info: ModelInfo }
-	countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number>
+	countTokens(content: NeutralMessageContent): Promise<number>
 	completePrompt(prompt: string): Promise<string>
 }
 
@@ -21,7 +21,7 @@ export class FakeAIHandler implements ApiHandler, SingleCompletionHandler {
 		this.ai = options.fakeAi as FakeAI
 	}
 
-	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		yield* this.ai.createMessage(systemPrompt, messages)
 	}
 
@@ -29,7 +29,7 @@ export class FakeAIHandler implements ApiHandler, SingleCompletionHandler {
 		return this.ai.getModel()
 	}
 
-	countTokens(content: Array<Anthropic.Messages.ContentBlockParam>): Promise<number> {
+	countTokens(content: NeutralMessageContent): Promise<number> {
 		return this.ai.countTokens(content)
 	}
 

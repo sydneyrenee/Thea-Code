@@ -8,7 +8,6 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
 import delay from "delay"
 import pWaitFor from "p-wait-for"
-import getFolderSize from "get-folder-size"
 import { serializeError } from "serialize-error"
 import * as vscode from "vscode"
 
@@ -35,17 +34,13 @@ import {
 	TheaApiReqInfo, // Renamed
 	TheaAsk, // Renamed
 	TheaMessage, // Renamed
-	TheaSay, // Renamed
 	ToolProgressStatus,
 } from "../shared/ExtensionMessage"
 import { getApiMetrics } from "../shared/getApiMetrics"
 import { HistoryItem } from "../shared/HistoryItem"
-import { TheaAskResponse } from "../shared/WebviewMessage" // Renamed import // TODO: Rename source type
-import { GlobalFileNames } from "../shared/globalFileNames"
 import { defaultModeSlug, getModeBySlug, getFullModeDetails } from "../shared/modes"
 import { EXPERIMENT_IDS, experiments as Experiments, ExperimentId } from "../shared/experiments"
 import { calculateApiCostAnthropic } from "../utils/cost"
-import { fileExistsAtPath } from "../utils/fs"
 import { arePathsEqual } from "../utils/path"
 import { parseMentions } from "./mentions"
 import { TheaIgnoreController } from "./ignore/TheaIgnoreController"
@@ -123,7 +118,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	readonly taskNumber: number
 	isPaused: boolean = false
 	pausedModeSlug: string = defaultModeSlug
-	private pauseInterval: NodeJS.Timeout | undefined
+	private pauseInterval: ReturnType<typeof setTimeout> | undefined
 
 	readonly apiConfiguration: ApiConfiguration
 	api: ApiHandler
@@ -676,8 +671,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		// Release any terminals associated with this task.
 		TerminalRegistry.releaseTerminalsForTask(this.taskId)
 
-		this.urlContentFetcher.closeBrowser()
-		this.browserSession.closeBrowser()
+		await this.urlContentFetcher.closeBrowser()
+		await this.browserSession.closeBrowser()
 		this.theaIgnoreController?.dispose()
 		this.checkpointManager?.dispose() // Dispose checkpoint manager
 
@@ -1542,9 +1537,9 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		const provider = this.providerRef.deref()
 
 		if (this.isPaused && provider) {
-			provider.log(`[subtasks] paused ${this.taskId}.${this.instanceId}`)
+			await provider.log(`[subtasks] paused ${this.taskId}.${this.instanceId}`)
 			await this.waitForResume()
-			provider.log(`[subtasks] resumed ${this.taskId}.${this.instanceId}`)
+			await provider.log(`[subtasks] resumed ${this.taskId}.${this.instanceId}`)
 			const currentMode = (await provider.theaStateManagerInstance.getState())?.mode ?? defaultModeSlug // Renamed getter
 
 			if (currentMode !== this.pausedModeSlug) {
@@ -1554,7 +1549,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				// Delay to allow mode change to take effect before next tool is executed.
 				await delay(500)
 
-				provider.log(
+				await provider.log(
 					`[subtasks] task ${this.taskId}.${this.instanceId} has switched back to '${this.pausedModeSlug}' from '${currentMode}'`,
 				)
 			}
@@ -1751,7 +1746,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			} catch (error) {
 				// abandoned happens when extension is no longer waiting for the thea instance to finish aborting (error is thrown here when any function in the for loop throws due to this.abort)
 				if (!this.abandoned) {
-					this.abortTask() // if the stream failed, there's various states the task could be in (i.e. could have streamed some tools the user may have executed), so we just resort to replicating a cancel task
+					await this.abortTask() // if the stream failed, there's various states the task could be in (i.e. could have streamed some tools the user may have executed), so we just resort to replicating a cancel task
 
 					await abortStream(
 						"streaming_failed",

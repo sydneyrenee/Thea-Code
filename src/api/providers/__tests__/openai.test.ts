@@ -1,8 +1,8 @@
 import { OpenAiHandler } from "../openai"
 import { ApiHandlerOptions } from "../../../shared/api"
 import type { NeutralConversationHistory } from "../../../shared/neutral-history";
-import { Anthropic } from "@anthropic-ai/sdk"
 import { API_REFERENCES } from "../../../../dist/thea-config" // Import branded constants
+import type OpenAI from "openai" // Import OpenAI types
 // Mock OpenAI client
 const mockCreate = jest.fn()
 jest.mock("openai", () => {
@@ -11,13 +11,15 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: mockCreate.mockImplementation(async (options) => {
+					// eslint-disable-next-line @typescript-eslint/require-await
+					create: mockCreate.mockImplementation(async (options: OpenAI.Chat.ChatCompletionCreateParams) => {
 						if (!options.stream) {
 							return {
 								id: "test-completion",
 								choices: [
 									{
 										message: { role: "assistant", content: "Test response", refusal: null },
+										logprobs: null,
 										finish_reason: "stop",
 										index: 0,
 									},
@@ -27,25 +29,37 @@ jest.mock("openai", () => {
 									completion_tokens: 5,
 									total_tokens: 15,
 								},
-							}
+							};
 						}
 
 						return {
-							[Symbol.asyncIterator]: async function* () {
+							// eslint-disable-next-line @typescript-eslint/require-await
+							[Symbol.asyncIterator]: async function* (): AsyncGenerator<OpenAI.Chat.Completions.ChatCompletionChunk> {
 								yield {
+									id: "chatcmpl-test-1",
+									created: 1678886400,
+									model: "gpt-4",
+									object: "chat.completion.chunk",
 									choices: [
 										{
 											delta: { content: "Test response" },
 											index: 0,
+											finish_reason: "stop",
+											logprobs: null,
 										},
 									],
 									usage: null,
-								}
+								};
 								yield {
+									id: "chatcmpl-test-2",
+									created: 1678886401,
+									model: "gpt-4",
+									object: "chat.completion.chunk",
 									choices: [
 										{
 											delta: {},
 											index: 0,
+											finish_reason: "stop",
 										},
 									],
 									usage: {
@@ -53,9 +67,9 @@ jest.mock("openai", () => {
 										completion_tokens: 5,
 										total_tokens: 15,
 									},
-								}
+								};
 							},
-						}
+						};
 					}),
 				},
 			},
@@ -94,7 +108,7 @@ describe("OpenAiHandler", () => {
 
 		it("should set default headers correctly", () => {
 			// Get the mock constructor from the jest mock system
-			const openAiMock = jest.requireMock("openai").default
+			const openAiMock = jest.requireMock("openai").default as jest.Mocked<typeof OpenAI>;
 
 			expect(openAiMock).toHaveBeenCalledWith({
 				baseURL: expect.any(String),
@@ -128,33 +142,33 @@ describe("OpenAiHandler", () => {
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = [];
 			for await (const chunk of stream) {
-				chunks.push(chunk)
+				chunks.push(chunk);
 			}
 
 			expect(chunks.length).toBeGreaterThan(0)
-			const textChunk = chunks.find((chunk) => chunk.type === "text")
-			const usageChunk = chunks.find((chunk) => chunk.type === "usage")
+			const textChunk = chunks.find((chunk) => chunk.type === "text");
+			const usageChunk = chunks.find((chunk) => chunk.type === "usage");
 
 			expect(textChunk).toBeDefined()
-			expect(textChunk?.text).toBe("Test response")
-			expect(usageChunk).toBeDefined()
-			expect(usageChunk?.inputTokens).toBe(10)
-			expect(usageChunk?.outputTokens).toBe(5)
+			expect(textChunk?.text).toBe("Test response");
+			expect(usageChunk).toBeDefined();
+			expect(usageChunk?.inputTokens).toBe(10);
+			expect(usageChunk?.outputTokens).toBe(5);
 		})
 
 		it("should handle streaming responses", async () => {
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = [];
 			for await (const chunk of stream) {
-				chunks.push(chunk)
+				chunks.push(chunk);
 			}
 
 			expect(chunks.length).toBeGreaterThan(0)
-			const textChunks = chunks.filter((chunk) => chunk.type === "text")
-			expect(textChunks).toHaveLength(1)
-			expect(textChunks[0].text).toBe("Test response")
+			const textChunks = chunks.filter((chunk) => chunk.type === "text");
+			expect(textChunks).toHaveLength(1);
+			expect(textChunks[0].text).toBe("Test response");
 		})
 	})
 
@@ -179,21 +193,22 @@ describe("OpenAiHandler", () => {
 			await expect(async () => {
 				for await (const chunk of stream) {
 					// Should not reach here
+					void chunk; // Explicitly ignore the chunk
 				}
 			}).rejects.toThrow("API Error")
 		})
 
 		it("should handle rate limiting", async () => {
-			const rateLimitError = new Error("Rate limit exceeded")
-			rateLimitError.name = "Error"
-			;(rateLimitError as any).status = 429
-			mockCreate.mockRejectedValueOnce(rateLimitError)
+			const rateLimitError: Error & { status?: number } = new Error("Rate limit exceeded");
+			rateLimitError.status = 429;
+			mockCreate.mockRejectedValueOnce(rateLimitError);
 
 			const stream = handler.createMessage("system prompt", testMessages)
 
 			await expect(async () => {
 				for await (const chunk of stream) {
 					// Should not reach here
+					void chunk; // Explicitly ignore the chunk
 				}
 			}).rejects.toThrow("Rate limit exceeded")
 		})
@@ -206,8 +221,8 @@ describe("OpenAiHandler", () => {
 			expect(mockCreate).toHaveBeenCalledWith({
 				model: mockOptions.openAiModelId,
 				messages: [{ role: "user", content: "Test prompt" }],
-				max_tokens: expect.any(Number), // Expect max_tokens to be included
-				temperature: expect.any(Number), // Expect temperature to be included
+				max_tokens: expect.any(Number as any),
+				temperature: expect.any(Number as any),
 				stream: false, // Expect stream to be false
 			})
 		})
@@ -251,6 +266,7 @@ describe('Tool Use Detection', () => {
 		const delta = {
 			tool_calls: [
 				{
+					index: 0,
 					id: 'call_123',
 					function: {
 						name: 'test_tool',
@@ -279,6 +295,7 @@ describe('Tool Use Detection', () => {
 		const delta = {
 			tool_calls: [
 				{
+					index: 0,
 					id: 'call_123',
 					function: {
 						name: 'test_tool',

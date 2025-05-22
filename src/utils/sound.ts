@@ -1,5 +1,10 @@
 import * as vscode from "vscode"
 import * as path from "path"
+import soundPlay from "sound-play"
+
+type SoundPlayFunction = (filepath: string, volume?: number) => Promise<void>
+
+const sound: SoundPlayFunction = soundPlay
 
 /**
  * Minimum interval (in milliseconds) to prevent continuous playback
@@ -63,13 +68,20 @@ export const playSound = (filepath: string): void => {
 			return // Skip playback within minimum interval to prevent continuous playback
 		}
 
-		const sound = require("sound-play")
-		sound.play(filepath, volume).catch(() => {
-			throw new Error("Failed to play sound effect")
+		sound(filepath, volume).catch((error: unknown) => {
+			if (error instanceof Error) {
+				throw new Error(`Failed to play sound effect: ${error.message}`)
+			} else {
+				throw new Error("Failed to play sound effect: An unknown error occurred")
+			}
 		})
 
 		lastPlayedTime = currentTime
-	} catch (error: any) {
-		vscode.window.showErrorMessage(error.message)
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			vscode.window.showErrorMessage(error.message)
+		} else {
+			vscode.window.showErrorMessage("An unknown error occurred while playing sound.")
+		}
 	}
 }

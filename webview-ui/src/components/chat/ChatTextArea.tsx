@@ -17,6 +17,7 @@ import {
 	removeMention,
 	shouldShowContextMenu,
 	SearchResult,
+	ContextMenuQueryItem,
 } from "@/utils/context-mentions"
 import { convertToMentionPath } from "@/utils/path-mentions"
 import { SelectDropdown, DropdownOptionType, Button } from "@/components/ui"
@@ -85,7 +86,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			}
 		}, [listApiConfigMeta, currentApiConfigName])
 
-		const [gitCommits, setGitCommits] = useState<any[]>([])
+		const [gitCommits, setGitCommits] = useState<ContextMenuQueryItem[]>([])
 		const [showDropdown, setShowDropdown] = useState(false)
 		const [fileSearchResults, setFileSearchResults] = useState<SearchResult[]>([])
 		const [searchLoading, setSearchLoading] = useState(false)
@@ -93,7 +94,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 		// Close dropdown when clicking outside.
 		useEffect(() => {
-			const handleClickOutside = (event: MouseEvent) => {
+			const handleClickOutside = () => {
 				if (showDropdown) {
 					setShowDropdown(false)
 				}
@@ -114,7 +115,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 					setIsEnhancingPrompt(false)
 				} else if (message.type === "commitSearchResults") {
-					const commits = message.commits.map((commit: any) => ({
+					const commits = message.commits.map((commit: { hash: string; subject: string; shortHash: string; author: string; date: string }) => ({
 						type: ContextMenuOptionType.Git,
 						value: commit.hash,
 						label: commit.subject,
@@ -423,9 +424,9 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				textAreaRef.current.setSelectionRange(intendedCursorPosition, intendedCursorPosition)
 				setIntendedCursorPosition(null) // Reset the state.
 			}
-		}, [inputValue, intendedCursorPosition])
+		}, [inputValue, intendedCursorPosition, textAreaRef])
 		// Ref to store the search timeout
-		const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+		const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 		const handleInputChange = useCallback(
 			(e: React.ChangeEvent<HTMLTextAreaElement>) => {

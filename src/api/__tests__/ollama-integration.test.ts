@@ -1,8 +1,8 @@
 import { OllamaHandler } from '../providers/ollama';
 import { NeutralConversationHistory } from '../../shared/neutral-history';
-import { ApiStream } from '../transform/stream';
 import OpenAI from 'openai';
-import { XmlMatcher } from '../../utils/xml-matcher';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { ChatCompletionChunk } from 'openai/resources/chat/completions';
 import { HybridMatcher } from '../../utils/json-xml-bridge';
 
 // Note: This test uses port 10000 which is for Msty, a service that uses Ollama on the backend
@@ -11,23 +11,33 @@ import { HybridMatcher } from '../../utils/json-xml-bridge';
 jest.mock('../../utils/json-xml-bridge', () => {
   return {
     HybridMatcher: jest.fn().mockImplementation(() => ({
-      update: jest.fn().mockImplementation((text) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+      update: jest.fn().mockImplementation((text: string) => {
         if (text.includes('<think>')) {
-          return [{ type: 'reasoning', text: text.replace(/<\/?think>/g, '') }];
+          return [{ matched: true, type: 'reasoning', data: text.replace(/<\/?think>/g, '') }];
         }
         if (text.includes('{"type":"thinking"')) {
           try {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
             const jsonObj = JSON.parse(text);
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (jsonObj.type === 'thinking') {
-              return [{ type: 'reasoning', text: jsonObj.content }];
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              return [{ matched: true, type: 'reasoning', data: jsonObj.content }];
             }
-          } catch (e) {
+          } catch (e: any) {
             // Not valid JSON, treat as text
           }
         }
-        return [{ type: 'text', text }];
+        return [{ matched: false, type: 'text', data: text, text: text }];
       }),
-      final: jest.fn().mockReturnValue([])
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+      final: jest.fn().mockImplementation((text: string) => {
+        if (text) {
+          return [{ matched: false, type: 'text', data: text, text: text }];
+        }
+        return [];
+      })
     }))
   };
 });
@@ -38,31 +48,20 @@ jest.mock('../../utils/xml-matcher', () => {
     XmlMatcher: jest.fn().mockImplementation(() => ({
       update: jest.fn().mockImplementation((text) => {
         if (text.includes('<think>')) {
-          return [{ type: 'reasoning', text: text.replace(/<\/?think>/g, '') }];
+          return [{ matched: true, type: 'reasoning', data: text.replace(/<\/?think>/g, '') }];
         }
-        return [{ type: 'text', text }];
+        return [{ matched: false, type: 'text', data: text, text: text }];
       }),
-      final: jest.fn().mockReturnValue([])
+      final: jest.fn().mockImplementation((text) => {
+        if (text) {
+          return [{ matched: false, type: 'text', data: text, text: text }];
+        }
+        return [];
+      })
     }))
   };
 });
 
-// Mock the XmlMatcher
-jest.mock('../../utils/xml-matcher', () => {
-  return {
-    XmlMatcher: jest.fn().mockImplementation(() => ({
-      update: jest.fn().mockImplementation((text) => {
-        if (text === '<think>This is a reasoning block where I analyze the problem.</think>') {
-          return [{ type: 'reasoning', text: 'This is a reasoning block where I analyze the problem.' }];
-        } else if (text.includes('<think>')) {
-          return [{ type: 'reasoning', text: text.replace(/<\/?think>/g, '') }];
-        }
-        return [{ type: 'text', text }];
-      }),
-      final: jest.fn().mockReturnValue([])
-    }))
-  };
-});
 
 // Mock the OpenAI client for integration testing
 jest.mock('openai', () => {
@@ -72,67 +71,98 @@ jest.mock('openai', () => {
     if (stream) {
       return {
         [Symbol.asyncIterator]: async function* () {
-          // Check if there's a system message
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const hasSystemMessage = messages.some((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system');
           
           // Check for specific test cases based on user message content
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const userMessage = messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'user')?.content || '';
           
+          // eslint-disable-next-line @typescript-eslint/require-await
           if (typeof userMessage === 'string' && userMessage.includes('reasoning')) {
             // Test case for reasoning/thinking
             yield {
               choices: [{
-                delta: { content: 'I need to think about this. ' }
-              }]
+                delta: { content: 'I need to think about this. ' },
+                index: 0,
+                finish_reason: null,
+              }],
+              id: 'chatcmpl-reasoning-1', created: 1678886400, model: 'llama2', object: 'chat.completion.chunk',
             };
             yield {
               choices: [{
-                delta: { content: '<think>This is a reasoning block where I analyze the problem.</think>' }
-              }]
+                delta: { content: '<think>This is a reasoning block where I analyze the problem.</think>' },
+                index: 0,
+                finish_reason: null,
+              }],
+              id: 'chatcmpl-reasoning-2', created: 1678886401, model: 'llama2', object: 'chat.completion.chunk',
             };
             yield {
               choices: [{
-                delta: { content: ' After thinking, my answer is 42.' }
-              }]
+                delta: { content: ' After thinking, my answer is 42.' },
+                index: 0,
+                finish_reason: 'stop',
+              }],
+              id: 'chatcmpl-reasoning-3', created: 1678886402, model: 'llama2', object: 'chat.completion.chunk',
             };
           } else if (typeof userMessage === 'string' && userMessage.includes('multi-turn')) {
             // Test case for multi-turn conversations
             // Return a response that acknowledges previous messages
-            const previousAssistantMessage = messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'assistant')?.content || '';
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const previousAssistantMessage = String(messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'assistant')?.content || '');
             yield {
               choices: [{
-                delta: { content: `I see our previous conversation where I said "${previousAssistantMessage}". ` }
-              }]
+                delta: { content: `I see our previous conversation where I said "${previousAssistantMessage}". ` },
+                index: 0,
+                finish_reason: null,
+              }],
+              id: 'chatcmpl-multi-turn-1', created: 1678886403, model: 'llama2', object: 'chat.completion.chunk',
             };
             yield {
               choices: [{
-                delta: { content: 'Now I can continue from there.' }
-              }]
+                delta: { content: 'Now I can continue from there.' },
+                index: 0,
+                finish_reason: 'stop',
+              }],
+              id: 'chatcmpl-multi-turn-2', created: 1678886404, model: 'llama2', object: 'chat.completion.chunk',
             };
           } else if (typeof userMessage === 'string' && userMessage.includes('system prompt')) {
             // Test case for system prompt
-            const systemMessage = messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system')?.content || 'No system prompt';
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const systemMessage = String(messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system')?.content || 'No system prompt');
             yield {
               choices: [{
-                delta: { content: `I'm following the system prompt: "${systemMessage}". ` }
-              }]
+                delta: { content: `I'm following the system prompt: "${systemMessage}". ` },
+                index: 0,
+                finish_reason: null,
+              }],
+              id: 'chatcmpl-system-prompt-1', created: 1678886405, model: 'llama2', object: 'chat.completion.chunk',
             };
             yield {
               choices: [{
-                delta: { content: 'This shows I received it correctly.' }
-              }]
+                delta: { content: 'This shows I received it correctly.' },
+                index: 0,
+                finish_reason: 'stop',
+              }],
+              id: 'chatcmpl-system-prompt-2', created: 1678886406, model: 'llama2', object: 'chat.completion.chunk',
             };
           } else {
             // Default response
             yield {
               choices: [{
-                delta: { content: 'Hello! ' }
-              }]
+                delta: { content: 'Hello! ' },
+                index: 0,
+                finish_reason: null,
+              }],
+              id: 'chatcmpl-default-1', created: 1678886407, model: 'llama2', object: 'chat.completion.chunk',
             };
             yield {
               choices: [{
-                delta: { content: 'This is a response from the Ollama API.' }
-              }]
+                delta: { content: 'This is a response from the Ollama API.' },
+                index: 0,
+                finish_reason: 'stop',
+              }],
+              id: 'chatcmpl-default-2', created: 1678886408, model: 'llama2', object: 'chat.completion.chunk',
             };
           }
         }
@@ -142,7 +172,7 @@ jest.mock('openai', () => {
     // Non-streaming response
     return {
       choices: [{
-        message: { content: 'Hello! This is a response from the Ollama API.' }
+        message: { content: 'Hello! This is a response from the Ollama API.', refusal: null }
       }]
     };
   });
@@ -223,26 +253,33 @@ describe('Ollama Integration', () => {
     ];
     
     // Mock the OpenAI client's create method for this specific test
-    const mockCreate = jest.fn().mockImplementation(() => {
+    (jest.spyOn(handler['client'].chat.completions, 'create') as any).mockImplementationOnce(async () => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      const stream = (async function* () {
+        yield {
+          choices: [{
+            delta: { content: 'I see our previous conversation where I said "Hi there!". ' },
+            index: 0,
+            finish_reason: null,
+          }],
+          id: 'chatcmpl-multi-turn-mock-1', created: 1678886409, model: 'llama2', object: 'chat.completion.chunk',
+          };
+        yield {
+          choices: [{
+            delta: { content: 'Now I can continue from there.' },
+            index: 0,
+            finish_reason: 'stop',
+          }],
+          id: 'chatcmpl-multi-turn-mock-2', created: 1678886410, model: 'llama2', object: 'chat.completion.chunk',
+          };
+      })();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment
       return {
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            choices: [{
-              delta: { content: 'I see our previous conversation where I said "Hi there!". ' }
-            }]
-          };
-          yield {
-            choices: [{
-              delta: { content: 'Now I can continue from there.' }
-            }]
-          };
-        }
-      };
+        [Symbol.asyncIterator]: () => stream[Symbol.asyncIterator](),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        then: (resolve: any) => Promise.resolve(stream).then(resolve),
+      } as any; // Cast to any to satisfy APIPromise type
     });
-    
-    // Replace the handler's client.chat.completions.create method temporarily
-    const originalCreate = handler['client'].chat.completions.create;
-    handler['client'].chat.completions.create = mockCreate;
     
     // Call createMessage
     const stream = handler.createMessage('You are helpful.', neutralHistory);
@@ -252,9 +289,6 @@ describe('Ollama Integration', () => {
     for await (const chunk of stream) {
       chunks.push(chunk);
     }
-    
-    // Restore the original create method
-    handler['client'].chat.completions.create = originalCreate;
     
     // Verify stream chunks
     expect(chunks).toContainEqual({ type: 'text', text: 'I see our previous conversation where I said "Hi there!". ' });
@@ -375,31 +409,41 @@ describe('Ollama Integration', () => {
     ];
     
     // Mock the OpenAI client's create method for this specific test
-    const mockCreate = jest.fn().mockImplementation(() => {
+    (jest.spyOn(handler['client'].chat.completions, 'create') as any).mockImplementationOnce(async () => {
+      // eslint-disable-next-line @typescript-eslint/require-await
+      const stream = (async function* () {
+        yield {
+          choices: [{
+            delta: { content: 'I need to think about this. ' },
+            index: 0,
+            finish_reason: null,
+          }],
+          id: 'chatcmpl-json-reasoning-1', created: 1678886411, model: 'llama2', object: 'chat.completion.chunk',
+        };
+        yield {
+          choices: [{
+            delta: { content: '{"type":"thinking","content":"This is a reasoning block in JSON format"}' },
+            index: 0,
+            finish_reason: null,
+          }],
+          id: 'chatcmpl-json-reasoning-2', created: 1678886412, model: 'llama2', object: 'chat.completion.chunk',
+        };
+        yield {
+          choices: [{
+            delta: { content: ' After thinking, my answer is 42.' },
+            index: 0,
+            finish_reason: 'stop',
+          }],
+          id: 'chatcmpl-json-reasoning-3', created: 1678886413, model: 'llama2', object: 'chat.completion.chunk',
+        };
+      })();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment
       return {
-        [Symbol.asyncIterator]: async function* () {
-          yield {
-            choices: [{
-              delta: { content: 'I need to think about this. ' }
-            }]
-          };
-          yield {
-            choices: [{
-              delta: { content: '{"type":"thinking","content":"This is a reasoning block in JSON format"}' }
-            }]
-          };
-          yield {
-            choices: [{
-              delta: { content: ' After thinking, my answer is 42.' }
-            }]
-          };
-        }
-      };
+        [Symbol.asyncIterator]: () => stream[Symbol.asyncIterator](),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        then: (resolve: any) => Promise.resolve(stream).then(resolve),
+      } as any; // Cast to any to satisfy APIPromise type
     });
-    
-    // Replace the handler's client.chat.completions.create method temporarily
-    const originalCreate = handler['client'].chat.completions.create;
-    handler['client'].chat.completions.create = mockCreate;
     
     // Call createMessage
     const stream = handler.createMessage('You are helpful.', neutralHistory);
@@ -409,9 +453,6 @@ describe('Ollama Integration', () => {
     for await (const chunk of stream) {
       chunks.push(chunk);
     }
-    
-    // Restore the original create method
-    handler['client'].chat.completions.create = originalCreate;
     
     // Verify stream chunks
     expect(chunks).toContainEqual({ type: 'text', text: 'I need to think about this. ' });

@@ -130,19 +130,19 @@ MCP는 무제한 커스텀 도구를 추가할 수 있게 하여 Thea Code의 �
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **의존성 설치**:
+1. **의존성 설치**:
 
 ```sh
 npm run install:all
 ```
 
-3. **웹뷰 시작(HMR이 있는 Vite/React 앱)**:
+1. **웹뷰 시작(HMR이 있는 Vite/React 앱)**:
 
 ```sh
 npm run dev
 ```
 
-4. **디버깅**:
+1. **디버깅**:
    VSCode에서 `F5`를 누르거나(**실행** → **디버깅 시작**) Thea Code가 로드된 새 세션을 엽니다.
 
 웹뷰의 변경 사항은 즉시 나타납니다. 코어 확장에 대한 변경 사항은 확장 호스트를 다시 시작해야 합니다.

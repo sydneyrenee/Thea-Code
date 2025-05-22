@@ -1,4 +1,5 @@
 import { supportPrompt } from "../support-prompt.ts"
+import * as vscode from "vscode"
 
 describe("Code Action Prompts", () => {
 	const testFilePath = "test/file.ts"
@@ -31,16 +32,19 @@ describe("Code Action Prompts", () => {
 		})
 
 		it("should format fix prompt with diagnostics", () => {
-			const diagnostics = [
+			const diagnostics: vscode.Diagnostic[] = [
 				{
 					source: "eslint",
 					message: "Missing semicolon",
 					code: "semi",
-				},
+					range: new vscode.Range(0, 0, 0, 0), // Add a dummy range
+					severity: vscode.DiagnosticSeverity.Error, // Add a dummy severity
+				} as vscode.Diagnostic,
 				{
 					message: "Unused variable",
-					severity: 1,
-				},
+					severity: vscode.DiagnosticSeverity.Warning, // Use vscode.DiagnosticSeverity
+					range: new vscode.Range(0, 0, 0, 0), // Add a dummy range
+				} as vscode.Diagnostic,
 			]
 
 			const prompt = supportPrompt.create("FIX", {

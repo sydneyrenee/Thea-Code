@@ -97,19 +97,19 @@ Thea'nun herkesin dilini konuşmasını istiyoruz:
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **Bağımlılıkları yükleyin**:
+1. **Bağımlılıkları yükleyin**:
 
 ```sh
 npm run install:all
 ```
 
-3. **Webview'ı başlatın (HMR ile Vite/React uygulaması)**:
+1. **Webview'ı başlatın (HMR ile Vite/React uygulaması)**:
 
 ```sh
 npm run dev
 ```
 
-4. **Hata ayıklama**:
+1. **Hata ayıklama**:
    VSCode'da `F5` tuşuna basın (veya **Run** → **Start Debugging**) Thea Code yüklenmiş yeni bir oturum açmak için.
 
 Webview'daki değişiklikler anında görünecektir. Ana uzantıdaki değişiklikler uzantı ana bilgisayarının yeniden başlatılmasını gerektirecektir.

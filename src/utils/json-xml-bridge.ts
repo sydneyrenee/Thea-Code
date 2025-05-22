@@ -11,8 +11,69 @@
  * 4. Tool use conversion between JSON and XML formats
  * 5. OpenAI function call conversion to neutral format
  */
-
 import { XmlMatcher, XmlMatcherResult } from './xml-matcher';
+
+
+export interface GenericParsedJson {
+  type?: string;
+  content?: any;
+  text?: any;
+  [key: string]: any; // Allow for arbitrary properties
+}
+
+export interface FormatDetectedJson extends GenericParsedJson {
+  tool_calls?: any;
+  function_call?: any;
+}
+
+export interface ThinkingJsonObject {
+  type: 'thinking';
+  content: string;
+}
+
+export interface ToolUseJsonObject {
+  type: 'tool_use';
+  id?: string;
+  name: string;
+  input: Record<string, any>;
+}
+
+export interface ToolResultContentItem {
+  type: 'text' | 'image';
+  text?: string;
+  source?: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
+}
+
+export interface ToolResultJsonObject {
+  type: 'tool_result';
+  tool_use_id: string;
+  status?: string;
+  content: ToolResultContentItem[];
+  error?: {
+    message: string;
+    details?: any;
+  };
+}
+
+export interface OpenAIFunctionCall {
+  function_call?: {
+    id?: string;
+    name: string;
+    arguments: string; // JSON string
+  };
+  tool_calls?: Array<{
+    id?: string;
+    type: 'function';
+    function: {
+      name: string;
+      arguments: string; // JSON string
+    };
+  }>;
+}
 
 /**
  * Result from the JsonMatcher
@@ -21,15 +82,16 @@ export interface JsonMatcherResult {
   matched: boolean;
   data: string | object;
   type?: string;
+  text?: string; // Added for non-matched text
 }
 
 /**
  * JsonMatcher - Similar to XmlMatcher but for JSON objects in streaming text
- * 
+ *
  * This class detects and extracts JSON objects from streaming text, particularly
  * focusing on reasoning/thinking blocks and tool usage.
  */
-export class JsonMatcher<Result = JsonMatcherResult> {
+export class JsonMatcher {
   private buffer = '';
   private objectDepth = 0;
   private inString = false;
@@ -37,33 +99,31 @@ export class JsonMatcher<Result = JsonMatcherResult> {
   
   /**
    * Create a new JsonMatcher
-   * 
+   *
    * @param matchType The type of JSON object to match (e.g., "thinking", "tool_use")
-   * @param transform Optional function to transform matched results
    */
   constructor(
     readonly matchType: string,
-    readonly transform?: (result: JsonMatcherResult) => Result
   ) {}
   
   /**
    * Update the matcher with a new chunk of text
-   * 
+   *
    * @param chunk New text chunk to process
    * @returns Array of matched results
    */
-  update(chunk: string): Result[] {
+  update(chunk: string): JsonMatcherResult[] {
     this.buffer += chunk;
     return this.processBuffer();
   }
   
   /**
    * Process any remaining content and return final results
-   * 
+   *
    * @param chunk Optional final chunk to process
    * @returns Array of matched results
    */
-  final(chunk?: string): Result[] {
+  final(chunk?: string): JsonMatcherResult[] {
     if (chunk) {
       this.buffer += chunk;
     }
@@ -74,15 +134,13 @@ export class JsonMatcher<Result = JsonMatcherResult> {
     if (this.buffer.trim()) {
       const textResult: JsonMatcherResult = {
         matched: false,
-        data: this.buffer
+        data: this.buffer,
+        text: this.buffer
       };
       
       this.buffer = '';
       
-      if (!this.transform) {
-        return [textResult as unknown as Result];
-      }
-      return [this.transform(textResult)];
+      return [textResult];
     }
     
     return results;
@@ -90,11 +148,11 @@ export class JsonMatcher<Result = JsonMatcherResult> {
   
   /**
    * Process the current buffer to extract JSON objects
-   * 
+   *
    * @returns Array of matched results
    */
-  private processBuffer(): Result[] {
-    const results: Result[] = [];
+  private processBuffer(): JsonMatcherResult[] {
+    const results: JsonMatcherResult[] = [];
     let startIndex = 0;
     
     while (startIndex < this.buffer.length) {
@@ -108,10 +166,11 @@ export class JsonMatcher<Result = JsonMatcherResult> {
           const text = this.buffer.substring(startIndex);
           const textResult: JsonMatcherResult = {
             matched: false,
-            data: text
+            data: text,
+            text: text
           };
           
-          results.push(this.transformResult(textResult));
+          results.push(textResult);
           this.buffer = '';
         }
         break;
@@ -122,10 +181,11 @@ export class JsonMatcher<Result = JsonMatcherResult> {
         const text = this.buffer.substring(startIndex, objectStart);
         const textResult: JsonMatcherResult = {
           matched: false,
-          data: text
+          data: text,
+          text: text
         };
         
-        results.push(this.transformResult(textResult));
+        results.push(textResult);
       }
       
       // Find the end of the JSON object
@@ -139,34 +199,40 @@ export class JsonMatcher<Result = JsonMatcherResult> {
       // Process JSON object
       const jsonStr = this.buffer.substring(objectStart, objectEnd + 1);
       try {
-        const jsonObj = JSON.parse(jsonStr);
+        const jsonObj: GenericParsedJson = JSON.parse(jsonStr);
         
         // Check if this is a matching object type
         if (jsonObj.type === this.matchType) {
           const matchedResult: JsonMatcherResult = {
             matched: true,
-            data: jsonObj.content || jsonObj.text || jsonObj,
+            data: (typeof jsonObj.content === 'string' || (typeof jsonObj.content === 'object' && jsonObj.content !== null))
+              ? jsonObj.content
+              : (typeof jsonObj.text === 'string' || (typeof jsonObj.text === 'object' && jsonObj.text !== null))
+                ? jsonObj.text
+                : jsonObj,
             type: this.matchType
           };
           
-          results.push(this.transformResult(matchedResult));
+          results.push(matchedResult);
         } else {
           // Not a matching object, treat as non-matched
           const textResult: JsonMatcherResult = {
             matched: false,
-            data: jsonStr
+            data: jsonStr,
+            text: jsonStr
           };
           
-          results.push(this.transformResult(textResult));
+          results.push(textResult);
         }
-      } catch (e) {
+      } catch {
         // Invalid JSON, treat as text
         const textResult: JsonMatcherResult = {
           matched: false,
-          data: jsonStr
+          data: jsonStr,
+          text: jsonStr
         };
         
-        results.push(this.transformResult(textResult));
+        results.push(textResult);
       }
       
       startIndex = objectEnd + 1;
@@ -180,7 +246,7 @@ export class JsonMatcher<Result = JsonMatcherResult> {
   
   /**
    * Find the matching closing brace for a JSON object
-   * 
+   *
    * @param start Starting index of the opening brace
    * @returns Index of the matching closing brace, or -1 if not found
    */
@@ -188,8 +254,15 @@ export class JsonMatcher<Result = JsonMatcherResult> {
     let depth = 0;
     let inString = false;
     let escapeNext = false;
+
+    // Initialize depth based on the starting brace
+    if (this.buffer[start] === '{') {
+      depth = 1;
+    } else {
+      return -1; // Should always start with an opening brace
+    }
     
-    for (let i = start; i < this.buffer.length; i++) {
+    for (let i = start + 1; i < this.buffer.length; i++) {
       const char = this.buffer[i];
       
       if (escapeNext) {
@@ -202,10 +275,8 @@ export class JsonMatcher<Result = JsonMatcherResult> {
         continue;
       }
       
-      if (char === '"' && !inString) {
-        inString = true;
-      } else if (char === '"' && inString) {
-        inString = false;
+      if (char === '"') {
+        inString = !inString;
       } else if (!inString) {
         if (char === '{') {
           depth++;
@@ -220,19 +291,6 @@ export class JsonMatcher<Result = JsonMatcherResult> {
     
     return -1; // Incomplete object
   }
-  
-  /**
-   * Apply the transform function to a result
-   * 
-   * @param result Result to transform
-   * @returns Transformed result
-   */
-  private transformResult(result: JsonMatcherResult): Result {
-    if (!this.transform) {
-      return result as unknown as Result;
-    }
-    return this.transform(result);
-  }
 }
 
 /**
@@ -241,7 +299,7 @@ export class JsonMatcher<Result = JsonMatcherResult> {
 export class FormatDetector {
   /**
    * Detect the format of a text chunk
-   * 
+   *
    * @param content Text content to analyze
    * @returns Format type: 'json', 'xml', or 'unknown'
    */
@@ -260,37 +318,40 @@ export class FormatDetector {
         
         if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
           const sample = content.substring(startIndex, endIndex + 1);
-          const jsonObj = JSON.parse(sample);
-          
-          // Check if it's a tool use or tool result JSON
-          if (jsonObj.type === 'tool_use' || jsonObj.type === 'tool_result' ||
-              jsonObj.type === 'thinking') {
+          // Attempt to parse only if it looks like a complete JSON object
+          if (sample.startsWith('{') && sample.endsWith('}')) {
+            const jsonObj: FormatDetectedJson = JSON.parse(sample);
+            
+            // Check if it's a tool use or tool result JSON
+            if (jsonObj.type === 'tool_use' || jsonObj.type === 'tool_result' ||
+                jsonObj.type === 'thinking') {
+              return 'json';
+            }
+            
+            // Check for OpenAI function calling format
+            if (jsonObj.tool_calls || jsonObj.function_call) {
+              return 'json';
+            }
+            
             return 'json';
-          }
-          
-          // Check for OpenAI function calling format
-          if (jsonObj.tool_calls || jsonObj.function_call) {
-            return 'json';
-          }
-          
-          return 'json';
+          } // This closing brace was misplaced
         }
       } catch (e) {
-        // Not valid JSON
+        // Not valid JSON, or incomplete JSON object
+        // console.error("JSON parsing error in detectFormat:", e); // For debugging
       }
     }
     
     return 'unknown';
-  }
 }
 
 /**
  * Convert JSON thinking format to XML format
- * 
+ *
  * @param jsonObj JSON object with thinking content
  * @returns XML string with thinking tags
  */
-export function jsonThinkingToXml(jsonObj: any): string {
+export function jsonThinkingToXml(jsonObj: ThinkingJsonObject | GenericParsedJson): string {
   if (typeof jsonObj === 'object' && jsonObj.type === 'thinking' && jsonObj.content) {
     return `<think>${jsonObj.content}</think>`;
   }
@@ -299,7 +360,7 @@ export function jsonThinkingToXml(jsonObj: any): string {
 
 /**
  * Convert XML thinking format to JSON format
- * 
+ *
  * @param xmlContent XML string with thinking tags
  * @returns JSON object with thinking content
  */
@@ -323,17 +384,16 @@ export function xmlThinkingToJson(xmlContent: string): string {
  * @param jsonObj JSON object with tool use content
  * @returns XML string with tool use tags
  */
-export function jsonToolUseToXml(jsonObj: any): string {
+export function jsonToolUseToXml(jsonObj: ToolUseJsonObject | GenericParsedJson): string {
   if (typeof jsonObj === 'object' && jsonObj.type === 'tool_use' && jsonObj.name) {
     // Create the opening tool tag with the tool name
     let xml = `<${jsonObj.name}>\n`;
     
     // Add parameter tags
-    if (jsonObj.input && typeof jsonObj.input === 'object') {
-      for (const [key, value] of Object.entries(jsonObj.input)) {
-        // Handle different types of values
+    if (jsonObj.input && typeof jsonObj.input === 'object' && jsonObj.input !== null) {
+      for (const [key, value] of Object.entries(jsonObj.input as Record<string, unknown>)) {
         let stringValue: string;
-        if (typeof value === 'object') {
+        if (typeof value === 'object' && value !== null) {
           stringValue = JSON.stringify(value);
         } else {
           stringValue = String(value);
@@ -365,10 +425,6 @@ export function xmlToolUseToJson(xmlContent: string): string {
     const toolName = toolNameMatch[1];
     
     // Extract parameters using a more specific regex that handles nested content better
-    const params: Record<string, any> = {};
-    
-    // Look for each parameter tag within the tool tag
-    const paramPattern = new RegExp(`<(\\w+)>(.*?)<\\/${toolName}>`, 'gs');
     let outerContent = xmlContent;
     
     // First, remove the outer tool tag to simplify parsing
@@ -376,6 +432,7 @@ export function xmlToolUseToJson(xmlContent: string): string {
     outerContent = outerContent.replace(new RegExp(`\\s*</${toolName}>`), '');
     
     // Now parse each parameter
+    const params: Record<string, any> = {};
     const paramRegex = /<(\w+)>([\s\S]*?)<\/\1>/g;
     let match;
     
@@ -385,14 +442,18 @@ export function xmlToolUseToJson(xmlContent: string): string {
       
       // Skip if the param name is the same as the tool name (outer tag)
       if (paramName !== toolName) {
-        // Try to parse as JSON if possible
-        // Always keep values as strings for XML parameters
-        params[paramName] = paramValue;
+        // Attempt to parse as JSON if it looks like a JSON string
+        try {
+          const parsedValue = JSON.parse(paramValue);
+          params[paramName] = parsedValue;
+        } catch {
+          params[paramName] = paramValue;
+        }
       }
     }
     
     // Create the JSON object
-    const jsonObj = {
+    const jsonObj: ToolUseJsonObject = {
       type: 'tool_use',
       name: toolName,
       id: `${toolName}-${Date.now()}`, // Generate a unique ID
@@ -411,7 +472,7 @@ export function xmlToolUseToJson(xmlContent: string): string {
  * @param jsonObj JSON object with tool result content
  * @returns XML string with tool result tags
  */
-export function jsonToolResultToXml(jsonObj: any): string {
+export function jsonToolResultToXml(jsonObj: ToolResultJsonObject | GenericParsedJson): string {
   if (typeof jsonObj === 'object' && jsonObj.type === 'tool_result' && jsonObj.tool_use_id) {
     // Create the opening tool result tag
     let xml = `<tool_result tool_use_id="${jsonObj.tool_use_id}"`;
@@ -429,7 +490,9 @@ export function jsonToolResultToXml(jsonObj: any): string {
         if (item.type === 'text') {
           xml += `${item.text}\n`;
         } else if (item.type === 'image') {
-          xml += `<image type="${item.source.media_type}" data="${item.source.data}" />\n`;
+          if (item.source) { // Add null check for item.source
+            xml += `<image type="${item.source.media_type}" data="${item.source.data}" />\n`;
+          }
         }
       }
     }
@@ -439,7 +502,7 @@ export function jsonToolResultToXml(jsonObj: any): string {
       xml += `<error message="${jsonObj.error.message}"`;
       if (jsonObj.error.details) {
         // Escape quotes in the JSON string
-        const escapedDetails = JSON.stringify(jsonObj.error.details).replace(/"/g, '&quot;');
+        const escapedDetails = JSON.stringify(jsonObj.error.details).replace(/"/g, '"');
         xml += ` details="${escapedDetails}"`;
       }
       xml += ' />\n';
@@ -472,7 +535,7 @@ export function xmlToolResultToJson(xmlContent: string): string {
     const contentRegex = /<tool_result[^>]*>([\s\S]*?)<\/tool_result>/;
     const contentMatch = contentRegex.exec(xmlContent);
     
-    let content: Array<any> = [];
+    let content: Array<ToolResultContentItem> = [];
     
     if (contentMatch && contentMatch[1]) {
       // Extract text content (everything that's not in a tag)
@@ -514,23 +577,20 @@ export function xmlToolResultToJson(xmlContent: string): string {
       
       if (errorMatch[2]) {
         try {
-          // Replace HTML entities with actual quotes before parsing
-          const unescapedDetails = errorMatch[2].replace(/&quot;/g, '"');
-          error.details = JSON.parse(unescapedDetails);
-        } catch (e) {
+          // Attempt to parse as JSON, otherwise keep as string
+          try {
+            error.details = JSON.parse(errorMatch[2]);
+          } catch {
+            error.details = errorMatch[2];
+          }
+        } catch {
           error.details = errorMatch[2];
         }
       }
     }
     
     // Create the JSON object
-    const jsonObj: {
-      type: string;
-      tool_use_id: string;
-      content: any[];
-      status: string;
-      error?: { message: string; details?: any };
-    } = {
+    const jsonObj: ToolResultJsonObject = {
       type: 'tool_result',
       tool_use_id: toolUseId,
       content,
@@ -553,11 +613,11 @@ export function xmlToolResultToJson(xmlContent: string): string {
  * @param openAiFunctionCall OpenAI function call object
  * @returns Neutral tool use object
  */
-export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: any): any {
+export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFunctionCall): ToolUseJsonObject | null {
   if (openAiFunctionCall.function_call) {
     // Handle single function call
     try {
-      const args = JSON.parse(openAiFunctionCall.function_call.arguments);
+      const args: Record<string, any> = JSON.parse(openAiFunctionCall.function_call.arguments);
       
       return {
         type: 'tool_use',
@@ -565,7 +625,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: any): any
         name: openAiFunctionCall.function_call.name,
         input: args
       };
-    } catch (e) {
+    } catch {
       // If arguments can't be parsed, use as string
       return {
         type: 'tool_use',
@@ -579,7 +639,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: any): any
     for (const toolCall of openAiFunctionCall.tool_calls) {
       if (toolCall.type === 'function' && toolCall.function) {
         try {
-          const args = JSON.parse(toolCall.function.arguments);
+          const args: Record<string, unknown> = JSON.parse(toolCall.function.arguments); // Cast to Record<string, unknown>
           
           return {
             type: 'tool_use',
@@ -587,7 +647,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: any): any
             name: toolCall.function.name,
             input: args
           };
-        } catch (e) {
+        } catch {
           // If arguments can't be parsed, use as string
           return {
             type: 'tool_use',
@@ -609,12 +669,11 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: any): any
  * @param neutralToolUse Neutral tool use object
  * @returns OpenAI function call object
  */
-export function neutralToolUseToOpenAiFunctionCall(neutralToolUse: any): any {
+export function neutralToolUseToOpenAiFunctionCall(neutralToolUse: ToolUseJsonObject): OpenAIFunctionCall | null {
   if (neutralToolUse.type === 'tool_use' && neutralToolUse.name) {
     return {
-      id: neutralToolUse.id || `function-${Date.now()}`,
-      type: 'function',
-      function: {
+      function_call: {
+        id: neutralToolUse.id || `function-${Date.now()}`,
         name: neutralToolUse.name,
         arguments: JSON.stringify(neutralToolUse.input)
       }
@@ -627,7 +686,7 @@ export function neutralToolUseToOpenAiFunctionCall(neutralToolUse: any): any {
 /**
  * Tool Use Matcher - Detects and extracts tool use blocks from streaming text
  */
-export class ToolUseMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
+export class ToolUseMatcher<Result extends JsonMatcherResult | XmlMatcherResult = JsonMatcherResult | XmlMatcherResult> {
   private xmlMatcher: XmlMatcher;
   private jsonMatcher: JsonMatcher;
   private formatDetector: FormatDetector;
@@ -643,8 +702,8 @@ export class ToolUseMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
     readonly transform?: (result: XmlMatcherResult | JsonMatcherResult) => Result
   ) {
     // Use a matcher for XML that can match any tool tag
-    this.xmlMatcher = new XmlMatcher('', transform as any);
-    this.jsonMatcher = new JsonMatcher('tool_use', transform as any);
+    this.xmlMatcher = new XmlMatcher('');
+    this.jsonMatcher = new JsonMatcher('tool_use');
     this.formatDetector = new FormatDetector();
   }
   
@@ -662,128 +721,45 @@ export class ToolUseMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
     
     let results: Result[] = [];
     
-    // For XML format, we need to extract tool use blocks manually
     if (this.detectedFormat === 'xml' || this.detectedFormat === 'unknown') {
-      // Look for tool use patterns in XML
-      const toolUseRegex = /<(\w+)>\s*(?:<[^>]+>[^<]*<\/[^>]+>\s*)*<\/\1>/gs;
-      let match;
-      let lastIndex = 0;
-      const matches: { start: number; end: number; content: string; toolName: string }[] = [];
-      
-      // Find all potential tool use blocks
-      while ((match = toolUseRegex.exec(chunk)) !== null) {
-        const toolName = match[1];
-        // Skip if it's a known non-tool tag like 'think'
-        if (toolName !== 'think' && toolName !== 'tool_result') {
-          matches.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            content: match[0],
-            toolName
-          });
-        }
-      }
-      
-      // Process matches and non-matches
-      for (let i = 0; i < matches.length; i++) {
-        const match = matches[i];
-        
-        // Process text before this match
-        if (match.start > lastIndex) {
-          const textBefore = chunk.substring(lastIndex, match.start);
-          results.push({
-            matched: false,
-            data: textBefore
-          } as unknown as Result);
-        }
-        
-        // Process the tool use block
-        const toolId = `${match.toolName}-${Date.now()}`;
-        this.toolUseIds.set(match.toolName, toolId);
-        
-        results.push({
-          matched: true,
-          data: match.content,
-          type: 'tool_use'
-        } as unknown as Result);
-        
-        lastIndex = match.end;
-      }
-      
-      // Process any remaining text
-      if (lastIndex < chunk.length) {
-        results.push({
-          matched: false,
-          data: chunk.substring(lastIndex)
-        } as unknown as Result);
-      }
-      
-      // Apply transform if provided
-      if (this.transform) {
-        results = results.map(r => this.transform!(r as any)) as Result[];
-      }
-    } else {
-      // For JSON format, we need to look for tool use JSON objects
-      // First, try to parse the entire chunk as JSON
-      try {
-        const jsonObj = JSON.parse(chunk);
-        if (jsonObj.type === 'tool_use' && jsonObj.name) {
-          // Store the tool use ID
-          if (jsonObj.id) {
-            this.toolUseIds.set(jsonObj.name, jsonObj.id);
-          } else {
-            const toolId = `${jsonObj.name}-${Date.now()}`;
-            this.toolUseIds.set(jsonObj.name, toolId);
-          }
-          
-          // Add the matched result
-          results.push({
-            matched: true,
-            data: jsonObj,
-            type: 'tool_use'
-          } as unknown as Result);
-          
-          return results;
-        }
-      } catch (e) {
-        // Not a complete JSON object, try to find JSON objects in the text
-      }
-      
-      // Look for JSON objects in the text
-      const toolUseRegex = /\{"type":"tool_use"[^}]*\}/g;
-      let match;
-      
-      while ((match = toolUseRegex.exec(chunk)) !== null) {
-        try {
-          const toolUseObj = JSON.parse(match[0]);
-          if (toolUseObj.type === 'tool_use' && toolUseObj.name) {
-            // Store the tool use ID
-            if (toolUseObj.id) {
-              this.toolUseIds.set(toolUseObj.name, toolUseObj.id);
-            } else {
-              const toolId = `${toolUseObj.name}-${Date.now()}`;
-              this.toolUseIds.set(toolUseObj.name, toolId);
-            }
-            
-            // Add the matched result
-            results.push({
+      const xmlResults = this.xmlMatcher.update(chunk);
+      for (const result of xmlResults) {
+        if (result.matched) {
+          // Attempt to parse XML content to extract tool name
+          const toolNameMatch = /<(\w+)>/.exec(result.data as string);
+          if (toolNameMatch && toolNameMatch[1] && toolNameMatch[1] !== 'think' && toolNameMatch[1] !== 'tool_result') {
+            const toolName = toolNameMatch[1];
+            const toolId = `${toolName}-${Date.now()}`;
+            this.toolUseIds.set(toolName, toolId);
+            results.push(this.transformResult({
               matched: true,
-              data: toolUseObj,
+              data: result.data,
               type: 'tool_use'
-            } as unknown as Result);
+            }));
+          } else {
+            results.push(this.transformResult(result));
           }
-        } catch (e) {
-          // Ignore parsing errors
+        } else {
+          results.push(this.transformResult(result));
         }
       }
-      
-      // If no tool use objects were found, use the standard JsonMatcher
-      if (results.length === 0) {
-        const jsonResults = this.jsonMatcher.update(chunk) as Result[];
-        results = jsonResults;
+    } else if (this.detectedFormat === 'json') {
+      const jsonResults = this.jsonMatcher.update(chunk);
+      for (const result of jsonResults) {
+        if (result.matched && typeof result.data === 'object' && (result.data as GenericParsedJson).type === 'tool_use') {
+          const toolUseObj = result.data as ToolUseJsonObject;
+          const toolId = toolUseObj.id || `${toolUseObj.name}-${Date.now()}`;
+          this.toolUseIds.set(toolUseObj.name, toolId);
+          results.push(this.transformResult({
+            matched: true,
+            data: toolUseObj,
+            type: 'tool_use'
+          }));
+        } else {
+          results.push(this.transformResult(result));
+        }
       }
     }
-    
     return results;
   }
   
@@ -803,11 +779,24 @@ export class ToolUseMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
     
     // Use the appropriate matcher based on the detected format
     if (this.detectedFormat === 'json') {
-      return this.jsonMatcher.final(chunk) as Result[];
+      return this.jsonMatcher.final(chunk).map(r => this.transformResult(r));
     } else {
       // Default to XML matcher for 'xml' or 'unknown'
-      return this.xmlMatcher.final(chunk) as Result[];
+      return this.xmlMatcher.final(chunk).map(r => this.transformResult(r));
     }
+  }
+
+  /**
+   * Apply the transform function to a result
+   *
+   * @param result Result to transform
+   * @returns Transformed result
+   */
+  private transformResult(result: JsonMatcherResult | XmlMatcherResult): Result {
+    if (!this.transform) {
+      return result as Result;
+    }
+    return this.transform(result);
   }
   
   /**
@@ -823,7 +812,7 @@ export class ToolUseMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
 /**
  * Tool Result Matcher - Detects and extracts tool result blocks from streaming text
  */
-export class ToolResultMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
+export class ToolResultMatcher<Result extends JsonMatcherResult | XmlMatcherResult = JsonMatcherResult | XmlMatcherResult> {
   private xmlMatcher: XmlMatcher;
   private jsonMatcher: JsonMatcher;
   private formatDetector: FormatDetector;
@@ -839,8 +828,8 @@ export class ToolResultMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
     readonly toolUseIds: Map<string, string>,
     readonly transform?: (result: XmlMatcherResult | JsonMatcherResult) => Result
   ) {
-    this.xmlMatcher = new XmlMatcher('tool_result', transform as any);
-    this.jsonMatcher = new JsonMatcher('tool_result', transform as any);
+    this.xmlMatcher = new XmlMatcher('tool_result');
+    this.jsonMatcher = new JsonMatcher('tool_result');
     this.formatDetector = new FormatDetector();
   }
   
@@ -884,46 +873,39 @@ export class ToolResultMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
         // Process text before this match
         if (match.start > lastIndex) {
           const textBefore = chunk.substring(lastIndex, match.start);
-          results.push({
+          results.push(this.transformResult({
             matched: false,
             data: textBefore
-          } as unknown as Result);
+          }));
         }
         
         // Process the tool result block
-        results.push({
+        results.push(this.transformResult({
           matched: true,
           data: match.content,
           type: 'tool_result'
-        } as unknown as Result);
+        }));
         
         lastIndex = match.end;
       }
       
       // Process any remaining text
       if (lastIndex < chunk.length) {
-        results.push({
+        results.push(this.transformResult({
           matched: false,
           data: chunk.substring(lastIndex)
-        } as unknown as Result);
+        }));
       }
       
-      // Apply transform if provided
-      if (this.transform) {
-        results = results.map(r => this.transform!(r as any)) as Result[];
-      }
-      
-      if (results.length > 0) {
-        return results;
-      }
+      return results;
     }
     
     // For JSON format, use the JsonMatcher
     if (this.detectedFormat === 'json') {
-      return this.jsonMatcher.update(chunk) as Result[];
+      return this.jsonMatcher.update(chunk).map(r => this.transformResult(r));
     } else {
       // Default to XML matcher for 'xml' or 'unknown'
-      return this.xmlMatcher.update(chunk) as Result[];
+      return this.xmlMatcher.update(chunk).map(r => this.transformResult(r));
     }
   }
   
@@ -943,25 +925,38 @@ export class ToolResultMatcher<Result = JsonMatcherResult | XmlMatcherResult> {
     
     // Use the appropriate matcher based on the detected format
     if (this.detectedFormat === 'json') {
-      return this.jsonMatcher.final(chunk) as Result[];
+      return this.jsonMatcher.final(chunk).map(r => this.transformResult(r));
     } else {
       // Default to XML matcher for 'xml' or 'unknown'
-      return this.xmlMatcher.final(chunk) as Result[];
+      return this.xmlMatcher.final(chunk).map(r => this.transformResult(r));
     }
+  }
+
+  /**
+   * Apply the transform function to a result
+   *
+   * @param result Result to transform
+   * @returns Transformed result
+   */
+  private transformResult(result: JsonMatcherResult | XmlMatcherResult): Result {
+    if (!this.transform) {
+      return result as Result;
+    }
+    return this.transform(result);
   }
 }
 
 /**
  * Hybrid matcher that can handle both XML and JSON formats
  */
-export class HybridMatcher<Result = XmlMatcherResult | JsonMatcherResult> {
+export class HybridMatcher<Result extends JsonMatcherResult | XmlMatcherResult = JsonMatcherResult | XmlMatcherResult> {
   private xmlMatcher: XmlMatcher;
   private jsonMatcher: JsonMatcher;
   private formatDetector: FormatDetector;
   private detectedFormat: 'json' | 'xml' | 'unknown' = 'unknown';
   private toolUseIds: Map<string, string> = new Map();
-  private toolUseMatcher: ToolUseMatcher | null = null;
-  private toolResultMatcher: ToolResultMatcher | null = null;
+  private toolUseMatcher: ToolUseMatcher<Result> | null = null;
+  private toolResultMatcher: ToolResultMatcher<Result> | null = null;
   
   /**
    * Create a new HybridMatcher
@@ -979,19 +974,19 @@ export class HybridMatcher<Result = XmlMatcherResult | JsonMatcherResult> {
     readonly matchToolUse: boolean = false,
     readonly matchToolResult: boolean = false
   ) {
-    this.xmlMatcher = new XmlMatcher(tagName, transform as any);
-    this.jsonMatcher = new JsonMatcher(jsonType, transform as any);
+    this.xmlMatcher = new XmlMatcher(tagName);
+    this.jsonMatcher = new JsonMatcher(jsonType);
     this.formatDetector = new FormatDetector();
     
     // Initialize specialized matchers if needed
     if (matchToolUse) {
-      this.toolUseMatcher = new ToolUseMatcher(transform as any);
+      this.toolUseMatcher = new ToolUseMatcher(this.transform);
     }
     
     if (matchToolResult && this.toolUseMatcher) {
       this.toolResultMatcher = new ToolResultMatcher(
         this.toolUseMatcher.getToolUseIds(),
-        transform as any
+        this.transform
       );
     }
   }
@@ -1012,190 +1007,48 @@ export class HybridMatcher<Result = XmlMatcherResult | JsonMatcherResult> {
     
     // Special handling for thinking blocks
     if (this.tagName === 'think' && this.jsonType === 'thinking') {
-      // Check for XML thinking blocks
-      if (chunk.includes('<think>')) {
-        const thinkRegex = /<think>([\s\S]*?)<\/think>/g;
-        let match;
-        let lastIndex = 0;
-        const matches: { start: number; end: number; content: string }[] = [];
-        
-        // Find all thinking blocks
-        while ((match = thinkRegex.exec(chunk)) !== null) {
-          matches.push({
-            start: match.index,
-            end: match.index + match[0].length,
-            content: match[1]
-          });
-        }
-        
-        // Process matches and non-matches
-        for (let i = 0; i < matches.length; i++) {
-          const match = matches[i];
-          
-          // Process text before this match
-          if (match.start > lastIndex) {
-            const textBefore = chunk.substring(lastIndex, match.start);
-            results.push({
-              matched: false,
-              data: textBefore
-            } as unknown as Result);
+      if (this.detectedFormat === 'xml' || this.detectedFormat === 'unknown') {
+        const xmlResults = this.xmlMatcher.update(chunk);
+        for (const result of xmlResults) {
+          if (result.matched) {
+            results.push(this.transformResult({
+              matched: true,
+              data: result.data,
+              type: 'reasoning'
+            }));
+          } else {
+            results.push(this.transformResult(result));
           }
-          
-          // Process the thinking block
-          results.push({
-            matched: true,
-            data: match.content,
-            type: 'reasoning'
-          } as unknown as Result);
-          
-          lastIndex = match.end;
         }
-        
-        // Process any remaining text
-        if (lastIndex < chunk.length) {
-          results.push({
-            matched: false,
-            data: chunk.substring(lastIndex)
-          } as unknown as Result);
-        }
-        
-        // Apply transform if provided
-        if (this.transform) {
-          results = results.map(r => this.transform!(r as any)) as Result[];
-        }
-        
-        return results;
-      }
-      
-      // Check for JSON thinking blocks
-      if (chunk.includes('{"type":"thinking"')) {
-        // Process JSON thinking blocks
-        const jsonContent = chunk;
-        let startIndex = 0;
-        
-        // Find all JSON thinking blocks and surrounding text
-        while (startIndex < jsonContent.length) {
-          const jsonStart = jsonContent.indexOf('{"type":"thinking"', startIndex);
-          
-          if (jsonStart === -1) {
-            // No more JSON objects, add remaining text
-            if (startIndex < jsonContent.length) {
-              results.push({
-                matched: false,
-                data: jsonContent.substring(startIndex)
-              } as unknown as Result);
-            }
-            break;
+      } else if (this.detectedFormat === 'json') {
+        const jsonResults = this.jsonMatcher.update(chunk);
+        for (const result of jsonResults) {
+          if (result.matched && typeof result.data === 'object' && (result.data as GenericParsedJson).type === 'thinking') {
+            results.push(this.transformResult({
+              matched: true,
+              data: (result.data as ThinkingJsonObject).content,
+              type: 'reasoning'
+            }));
+          } else {
+            results.push(this.transformResult(result));
           }
-          
-          // Add text before JSON object
-          if (jsonStart > startIndex) {
-            results.push({
-              matched: false,
-              data: jsonContent.substring(startIndex, jsonStart)
-            } as unknown as Result);
-          }
-          
-          // Find the end of the JSON object
-          let jsonEnd = jsonStart;
-          let braceCount = 0;
-          let inString = false;
-          
-          for (let i = jsonStart; i < jsonContent.length; i++) {
-            const char = jsonContent[i];
-            
-            if (char === '"' && jsonContent[i-1] !== '\\') {
-              inString = !inString;
-            } else if (!inString) {
-              if (char === '{') braceCount++;
-              else if (char === '}') {
-                braceCount--;
-                if (braceCount === 0) {
-                  jsonEnd = i + 1;
-                  break;
-                }
-              }
-            }
-          }
-          
-          // Process the JSON object
-          try {
-            const jsonObj = JSON.parse(jsonContent.substring(jsonStart, jsonEnd));
-            if (jsonObj.type === 'thinking' && jsonObj.content) {
-              results.push({
-                matched: true,
-                data: jsonObj.content,
-                type: 'reasoning'
-              } as unknown as Result);
-            } else {
-              results.push({
-                matched: false,
-                data: jsonContent.substring(jsonStart, jsonEnd)
-              } as unknown as Result);
-            }
-          } catch (e) {
-            results.push({
-              matched: false,
-              data: jsonContent.substring(jsonStart, jsonEnd)
-            } as unknown as Result);
-          }
-          
-          startIndex = jsonEnd;
-        }
-        
-        // Apply transform if provided
-        if (this.transform) {
-          results = results.map(r => this.transform!(r as any)) as Result[];
-        }
-        
-        if (results.length > 0) {
-          return results;
         }
       }
+      return results;
     }
     
     // Process with specialized matchers if enabled
     if (this.matchToolUse && this.toolUseMatcher) {
-      // Special handling for JSON tool use blocks
-      if (this.detectedFormat === 'json') {
-        try {
-          // Try to parse the entire chunk as JSON
-          const jsonObj = JSON.parse(chunk);
-          if (jsonObj.type === 'tool_use' && jsonObj.name && jsonObj.id) {
-            // Directly update the tool use IDs
-            this.toolUseIds.set(jsonObj.name, jsonObj.id);
-            this.toolUseMatcher.getToolUseIds().set(jsonObj.name, jsonObj.id);
-          }
-        } catch (e) {
-          // Not a complete JSON object, try to find JSON objects in the text
-          const toolUseRegex = /\{"type":"tool_use"[^}]*\}/g;
-          let match;
-          
-          while ((match = toolUseRegex.exec(chunk)) !== null) {
-            try {
-              const toolUseObj = JSON.parse(match[0]);
-              if (toolUseObj.type === 'tool_use' && toolUseObj.name && toolUseObj.id) {
-                // Directly update the tool use IDs
-                this.toolUseIds.set(toolUseObj.name, toolUseObj.id);
-                this.toolUseMatcher.getToolUseIds().set(toolUseObj.name, toolUseObj.id);
-              }
-            } catch (e) {
-              // Ignore parsing errors
-            }
-          }
-        }
-      }
-      
       const toolUseResults = this.toolUseMatcher.update(chunk);
       if (toolUseResults.length > 0) {
-        results = [...results, ...toolUseResults as Result[]];
+        results = [...results, ...toolUseResults];
       }
       
       // Create a new ToolResultMatcher with updated tool use IDs if needed
       if (this.toolResultMatcher && this.toolUseMatcher.getToolUseIds().size > 0) {
         this.toolResultMatcher = new ToolResultMatcher(
           this.toolUseMatcher.getToolUseIds(),
-          this.transform as any
+          this.transform
         );
       }
     }
@@ -1203,7 +1056,7 @@ export class HybridMatcher<Result = XmlMatcherResult | JsonMatcherResult> {
     if (this.matchToolResult && this.toolResultMatcher) {
       const toolResultResults = this.toolResultMatcher.update(chunk);
       if (toolResultResults.length > 0) {
-        results = [...results, ...toolResultResults as Result[]];
+        results = [...results, ...toolResultResults];
       }
     }
     
@@ -1211,10 +1064,10 @@ export class HybridMatcher<Result = XmlMatcherResult | JsonMatcherResult> {
     if (results.length === 0) {
       // Use the appropriate matcher based on the detected format
       if (this.detectedFormat === 'json') {
-        results = this.jsonMatcher.update(chunk) as Result[];
+        results = this.jsonMatcher.update(chunk).map(r => this.transformResult(r));
       } else {
         // Default to XML matcher for 'xml' or 'unknown'
-        results = this.xmlMatcher.update(chunk) as Result[];
+        results = this.xmlMatcher.update(chunk).map(r => this.transformResult(r));
       }
     }
     
@@ -1241,14 +1094,14 @@ export class HybridMatcher<Result = XmlMatcherResult | JsonMatcherResult> {
     if (this.matchToolUse && this.toolUseMatcher) {
       const toolUseResults = this.toolUseMatcher.final(chunk);
       if (toolUseResults.length > 0) {
-        results = [...results, ...toolUseResults as Result[]];
+        results = [...results, ...toolUseResults];
       }
     }
     
     if (this.matchToolResult && this.toolResultMatcher) {
       const toolResultResults = this.toolResultMatcher.final(chunk);
       if (toolResultResults.length > 0) {
-        results = [...results, ...toolResultResults as Result[]];
+        results = [...results, ...toolResultResults];
       }
     }
     
@@ -1256,22 +1109,35 @@ export class HybridMatcher<Result = XmlMatcherResult | JsonMatcherResult> {
     if (results.length === 0) {
       // Use the appropriate matcher based on the detected format
       if (this.detectedFormat === 'json') {
-        results = this.jsonMatcher.final(chunk) as Result[];
+        results = this.jsonMatcher.final(chunk).map(r => this.transformResult(r));
       } else {
         // Default to XML matcher for 'xml' or 'unknown'
-        results = this.xmlMatcher.final(chunk) as Result[];
+        return this.xmlMatcher.final(chunk).map(r => this.transformResult(r));
       }
     }
     
     return results;
   }
-  
+
+  /**
+   * Apply the transform function to a result
+   *
+   * @param result Result to transform
+   * @returns Transformed result
+   */
+  private transformResult(result: JsonMatcherResult | XmlMatcherResult): Result {
+    if (!this.transform) {
+      return result as Result;
+    }
+    return this.transform(result);
+  }
+
   /**
    * Get the map of tool use IDs
    *
    * @returns Map of tool name to tool use ID
    */
-  getToolUseIds(): Map<string, string> {
+  public getToolUseIds(): Map<string, string> {
     if (this.toolUseMatcher) {
       return this.toolUseMatcher.getToolUseIds();
     }

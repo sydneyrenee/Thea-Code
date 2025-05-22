@@ -23,7 +23,7 @@ export interface IMcpTransport {
   onclose?: () => void;
   // Add other transport-specific methods/properties if needed
   // For SDK compatibility, the connect method in McpServer might expect a transport with `send`
-  send?: (message: any) => Promise<void>;
+  send?: (message: unknown) => Promise<void>;
 }
 
 // Add StdioTransportConfig if needed

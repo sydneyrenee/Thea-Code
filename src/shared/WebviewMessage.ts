@@ -1,10 +1,10 @@
 import { z } from "zod"
-import { ApiConfiguration, ApiProvider } from "./api"
+import { ApiConfiguration } from "./api"
 import { Mode, PromptComponent, ModeConfig } from "./modes"
 
 export type TheaAskResponse = "yesButtonClicked" | "noButtonClicked" | "messageResponse"
 
-export type PromptMode = Mode | "enhance"
+export type PromptMode = Mode
 
 export type AudioType = "notification" | "celebration" | "progress_loop"
 
@@ -137,7 +137,7 @@ export interface WebviewMessage {
 	promptMode?: PromptMode
 	customPrompt?: PromptComponent
 	dataUrls?: string[]
-	values?: Record<string, any>
+        values?: Record<string, unknown>
 	query?: string
 	slug?: string
 	modeConfig?: ModeConfig

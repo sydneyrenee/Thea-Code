@@ -73,7 +73,7 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 	}
 
 	// Get all files at top level (not gitignored)
-	const [allFiles, _] = await listFiles(dirPath, false, 200)
+        const [allFiles] = await listFiles(dirPath, false, 200)
 
 	let result = ""
 
@@ -184,20 +184,11 @@ async function parseFile(
 				// Split the file content into individual lines
 				const lines = fileContent.split("\n")
 
-				// Keep track of the last line we've processed
-				let lastLine = -1
 
 				// Track already processed lines to avoid duplicates
 				const processedLines = new Set<string>()
 
 				// Track definition types for better categorization
-				const definitions = {
-					classes: [],
-					functions: [],
-					methods: [],
-					variables: [],
-					other: [],
-				}
 
 				// First pass - categorize captures by type
 				captures.forEach((capture) => {
@@ -253,7 +244,6 @@ async function parseFile(
 						}
 					}
 
-					lastLine = endLine
 				})
 			} else {
 				// Handle the case where tree or rootNode is null, e.g., log an error or return empty results

@@ -13,7 +13,6 @@ import {
 	ToolProgressStatus,
 	TheaMessage, // Renamed
 } from "../schemas"
-import { SETTING_KEYS } from "../../dist/thea-config" // Import branded constant
 import { McpServer } from "./mcp"
 import { GitCommit } from "../utils/git"
 import { Mode } from "./modes"
@@ -103,7 +102,7 @@ export interface ExtensionMessage {
 	customMode?: ModeConfig
 	slug?: string
 	success?: boolean
-	values?: Record<string, any>
+        values?: Record<string, unknown>
 	requestId?: string
 	promptText?: string
 	results?: Array<{

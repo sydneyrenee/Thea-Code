@@ -24,8 +24,8 @@ class MockStdioServerTransport {
  * StdioTransport provides an implementation of the MCP transport using stdio.
  */
 export class StdioTransport implements IMcpTransport {
-  private transport: any;
-  private _stderr?: any;
+  private transport: unknown;
+  private _stderr?: unknown;
 
   constructor(options: StdioTransportConfig) {
     try {
@@ -46,15 +46,15 @@ export class StdioTransport implements IMcpTransport {
   }
 
   async start(): Promise<void> {
-    if (this.transport && typeof this.transport.start === "function") {
-      await this.transport.start();
-      this._stderr = this.transport.stderr;
+    if (this.transport && typeof (this.transport as any).start === "function") {
+      await (this.transport as any).start();
+      this._stderr = (this.transport as any).stderr;
     }
   }
 
   async close(): Promise<void> {
-    if (this.transport && typeof this.transport.close === "function") {
-      await this.transport.close();
+    if (this.transport && typeof (this.transport as any).close === "function") {
+      await (this.transport as any).close();
     }
   }
 
@@ -62,19 +62,19 @@ export class StdioTransport implements IMcpTransport {
     return undefined;
   }
 
-  get stderr(): any {
+  get stderr(): unknown {
     return this._stderr;
   }
 
   set onerror(handler: (error: Error) => void) {
     if (this.transport) {
-      this.transport.onerror = handler;
+      (this.transport as any).onerror = handler;
     }
   }
 
   set onclose(handler: () => void) {
     if (this.transport) {
-      this.transport.onclose = handler;
+      (this.transport as any).onclose = handler;
     }
   }
 }

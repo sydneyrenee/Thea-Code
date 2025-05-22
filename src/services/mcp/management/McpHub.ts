@@ -1,5 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
-import { StdioClientTransport, StdioServerParameters } from "@modelcontextprotocol/sdk/client/stdio.js"
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 import ReconnectingEventSource from "reconnecting-eventsource"
 import {
@@ -111,13 +111,13 @@ export class McpHub {
 
 	constructor(provider: TheaProvider) {
 		// Renamed type
-		this.providerRef = new WeakRef(provider)
-		this.watchMcpSettingsFile()
-		this.watchProjectMcpFile()
-		this.setupWorkspaceFoldersWatcher()
-		this.initializeGlobalMcpServers()
-		this.initializeProjectMcpServers()
-	}
+               this.providerRef = new WeakRef(provider)
+               void this.watchMcpSettingsFile()
+               this.watchProjectMcpFile()
+               this.setupWorkspaceFoldersWatcher()
+               void this.initializeGlobalMcpServers()
+               void this.initializeProjectMcpServers()
+       }
 
 	/**
 	 * Validates and normalizes server configuration
@@ -126,10 +126,19 @@ export class McpHub {
 	 * @returns The validated configuration
 	 * @throws Error if the configuration is invalid
 	 */
-	private validateServerConfig(config: any, serverName?: string): z.infer<typeof ServerConfigSchema> {
-		// Detect configuration issues before validation
-		const hasStdioFields = config.command !== undefined
-		const hasSseFields = config.url !== undefined
+       private validateServerConfig(
+               config: Record<string, unknown>,
+               serverName?: string,
+       ): z.infer<typeof ServerConfigSchema> {
+               // Detect configuration issues before validation
+               const hasStdioFields = Object.prototype.hasOwnProperty.call(
+                       config,
+                       "command",
+               )
+               const hasSseFields = Object.prototype.hasOwnProperty.call(
+                       config,
+                       "url",
+               )
 
 		// Check for mixed fields
 		if (hasStdioFields && hasSseFields) {
@@ -137,25 +146,28 @@ export class McpHub {
 		}
 
 		// Check if it's a stdio or SSE config and add type if missing
-		if (!config.type) {
-			if (hasStdioFields) {
-				config.type = "stdio"
-			} else if (hasSseFields) {
-				config.type = "sse"
-			} else {
-				throw new Error(missingFieldsErrorMessage)
-			}
-		} else if (config.type !== "stdio" && config.type !== "sse") {
+               if (!("type" in config)) {
+                       if (hasStdioFields) {
+                               ;(config as Record<string, unknown>).type = "stdio"
+                       } else if (hasSseFields) {
+                               ;(config as Record<string, unknown>).type = "sse"
+                       } else {
+                               throw new Error(missingFieldsErrorMessage)
+                       }
+               } else if (
+                       (config as Record<string, unknown>).type !== "stdio" &&
+                       (config as Record<string, unknown>).type !== "sse"
+               ) {
 			throw new Error(typeErrorMessage)
 		}
 
 		// Check for type/field mismatch
-		if (config.type === "stdio" && !hasStdioFields) {
-			throw new Error(stdioFieldsErrorMessage)
-		}
-		if (config.type === "sse" && !hasSseFields) {
-			throw new Error(sseFieldsErrorMessage)
-		}
+               if ((config as { type?: string }).type === "stdio" && !hasStdioFields) {
+                       throw new Error(stdioFieldsErrorMessage)
+               }
+               if ((config as { type?: string }).type === "sse" && !hasSseFields) {
+                       throw new Error(sseFieldsErrorMessage)
+               }
 
 		// Validate the config against the schema
 		try {
@@ -437,16 +449,16 @@ export class McpHub {
 
 			let transport: StdioClientTransport | SSEClientTransport
 
-			if (config.type === "stdio") {
-				transport = new StdioClientTransport({
-					command: config.command,
-					args: config.args,
-					env: {
-						...config.env,
-						...(process.env.PATH ? { PATH: process.env.PATH } : {}),
-					},
-					stderr: "pipe",
-				})
+                       if ((config as { type: string }).type === "stdio") {
+                               transport = new StdioClientTransport({
+                                       command: (config as { command: string }).command,
+                                       args: (config as { args?: string[] }).args,
+                                       env: {
+                                               ...(config as { env?: Record<string, string> }).env,
+                                               ...(process.env.PATH ? { PATH: process.env.PATH } : {}),
+                                       },
+                                       stderr: "pipe",
+                               })
 
 				// Set up stdio specific error handling
 				transport.onerror = async (error) => {
@@ -509,7 +521,9 @@ export class McpHub {
 					withCredentials: config.headers?.["Authorization"] ? true : false, // Enable credentials if Authorization header exists
 				}
 				global.EventSource = ReconnectingEventSource
-				transport = new SSEClientTransport(new URL(config.url), {
+                                transport = new SSEClientTransport(
+                                        new URL((config as { url: string }).url),
+                                        {
 					...sseOptions,
 					eventSourceInit: reconnectingEventSourceOptions,
 				})

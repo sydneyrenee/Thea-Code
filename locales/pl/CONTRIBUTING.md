@@ -97,19 +97,19 @@ Szczególnie witamy wkłady, które przyspieszają realizację celów naszej map
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **Zainstaluj zależności**:
+1. **Zainstaluj zależności**:
 
 ```sh
 npm run install:all
 ```
 
-3. **Uruchom webview (aplikację Vite/React z HMR)**:
+1. **Uruchom webview (aplikację Vite/React z HMR)**:
 
 ```sh
 npm run dev
 ```
 
-4. **Debugowanie**:
+1. **Debugowanie**:
    Naciśnij `F5` (lub **Uruchom** → **Rozpocznij debugowanie**) w VSCode, aby otworzyć nową sesję z załadowanym Thea Code.
 
 Zmiany w webview pojawią się natychmiast. Zmiany w podstawowym rozszerzeniu będą wymagać ponownego uruchomienia hosta rozszerzenia.

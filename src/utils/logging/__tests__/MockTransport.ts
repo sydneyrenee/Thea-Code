@@ -18,13 +18,13 @@ export class MockTransport extends CompactTransport {
 		super(TEST_CONFIG)
 	}
 
-	override async write(entry: CompactLogEntry): Promise<void> {
+	override write(entry: CompactLogEntry): void {
 		this.entries.push(entry)
 	}
 
-	override async close(): Promise<void> {
+	override close(): void {
 		this.closed = true
-		await super.close()
+		super.close()
 	}
 
 	clear(): void {

@@ -36,7 +36,7 @@ The test runner (`runTest.ts`) is responsible for:
 OPENROUTER_API_KEY=sk-or-v1-...
 ```
 
-2. The test suite (`suite/index.ts`) configures:
+1. The test suite (`suite/index.ts`) configures:
 
 - Mocha test framework with TDD interface
 - 10-minute timeout for LLM communication
@@ -75,7 +75,7 @@ declare global {
 npm run test:integration
 ```
 
-3. If you want to run a specific test, you can use the `test.only` function in the test file. This will run only the test you specify and ignore the others. Be sure to remove the `test.only` function before committing your changes.
+1. If you want to run a specific test, you can use the `test.only` function in the test file. This will run only the test you specify and ignore the others. Be sure to remove the `test.only` function before committing your changes.
 
 The tests will:
 
@@ -103,7 +103,7 @@ suite("Your Test Suite Name", () => {
 })
 ```
 
-3. Use the global objects (`api`, `provider`, `extension`, `panel`) to interact with the extension
+1. Use the global objects (`api`, `provider`, `extension`, `panel`) to interact with the extension
 
 ### Best Practices
 
@@ -114,7 +114,7 @@ const timeout = 30000
 const interval = 1000
 ```
 
-2. **State Management**: Reset extension state before/after tests:
+1. **State Management**: Reset extension state before/after tests:
 
 ```typescript
 await globalThis.api.setConfiguration({
@@ -123,13 +123,13 @@ await globalThis.api.setConfiguration({
 })
 ```
 
-3. **Assertions**: Use clear assertions with meaningful messages:
+1. **Assertions**: Use clear assertions with meaningful messages:
 
 ```typescript
 assert.ok(condition, "Descriptive message about what failed")
 ```
 
-4. **Error Handling**: Wrap test code in try/catch blocks and clean up resources:
+1. **Error Handling**: Wrap test code in try/catch blocks and clean up resources:
 
 ```typescript
 try {
@@ -139,7 +139,7 @@ try {
 }
 ```
 
-5. **Wait for Operations**: Use polling when waiting for async operations:
+1. **Wait for Operations**: Use polling when waiting for async operations:
 
 ```typescript
 let startTime = Date.now()
@@ -153,7 +153,7 @@ while (Date.now() - startTime < timeout) {
 }
 ```
 
-6. **Grading**: When grading tests, use the `Grade:` format to ensure the test is graded correctly (See modes.test.ts for an example).
+1. **Grading**: When grading tests, use the `Grade:` format to ensure the test is graded correctly (See modes.test.ts for an example).
 
 ```typescript
 await globalThis.api.startNewTask(

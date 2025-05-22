@@ -35,7 +35,7 @@ export async function openMention(mention?: string, osInfo?: string): Promise<vo
 		) {
 			vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(absPath))
 		} else {
-			openFile(absPath)
+			await openFile(absPath)
 		}
 	} else if (mention === "problems") {
 		vscode.commands.executeCommand("workbench.actions.view.problems")

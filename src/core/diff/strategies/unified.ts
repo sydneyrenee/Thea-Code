@@ -113,7 +113,12 @@ Your diff here
 
         async applyDiff(originalContent: string, diffContent: string): Promise<DiffResult> {
                 try {
-                        const cleanDiff = diffContent.replace(/^\s+/gm, "")
+                        let cleanDiff = diffContent.replace(/^\s+/gm, "")
+                        cleanDiff = cleanDiff.replace(/^(?![+\-@])/gm, " $&")
+                        if (!cleanDiff.endsWith("\n")) {
+                                cleanDiff += "\n"
+                        }
+
                         const result = applyPatch(originalContent, cleanDiff)
 			if (result === false) {
 				return {

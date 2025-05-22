@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { loadRequiredLanguageParsers } from "../languageParser"
 import Parser from "web-tree-sitter"
 

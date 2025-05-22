@@ -8,7 +8,7 @@ type VoidFn = () => void
  */
 export function useDebounceEffect(effect: VoidFn, delay: number, deps: any[]) {
 	const callbackRef = useRef<VoidFn>(effect)
-	const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	// Keep callbackRef current
 	useEffect(() => {

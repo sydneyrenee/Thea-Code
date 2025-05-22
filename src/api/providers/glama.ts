@@ -9,6 +9,7 @@ import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
 import { EXTENSION_ID } from "../../../dist/thea-config" // Import branded constant
+import { NeutralConversationHistory } from "../../shared/neutral-history"
 const GLAMA_DEFAULT_TEMPERATURE = 0
 
 export class GlamaHandler extends BaseProvider implements SingleCompletionHandler {
@@ -38,11 +39,11 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 		return { id: glamaDefaultModelId, info: glamaDefaultModelInfo }
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		// Convert Anthropic messages to OpenAI format
 		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
 			{ role: "system", content: systemPrompt },
-			...convertToOpenAiMessages(messages),
+			...convertToOpenAiMessages(messages as unknown as Anthropic.Messages.MessageParam[]),
 		]
 
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
@@ -232,3 +233,6 @@ export async function getGlamaModels() {
 
 	return models
 }
+
+// Note: countTokens will use the default implementation in BaseProvider which expects NeutralMessageContent
+

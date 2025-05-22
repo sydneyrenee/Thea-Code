@@ -20,7 +20,7 @@ export interface ToolCallResult {
 export interface ToolDefinition {
   name: string;
   description?: string;
-  paramSchema?: Record<string, any>; // JSON Schema for parameters
+  paramSchema?: Record<string, unknown>; // JSON Schema for parameters
   handler: (args: Record<string, unknown>) => Promise<ToolCallResult>;
 }
 

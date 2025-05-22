@@ -1,6 +1,5 @@
 import { GeminiHandler } from "../gemini"
-import { GoogleGenerativeAI } from "@google/generative-ai"
-import type { NeutralConversationHistory } from "../../../shared/neutral-history"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../../shared/neutral-history"
 
 // Mock the Google Generative AI SDK
 jest.mock("@google/generative-ai", () => ({
@@ -71,11 +70,9 @@ describe("GeminiHandler", () => {
 
 			// Setup the mock implementation
 			const mockGenerateContentStream = jest.fn().mockResolvedValue(mockStream)
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
-
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 			const chunks = []
@@ -101,7 +98,7 @@ describe("GeminiHandler", () => {
 			})
 
 			// Verify the model configuration
-			expect(mockGetGenerativeModel).toHaveBeenCalledWith(
+			expect((handler["client"] as any).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
 					systemInstruction: systemPrompt,
@@ -124,11 +121,9 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContentStream = jest.fn().mockRejectedValue(mockError)
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
-
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 
@@ -147,14 +142,13 @@ describe("GeminiHandler", () => {
 					text: () => "Test response",
 				},
 			})
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
-			expect(mockGetGenerativeModel).toHaveBeenCalledWith(
+			expect((handler["client"] as any).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
 				},
@@ -173,10 +167,9 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContent = jest.fn().mockRejectedValue(mockError)
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			await expect(handler.completePrompt("Test prompt")).rejects.toThrow(
 				"Gemini completion error: Gemini API error",
@@ -189,10 +182,9 @@ describe("GeminiHandler", () => {
 					text: () => "",
 				},
 			})
-			const mockGetGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
-			;(handler["client"] as any).getGenerativeModel = mockGetGenerativeModel
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("")
@@ -254,10 +246,10 @@ describe("GeminiHandler", () => {
 				});
 			
 			// Create mixed content with text and image
-			const mixedContent = [
+			const mixedContent: NeutralMessageContent = [ // Explicitly type as NeutralMessageContent
 				{ type: "text" as const, text: "Test message" },
 				{
-					type: "image" as const,
+					type: "image_base64" as const, // Changed from "image" to "image_base64"
 					source: {
 						type: "base64" as const,
 						media_type: "image/png",
@@ -309,8 +301,9 @@ describe("GeminiHandler", () => {
 		
 		it("should handle errors by falling back to base implementation", async () => {
 			// Mock the implementation to throw an error first time, then succeed second time
-			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
-				.mockResolvedValue(8);
+                        const mockBaseCountTokens = jest
+                                .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+                                .mockResolvedValue(8);
 			
 			// Create a spy on console.warn
 			const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
@@ -318,11 +311,11 @@ describe("GeminiHandler", () => {
 			// Create content that will cause an error in our custom logic
 			const content = [{ type: "text" as const, text: "Test content" }];
 			
-			// Force an error in the try block
-			const mockError = new Error("Test error");
-			jest.spyOn(handler as any, 'countTokens').mockImplementationOnce(() => {
-				throw mockError;
-			});
+                        // Force an error in the try block
+                        const mockError = new Error("Test error");
+                        mockBaseCountTokens.mockImplementationOnce(() => {
+                                throw mockError;
+                        });
 			
 			// Call the method (this will throw and then call the original)
 			const result = await handler.countTokens(content);

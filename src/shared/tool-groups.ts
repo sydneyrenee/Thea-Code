@@ -54,18 +54,13 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 export const ALWAYS_AVAILABLE_TOOLS = [
 	"ask_followup_question",
 	"attempt_completion",
-	"switch_mode",
-	"new_task",
 ] as const
 
 // Tool name types for type safety
 export type ToolName = keyof typeof TOOL_DISPLAY_NAMES
 
 // Tool helper functions
-export function getToolName(toolConfig: string | readonly [ToolName, ...any[]]): ToolName {
+export function getToolName(toolConfig: string | readonly [ToolName, ...unknown[]]): ToolName {
 	return typeof toolConfig === "string" ? (toolConfig as ToolName) : toolConfig[0]
 }
 
-export function getToolOptions(toolConfig: string | readonly [ToolName, ...any[]]): any {
-	return typeof toolConfig === "string" ? undefined : toolConfig[1]
-}

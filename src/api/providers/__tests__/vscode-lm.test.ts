@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import { VsCodeLmHandler } from "../vscode-lm"
 import { ApiHandlerOptions } from "../../../shared/api"
-import { Anthropic } from "@anthropic-ai/sdk"
+import { NeutralConversationHistory } from "../../../shared/neutral-history"
 
 // Mock vscode namespace
 jest.mock("vscode", () => {
@@ -15,46 +15,48 @@ jest.mock("vscode", () => {
 		constructor(
 			public callId: string,
 			public name: string,
-			public input: any,
+			public input: Record<string, any>,
 		) {}
 	}
 
-	return {
-		workspace: {
-			onDidChangeConfiguration: jest.fn((callback) => ({
-				dispose: jest.fn(),
-			})),
-		},
-		CancellationTokenSource: jest.fn(() => ({
-			token: {
-				isCancellationRequested: false,
-				onCancellationRequested: jest.fn(),
-			},
-			cancel: jest.fn(),
+type MockLanguageModelPart = MockLanguageModelTextPart | MockLanguageModelToolCallPart;
+
+return {
+	workspace: {
+		onDidChangeConfiguration: jest.fn((_callback: any) => ({ // eslint-disable-line @typescript-eslint/no-unused-vars
 			dispose: jest.fn(),
 		})),
-		CancellationError: class CancellationError extends Error {
-			constructor() {
-				super("Operation cancelled")
-				this.name = "CancellationError"
-			}
+	},
+	CancellationTokenSource: jest.fn(() => ({
+		token: {
+			isCancellationRequested: false,
+			onCancellationRequested: jest.fn(),
 		},
-		LanguageModelChatMessage: {
-			Assistant: jest.fn((content) => ({
-				role: "assistant",
-				content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content)],
-			})),
-			User: jest.fn((content) => ({
-				role: "user",
-				content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content)],
-			})),
-		},
-		LanguageModelTextPart: MockLanguageModelTextPart,
-		LanguageModelToolCallPart: MockLanguageModelToolCallPart,
-		lm: {
-			selectChatModels: jest.fn(),
-		},
-	}
+		cancel: jest.fn(),
+		dispose: jest.fn(),
+	})),
+	CancellationError: class CancellationError extends Error {
+		constructor() {
+			super("Operation cancelled")
+			this.name = "CancellationError"
+		}
+	},
+	LanguageModelChatMessage: {
+		Assistant: jest.fn((content: string | MockLanguageModelPart[]) => ({
+			role: "assistant",
+			content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content as string)], // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion
+		})),
+		User: jest.fn((content: string | MockLanguageModelPart[]) => ({
+			role: "user",
+			content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content as string)], // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion
+		})),
+	},
+	LanguageModelTextPart: MockLanguageModelTextPart,
+	LanguageModelToolCallPart: MockLanguageModelToolCallPart,
+	lm: {
+		selectChatModels: jest.fn(),
+	},
+}
 })
 
 const mockLanguageModelChat = {
@@ -93,8 +95,9 @@ describe("VsCodeLmHandler", () => {
 		})
 
 		it("should handle configuration changes", () => {
-			const callback = (vscode.workspace.onDidChangeConfiguration as jest.Mock).mock.calls[0][0]
-			callback({ affectsConfiguration: () => true })
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+			const callback: (config: { affectsConfiguration: (section: string) => boolean }) => void = (vscode.workspace.onDidChangeConfiguration as jest.Mock).mock.calls[0][0];
+			callback({ affectsConfiguration: () => true });
 			// Should reset client when config changes
 			expect(handler["client"]).toBeNull()
 		})
@@ -138,27 +141,27 @@ describe("VsCodeLmHandler", () => {
 
 		it("should stream text responses", async () => {
 			const systemPrompt = "You are a helpful assistant"
-			const messages: Anthropic.Messages.MessageParam[] = [
+			const messages: NeutralConversationHistory = [
 				{
-					role: "user" as const,
-					content: "Hello",
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "Hello",
+						},
+					],
 				},
 			]
 
 			const responseText = "Hello! How can I help you?"
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () {
-					yield new vscode.LanguageModelTextPart(responseText)
-					return
-				})(),
-				text: (async function* () {
-					yield responseText
-					return
+				stream: (async function* () { // eslint-disable-line @typescript-eslint/require-await
+					yield new vscode.LanguageModelTextPart(responseText);
 				})(),
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks = []
+			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = [];
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -170,17 +173,22 @@ describe("VsCodeLmHandler", () => {
 			})
 			expect(chunks[1]).toMatchObject({
 				type: "usage",
-				inputTokens: expect.any(Number),
-				outputTokens: expect.any(Number),
+				inputTokens: expect.any(Number as any), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				outputTokens: expect.any(Number as any), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 			})
 		})
 
 		it("should handle tool calls", async () => {
 			const systemPrompt = "You are a helpful assistant"
-			const messages: Anthropic.Messages.MessageParam[] = [
+			const messages: NeutralConversationHistory = [
 				{
-					role: "user" as const,
-					content: "Calculate 2+2",
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "Calculate 2+2",
+						},
+					],
 				},
 			]
 
@@ -191,39 +199,41 @@ describe("VsCodeLmHandler", () => {
 			}
 
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () {
+				stream: (async function* () { // eslint-disable-line @typescript-eslint/require-await
 					yield new vscode.LanguageModelToolCallPart(
 						toolCallData.callId,
 						toolCallData.name,
 						toolCallData.arguments,
-					)
-					return
-				})(),
-				text: (async function* () {
-					yield JSON.stringify({ type: "tool_call", ...toolCallData })
-					return
+					);
 				})(),
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks = []
+			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = [];
 			for await (const chunk of stream) {
-				chunks.push(chunk)
+				chunks.push(chunk);
 			}
 
 			expect(chunks).toHaveLength(2) // Tool call chunk + usage chunk
 			expect(chunks[0]).toEqual({
-				type: "text",
-				text: JSON.stringify({ type: "tool_call", ...toolCallData }),
+				type: "tool_use",
+				id: toolCallData.callId,
+				name: toolCallData.name,
+				input: toolCallData.arguments,
 			})
 		})
 
 		it("should handle errors", async () => {
 			const systemPrompt = "You are a helpful assistant"
-			const messages: Anthropic.Messages.MessageParam[] = [
+			const messages: NeutralConversationHistory = [
 				{
-					role: "user" as const,
-					content: "Hello",
+					role: "user",
+					content: [
+						{
+							type: "text",
+							text: "Hello",
+						},
+					],
 				},
 			]
 
@@ -231,8 +241,9 @@ describe("VsCodeLmHandler", () => {
 
 			await expect(async () => {
 				const stream = handler.createMessage(systemPrompt, messages)
-				for await (const _ of stream) {
+				for await (const chunk of stream) {
 					// consume stream
+					void chunk;
 				}
 			}).rejects.toThrow("API Error")
 		})
@@ -266,13 +277,8 @@ describe("VsCodeLmHandler", () => {
 
 			const responseText = "Completed text"
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () {
-					yield new vscode.LanguageModelTextPart(responseText)
-					return
-				})(),
-				text: (async function* () {
-					yield responseText
-					return
+				stream: (async function* () { // eslint-disable-line @typescript-eslint/require-await
+					yield new vscode.LanguageModelTextPart(responseText);
 				})(),
 			})
 

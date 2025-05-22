@@ -3,6 +3,20 @@
 import { AnthropicHandler } from "../anthropic"
 import { ApiHandlerOptions } from "../../../shared/api"
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
+import { ApiStreamUsageChunk, ApiStreamTextChunk, ApiStreamReasoningChunk, ApiStreamToolUseChunk, ApiStreamToolResultChunk } from "../../transform/stream"
+
+// Internal type for test mocks that matches the structure of ApiStreamChunk
+type Chunk =
+  | { type: "message_start"; message: { usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens: number; cache_read_input_tokens: number; }; }; }
+  | { type: "content_block_start"; index: number; content_block: { type: "text"; text: string; }; }
+  | { type: "content_block_delta"; delta: { type: "text_delta"; text: string; }; }
+  | ApiStreamUsageChunk
+  | ApiStreamTextChunk
+  | ApiStreamReasoningChunk
+  | ApiStreamToolUseChunk
+  | ApiStreamToolResultChunk;
+
+// No need for a special type, we'll use a different approach
 
 const mockCreate = jest.fn()
 
@@ -119,7 +133,7 @@ describe("AnthropicHandler", () => {
 			
 			const stream = handler.createMessage(systemPrompt, neutralMessages)
 
-			const chunks: any[] = []
+			const chunks: Chunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -237,7 +251,11 @@ describe("AnthropicHandler", () => {
 			
 			// Setup the mock
 			const mockCountTokens = jest.fn().mockResolvedValue(mockCountTokensResponse);
-			(handler as any).client.messages.countTokens = mockCountTokens;
+			// Using a two-step type assertion to avoid ESLint error
+			// First cast to unknown, then to the desired type
+			const mockableHandler = handler as unknown;
+			// Then access the property
+			(mockableHandler as {client: {messages: {countTokens: jest.Mock}}}).client.messages.countTokens = mockCountTokens;
 			
 			// Create neutral content for testing
 			const neutralContent = [
@@ -262,7 +280,11 @@ describe("AnthropicHandler", () => {
 		it("should fall back to base provider implementation on error", async () => {
 			// Mock the countTokens to throw an error
 			const mockCountTokens = jest.fn().mockRejectedValue(new Error("API Error"));
-			(handler as any).client.messages.countTokens = mockCountTokens;
+			// Using a two-step type assertion to avoid ESLint error
+			// First cast to unknown, then to the desired type
+			const mockableHandler = handler as unknown;
+			// Then access the property
+			(mockableHandler as {client: {messages: {countTokens: jest.Mock}}}).client.messages.countTokens = mockCountTokens;
 			
 			// Mock the base provider's countTokens method
 			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')

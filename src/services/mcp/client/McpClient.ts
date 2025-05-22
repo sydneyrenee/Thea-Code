@@ -1,5 +1,5 @@
 export interface McpClientInfo {
-	name: string
+	name: string;
 	version: string
 }
 

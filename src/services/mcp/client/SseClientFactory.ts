@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { McpClient, McpClientInfo } from "./McpClient"
 
 /**

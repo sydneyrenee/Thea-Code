@@ -6,9 +6,9 @@ import { logger } from "../../utils/logging"
 
 // This forward declaration is needed to avoid circular dependencies
 interface TheaProviderInterface {
-	// Renamed interface
-	// Gets telemetry properties to attach to every event
-	getTelemetryProperties(): Promise<Record<string, any>>
+        // Renamed interface
+        // Gets telemetry properties to attach to every event
+        getTelemetryProperties(): Promise<Record<string, unknown>>
 }
 
 /**
@@ -64,11 +64,11 @@ class PostHogClient {
 		}
 
 		// Update PostHog client state based on telemetry preference
-		if (this.telemetryEnabled) {
-			this.client.optIn()
-		} else {
-			this.client.optOut()
-		}
+                if (this.telemetryEnabled) {
+                        void this.client.optIn()
+                } else {
+                        void this.client.optOut()
+                }
 	}
 
 	/**
@@ -96,11 +96,11 @@ class PostHogClient {
 	 * Captures a telemetry event if telemetry is enabled
 	 * @param event The event to capture with its properties
 	 */
-	public async capture(event: { event: string; properties?: any }): Promise<void> {
+        public async capture(event: { event: string; properties?: Record<string, unknown> }): Promise<void> {
 		// Only send events if telemetry is enabled
 		if (this.telemetryEnabled) {
 			// Get global properties from TheaProvider if available
-			let globalProperties: Record<string, any> = {}
+                        let globalProperties: Record<string, unknown> = {}
 			const provider = this.providerRef?.deref()
 
 			if (provider) {
@@ -209,9 +209,9 @@ class TelemetryService {
 	 * Captures a telemetry event if telemetry is enabled
 	 * @param event The event to capture with its properties
 	 */
-	public capture(event: { event: string; properties?: any }): void {
+    public capture(event: { event: string; properties?: Record<string, unknown> }): void {
 		if (!this.isReady()) return
-		this.client!.capture(event)
+        void this.client!.capture(event)
 	}
 
 	/**
@@ -219,7 +219,7 @@ class TelemetryService {
 	 * @param eventName The event name to capture
 	 * @param properties The event properties
 	 */
-	public captureEvent(eventName: string, properties?: any): void {
+    public captureEvent(eventName: string, properties?: Record<string, unknown>): void {
 		this.capture({ event: eventName, properties })
 	}
 

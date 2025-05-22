@@ -9,7 +9,8 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"useUnknownInCatchVariables": false,
-		"outDir": "out"
+		"outDir": "out",
+		"types": ["node"]
 	},
 	"include": ["src", "../src/exports/thea-code.d.ts"],
 	"exclude": ["**/node_modules/**", "out"]

@@ -1,8 +1,9 @@
 import { EventEmitter } from "events";
-import { ToolDefinition, ToolCallResult } from "../types/McpProviderTypes";
+import { ToolDefinition } from "../types/McpProviderTypes";
 import { NeutralToolUseRequest, NeutralToolResult } from "../types/McpToolTypes";
 import { McpToolRegistry } from "./McpToolRegistry";
 import { SseTransportConfig } from "../types/McpTransportTypes";
+import { EmbeddedMcpProvider } from "../providers/EmbeddedMcpProvider";
 
 /**
  * McpToolExecutor provides a unified interface for tool use across different AI models.
@@ -10,8 +11,8 @@ import { SseTransportConfig } from "../types/McpTransportTypes";
  */
 export class McpToolExecutor extends EventEmitter {
   private static instance: McpToolExecutor;
-  private mcpProvider: any; // This will be EmbeddedMcpProvider once it's refactored
-  private toolRegistry: McpToolRegistry;
+  private mcpProvider: EmbeddedMcpProvider | undefined;
+ private toolRegistry: McpToolRegistry;
   private isInitialized: boolean = false;
   private sseConfig?: SseTransportConfig;
 
@@ -35,15 +36,11 @@ export class McpToolExecutor extends EventEmitter {
    */
   private constructor(config?: SseTransportConfig) {
     super();
+    // The EmbeddedMcpProvider has a private constructor and should be created using the static create method.
     this.sseConfig = config;
-    this.mcpProvider = new (require("../providers/EmbeddedMcpProvider").EmbeddedMcpProvider)(config);
+    // The actual instantiation and initialization will happen in the initialize method as it's an async operation.
+    // this.mcpProvider = new EmbeddedMcpProvider(config); // This line caused the error due to private constructor.
     this.toolRegistry = McpToolRegistry.getInstance();
-    
-    // Forward events from the MCP provider
-    this.mcpProvider.on('tool-registered', (name: string) => this.emit('tool-registered', name));
-    this.mcpProvider.on('tool-unregistered', (name: string) => this.emit('tool-unregistered', name));
-    this.mcpProvider.on('started', (info: unknown) => this.emit('started', info));
-    this.mcpProvider.on('stopped', () => this.emit('stopped'));
   }
 
   /**
@@ -54,9 +51,16 @@ export class McpToolExecutor extends EventEmitter {
       return;
     }
 
-    // Start the MCP provider
+    // Create and start the EmbeddedMcpProvider instance
+    this.mcpProvider = await EmbeddedMcpProvider.create(this.sseConfig);
     await this.mcpProvider.start();
     this.isInitialized = true;
+
+    // Forward events from the MCP provider
+    this.mcpProvider.on('tool-registered', (name: string) => this.emit('tool-registered', name));
+    this.mcpProvider.on('tool-unregistered', (name: string) => this.emit('tool-unregistered', name));
+    this.mcpProvider.on('started', (info: unknown) => this.emit('started', info));
+    this.mcpProvider.on('stopped', () => this.emit('stopped'));
   }
 
   /**
@@ -68,7 +72,7 @@ export class McpToolExecutor extends EventEmitter {
     }
 
     // Stop the MCP provider
-    await this.mcpProvider.stop();
+    await this.mcpProvider!.stop();
     this.isInitialized = false;
   }
 
@@ -77,6 +81,9 @@ export class McpToolExecutor extends EventEmitter {
    * @param definition The tool definition
    */
   public registerTool(definition: ToolDefinition): void {
+    if (!this.mcpProvider) {
+      throw new Error('McpToolExecutor not initialized');
+    }
     // Register with both the MCP provider and the tool registry
     this.mcpProvider.registerToolDefinition(definition);
     this.toolRegistry.registerTool(definition);
@@ -88,6 +95,9 @@ export class McpToolExecutor extends EventEmitter {
    * @returns true if the tool was unregistered, false if it wasn't found
    */
   public unregisterTool(name: string): boolean {
+    if (!this.mcpProvider) {
+      throw new Error('McpToolExecutor not initialized');
+    }
     // Unregister from both the MCP provider and the tool registry
     const mcpResult = this.mcpProvider.unregisterTool(name);
     const registryResult = this.toolRegistry.unregisterTool(name);
@@ -101,6 +111,9 @@ export class McpToolExecutor extends EventEmitter {
    * @returns The tool result in neutral format
    */
   public async executeToolFromNeutralFormat(request: NeutralToolUseRequest): Promise<NeutralToolResult> {
+    if (!this.mcpProvider) {
+      throw new Error('McpToolExecutor not initialized');
+    }
     const { name, input, id } = request;
     
     try {
@@ -147,6 +160,6 @@ export class McpToolExecutor extends EventEmitter {
    * @returns The URL of the server, or undefined if not started
    */
   public getServerUrl(): URL | undefined {
-    return this.mcpProvider.getServerUrl();
+    return this.mcpProvider?.getServerUrl();
   }
 }

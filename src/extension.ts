@@ -129,7 +129,7 @@ export async function deactivate() {
 	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension deactivated`)
 	// Clean up MCP server manager
 	await McpServerManager.cleanup(extensionContext)
-	telemetryService.shutdown()
+	await telemetryService.shutdown()
 
 	// Clean up terminal handlers
 	TerminalRegistry.cleanup()

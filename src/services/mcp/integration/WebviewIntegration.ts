@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { McpHub } from '../management/McpHub';
+import type { McpServer } from '../../shared/mcp';
 
 /**
  * WebviewIntegration provides an integration layer for webview interactions.
@@ -23,10 +24,6 @@ export class WebviewIntegration extends EventEmitter {
   /** Set the McpHub instance to delegate operations to. */
   public setMcpHub(hub: McpHub): void {
     this.mcpHub = hub;
-    hub.on('tool-registered', (name) => this.emit('tool-registered', name));
-    hub.on('tool-unregistered', (name) => this.emit('tool-unregistered', name));
-    hub.on('started', (info) => this.emit('started', info));
-    hub.on('stopped', () => this.emit('stopped'));
   }
 
   /** Get the McpHub instance. */
@@ -35,7 +32,7 @@ export class WebviewIntegration extends EventEmitter {
   }
 
   /** Return all servers known by the hub. */
-  public getAllServers(): any[] {
+  public getAllServers(): McpServer[] {
     return this.mcpHub?.getAllServers() || [];
   }
 

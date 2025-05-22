@@ -43,40 +43,60 @@ const registerCodeAction = (
 	let userInput: string | undefined
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand(command, async (...args: any[]) => {
+		vscode.commands.registerCommand(command, async (
+			argFilePath?: string,
+			argSelectedText?: string,
+			argStartLine?: number,
+			argEndLine?: number,
+			argDiagnostics?: vscode.Diagnostic[],
+		) => {
 			if (inputPrompt) {
 				userInput = await vscode.window.showInputBox({
 					prompt: inputPrompt,
 					placeHolder: inputPlaceholder,
-				})
+				});
 			}
 
-			// Handle both code action and direct command cases.
-			let filePath: string
-			let selectedText: string
-			let startLine: number | undefined
-			let endLine: number | undefined
-			let diagnostics: any[] | undefined
+			let filePath: string;
+			let selectedText: string;
+			let startLine: number | undefined;
+			let endLine: number | undefined;
+			let diagnostics: vscode.Diagnostic[] | undefined;
 
-			if (args.length > 1) {
+			// Determine if called from code action or direct command
+			if (argFilePath !== undefined && argSelectedText !== undefined) {
 				// Called from code action.
-				;[filePath, selectedText, startLine, endLine, diagnostics] = args
+				filePath = argFilePath;
+				selectedText = argSelectedText;
+				startLine = argStartLine;
+				endLine = argEndLine;
+				diagnostics = argDiagnostics;
 			} else {
 				// Called directly from command palette.
-				const context = EditorUtils.getEditorContext()
-				if (!context) return
-				;({ filePath, selectedText, startLine, endLine, diagnostics } = context)
+				const context = EditorUtils.getEditorContext();
+				if (!context) return;
+				({ filePath, selectedText, startLine, endLine, diagnostics } = context);
 			}
 
-			const params = {
-				...{ filePath, selectedText },
-				...(startLine !== undefined ? { startLine: startLine.toString() } : {}),
-				...(endLine !== undefined ? { endLine: endLine.toString() } : {}),
-				...(diagnostics ? { diagnostics } : {}),
-				...(userInput ? { userInput } : {}),
+			const params: Record<string, string | any[]> = {
+				filePath,
+				selectedText,
+			};
+
+			if (startLine !== undefined) {
+				params.startLine = startLine.toString();
+			}
+			if (endLine !== undefined) {
+				params.endLine = endLine.toString();
+			}
+			if (diagnostics) {
+				params.diagnostics = diagnostics as any[];
+			}
+			if (userInput) {
+				params.userInput = userInput;
 			}
 
-			await TheaProvider.handleCodeAction(command, promptType, params) // Renamed static method call
+			await TheaProvider.handleCodeAction(command, promptType, params);
 		}),
 	)
 }

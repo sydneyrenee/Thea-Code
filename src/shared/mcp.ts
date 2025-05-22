@@ -34,7 +34,7 @@ export type McpResourceTemplate = {
 }
 
 export type McpResourceResponse = {
-	_meta?: Record<string, any>
+        _meta?: Record<string, unknown>
 	contents: Array<{
 		uri: string
 		mimeType?: string
@@ -44,7 +44,7 @@ export type McpResourceResponse = {
 }
 
 export type McpToolCallResponse = {
-	_meta?: Record<string, any>
+        _meta?: Record<string, unknown>
 	content: Array<
 		| {
 				type: "text"

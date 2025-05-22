@@ -9,8 +9,15 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"useUnknownInCatchVariables": false,
-		"outDir": "out"
+		"outDir": "out",
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"types": ["node"]
+
 	},
-	"include": ["src", "../src/exports/thea-code.d.ts"],
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx"
+	],
 	"exclude": [".vscode-test", "**/node_modules/**", "out"]
 }

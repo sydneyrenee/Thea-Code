@@ -36,14 +36,26 @@ export function convertToNeutralHistory(
                     return { type: 'text', text: block.text } as NeutralTextContentBlock;
                 } else if (block.type === 'image') {
                     // Convert Anthropic image source to Neutral image source
-                    return {
-                        type: 'image',
-                        source: {
-                            type: 'base64',
-                            media_type: block.source.media_type, // Use Anthropic's media type
-                            data: block.source.data // Use Anthropic's base64 data
-                        }
-                    } as NeutralImageContentBlock;
+                    const source = block.source;
+                    // Determine if it's a URL or Base64 source
+                    if (source.type === 'url') {
+                        return {
+                            type: 'image_url',
+                            source: {
+                                type: 'image_url',
+                                url: source.url
+                            }
+                        } as NeutralImageContentBlock;
+                    } else {
+                        return {
+                            type: 'image_base64',
+                            source: {
+                                type: 'base64',
+                                media_type: source.media_type,
+                                data: source.data
+                            }
+                        } as NeutralImageContentBlock;
+                    }
                 } else if (block.type === 'tool_use') {
                     return {
                         type: 'tool_use',
@@ -62,7 +74,7 @@ export function convertToNeutralHistory(
                                  toolResultContent.push({ type: 'text', text: part.text });
                              } else if (part.type === 'image') {
                                   toolResultContent.push({
-                                     type: 'image',
+                                     type: 'image_base64',
                                      source: {
                                          type: 'base64',
                                          media_type: part.source.media_type,
@@ -112,16 +124,26 @@ export function convertToAnthropicContentBlocks(
         neutralContent.forEach(block => {
             if (block.type === 'text') {
                 anthropicBlocks.push({ type: 'text', text: block.text });
-            } else if (block.type === 'image') {
+            } else if (block.type === 'image_url' || block.type === 'image_base64') {
                  // Convert Neutral image source to Anthropic image source
-                 anthropicBlocks.push({
-                     type: 'image',
-                     source: {
-                         type: 'base64', // Anthropic uses 'base64' source type
-                         media_type: block.source.media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp", // Cast to Anthropic's specific media types
-                         data: block.source.data
-                     }
-                 });
+                 if (block.type === 'image_url') {
+                     anthropicBlocks.push({
+                         type: 'image',
+                         source: {
+                             type: 'url',
+                             url: (block.source as { type: 'image_url', url: string }).url
+                         }
+                     });
+                 } else { // image_base64
+                     anthropicBlocks.push({
+                         type: 'image',
+                         source: {
+                             type: 'base64',
+                             media_type: (block.source as { type: 'base64', media_type: string, data: string }).media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+                             data: (block.source as { type: 'base64', media_type: string, data: string }).data
+                         }
+                     });
+                 }
             } else if (block.type === 'tool_use') {
                 anthropicBlocks.push({
                     type: 'tool_use',
@@ -136,15 +158,25 @@ export function convertToAnthropicContentBlocks(
                      block.content.forEach(part => {
                          if (part.type === 'text') {
                              toolResultContent.push({ type: 'text', text: part.text });
-                         } else if (part.type === 'image') {
-                              toolResultContent.push({
-                                 type: 'image',
-                                 source: {
-                                     type: 'base64',
-                                     media_type: part.source.media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp", // Cast media type
-                                     data: part.source.data
-                                 }
-                              });
+                         } else if (part.type === 'image_url' || part.type === 'image_base64') {
+                              if (part.type === 'image_url') {
+                                  toolResultContent.push({
+                                      type: 'image',
+                                      source: {
+                                          type: 'url',
+                                          url: (part.source as { type: 'image_url', url: string }).url
+                                      }
+                                  });
+                              } else { // image_base64
+                                  toolResultContent.push({
+                                      type: 'image',
+                                      source: {
+                                          type: 'base64',
+                                          media_type: (part.source as { type: 'base64', media_type: string, data: string }).media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
+                                          data: (part.source as { type: 'base64', media_type: string, data: string }).data
+                                      }
+                                  });
+                              }
                          }
                      });
                  }
@@ -188,12 +220,11 @@ export function convertToAnthropicHistory(
             anthropicMessage.content = neutralMessage.content; // Anthropic also supports string content
         } else if (Array.isArray(neutralMessage.content)) {
             // If content is an array of blocks, convert each block using the helper
-            anthropicMessage.content = convertToAnthropicContentBlocks(neutralMessage.content);
-        }
-
-        // If content array is empty, set content to an empty string as Anthropic expects
-        if (Array.isArray(anthropicMessage.content) && anthropicMessage.content.length === 0) {
-             anthropicMessage.content = '';
+            const convertedContent = convertToAnthropicContentBlocks(neutralMessage.content);
+            anthropicMessage.content = convertedContent.length > 0 ? convertedContent : '';
+        } else {
+            // Handle unexpected content types by setting to empty string
+            anthropicMessage.content = '';
         }
 
 

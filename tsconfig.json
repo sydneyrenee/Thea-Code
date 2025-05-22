@@ -18,8 +18,10 @@
 		"strict": true,
 		"target": "es2022",
 		"useDefineForClassFields": true,
-		"useUnknownInCatchVariables": false
+		"useUnknownInCatchVariables": false,
+		"allowImportingTsExtensions": true,
+		"noEmit": true
 	},
-	"include": ["src/**/*", "scripts/**/*", ".changeset/**/*"],
-	"exclude": ["node_modules", ".vscode-test", "webview-ui"]
+	"include": ["src/**/*", ".changeset/**/*"],
+	"exclude": ["node_modules", ".vscode-test", "webview-ui", "src/__mocks__"]
 }

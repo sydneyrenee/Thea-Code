@@ -12,6 +12,11 @@ jest.mock("fs")
 jest.mock("../utils/fs")
 // We're testing the real migrateSettings function
 
+declare global {
+// eslint-disable-next-line no-var
+var outputChannel: vscode.OutputChannel
+}
+
 describe("Settings Migration", () => {
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
@@ -48,14 +53,13 @@ describe("Settings Migration", () => {
 		// We don't need to manually mock these methods
 
 		// Set global outputChannel for all tests
-		;(global as any).outputChannel = mockOutputChannel
+		global.outputChannel = mockOutputChannel
 	})
 
 	it("should migrate custom modes file if old file exists and new file doesn't", async () => {
-		const mockCustomModesContent = '{"customModes":[{"slug":"test-mode"}]}' as string
 
 		// Mock file existence checks
-		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
+		;(fileExistsAtPath as jest.Mock).mockImplementation((path: string) => {
 			if (path === mockSettingsDir) return true
 			if (path === legacyCustomModesPath) return true
 			if (path === newCustomModesPath) return false
@@ -69,10 +73,9 @@ describe("Settings Migration", () => {
 	})
 
 	it("should migrate MCP settings file if old file exists and new file doesn't", async () => {
-		const mockMcpSettingsContent = '{"mcpServers":{"test-server":{}}}' as string
 
 		// Mock file existence checks
-		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
+		;(fileExistsAtPath as jest.Mock).mockImplementation((path: string) => {
 			if (path === mockSettingsDir) return true
 			if (path === legacyMcpSettingsPath) return true
 			if (path === newMcpSettingsPath) return false
@@ -87,7 +90,7 @@ describe("Settings Migration", () => {
 
 	it("should not migrate if new file already exists", async () => {
 		// Mock file existence checks
-		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
+		;(fileExistsAtPath as jest.Mock).mockImplementation((path: string) => {
 			if (path === mockSettingsDir) return true
 			if (path === legacyCustomModesPath) return true
 			if (path === newCustomModesPath) return true
@@ -107,12 +110,12 @@ describe("Settings Migration", () => {
 		;(fileExistsAtPath as jest.Mock).mockRejectedValue(new Error("Test error"))
 
 		// Set the global outputChannel for the test
-		;(global as any).outputChannel = mockOutputChannel
+		global.outputChannel = mockOutputChannel
 
 		await migrateSettings(mockContext, mockOutputChannel)
 
 		// Verify error was logged
-		expect(mockOutputChannel.appendLine).toHaveBeenCalledWith(
+		expect(mockOutputChannel.appendLine.bind(mockOutputChannel)).toHaveBeenCalledWith(
 			expect.stringContaining("Error migrating settings files"),
 		)
 	})

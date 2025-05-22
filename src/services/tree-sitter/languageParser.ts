@@ -1,5 +1,5 @@
 import * as path from "path"
-import { Parser } from "web-tree-sitter"
+import * as Parser from "web-tree-sitter"
 import {
 	javascriptQuery,
 	typescriptQuery,
@@ -18,7 +18,7 @@ import {
 
 export interface LanguageParser {
 	[key: string]: {
-		parser: Parser
+		parser: Parser.Parser
 		query: Parser.Query
 	}
 }
@@ -29,11 +29,11 @@ async function loadLanguage(langName: string) {
 
 let isParserInitialized = false
 
-async function initializeParser() {
-	if (!isParserInitialized) {
-		await Parser.init()
-		isParserInitialized = true
-	}
+function initializeParser(): void {
+        if (!isParserInitialized) {
+                // Parser.init(); // Removed as may not be required
+                isParserInitialized = true
+        }
 }
 
 /*
@@ -59,7 +59,7 @@ Sources:
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/test/query-test.js
 */
 export async function loadRequiredLanguageParsers(filesToParse: string[]): Promise<LanguageParser> {
-	await initializeParser()
+        initializeParser()
 	const extensionsToLoad = new Set(filesToParse.map((file) => path.extname(file).toLowerCase().slice(1)))
 	const parsers: LanguageParser = {}
 	for (const ext of extensionsToLoad) {
@@ -129,7 +129,7 @@ export async function loadRequiredLanguageParsers(filesToParse: string[]): Promi
 			default:
 				throw new Error(`Unsupported language: ${ext}`)
 		}
-		const parser = new Parser()
+		const parser = new Parser.Parser()
 		parser.setLanguage(language)
 		parsers[ext] = { parser, query }
 	}

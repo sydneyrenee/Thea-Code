@@ -1,8 +1,6 @@
-import { 
-  jsonToolUseToXml, 
-  xmlToolUseToJson, 
-  openAiFunctionCallToNeutralToolUse,
-  neutralToolUseToOpenAiFunctionCall
+import {
+  xmlToolUseToJson,
+  openAiFunctionCallToNeutralToolUse
 } from "../../../utils/json-xml-bridge";
 import { NeutralToolUseRequest, NeutralToolResult } from "../types/McpToolTypes";
 import { ToolDefinition } from "../types/McpProviderTypes";
@@ -47,8 +45,8 @@ export class McpConverters {
     try {
       let toolUseRequest: Record<string, unknown>;
       
-      if (typeof jsonContent === 'string') {
-        toolUseRequest = JSON.parse(jsonContent);
+        if (typeof jsonContent === 'string') {
+          toolUseRequest = JSON.parse(jsonContent) as Record<string, unknown>;
       } else {
         toolUseRequest = jsonContent;
       }
@@ -100,7 +98,7 @@ export class McpConverters {
         if (item.type === 'text') {
           return item.text;
         } else if (item.type === 'image') {
-          const source = (item as any).source;
+          const source = (item as { source: { media_type: string; data: string } }).source;
           return `<image type="${source.media_type}" data="${source.data}" />`;
         }
         return '';
@@ -139,10 +137,12 @@ export class McpConverters {
    * @param tools Map of tool names to tool definitions
    * @returns Array of OpenAI function definitions
    */
-  public static toolDefinitionsToOpenAiFunctions(tools: Map<string, ToolDefinition>): any[] {
-    const functions = [];
-    
-    for (const [name, definition] of tools.entries()) {
+  public static toolDefinitionsToOpenAiFunctions(
+    tools: Map<string, ToolDefinition>
+  ): Array<Record<string, unknown>> {
+    const functions: Array<Record<string, unknown>> = [];
+
+    for (const definition of tools.values()) {
       functions.push({
         name: definition.name,
         description: definition.description || '',

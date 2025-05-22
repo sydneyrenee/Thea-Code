@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI, { AzureOpenAI } from "openai"
 import axios from "axios"
 
@@ -11,8 +10,6 @@ import {
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types
 import { SingleCompletionHandler } from "../index"
 import { convertToOpenAiHistory, convertToOpenAiContentBlocks } from "../transform/neutral-openai-format"; // Import conversion functions
-import { convertToR1Format } from "../transform/r1-format" // Keep for now, might be refactored later
-import { convertToSimpleMessages } from "../transform/simple-format" // Keep for now, might be refactored later
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
@@ -26,7 +23,8 @@ export const defaultHeaders = {
 	"X-Title": API_REFERENCES.APP_TITLE,
 }
 
-export interface OpenAiHandlerOptions extends ApiHandlerOptions {}
+// OpenAiHandlerOptions is just an alias for ApiHandlerOptions
+export type OpenAiHandlerOptions = ApiHandlerOptions;
 
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: OpenAiHandlerOptions
@@ -42,7 +40,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 		try {
 			urlHost = new URL(this.options.openAiBaseUrl ?? "").host
-		} catch (error) {
+		} catch {
 			// Likely an invalid `openAiBaseUrl`; we're still working on
 			// proper settings validation.
 			urlHost = ""
@@ -64,11 +62,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const modelInfo = this.getModel().info
-		const modelUrl = this.options.openAiBaseUrl ?? ""
 		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false // Keep for now, might be refactored later
 		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format // Keep for now, might be refactored later
-		const ark = modelUrl.includes(".volces.com") // Keep for now, might be refactored later
+		// Note: ark variable removed as it was unused
 
 		// Convert neutral history to OpenAI format
 		let openAiMessages = convertToOpenAiHistory(messages);
@@ -193,12 +190,15 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 							name: toolCall.function.name,
 							input: JSON.parse(toolCall.function.arguments || '{}')
 						});
+						
+						// Ensure the tool result content is a string
+						const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
 
 						// Yield tool result
 						yield {
 							type: 'tool_result',
 							id: toolCall.id,
-							content: toolResult
+							content: toolResultString
 						};
 					}
 				}
@@ -218,14 +218,11 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			if (lastUsage) {
-				yield this.processUsageMetrics(lastUsage, modelInfo)
+				yield this.processUsageMetrics(lastUsage)
 			}
 		} else {
 			// o1 for instance doesnt support streaming, non-1 temp, or system prompt
-			const systemMessage: OpenAI.Chat.ChatCompletionUserMessageParam = {
-				role: "user",
-				content: systemPrompt,
-			}
+			// Note: System prompt is already included in openAiMessages
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
 				model: modelId,
@@ -244,7 +241,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				type: "text",
 				text: response.choices[0]?.message.content || "",
 			}
-			yield this.processUsageMetrics(response.usage, modelInfo)
+			if (response.usage) {
+				yield this.processUsageMetrics(response.usage)
+			}
 		}
 	}
 
@@ -268,7 +267,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				dummyMessage.content = content;
 			} else {
 				// Otherwise use the array of content blocks
-				dummyMessage.content = openAiContentBlocks as any;
+				// Cast to OpenAI.Chat.ChatCompletionContentPart[] which is the expected type
+				dummyMessage.content = openAiContentBlocks as OpenAI.Chat.ChatCompletionContentPart[];
 			}
 
 			const response = await this.client.chat.completions.create({
@@ -294,7 +294,10 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 
-	protected processUsageMetrics(usage: any, modelInfo?: ModelInfo): ApiStreamUsageChunk {
+	protected processUsageMetrics(usage: {
+		prompt_tokens?: number;
+		completion_tokens?: number;
+	}): ApiStreamUsageChunk {
 		return {
 			type: "usage",
 			inputTokens: usage?.prompt_tokens || 0,
@@ -307,7 +310,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	 * @param delta The OpenAI delta object
 	 * @returns True if the delta contains tool calls, false otherwise
 	 */
-	public hasToolCalls(delta: any): boolean {
+	public hasToolCalls(delta: OpenAI.Chat.ChatCompletionChunk.Choice.Delta): boolean {
 		// Use extractToolCalls to maintain consistency and follow DRY principle
 		return this.extractToolCalls(delta).length > 0;
 	}
@@ -317,10 +320,147 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	 * @param delta The OpenAI delta object
 	 * @returns An array of tool calls
 	 */
-	public extractToolCalls(delta: any): any[] {
-		// Extracts tool calls from a delta chunk.
-		// Ensures it returns an array, even if tool_calls is null or undefined.
-		return delta?.tool_calls ?? [];
+	public extractToolCalls(delta: OpenAI.Chat.ChatCompletionChunk.Choice.Delta | Record<string, unknown>): Array<{
+		id: string;
+		type: string;
+		function: {
+			name: string;
+			arguments: string;
+		};
+	}> {
+		// First, check for standard OpenAI function calls
+		const standardToolCalls = delta?.tool_calls as Array<{
+			id: string;
+			type: string;
+			function: {
+				name: string;
+				arguments: string;
+			};
+		}> ?? [];
+		
+		if (standardToolCalls.length > 0) {
+			return standardToolCalls;
+		}
+		
+		// If no standard tool calls found, check for content that might contain XML or JSON tool calls
+		const content = delta?.content as string;
+		if (!content || typeof content !== 'string') {
+			return [];
+		}
+		
+		const toolCalls: Array<{
+			id: string;
+			type: string;
+			function: {
+				name: string;
+				arguments: string;
+			};
+		}> = [];
+		
+		// Check for XML tool use pattern
+		const xmlToolUseRegex = /<(\w+)>[\s\S]*?<\/\1>/g;
+		let match;
+		
+		while ((match = xmlToolUseRegex.exec(content)) !== null) {
+			const tagName = match[1];
+			// Skip known non-tool tags
+			if (tagName !== 'think' && tagName !== 'tool_result' && tagName !== 'tool_use') {
+				const toolUseXml = match[0];
+				
+				try {
+					// Extract parameters
+					const params: Record<string, unknown> = {};
+					
+					// First, remove the outer tool tag to simplify parsing
+					let outerContent = toolUseXml;
+					outerContent = outerContent.replace(new RegExp(`<${tagName}>\\s*`), '');
+					outerContent = outerContent.replace(new RegExp(`\\s*</${tagName}>`), '');
+					
+					// Now parse each parameter
+					const paramRegex = /<(\w+)>([\s\S]*?)<\/\1>/g;
+					let paramMatch;
+					
+					while ((paramMatch = paramRegex.exec(outerContent)) !== null) {
+						const paramName = paramMatch[1];
+						const paramValue = paramMatch[2].trim();
+						
+						// Skip if the param name is the same as the tool name (outer tag)
+						if (paramName !== tagName) {
+							// Try to parse as JSON if possible
+							try {
+								params[paramName] = JSON.parse(paramValue);
+							} catch {
+								params[paramName] = paramValue;
+							}
+						}
+					}
+					
+					// Create tool call object in OpenAI format
+					toolCalls.push({
+						id: `${tagName}-${Date.now()}`,
+						type: 'function',
+						function: {
+							name: tagName,
+							arguments: JSON.stringify(params)
+						}
+					});
+				} catch (error) {
+					console.warn("Error processing XML tool use:", error);
+				}
+			}
+		}
+		
+		// Check for JSON tool use pattern if no XML tool use was found
+		if (toolCalls.length === 0 && content.includes('"type":"tool_use"')) {
+			try {
+				// Try to find and parse JSON object
+				const jsonStart = content.indexOf('{"type":"tool_use"');
+				if (jsonStart !== -1) {
+					// Find the end of the JSON object
+					let braceCount = 0;
+					let inString = false;
+					let jsonEnd = -1;
+					
+					for (let i = jsonStart; i < content.length; i++) {
+						const char = content[i];
+						
+						if (char === '"' && content[i-1] !== '\\') {
+							inString = !inString;
+						} else if (!inString) {
+							if (char === '{') braceCount++;
+							else if (char === '}') {
+								braceCount--;
+								if (braceCount === 0) {
+									jsonEnd = i + 1;
+									break;
+								}
+							}
+						}
+					}
+					
+					if (jsonEnd !== -1) {
+						const jsonStr = content.substring(jsonStart, jsonEnd);
+						const jsonObj = JSON.parse(jsonStr);
+						
+						if (jsonObj.type === 'tool_use' && jsonObj.name) {
+							// Create tool call object in OpenAI format
+							toolCalls.push({
+								id: jsonObj.id || `${jsonObj.name}-${Date.now()}`,
+								type: 'function',
+								function: {
+									name: jsonObj.name,
+									arguments: JSON.stringify(jsonObj.input || {})
+								}
+							});
+						}
+					}
+				}
+			} catch (error) {
+				console.warn("Error processing JSON tool use:", error);
+			}
+		}
+		
+		return toolCalls;
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {
@@ -397,12 +537,15 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 						name: toolCall.function.name,
 						input: JSON.parse(toolCall.function.arguments || '{}')
 					});
+					
+					// Ensure the tool result content is a string
+					const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
 
 					// Yield tool result
 					yield {
 						type: 'tool_result',
 						id: toolCall.id,
-						content: toolResult
+						content: toolResultString
 					};
 				}
 			}
@@ -429,14 +572,14 @@ export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
 			return []
 		}
 
-		const config: Record<string, any> = {}
+		const config: Record<string, unknown> = {}
 
 		if (apiKey) {
 			config["headers"] = { Authorization: `Bearer ${apiKey}` }
 		}
 
 		const response = await axios.get(`${baseUrl}/models`, config)
-		const modelsArray = response.data?.data?.map((model: any) => model.id) || []
+		const modelsArray = response.data?.data?.map((model: { id: string }) => model.id) || []
 		return [...new Set<string>(modelsArray)]
 	} catch (error) {
 		console.error("Failed to fetch OpenAI models:", error)

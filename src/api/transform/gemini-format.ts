@@ -11,13 +11,14 @@ function convertAnthropicContentToGemini(content: Anthropic.Messages.MessagePara
 			case "text":
 				return { text: block.text } as TextPart
 			case "image":
+				// Type guard to ensure source is Base64ImageSource
 				if (block.source.type !== "base64") {
-					throw new Error("Unsupported image source type")
+					throw new Error("Unsupported image source type, expected base64")
 				}
 				return {
 					inlineData: {
-						data: block.source.data,
-						mimeType: block.source.media_type,
+						data: block.source.data, // Now safe to access
+						mimeType: block.source.media_type, // Now safe to access
 					},
 				} as InlineDataPart
 			case "tool_use":
@@ -45,7 +46,9 @@ function convertAnthropicContentToGemini(content: Anthropic.Messages.MessagePara
 				} else {
 					// The only case when tool_result could be array is when the tool failed and we're providing ie user feedback potentially with images
 					const textParts = block.content.filter((part) => part.type === "text")
-					const imageParts = block.content.filter((part) => part.type === "image")
+					const imageParts = block.content.filter(
+						(part): part is Anthropic.Messages.ImageBlockParam => part.type === "image",
+					)
 					const text = textParts.length > 0 ? textParts.map((part) => part.text).join("\n\n") : ""
 					const imageText = imageParts.length > 0 ? "\n\n(See next part for image)" : ""
 					return [
@@ -58,15 +61,18 @@ function convertAnthropicContentToGemini(content: Anthropic.Messages.MessagePara
 								},
 							},
 						} as FunctionResponsePart,
-						...imageParts.map(
-							(part) =>
-								({
-									inlineData: {
-										data: part.source.data,
-										mimeType: part.source.media_type,
-									},
-								}) as InlineDataPart,
-						),
+						...imageParts.map((part) => {
+							// Type guard for image part source
+							if (part.source.type !== "base64") {
+								throw new Error("Unsupported image source type in tool_result, expected base64")
+							}
+							return {
+								inlineData: {
+									data: part.source.data, // Now safe to access
+									mimeType: part.source.media_type, // Now safe to access
+								},
+							} as InlineDataPart
+						}),
 					]
 				}
 			default:

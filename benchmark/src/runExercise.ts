@@ -84,7 +84,7 @@ export async function run() {
 
 	try {
 		usage = await waitUntilCompleted({ api, taskId, timeout: 5 * 60 * 1_000 }) // 5m
-	} catch (e) {
+	} catch {
 		usage = api.getTokenUsage(taskId)
 	}
 

@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 import { SingleCompletionHandler } from "../"
 import { ApiHandlerOptions, geminiDefaultModelId, GeminiModelId, geminiModels, ModelInfo } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
-import { convertToGeminiHistory, convertToGeminiContentBlocks } from "../transform/neutral-gemini-format"
+import { convertToGeminiHistory } from "../transform/neutral-gemini-format"
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
@@ -97,8 +97,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	override async countTokens(content: NeutralMessageContent): Promise<number> {
 		try {
 			// For simple text content, use the base provider's implementation
-			if (typeof content === 'string' || 
-				(Array.isArray(content) && content.every(block => block.type === 'text'))) {
+			if (Array.isArray(content) && content.every(block => block.type === 'text')) {
 				return super.countTokens(content);
 			}
 			
@@ -111,7 +110,7 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 					if (block.type === 'text') {
 						// Use base implementation for text blocks
 						totalTokens += await super.countTokens([block]);
-					} else if (block.type === 'image') {
+					} else if (block.type === 'image_url' || block.type === 'image_base64') { // Changed from 'image' to 'image_url' || 'image_base64'
 						// Gemini charges approximately 258 tokens for a 512x512 image
 						// This is a rough estimate and may need adjustment
 						totalTokens += 258;

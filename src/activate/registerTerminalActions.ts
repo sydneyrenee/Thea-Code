@@ -19,14 +19,14 @@ export const registerTerminalActions = (context: vscode.ExtensionContext) => {
 		context,
 		TERMINAL_COMMAND_IDS.FIX,
 		"TERMINAL_FIX",
-		"What would you like ${AI_IDENTITY_NAME} to fix?",
+		`What would you like ${AI_IDENTITY_NAME} to fix?`,
 	)
 
 	registerTerminalActionPair(
 		context,
 		TERMINAL_COMMAND_IDS.EXPLAIN,
 		"TERMINAL_EXPLAIN",
-		"What would you like ${AI_IDENTITY_NAME} to explain?",
+		`What would you like ${AI_IDENTITY_NAME} to explain?`,
 	)
 }
 
@@ -37,26 +37,25 @@ const registerTerminalAction = (
 	inputPrompt?: string,
 ) => {
 	context.subscriptions.push(
-		vscode.commands.registerCommand(command, async (args: any) => {
+		vscode.commands.registerCommand(command, async (args: { selection?: string }) => {
 			let content = args.selection
 			if (!content || content === "") {
 				content = await Terminal.getTerminalContents(promptType === "TERMINAL_ADD_TO_CONTEXT" ? -1 : 1)
 			}
 
 			if (!content) {
-				vscode.window.showWarningMessage(t("common:warnings.no_terminal_content"))
-				return
+				void vscode.window.showWarningMessage(t("common:warnings.no_terminal_content"));
+				return;
 			}
 
-			const params: Record<string, any> = {
+			const params: Record<string, string> = {
 				terminalContent: content,
-			}
+			};
 
 			if (inputPrompt) {
-				params.userInput =
-					(await vscode.window.showInputBox({
-						prompt: inputPrompt,
-					})) ?? ""
+				params.userInput = (await vscode.window.showInputBox({
+					prompt: inputPrompt,
+				})) ?? "";
 			}
 
 			await TheaProvider.handleTerminalAction(command, promptType, params) // Renamed static method call

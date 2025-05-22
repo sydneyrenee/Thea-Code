@@ -12,7 +12,7 @@ export const waitFor = (
 	condition: (() => Promise<boolean>) | (() => boolean),
 	{ timeout = 60_000, interval = 250 }: WaitForOptions = {},
 ) => {
-	let timeoutId: NodeJS.Timeout | undefined = undefined
+	let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined
 
 	return Promise.race([
 		new Promise<void>((resolve) => {

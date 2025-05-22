@@ -7,8 +7,9 @@ import { ToolDefinition, ToolCallResult } from "../../types/McpProviderTypes";
 describe("McpToolRegistry", () => {
   // Reset the singleton instance before each test
   beforeEach(() => {
-    // Access private static instance property using type assertion
-    (McpToolRegistry as any).instance = undefined;
+    // Access private static instance property using a typed assertion
+    (McpToolRegistry as unknown as { instance?: McpToolRegistry }).instance =
+      undefined;
   });
 
   describe("Singleton Pattern", () => {
@@ -186,7 +187,7 @@ describe("McpToolRegistry", () => {
 
 // Helper function to create a mock tool definition
 function createMockTool(name: string, description: string = "Test tool"): ToolDefinition {
-  const mockHandler = jest.fn((_args: Record<string, unknown>) => {
+  const mockHandler = jest.fn(() => {
     return Promise.resolve({
       content: [{ type: "text", text: "Success" }]
     } as ToolCallResult);
@@ -207,7 +208,7 @@ function createMockTool(name: string, description: string = "Test tool"): ToolDe
 
 // Helper function to create a mock tool that throws an error
 function createMockToolWithError(name: string, errorMessage: string): ToolDefinition {
-  const mockHandler = jest.fn((_args: Record<string, unknown>) => {
+  const mockHandler = jest.fn(() => {
     return Promise.reject(new Error(errorMessage));
   });
   

@@ -130,19 +130,19 @@ Làm cho Thea Code hoạt động theo cách của bạn với:
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **Cài đặt các phụ thuộc**:
+1. **Cài đặt các phụ thuộc**:
 
 ```sh
 npm run install:all
 ```
 
-3. **Khởi động webview (ứng dụng Vite/React với HMR)**:
+1. **Khởi động webview (ứng dụng Vite/React với HMR)**:
 
 ```sh
 npm run dev
 ```
 
-4. **Gỡ lỗi**:
+1. **Gỡ lỗi**:
    Nhấn `F5` (hoặc **Run** → **Start Debugging**) trong VSCode để mở phiên mới với Thea Code được tải.
 
 Các thay đổi đối với webview sẽ xuất hiện ngay lập tức. Các thay đổi đối với phần mở rộng cốt lõi sẽ yêu cầu khởi động lại máy chủ phần mở rộng.

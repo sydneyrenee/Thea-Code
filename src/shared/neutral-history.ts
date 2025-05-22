@@ -1,6 +1,6 @@
 // Represents a single block of content within a message
 interface NeutralContentBlock {
-    type: 'text' | 'image' | 'tool_use' | 'tool_result';
+    type: 'text' | 'image' | 'image_url' | 'image_base64' | 'tool_use' | 'tool_result';
     // Add a unique ID for tool_use blocks to link them to tool_result blocks
     id?: string; // Optional ID for tool_use blocks
 }
@@ -13,14 +13,15 @@ interface NeutralTextContentBlock extends NeutralContentBlock {
 
 // Represents a block of image content
 interface NeutralImageContentBlock extends NeutralContentBlock {
-    type: 'image';
-    // Store image data in a format accessible by different providers (e.g., base64)
-    // Include media type for proper handling
-    source: {
-        type: 'base64'; // Or other source types if needed
-        media_type: string; // e.g., 'image/png', 'image/jpeg'
-        data: string; // Base64 encoded image data
-    };
+  type: "image" | "image_url" | "image_base64";
+  source: {
+	type: "base64";
+	media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+	data: string;
+  } | {
+	type: "image_url";
+	url: string;
+  };
 }
 
 // Represents an AI's request to use a tool
@@ -29,7 +30,7 @@ interface NeutralToolUseContentBlock extends NeutralContentBlock {
     id: string; // Unique ID for this tool call instance
     name: string; // The name of the tool requested
     // Store parameters as a structured object, not just a JSON string
-    input: Record<string, any>; // The parameters for the tool call
+    input: Record<string, unknown>; // The parameters for the tool call
 }
 
 // Represents the result of a tool execution
@@ -43,7 +44,7 @@ interface NeutralToolResultContentBlock extends NeutralContentBlock {
     // Optionally include error details if status is 'error';
     error?: {
         message: string;
-        details?: any;
+        details?: unknown;
     };
 }
 
@@ -63,7 +64,7 @@ interface NeutralMessage {
     // Optional timestamp for history tracking
     ts?: number;
     // Optional metadata (e.g., for UI display, not sent to AI)
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 // The complete conversation history

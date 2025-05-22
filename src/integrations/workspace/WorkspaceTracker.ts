@@ -4,7 +4,7 @@ import { listFiles } from "../../services/glob/list-files"
 import { TheaProvider } from "../../core/webview/TheaProvider" // Renamed import
 import { toRelativePath } from "../../utils/path"
 import { getWorkspacePath } from "../../utils/path"
-import { logger } from "../../utils/logging"
+// Remove unused logger import
 
 const MAX_INITIAL_FILES = 1_000
 
@@ -13,9 +13,9 @@ class WorkspaceTracker {
 	private providerRef: WeakRef<TheaProvider> // Renamed type
 	private disposables: vscode.Disposable[] = []
 	private filePaths: Set<string> = new Set()
-	private updateTimer: NodeJS.Timeout | null = null
+	private updateTimer: ReturnType<typeof setTimeout> | null = null
 	private prevWorkSpacePath: string | undefined
-	private resetTimer: NodeJS.Timeout | null = null
+	private resetTimer: ReturnType<typeof setTimeout> | null = null
 
 	get cwd() {
 		return getWorkspacePath()
@@ -32,7 +32,7 @@ class WorkspaceTracker {
 			return
 		}
 		const tempCwd = this.cwd
-		const [files, _] = await listFiles(tempCwd, true, MAX_INITIAL_FILES)
+		const [files] = await listFiles(tempCwd, true, MAX_INITIAL_FILES)
 		if (this.prevWorkSpacePath !== tempCwd) {
 			return
 		}
@@ -106,7 +106,7 @@ class WorkspaceTracker {
 				})
 				this.filePaths.clear()
 				this.prevWorkSpacePath = this.cwd
-				this.initializeFilePaths()
+				await this.initializeFilePaths()
 			}
 		}, 300) // Debounce for 300ms
 	}

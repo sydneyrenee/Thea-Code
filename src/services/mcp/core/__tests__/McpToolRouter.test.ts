@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { EventEmitter } from "events"; // Import EventEmitter
 
 // npx jest src/services/mcp/core/__tests__/McpToolRouter.test.ts

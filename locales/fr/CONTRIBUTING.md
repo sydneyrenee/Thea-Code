@@ -97,19 +97,19 @@ Nous accueillons particulièrement les contributions qui font progresser nos obj
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **Installez les dépendances** :
+1. **Installez les dépendances** :
 
 ```sh
 npm run install:all
 ```
 
-3. **Démarrez la vue web (application Vite/React avec HMR)** :
+1. **Démarrez la vue web (application Vite/React avec HMR)** :
 
 ```sh
 npm run dev
 ```
 
-4. **Débogage** :
+1. **Débogage** :
    Appuyez sur `F5` (ou **Exécuter** → **Démarrer le débogage**) dans VSCode pour ouvrir une nouvelle session avec Thea Code chargé.
 
 Les modifications apportées à la vue web apparaîtront immédiatement. Les modifications apportées à l'extension principale nécessiteront un redémarrage de l'hôte d'extension.

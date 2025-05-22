@@ -1,3 +1,5 @@
+import * as say from 'say';
+
 interface Say {
 	speak: (text: string, voice?: string, speed?: number, callback?: (err?: string) => void) => void
 	stop: () => void
@@ -32,7 +34,9 @@ export const playTts = async (message: string, options: PlayTtsOptions = {}) => 
 	try {
 		queue.push({ message, options })
 		await processQueue()
-	} catch (error) {}
+	} catch {
+		// Silently catch errors in TTS to prevent them from affecting the application flow
+	}
 }
 
 export const stopTts = () => {
@@ -56,7 +60,6 @@ const processQueue = async (): Promise<void> => {
 		const { message: nextUtterance, options } = item
 
 		await new Promise<void>((resolve, reject) => {
-			const say: Say = require("say")
 			sayInstance = say
 			options.onStart?.()
 
@@ -74,7 +77,7 @@ const processQueue = async (): Promise<void> => {
 		})
 
 		await processQueue()
-	} catch (error: any) {
+	} catch {
 		sayInstance = undefined
 		await processQueue()
 	}

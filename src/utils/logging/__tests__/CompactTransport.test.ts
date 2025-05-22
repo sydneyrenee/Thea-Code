@@ -1,6 +1,7 @@
 // __tests__/CompactTransport.test.ts
 import { describe, expect, test, beforeEach, afterEach } from "@jest/globals"
 import { CompactTransport } from "../CompactTransport"
+import { CompactLogEntry } from "../types"
 import fs from "fs"
 import path from "path"
 
@@ -8,7 +9,7 @@ describe("CompactTransport", () => {
 	const testDir = "./test-logs"
 	const testLogPath = path.join(testDir, "test.log")
 	let transport: CompactTransport
-	const originalWrite = process.stdout.write
+	const originalWrite = process.stdout.write.bind(process.stdout)
 
 	const cleanupTestLogs = () => {
 		const rmDirRecursive = (dirPath: string) => {
@@ -111,7 +112,7 @@ describe("CompactTransport", () => {
 
 			const fileContent = fs.readFileSync(testLogPath, "utf-8")
 			const lines = fileContent.trim().split("\n")
-			const lastLine = JSON.parse(lines[lines.length - 1])
+			const lastLine = JSON.parse(lines[lines.length - 1]) as CompactLogEntry
 
 			expect(lastLine).toMatchObject({
 				l: "info",
@@ -212,7 +213,7 @@ describe("CompactTransport", () => {
 				m: "second",
 			})
 
-			const entries = output.map((str) => JSON.parse(str))
+			const entries = output.map((str) => JSON.parse(str) as CompactLogEntry)
 			expect(entries[0].t).toBe(0) // First entry should have 0 delta from transport creation
 			expect(entries[1].t).toBe(100) // Delta from previous entry
 		})

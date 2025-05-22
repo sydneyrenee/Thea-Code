@@ -12,7 +12,7 @@ import { GlobalFileNames } from "../../shared/globalFileNames"
 
 import { checkoutDiffPayloadSchema, checkoutRestorePayloadSchema, WebviewMessage } from "../../shared/WebviewMessage"
 import { checkExistKey } from "../../shared/checkExistApiConfig"
-import { EXPERIMENT_IDS, experiments as Experiments, experimentDefault, ExperimentId } from "../../shared/experiments"
+import { EXPERIMENT_IDS, experimentDefault } from "../../shared/experiments"
 import { Terminal } from "../../integrations/terminal/Terminal"
 import { openFile, openImage } from "../../integrations/misc/open-file"
 import { selectImages } from "../../integrations/misc/process-images"
@@ -25,7 +25,7 @@ import { playTts, setTtsEnabled, setTtsSpeed, stopTts } from "../../utils/tts"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { searchCommits } from "../../utils/git"
 import { exportSettings, importSettings } from "../config/importExport"
-import { getOpenRouterModels } from "../../api/providers/openrouter"
+import { OpenRouterHandler } from "../../api/providers/openrouter"
 import { getGlamaModels } from "../../api/providers/glama"
 import { getUnboundModels } from "../../api/providers/unbound"
 import { getRequestyModels } from "../../api/providers/requesty"
@@ -33,39 +33,38 @@ import { getOpenAiModels } from "../../api/providers/openai"
 import { getOllamaModels } from "../../api/providers/ollama"
 import { getVsCodeLmModels } from "../../api/providers/vscode-lm"
 import { getLmStudioModels } from "../../api/providers/lmstudio"
+import { getOpenRouterModels } from "../../api/providers/openrouter"
 import { openMention } from "../mentions"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { TelemetrySetting } from "../../shared/TelemetrySetting"
 import { getWorkspacePath } from "../../utils/path"
-import { Mode, PromptComponent, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
+import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared/modes"
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
 import {
 	EXTENSION_CONFIG_DIR,
-	GLOBAL_FILENAMES as BRANDED_FILENAMES,
 	configSection,
 	EXTENSION_NAME,
 } from "../../../dist/thea-config" // Import branded constants
-import { SETTING_KEYS } from "../../../dist/thea-config" // Import branded constant
 
 // Export for testing
 export const webviewMessageHandler = async (provider: TheaProvider, message: WebviewMessage) => {
 	// Renamed type
 	switch (message.type) {
-		case "webviewDidLaunch":
+		case "webviewDidLaunch": {
 			// Load custom modes first
 			const customModes = await provider.customModesManager.getCustomModes()
 			await provider.updateGlobalState("customModes", customModes)
 
-			provider.postStateToWebview()
+			await provider.postStateToWebview()
 			provider.workspaceTracker?.initializeFilePaths() // don't await
 
 			getTheme().then((theme) => provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }))
 
 			// If MCP Hub is already initialized, update the webview with current server list
 			if (provider.mcpHub) {
-				provider.postMessageToWebview({
+				await provider.postMessageToWebview({
 					type: "mcpServers",
 					mcpServers: provider.mcpHub.getAllServers(),
 				})
@@ -89,29 +88,29 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			// if we hadn't retrieved the latest at this point
 			// (see normalizeApiConfiguration > openrouter).
 			const { apiConfiguration: currentApiConfig } = await provider.getState()
-			getOpenRouterModels(currentApiConfig).then(async (openRouterModels) => {
-				if (Object.keys(openRouterModels).length > 0) {
-					await fs.writeFile(
-						path.join(cacheDir, GlobalFileNames.openRouterModels),
-						JSON.stringify(openRouterModels),
+			const openRouterHandler = new OpenRouterHandler(currentApiConfig)
+			const { info: openRouterModelInfo } = openRouterHandler.getModel()
+			if (Object.keys(openRouterModelInfo).length > 0) {
+				await fs.writeFile(
+					path.join(cacheDir, GlobalFileNames.openRouterModels),
+					JSON.stringify(openRouterModelInfo),
+				)
+				await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels: openRouterModelInfo })
+
+				// Update model info in state (this needs to be
+				// done here since we don't want to update state
+				// while settings is open, and we may refresh
+				// models there).
+				const { apiConfiguration } = await provider.getState()
+
+				if (apiConfiguration.openRouterModelId) {
+					await provider.updateGlobalState(
+						"openRouterModelInfo",
+						openRouterModelInfo[apiConfiguration.openRouterModelId],
 					)
-					await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels })
-
-					// Update model info in state (this needs to be
-					// done here since we don't want to update state
-					// while settings is open, and we may refresh
-					// models there).
-					const { apiConfiguration } = await provider.getState()
-
-					if (apiConfiguration.openRouterModelId) {
-						await provider.updateGlobalState(
-							"openRouterModelInfo",
-							openRouterModels[apiConfiguration.openRouterModelId],
-						)
-						await provider.postStateToWebview()
-					}
+					await provider.postStateToWebview()
 				}
-			})
+			}
 
 			provider.readModelsFromCache(GlobalFileNames.glamaModels).then((glamaModels) => {
 				if (glamaModels) {
@@ -248,7 +247,9 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 
 			provider.isViewLaunched = true
 			break
-		case "newTask":
+		}
+		
+		case "newTask": {
 			// Code that should run in response to the hello message command
 			//vscode.window.showInformationMessage(message.text!)
 
@@ -259,44 +260,54 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			// initializing new instance of Cline will make sure that any agentically running promises in old instance don't affect our new task. this essentially creates a fresh slate for the new task
 			await provider.initWithTask(message.text, message.images)
 			break
-		case "apiConfiguration":
+		}
+		case "apiConfiguration": {
 			if (message.apiConfiguration) {
 				await provider.updateApiConfiguration(message.apiConfiguration)
 				// Make sure to post state to webview after successful API configuration update
 				await provider.postStateToWebview()
 			}
 			break
-		case "customInstructions":
+		}
+		case "customInstructions": {
 			await provider.updateCustomInstructions(message.text)
 			break
-		case "alwaysAllowReadOnly":
+		}
+		case "alwaysAllowReadOnly": {
 			await provider.updateGlobalState("alwaysAllowReadOnly", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
-		case "alwaysAllowReadOnlyOutsideWorkspace":
+		}
+		case "alwaysAllowReadOnlyOutsideWorkspace": {
 			await provider.updateGlobalState("alwaysAllowReadOnlyOutsideWorkspace", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
-		case "alwaysAllowWrite":
+		}
+		case "alwaysAllowWrite": {
 			await provider.updateGlobalState("alwaysAllowWrite", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
-		case "alwaysAllowWriteOutsideWorkspace":
+		}
+		case "alwaysAllowWriteOutsideWorkspace": {
 			await provider.updateGlobalState("alwaysAllowWriteOutsideWorkspace", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
-		case "alwaysAllowExecute":
+		}
+		case "alwaysAllowExecute": {
 			await provider.updateGlobalState("alwaysAllowExecute", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
-		case "alwaysAllowBrowser":
+		}
+		case "alwaysAllowBrowser": {
 			await provider.updateGlobalState("alwaysAllowBrowser", message.bool ?? undefined)
 			await provider.postStateToWebview()
 			break
-		case "alwaysAllowMcp":
+		}
+		case "alwaysAllowMcp": {
 			await provider.updateGlobalState("alwaysAllowMcp", message.bool)
 			await provider.postStateToWebview()
 			break
+		}
 		case "alwaysAllowModeSwitch":
 			await provider.updateGlobalState("alwaysAllowModeSwitch", message.bool)
 			await provider.postStateToWebview()
@@ -319,21 +330,23 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			await provider.updateGlobalState("lastShownAnnouncementId", provider.latestAnnouncementId)
 			await provider.postStateToWebview()
 			break
-		case "selectImages":
+		case "selectImages": {
 			const images = await selectImages()
 			await provider.postMessageToWebview({ type: "selectedImages", images })
 			break
-		case "exportCurrentTask":
+		}
+		case "exportCurrentTask": {
 			const currentTaskId = provider.getCurrent()?.taskId
 			if (currentTaskId) {
-				provider.exportTaskWithId(currentTaskId)
+				await provider.exportTaskWithId(currentTaskId)
 			}
 			break
+		}
 		case "showTaskWithId":
-			provider.showTaskWithId(message.text!)
+			await provider.showTaskWithId(message.text!)
 			break
 		case "deleteTaskWithId":
-			provider.deleteTaskWithId(message.text!)
+			await provider.deleteTaskWithId(message.text!)
 			break
 		case "deleteMultipleTasksWithIds": {
 			const ids = message.ids
@@ -380,9 +393,9 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			break
 		}
 		case "exportTaskWithId":
-			provider.exportTaskWithId(message.text!)
+			await provider.exportTaskWithId(message.text!)
 			break
-		case "importSettings":
+		case "importSettings": {
 			const { success } = await importSettings({
 				providerSettingsManager: provider.providerSettingsManager,
 				contextProxy: provider.contextProxy,
@@ -395,6 +408,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			}
 
 			break
+		}
 		case "exportSettings":
 			await exportSettings({
 				providerSettingsManager: provider.providerSettingsManager,
@@ -420,7 +434,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 
 			break
 		}
-		case "refreshGlamaModels":
+		case "refreshGlamaModels": {
 			const glamaModels = await getGlamaModels()
 
 			if (Object.keys(glamaModels).length > 0) {
@@ -430,7 +444,8 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			}
 
 			break
-		case "refreshUnboundModels":
+		}
+		case "refreshUnboundModels": {
 			const unboundModels = await getUnboundModels()
 
 			if (Object.keys(unboundModels).length > 0) {
@@ -440,7 +455,8 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			}
 
 			break
-		case "refreshRequestyModels":
+		}
+		case "refreshRequestyModels": {
 			const requestyModels = await getRequestyModels()
 
 			if (Object.keys(requestyModels).length > 0) {
@@ -450,41 +466,47 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			}
 
 			break
-		case "refreshOpenAiModels":
+		}
+		case "refreshOpenAiModels": {
 			if (message?.values?.baseUrl && message?.values?.apiKey) {
 				const openAiModels = await getOpenAiModels(message?.values?.baseUrl, message?.values?.apiKey)
-				provider.postMessageToWebview({ type: "openAiModels", openAiModels })
+				await provider.postMessageToWebview({ type: "openAiModels", openAiModels })
 			}
 
 			break
-		case "requestOllamaModels":
+		}
+		case "requestOllamaModels": {
 			const ollamaModels = await getOllamaModels(message.text)
 			// TODO: Cache like we do for OpenRouter, etc?
-			provider.postMessageToWebview({ type: "ollamaModels", ollamaModels })
+			await provider.postMessageToWebview({ type: "ollamaModels", ollamaModels })
 			break
-		case "requestLmStudioModels":
+		}
+		case "requestLmStudioModels": {
 			const lmStudioModels = await getLmStudioModels(message.text)
 			// TODO: Cache like we do for OpenRouter, etc?
-			provider.postMessageToWebview({ type: "lmStudioModels", lmStudioModels })
+			await provider.postMessageToWebview({ type: "lmStudioModels", lmStudioModels })
 			break
-		case "requestVsCodeLmModels":
+		}
+		case "requestVsCodeLmModels": {
 			const vsCodeLmModels = await getVsCodeLmModels()
 			// TODO: Cache like we do for OpenRouter, etc?
-			provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
+			await provider.postMessageToWebview({ type: "vsCodeLmModels", vsCodeLmModels })
 			break
-		case "openImage":
-			openImage(message.text!)
+		}
+		case "openImage": {
+			await openImage(message.text!)
 			break
-		case "openFile":
-			openFile(message.text!, message.values as { create?: boolean; content?: string })
+		}
+		case "openFile": {
+			await openFile(message.text!, message.values as { create?: boolean; content?: string })
 			break
-		case "openMention":
-			{
-				const { osInfo } = (await provider.getState()) || {}
-				openMention(message.text, osInfo)
-			}
+		}
+		case "openMention": {
+			const { osInfo } = (await provider.getState()) || {}
+			await openMention(message.text, osInfo)
 			break
-		case "checkpointDiff":
+		}
+		case "checkpointDiff": {
 			const result = checkoutDiffPayloadSchema.safeParse(message.payload)
 
 			if (result.success) {
@@ -492,6 +514,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			}
 
 			break
+		}
 		case "checkpointRestore": {
 			const result = checkoutRestorePayloadSchema.safeParse(message.payload)
 
@@ -500,33 +523,35 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 
 				try {
 					await pWaitFor(() => provider.getCurrent()?.isInitialized === true, { timeout: 3_000 })
-				} catch (error) {
+				} catch {
 					vscode.window.showErrorMessage(t("common:errors.checkpoint_timeout"))
 				}
 
 				try {
 					await provider.getCurrent()?.checkpointRestore(result.data)
-				} catch (error) {
+				} catch {
 					vscode.window.showErrorMessage(t("common:errors.checkpoint_failed"))
 				}
 			}
 
 			break
 		}
-		case "cancelTask":
+		case "cancelTask": {
 			await provider.cancelTask()
 			break
-		case "allowedCommands":
+		}
+		case "allowedCommands": {
 			await provider.context.globalState.update("allowedCommands", message.commands)
 			// Also update workspace settings
 			await vscode.workspace
 				.getConfiguration(configSection())
 				.update("allowedCommands", message.commands, vscode.ConfigurationTarget.Global)
 			break
+		}
 		case "openMcpSettings": {
 			const mcpSettingsFilePath = await provider.mcpHub?.getMcpSettingsFilePath()
 			if (mcpSettingsFilePath) {
-				openFile(mcpSettingsFilePath)
+				await openFile(mcpSettingsFilePath)
 			}
 			break
 		}
@@ -555,7 +580,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 		case "openCustomModesSettings": {
 			const customModesFilePath = await provider.customModesManager.getCustomModesFilePath()
 			if (customModesFilePath) {
-				openFile(customModesFilePath)
+				await openFile(customModesFilePath)
 			}
 			break
 		}
@@ -616,11 +641,12 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			}
 			break
 		}
-		case "mcpEnabled":
+		case "mcpEnabled": {
 			const mcpEnabled = message.bool ?? true
 			await provider.updateGlobalState("mcpEnabled", mcpEnabled)
 			await provider.postStateToWebview()
 			break
+		}
 		case "enableMcpServerCreation":
 			await provider.updateGlobalState("enableMcpServerCreation", message.bool ?? true)
 			await provider.postStateToWebview()
@@ -631,33 +657,37 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				playSound(soundPath)
 			}
 			break
-		case "soundEnabled":
+		case "soundEnabled": {
 			const soundEnabled = message.bool ?? true
 			await provider.updateGlobalState("soundEnabled", soundEnabled)
 			setSoundEnabled(soundEnabled) // Add this line to update the sound utility
 			await provider.postStateToWebview()
 			break
-		case "soundVolume":
+		}
+		case "soundVolume": {
 			const soundVolume = message.value ?? 0.5
 			await provider.updateGlobalState("soundVolume", soundVolume)
 			setSoundVolume(soundVolume)
 			await provider.postStateToWebview()
 			break
-		case "ttsEnabled":
+		}
+		case "ttsEnabled": {
 			const ttsEnabled = message.bool ?? true
 			await provider.updateGlobalState("ttsEnabled", ttsEnabled)
 			setTtsEnabled(ttsEnabled) // Add this line to update the tts utility
 			await provider.postStateToWebview()
 			break
-		case "ttsSpeed":
+		}
+		case "ttsSpeed": {
 			const ttsSpeed = message.value ?? 1.0
 			await provider.updateGlobalState("ttsSpeed", ttsSpeed)
 			setTtsSpeed(ttsSpeed)
 			await provider.postStateToWebview()
 			break
+		}
 		case "playTts":
 			if (message.text) {
-				playTts(message.text, {
+				await playTts(message.text, {
 					onStart: () => provider.postMessageToWebview({ type: "ttsStart", text: message.text }),
 					onStop: () => provider.postMessageToWebview({ type: "ttsStop", text: message.text }),
 				})
@@ -666,27 +696,31 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 		case "stopTts":
 			stopTts()
 			break
-		case "diffEnabled":
+		case "diffEnabled": {
 			const diffEnabled = message.bool ?? true
 			await provider.updateGlobalState("diffEnabled", diffEnabled)
 			await provider.postStateToWebview()
 			break
-		case "enableCheckpoints":
+		}
+		case "enableCheckpoints": {
 			const enableCheckpoints = message.bool ?? true
 			await provider.updateGlobalState("enableCheckpoints", enableCheckpoints)
 			await provider.postStateToWebview()
 			break
-		case "checkpointStorage":
+		}
+		case "checkpointStorage": {
 			console.log(`[ClineProvider] checkpointStorage: ${message.text}`)
 			const checkpointStorage = message.text ?? "task"
 			await provider.updateGlobalState("checkpointStorage", checkpointStorage as CheckpointStorage)
 			await provider.postStateToWebview()
 			break
-		case "browserViewportSize":
+		}
+		case "browserViewportSize": {
 			const browserViewportSize = message.text ?? "900x600"
 			await provider.updateGlobalState("browserViewportSize", browserViewportSize)
 			await provider.postStateToWebview()
 			break
+		}
 		case "remoteBrowserHost":
 			await provider.updateGlobalState("remoteBrowserHost", message.text)
 			await provider.postStateToWebview()
@@ -919,16 +953,18 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			await provider.updateGlobalState("screenshotQuality", message.value)
 			await provider.postStateToWebview()
 			break
-		case "maxOpenTabsContext":
+		case "maxOpenTabsContext": {
 			const tabCount = Math.min(Math.max(0, message.value ?? 20), 500)
 			await provider.updateGlobalState("maxOpenTabsContext", tabCount)
 			await provider.postStateToWebview()
 			break
-		case "maxWorkspaceFiles":
+		}
+		case "maxWorkspaceFiles": {
 			const fileCount = Math.min(Math.max(0, message.value ?? 200), 500)
 			await provider.updateGlobalState("maxWorkspaceFiles", fileCount)
 			await provider.postStateToWebview()
 			break
+		}
 		case "browserToolEnabled":
 			await provider.updateGlobalState("browserToolEnabled", message.bool ?? true)
 			await provider.postStateToWebview()
@@ -1252,7 +1288,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			try {
 				const listApiConfig = await provider.providerSettingsManager.listConfig()
 				await provider.updateGlobalState("listApiConfigMeta", listApiConfig)
-				provider.postMessageToWebview({ type: "listApiConfig", listApiConfig })
+				await provider.postMessageToWebview({ type: "listApiConfig", listApiConfig })
 			} catch (error) {
 				provider.outputChannel.appendLine(
 					`Error get list api configuration: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,

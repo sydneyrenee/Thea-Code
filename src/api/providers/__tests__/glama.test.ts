@@ -1,10 +1,11 @@
 // npx jest src/api/providers/__tests__/glama.test.ts
 
-import { Anthropic } from "@anthropic-ai/sdk"
+// import { Anthropic } from "@anthropic-ai/sdk" // Unused import
 import axios from "axios"
 
 import { GlamaHandler } from "../glama"
 import { ApiHandlerOptions } from "../../../shared/api"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"; // Fixed import path
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -108,7 +109,7 @@ describe("GlamaHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [ // Explicitly type as NeutralConversationHistory
 			{
 				role: "user",
 				content: "Hello!",

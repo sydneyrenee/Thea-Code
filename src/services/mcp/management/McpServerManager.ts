@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import { McpHub } from "./McpHub"
 import { TheaProvider } from "../../../core/webview/TheaProvider" // Renamed import
+import { ExtensionMessage } from "../../../shared/ExtensionMessage"
 
 /**
  * Singleton manager for MCP server instances.
@@ -63,13 +64,18 @@ export class McpServerManager {
 	/**
 	 * Notify all registered providers of server state changes.
 	 */
-	static notifyProviders(message: any): void {
-		this.providers.forEach((provider) => {
-			provider.postMessageToWebview(message).catch((error) => {
-				console.error("Failed to notify provider:", error)
-			})
-		})
-	}
+       static notifyProviders(message: ExtensionMessage): void {
+               this.providers.forEach((provider) => {
+                       provider
+                               .postMessageToWebview(message)
+                               .catch((error: unknown) => {
+                                       console.error(
+                                               "Failed to notify provider:",
+                                               error,
+                                       )
+                               })
+               })
+       }
 
 	/**
 	 * Clean up the singleton instance and all its resources.

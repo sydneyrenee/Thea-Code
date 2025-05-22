@@ -6,14 +6,13 @@ import { StdioTransportConfig } from "../types/McpTransportTypes";
  * This will be replaced with the actual implementation when the MCP SDK is installed
  */
 class MockStdioServerTransport {
-  constructor() {}
   start(): Promise<void> {
     return Promise.resolve();
   }
   close(): Promise<void> {
     return Promise.resolve();
   }
-  get stderr(): any {
+  get stderr(): unknown {
     return undefined;
   }
   onerror?: (error: Error) => void;
@@ -23,18 +22,35 @@ class MockStdioServerTransport {
 /**
  * StdioTransport provides an implementation of the MCP transport using stdio.
  */
+interface StdioServerTransportLike {
+  start(): Promise<void>;
+  close(): Promise<void>;
+  readonly stderr?: unknown;
+  onerror?: (error: Error) => void;
+  onclose?: () => void;
+}
+
 export class StdioTransport implements IMcpTransport {
-  private transport: any;
-  private _stderr?: any;
+  private transport?: StdioServerTransportLike;
+  private _stderr?: unknown;
+  private readonly options: StdioTransportConfig;
 
   constructor(options: StdioTransportConfig) {
+    this.options = options;
+  }
+
+  private async initTransport(): Promise<void> {
+    if (this.transport) {
+      return;
+    }
     try {
-      const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
-      this.transport = new StdioServerTransport({
-        command: options.command,
-        args: options.args,
+      const mod = await import("@modelcontextprotocol/sdk/server/stdio.js");
+      const Transport = mod.StdioServerTransport as new (opts: StdioTransportConfig & { stderr: string }) => StdioServerTransportLike;
+      this.transport = new Transport({
+        command: this.options.command,
+        args: this.options.args,
         env: {
-          ...options.env,
+          ...this.options.env,
           ...(process.env.PATH ? { PATH: process.env.PATH } : {}),
         },
         stderr: "pipe",
@@ -46,14 +62,15 @@ export class StdioTransport implements IMcpTransport {
   }
 
   async start(): Promise<void> {
-    if (this.transport && typeof this.transport.start === "function") {
+    await this.initTransport();
+    if (this.transport) {
       await this.transport.start();
       this._stderr = this.transport.stderr;
     }
   }
 
   async close(): Promise<void> {
-    if (this.transport && typeof this.transport.close === "function") {
+    if (this.transport) {
       await this.transport.close();
     }
   }
@@ -62,7 +79,7 @@ export class StdioTransport implements IMcpTransport {
     return undefined;
   }
 
-  get stderr(): any {
+  get stderr(): unknown {
     return this._stderr;
   }
 

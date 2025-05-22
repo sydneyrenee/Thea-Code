@@ -11,16 +11,17 @@ import {
   openAiFunctionCallToNeutralToolUse,
   neutralToolUseToOpenAiFunctionCall,
   ToolUseMatcher,
-  ToolResultMatcher
+  ToolResultMatcher,
+  JsonMatcherResult, // Added JsonMatcherResult import
+  ToolUseJsonObject, // Added ToolUseJsonObject import
+  ToolResultJsonObject // Added ToolResultJsonObject import
 } from '../json-xml-bridge';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unused-vars */
 
 describe('json-xml-bridge', () => {
   describe('JsonMatcher', () => {
     it('should detect and extract JSON thinking blocks', () => {
-      const matcher = new JsonMatcher('thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new JsonMatcher('thinking');
       
       // Test with a simple JSON thinking block
       const jsonBlock = '{"type":"thinking","content":"This is a reasoning block"}';
@@ -28,32 +29,27 @@ describe('json-xml-bridge', () => {
       
       expect(results).toHaveLength(1);
       expect(results[0]).toEqual({
-        type: 'reasoning',
-        text: 'This is a reasoning block'
+        matched: true,
+        data: 'This is a reasoning block',
+        type: 'thinking'
       });
     });
     
     it('should handle text before and after JSON blocks', () => {
-      const matcher = new JsonMatcher('thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new JsonMatcher('thinking');
       
       // Test with text before and after JSON block
       const content = 'Text before {"type":"thinking","content":"Reasoning"} text after';
       const results = matcher.update(content);
       
       expect(results).toHaveLength(3);
-      expect(results[0]).toEqual({ type: 'text', text: 'Text before ' });
-      expect(results[1]).toEqual({ type: 'reasoning', text: 'Reasoning' });
-      expect(results[2]).toEqual({ type: 'text', text: ' text after' });
+      expect(results[0]).toEqual({ matched: false, data: 'Text before ' });
+      expect(results[1]).toEqual({ matched: true, data: 'Reasoning', type: 'thinking' });
+      expect(results[2]).toEqual({ matched: false, data: ' text after' });
     });
     
     it('should handle streaming JSON in multiple chunks', () => {
-      const matcher = new JsonMatcher('thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new JsonMatcher('thinking');
       
       // First chunk with partial JSON
       const chunk1 = 'Text before {"type":"thinking","content":"Reasoning';
@@ -61,7 +57,7 @@ describe('json-xml-bridge', () => {
       
       // Should only process the text before the JSON
       expect(results1).toHaveLength(1);
-      expect(results1[0]).toEqual({ type: 'text', text: 'Text before ' });
+      expect(results1[0]).toEqual({ matched: false, data: 'Text before ' });
       
       // Second chunk completing the JSON
       const chunk2 = '"} text after';
@@ -73,19 +69,16 @@ describe('json-xml-bridge', () => {
       expect(results2.length).toBeGreaterThan(0);
       
       // Find the reasoning item
-      const reasoningItem = results2.find(item => item.type === 'reasoning');
-      expect(reasoningItem).toEqual({ type: 'reasoning', text: 'Reasoning' });
+      const reasoningItem = results2.find(item => item.matched && item.type === 'thinking');
+      expect(reasoningItem).toEqual({ matched: true, data: 'Reasoning', type: 'thinking' });
       
       // Find the text after item
-      const textAfterItem = results2.find(item => item.type === 'text' && item.text === ' text after');
-      expect(textAfterItem).toEqual({ type: 'text', text: ' text after' });
+      const textAfterItem = results2.find(item => !item.matched && item.data === ' text after');
+      expect(textAfterItem).toEqual({ matched: false, data: ' text after' });
     });
     
     it('should handle nested JSON objects', () => {
-      const matcher = new JsonMatcher('thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new JsonMatcher('thinking');
       
       // Test with nested JSON
       const nestedJson = '{"type":"thinking","content":"Reasoning with nested object: { \\"nested\\": true }"}';
@@ -93,16 +86,14 @@ describe('json-xml-bridge', () => {
       
       expect(results).toHaveLength(1);
       expect(results[0]).toEqual({
-        type: 'reasoning',
-        text: 'Reasoning with nested object: { "nested": true }'
+        matched: true,
+        data: 'Reasoning with nested object: { "nested": true }',
+        type: 'thinking'
       });
     });
     
     it('should handle final method with remaining content', () => {
-      const matcher = new JsonMatcher('thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new JsonMatcher('thinking');
       
       // Update with partial content
       matcher.update('Text before {"type":"thinking","content":"Reasoning');
@@ -114,19 +105,16 @@ describe('json-xml-bridge', () => {
       expect(finalResults.length).toBeGreaterThan(0);
       
       // Find the reasoning item
-      const reasoningItem = finalResults.find(item => item.type === 'reasoning');
-      expect(reasoningItem).toEqual({ type: 'reasoning', text: 'Reasoning' });
+      const reasoningItem = finalResults.find(item => item.matched && item.type === 'thinking');
+      expect(reasoningItem).toEqual({ matched: true, data: 'Reasoning', type: 'thinking' });
       
       // Find the text after item
-      const textAfterItem = finalResults.find(item => item.type === 'text' && item.text.includes('text after'));
+      const textAfterItem = finalResults.find(item => !item.matched && typeof item.data === 'string' && item.data.includes('text after'));
       expect(textAfterItem).toBeDefined();
     });
     
     it('should handle non-matching JSON objects', () => {
-      const matcher = new JsonMatcher('thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new JsonMatcher('thinking');
       
       // Test with non-matching JSON
       const nonMatchingJson = '{"type":"other","content":"Not a thinking block"}';
@@ -134,8 +122,8 @@ describe('json-xml-bridge', () => {
       
       expect(results).toHaveLength(1);
       expect(results[0]).toEqual({
-        type: 'text',
-        text: '{"type":"other","content":"Not a thinking block"}'
+        matched: false,
+        data: '{"type":"other","content":"Not a thinking block"}'
       });
     });
   });
@@ -186,18 +174,15 @@ describe('json-xml-bridge', () => {
   
   describe('HybridMatcher', () => {
     it('should handle XML content', () => {
-      const matcher = new HybridMatcher('think', 'thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new HybridMatcher('think', 'thinking');
       
       const xmlContent = 'Text before <think>This is reasoning</think> text after';
       
       // Mock the XmlMatcher's update method to return the expected chunks
       const mockXmlUpdate = jest.fn().mockReturnValue([
-        { type: 'text', text: 'Text before ' },
-        { type: 'reasoning', text: 'This is reasoning' },
-        { type: 'text', text: ' text after' }
+        { matched: false, data: 'Text before ' },
+        { matched: true, data: 'This is reasoning', type: 'thinking' },
+        { matched: false, data: ' text after' }
       ]);
       
       // Replace the matcher's xmlMatcher.update method temporarily
@@ -207,31 +192,25 @@ describe('json-xml-bridge', () => {
       
       // Verify the results match what we expect from the mocked XmlMatcher
       expect(results).toHaveLength(3);
-      expect(results[0]).toEqual({ type: 'text', text: 'Text before ' });
-      expect(results[1]).toEqual({ type: 'reasoning', text: 'This is reasoning' });
-      expect(results[2]).toEqual({ type: 'text', text: ' text after' });
+      expect(results[0]).toEqual({ matched: false, data: 'Text before ' });
+      expect(results[1]).toEqual({ matched: true, data: 'This is reasoning', type: 'thinking' });
+      expect(results[2]).toEqual({ matched: false, data: ' text after' });
     });
     
     it('should handle JSON content', () => {
-      const matcher = new HybridMatcher('think', 'thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new HybridMatcher('think', 'thinking');
       
       const jsonContent = 'Text before {"type":"thinking","content":"This is reasoning"} text after';
       const results = matcher.update(jsonContent);
       
       expect(results).toHaveLength(3);
-      expect(results[0]).toEqual({ type: 'text', text: 'Text before ' });
-      expect(results[1]).toEqual({ type: 'reasoning', text: 'This is reasoning' });
-      expect(results[2]).toEqual({ type: 'text', text: ' text after' });
+      expect(results[0]).toEqual({ matched: false, data: 'Text before ' });
+      expect(results[1]).toEqual({ matched: true, data: 'This is reasoning', type: 'thinking' });
+      expect(results[2]).toEqual({ matched: false, data: ' text after' });
     });
     
     it('should handle format detection with multiple chunks', () => {
-      const matcher = new HybridMatcher('think', 'thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new HybridMatcher('think', 'thinking');
       
       // First chunk doesn't clearly indicate format
       const chunk1 = 'Text before ';
@@ -242,30 +221,24 @@ describe('json-xml-bridge', () => {
       const results = matcher.update(chunk2);
       
       expect(results).toHaveLength(2);
-      expect(results[0]).toEqual({ type: 'reasoning', text: 'This is reasoning' });
-      expect(results[1]).toEqual({ type: 'text', text: ' text after' });
+      expect(results[0]).toEqual({ matched: true, data: 'This is reasoning', type: 'thinking' });
+      expect(results[1]).toEqual({ matched: false, data: ' text after' });
     });
     
     it('should handle final method with remaining content', () => {
-      const matcher = new HybridMatcher('think', 'thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const matcher = new HybridMatcher('think', 'thinking');
       
       // For this test, we'll use a different approach
       // Create a new matcher with a custom transform function
-      const customMatcher = new HybridMatcher('think', 'thinking', (chunk) => ({
-        type: chunk.matched ? 'reasoning' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
+      const customMatcher = new HybridMatcher('think', 'thinking');
       
       // Mock the detectFormat method to always return 'json'
       customMatcher['formatDetector'].detectFormat = jest.fn().mockReturnValue('json');
       
       // Mock the jsonMatcher's final method
       const mockJsonFinal = jest.fn().mockReturnValue([
-        { type: 'reasoning', text: 'Reasoning' },
-        { type: 'text', text: ' text after' }
+        { matched: true, data: 'Reasoning', type: 'thinking' },
+        { matched: false, data: ' text after' }
       ]);
       
       // Replace the matcher's jsonMatcher.final method
@@ -279,17 +252,14 @@ describe('json-xml-bridge', () => {
       
       // Since we're using a mock that returns exactly 2 items, we can assert on that
       expect(finalResults).toHaveLength(2);
-      expect(finalResults[0]).toEqual({ type: 'reasoning', text: 'Reasoning' });
-      expect(finalResults[1]).toEqual({ type: 'text', text: ' text after' });
+      expect(finalResults[0]).toEqual({ matched: true, data: 'Reasoning', type: 'thinking' });
+      expect(finalResults[1]).toEqual({ matched: false, data: ' text after' });
     });
     
     describe('HybridMatcher with Tool Use and Tool Result', () => {
       it('should handle XML tool use with the matchToolUse option', () => {
         const matcher = new HybridMatcher('think', 'thinking',
-          (chunk) => ({
-            type: chunk.matched ? 'matched' : 'text',
-            text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-          }),
+          undefined, // Use default transform
           true, // matchToolUse
           false // matchToolResult
         );
@@ -308,10 +278,7 @@ describe('json-xml-bridge', () => {
       
       it('should handle JSON tool use with the matchToolUse option', () => {
         const matcher = new HybridMatcher('think', 'thinking',
-          (chunk) => ({
-            type: chunk.matched ? 'matched' : 'text',
-            text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-          }),
+          undefined, // Use default transform
           true, // matchToolUse
           false // matchToolResult
         );
@@ -332,10 +299,7 @@ describe('json-xml-bridge', () => {
       it('should handle both tool use and tool result with both options enabled', () => {
         // Create a matcher with both tool use and tool result matching enabled
         const matcher = new HybridMatcher('think', 'thinking',
-          (chunk) => ({
-            type: chunk.matched ? 'matched' : 'text',
-            text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-          }),
+          undefined, // Use default transform
           true, // matchToolUse
           true  // matchToolResult
         );
@@ -353,10 +317,7 @@ describe('json-xml-bridge', () => {
       
       it('should still handle regular thinking blocks when tool use matching is enabled', () => {
         const matcher = new HybridMatcher('think', 'thinking',
-          (chunk) => ({
-            type: chunk.matched ? 'reasoning' : 'text',
-            text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-          }),
+          undefined, // Use default transform
           true, // matchToolUse
           false // matchToolResult
         );
@@ -366,9 +327,9 @@ describe('json-xml-bridge', () => {
         const results = matcher.update(thinkingBlock);
         
         expect(results.length).toBeGreaterThan(0);
-        const reasoningItem = results.find(item => item.type === 'reasoning');
+        const reasoningItem = results.find(item => item.matched && (item as JsonMatcherResult).type === 'thinking');
         expect(reasoningItem).toBeDefined();
-        expect(reasoningItem?.text).toBe('This is reasoning');
+        expect(reasoningItem?.data).toBe('This is reasoning');
       });
     });
   });
@@ -539,11 +500,11 @@ describe('json-xml-bridge', () => {
       
       const result = openAiFunctionCallToNeutralToolUse(openAiFunctionCall);
       
-      expect(result.type).toBe('tool_use');
-      expect(result.name).toBe('read_file');
-      expect(result.id).toBe('call_abc123');
-      expect(result.input.path).toBe('src/main.js');
-      expect(result.input.start_line).toBe(10);
+      expect(result?.type).toBe('tool_use');
+      expect(result?.name).toBe('read_file');
+      expect(result?.id).toBe('call_abc123');
+      expect(result?.input.path).toBe('src/main.js');
+      expect(result?.input.start_line).toBe(10);
     });
     
     it('should handle OpenAI tool calls array', () => {
@@ -551,7 +512,7 @@ describe('json-xml-bridge', () => {
         tool_calls: [
           {
             id: 'call_abc123',
-            type: 'function',
+            type: 'function' as const, // Explicitly set type as 'function'
             function: {
               name: 'read_file',
               arguments: '{"path":"src/main.js","start_line":10}'
@@ -562,11 +523,11 @@ describe('json-xml-bridge', () => {
       
       const result = openAiFunctionCallToNeutralToolUse(openAiFunctionCall);
       
-      expect(result.type).toBe('tool_use');
-      expect(result.name).toBe('read_file');
-      expect(result.id).toBe('call_abc123');
-      expect(result.input.path).toBe('src/main.js');
-      expect(result.input.start_line).toBe(10);
+      expect(result?.type).toBe('tool_use');
+      expect(result?.name).toBe('read_file');
+      expect(result?.id).toBe('call_abc123');
+      expect(result?.input.path).toBe('src/main.js');
+      expect(result?.input.start_line).toBe(10);
     });
     
     it('should handle invalid JSON arguments', () => {
@@ -580,17 +541,17 @@ describe('json-xml-bridge', () => {
       
       const result = openAiFunctionCallToNeutralToolUse(openAiFunctionCall);
       
-      expect(result.type).toBe('tool_use');
-      expect(result.name).toBe('read_file');
-      expect(result.id).toBe('call_abc123');
-      expect(result.input.raw).toBe('invalid json');
+      expect(result?.type).toBe('tool_use');
+      expect(result?.name).toBe('read_file');
+      expect(result?.id).toBe('call_abc123');
+      expect(result?.input.raw).toBe('invalid json');
     });
   });
   
   describe('neutralToolUseToOpenAiFunctionCall', () => {
     it('should convert neutral tool use to OpenAI function call format', () => {
       const neutralToolUse = {
-        type: 'tool_use',
+        type: 'tool_use' as const, // Explicitly set type as 'tool_use'
         name: 'read_file',
         id: 'read_file-123',
         input: {
@@ -601,10 +562,9 @@ describe('json-xml-bridge', () => {
       
       const result = neutralToolUseToOpenAiFunctionCall(neutralToolUse);
       
-      expect(result.id).toBe('read_file-123');
-      expect(result.type).toBe('function');
-      expect(result.function.name).toBe('read_file');
-      expect(JSON.parse(result.function.arguments)).toEqual({
+      expect(result?.function_call?.id).toBe('read_file-123');
+      expect(result?.function_call?.name).toBe('read_file');
+      expect(JSON.parse(result?.function_call?.arguments || '{}')).toEqual({
         path: 'src/main.js',
         start_line: 10
       });
@@ -612,51 +572,48 @@ describe('json-xml-bridge', () => {
     
     it('should handle non-tool-use objects', () => {
       const nonToolUse = {
-        type: 'other',
+        type: 'other' as const, // Explicitly set type as 'other'
         content: 'Not a tool use'
       };
       
-      expect(neutralToolUseToOpenAiFunctionCall(nonToolUse)).toBeNull();
+      expect(neutralToolUseToOpenAiFunctionCall(nonToolUse as unknown as ToolUseJsonObject)).toBeNull();
     });
   });
-  
+
   describe('ToolUseMatcher', () => {
     it('should detect and extract XML tool use blocks', () => {
-      const matcher = new ToolUseMatcher((chunk) => ({
-        type: chunk.matched ? 'tool_use' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
-      
+      const matcher = new ToolUseMatcher();
+
       // Test with a simple XML tool use block
       const xmlBlock = '<read_file>\n<path>src/main.js</path>\n</read_file>';
       const results = matcher.update(xmlBlock);
-      
+
       expect(results.length).toBeGreaterThan(0);
-      const toolUseItem = results.find(item => item.type === 'tool_use');
+      const toolUseItem = results.find(item => item.matched && (item as JsonMatcherResult).type === 'tool_use');
       expect(toolUseItem).toBeDefined();
-      expect(toolUseItem?.text).toContain('read_file');
-      expect(toolUseItem?.text).toContain('src/main.js');
-      
+      expect(toolUseItem?.data).toBeInstanceOf(Object);
+      expect((toolUseItem?.data as ToolUseJsonObject).name).toBe('read_file');
+      expect((toolUseItem?.data as ToolUseJsonObject).input.path).toBe('src/main.js');
+
       // Check that tool use IDs are stored
       const toolUseIds = matcher.getToolUseIds();
       expect(toolUseIds.size).toBeGreaterThan(0);
       expect(toolUseIds.has('read_file')).toBeTruthy();
     });
-    
+
     it('should detect and extract JSON tool use blocks', () => {
-      const matcher = new ToolUseMatcher((chunk) => ({
-        type: chunk.matched ? 'tool_use' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
-      
+      const matcher = new ToolUseMatcher();
+
       // Test with a simple JSON tool use block
       const jsonBlock = '{"type":"tool_use","name":"read_file","id":"read_file-123","input":{"path":"src/main.js"}}';
       const results = matcher.update(jsonBlock);
-      
+
       expect(results.length).toBeGreaterThan(0);
-      const toolUseItem = results.find(item => item.type === 'tool_use');
+      const toolUseItem = results.find(item => item.matched && (item as JsonMatcherResult).type === 'tool_use');
       expect(toolUseItem).toBeDefined();
-      
+      expect((toolUseItem?.data as ToolUseJsonObject).name).toBe('read_file');
+      expect((toolUseItem?.data as ToolUseJsonObject).input.path).toBe('src/main.js');
+
       // Check that tool use IDs are stored
       const toolUseIds = matcher.getToolUseIds();
       expect(toolUseIds.size).toBeGreaterThan(0);
@@ -664,46 +621,42 @@ describe('json-xml-bridge', () => {
       expect(toolUseIds.get('read_file')).toBe('read_file-123');
     });
   });
-  
+
   describe('ToolResultMatcher', () => {
     it('should detect and extract XML tool result blocks', () => {
       // Create a map of tool use IDs
       const toolUseIds = new Map<string, string>();
       toolUseIds.set('read_file', 'read_file-123');
-      
-      const matcher = new ToolResultMatcher(toolUseIds, (chunk) => ({
-        type: chunk.matched ? 'tool_result' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
-      
+
+      const matcher = new ToolResultMatcher(toolUseIds);
+
       // Test with a simple XML tool result block
       const xmlBlock = '<tool_result tool_use_id="read_file-123" status="success">\nFile content here\n</tool_result>';
       const results = matcher.update(xmlBlock);
-      
+
       expect(results.length).toBeGreaterThan(0);
-      const toolResultItem = results.find(item => item.type === 'tool_result');
+      const toolResultItem = results.find(item => item.matched && (item as JsonMatcherResult).type === 'tool_result');
       expect(toolResultItem).toBeDefined();
-      expect(toolResultItem?.text).toContain('tool_use_id="read_file-123"');
-      expect(toolResultItem?.text).toContain('File content here');
+      expect((toolResultItem?.data as ToolResultJsonObject).tool_use_id).toBe('read_file-123');
+      expect((toolResultItem?.data as ToolResultJsonObject).content[0].text).toBe('File content here');
     });
-    
+
     it('should detect and extract JSON tool result blocks', () => {
       // Create a map of tool use IDs
       const toolUseIds = new Map<string, string>();
       toolUseIds.set('read_file', 'read_file-123');
-      
-      const matcher = new ToolResultMatcher(toolUseIds, (chunk) => ({
-        type: chunk.matched ? 'tool_result' : 'text',
-        text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data)
-      }));
-      
+
+      const matcher = new ToolResultMatcher(toolUseIds);
+
       // Test with a simple JSON tool result block
       const jsonBlock = '{"type":"tool_result","tool_use_id":"read_file-123","content":[{"type":"text","text":"File content here"}],"status":"success"}';
       const results = matcher.update(jsonBlock);
-      
+
       expect(results.length).toBeGreaterThan(0);
-      const toolResultItem = results.find(item => item.type === 'tool_result');
+      const toolResultItem = results.find(item => item.matched && (item as JsonMatcherResult).type === 'tool_result');
       expect(toolResultItem).toBeDefined();
+      expect((toolResultItem?.data as ToolResultJsonObject).tool_use_id).toBe('read_file-123');
+      expect((toolResultItem?.data as ToolResultJsonObject).content[0].text).toBe('File content here');
     });
   });
 });

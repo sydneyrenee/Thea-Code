@@ -1,4 +1,6 @@
 import { EventEmitter } from "events";
+import type { Server as HttpServer } from "http";
+import type { AddressInfo } from "net";
 import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "../transport/config/SseTransportConfig";
 import { SseTransport } from "../transport/SseTransport";
 import { StdioTransport } from "../transport/StdioTransport";
@@ -14,8 +16,13 @@ import { StdioTransportConfig, IMcpTransport } from "../types/McpTransportTypes"
 // Define a more specific type for the MCP server instance from the SDK
 // This needs to align with the actual SDK's McpServer class structure
 interface SdkMcpServer {
-  tool: (name: string, description: string, schema: any, handler: any) => void;
-  connect: (transport: any) => Promise<void>; // Use 'any' for SDK transport type for now
+  tool: (
+    name: string,
+    description: string,
+    schema: Record<string, unknown>,
+    handler: (args: Record<string, unknown>) => Promise<unknown>
+  ) => void;
+  connect: (transport: unknown) => Promise<void>;
 }
 
 export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
@@ -33,7 +40,10 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
   private static async createServerInstance(): Promise<SdkMcpServer> {
     try {
       // Correctly import McpServer from the SDK's CJS distribution
-      const { McpServer } = require("@modelcontextprotocol/sdk/dist/cjs/server/mcp.js");
+      const mod = (await import("@modelcontextprotocol/sdk/dist/cjs/server/mcp.js")) as {
+        McpServer?: new (options: { name: string; version: string }) => SdkMcpServer;
+      };
+      const { McpServer } = mod;
       if (!McpServer) {
         throw new Error("MCP SDK McpServer not found");
       }
@@ -89,7 +99,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           name,
           definition.description || "",
           definition.paramSchema || {},
-          async (args: any) => {
+          async (args: Record<string, unknown>) => {
             try {
               return await definition.handler(args);
             } catch (error) {
@@ -143,7 +153,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     for (const [uriTemplate, definition] of this.resourceTemplates.entries()) {
       const templateName = `template:${uriTemplate}`;
       const paramNames = this.extractParamNames(uriTemplate);
-      const paramSchema: Record<string, any> = {};
+      const paramSchema: Record<string, { type: string }> = {};
       for (const param of paramNames) {
         paramSchema[param] = { type: "string" };
       }
@@ -153,7 +163,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           templateName,
           `Access resource template: ${definition.description || uriTemplate}`,
           paramSchema,
-          async (args: any) => {
+          async (args: Record<string, unknown>) => {
             try {
               const content = await definition.handler(args as Record<string, string>);
               return {
@@ -261,23 +271,33 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
       this.registerHandlers();
       // The SDK's connect method expects the raw SDK transport instance.
       // It will also start the underlying HTTP server for SSE.
-      await this.server.connect(this.transport as any);
+      await this.server.connect(this.transport as unknown);
 
       // After connect, if SSE, the port should be determined and available.
       if (this.transportType === 'sse') {
-        const sdkSseTransportInstance = this.transport as any;
+        const sdkSseTransportInstance = this.transport as {
+          httpServer?: HttpServer;
+          port?: number;
+        };
         
         let actualPort: number | undefined;
         // The SDK's SSEServerTransport has an `httpServer` which is a Node `http.Server`
         // The `address()` method returns an `AddressInfo` object or string.
-        if (sdkSseTransportInstance.httpServer && typeof sdkSseTransportInstance.httpServer.address === 'function') {
-          const address = sdkSseTransportInstance.httpServer.address();
-          if (address && typeof address === 'object' && 'port' in address) { // Check if it's AddressInfo
-            actualPort = address.port;
+        if (
+          sdkSseTransportInstance.httpServer &&
+          typeof sdkSseTransportInstance.httpServer.address === 'function'
+        ) {
+          const rawAddress: AddressInfo | string | null = sdkSseTransportInstance.httpServer.address();
+          if (rawAddress && typeof rawAddress === 'object' && 'port' in rawAddress) {
+            actualPort = rawAddress.port;
           }
         }
         
-        if (!actualPort && typeof sdkSseTransportInstance.port === 'number' && sdkSseTransportInstance.port !== 0) {
+        if (
+          !actualPort &&
+          typeof sdkSseTransportInstance.port === 'number' &&
+          sdkSseTransportInstance.port !== 0
+        ) {
           // Fallback to .port property if httpServer.address() didn't yield a port
           // This might be the case if the SDK sets .port directly after listening.
           actualPort = sdkSseTransportInstance.port;
@@ -379,7 +399,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
   public registerTool(
     name: string,
     description: string,
-    paramSchema: Record<string, any>,
+    paramSchema: Record<string, unknown>,
     handler: (args: Record<string, unknown>) => Promise<ToolCallResult>
   ): void {
     this.tools.set(name, { name, description, paramSchema, handler });
@@ -389,7 +409,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           name,
           description,
           paramSchema,
-          async (args: any) => {
+          async (args: Record<string, unknown>) => {
             try {
               return await handler(args);
             } catch (error) {

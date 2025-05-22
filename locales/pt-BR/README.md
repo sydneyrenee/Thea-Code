@@ -130,19 +130,19 @@ Faça o Thea Code funcionar do seu jeito com:
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **Instale as dependências**:
+1. **Instale as dependências**:
 
 ```sh
 npm run install:all
 ```
 
-3. **Inicie o webview (aplicativo Vite/React com HMR)**:
+1. **Inicie o webview (aplicativo Vite/React com HMR)**:
 
 ```sh
 npm run dev
 ```
 
-4. **Depuração**:
+1. **Depuração**:
    Pressione `F5` (ou **Executar** → **Iniciar Depuração**) no VSCode para abrir uma nova sessão com o Thea Code carregado.
 
 Alterações no webview aparecerão imediatamente. Alterações na extensão principal exigirão a reinicialização do host da extensão.

@@ -503,26 +503,26 @@ gantt
     Monitor                         :a8, after a7, 3d
 ```
 
-| Task | Estimated Time | Dependencies |
-|------|----------------|--------------|
-| Update the OpenAI Handler | 2 days | None |
-| Update the Ollama Handler | 3 days | OpenAI Handler Updates |
-| Update the Tests | 2 days | Handler Updates |
-| Manual Testing | 2 days | All Updates |
-| Fix Issues | 2 days | Manual Testing |
-| Code Review | 1 day | All Updates |
-| Merge to Main | 1 day | Code Review |
-| Monitor | 3 days | Merge to Main |
-| **Total** | **16 days** | |
+| Task                      | Estimated Time | Dependencies           |
+|---------------------------|----------------|------------------------|
+| Update the OpenAI Handler | 2 days         | None                   |
+| Update the Ollama Handler | 3 days         | OpenAI Handler Updates |
+| Update the Tests          | 2 days         | Handler Updates        |
+| Manual Testing            | 2 days         | All Updates            |
+| Fix Issues                | 2 days         | Manual Testing         |
+| Code Review               | 1 day          | All Updates            |
+| Merge to Main             | 1 day          | Code Review            |
+| Monitor                   | 3 days         | Merge to Main          |
+| **Total**                 | **16 days**    |                        |
 
 ## 6. Risks and Mitigations
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| OpenAI handler changes break existing functionality | High | Medium | Comprehensive test coverage, careful refactoring |
-| Ollama handler changes break existing functionality | High | Medium | Comprehensive test coverage, careful refactoring |
-| Performance impact from additional handler dependency | Medium | Low | Performance testing, optimization if needed |
-| Compatibility issues with different OpenAI/Ollama versions | Medium | Low | Version-specific tests, graceful degradation |
+| Risk                                                       | Impact | Likelihood | Mitigation                                       |
+|------------------------------------------------------------|--------|------------|--------------------------------------------------|
+| OpenAI handler changes break existing functionality        | High   | Medium     | Comprehensive test coverage, careful refactoring |
+| Ollama handler changes break existing functionality        | High   | Medium     | Comprehensive test coverage, careful refactoring |
+| Performance impact from additional handler dependency      | Medium | Low        | Performance testing, optimization if needed      |
+| Compatibility issues with different OpenAI/Ollama versions | Medium | Low        | Version-specific tests, graceful degradation     |
 
 ## 7. Rollout Plan
 

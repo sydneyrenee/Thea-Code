@@ -13,11 +13,11 @@ export async function getStorageBasePath(defaultPath: string): Promise<string> {
 	// Get user-configured custom storage path
 	let customStoragePath = ""
 
-	try {
-		// This is the line causing the error in tests
-		const config = vscode.workspace.getConfiguration(configSection())
-		customStoragePath = config.get<string>("customStoragePath", "")
-	} catch (error) {
+        try {
+                const section = (configSection as () => string)()
+                const config = vscode.workspace.getConfiguration(section)
+                customStoragePath = config.get<string>("customStoragePath", "")
+	} catch {
 		console.warn("Could not access VSCode configuration - using default path")
 		return defaultPath
 	}
@@ -39,10 +39,9 @@ export async function getStorageBasePath(defaultPath: string): Promise<string> {
 		return customStoragePath
 	} catch (error) {
 		// If path is unusable, report error and fall back to default path
-		console.error(`Custom storage path is unusable: ${error instanceof Error ? error.message : String(error)}`)
-		if (vscode.window) {
-			vscode.window.showErrorMessage(t("common:errors.custom_storage_path_unusable", { path: customStoragePath }))
-		}
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		console.error(t("common:errors.custom_storage_path_unusable_log", { path: customStoragePath, error: errorMessage }));
+		vscode.window.showErrorMessage(t("common:errors.custom_storage_path_unusable", { path: customStoragePath }));
 		return defaultPath
 	}
 }
@@ -82,16 +81,15 @@ export async function getCacheDirectoryPath(globalStoragePath: string): Promise<
  * Displays an input box allowing the user to enter a custom path
  */
 export async function promptForCustomStoragePath(): Promise<void> {
-	if (!vscode.window || !vscode.workspace) {
-		console.error("VS Code API not available")
-		return
-	}
+	// VS Code API is expected to be available in an extension context
+	// No need for explicit checks for vscode.window or vscode.workspace
 
 	let currentPath = ""
-	try {
-		const currentConfig = vscode.workspace.getConfiguration(configSection())
-		currentPath = currentConfig.get<string>("customStoragePath", "")
-	} catch (error) {
+        try {
+                const section = (configSection as () => string)()
+                const currentConfig = vscode.workspace.getConfiguration(section)
+                currentPath = currentConfig.get<string>("customStoragePath", "")
+	} catch {
 		console.error("Could not access configuration")
 		return
 	}
@@ -111,21 +109,22 @@ export async function promptForCustomStoragePath(): Promise<void> {
 
 				// Check if path is absolute
 				if (!path.isAbsolute(input)) {
-					return t("common:storage.enter_absolute_path")
+					return t("common:storage.enter_absolute_path");
 				}
 
 				return null // Path format is valid
-			} catch (e) {
-				return t("common:storage.enter_valid_path")
+			} catch {
+				return t("common:storage.enter_valid_path");
 			}
 		},
 	})
 
 	// If user canceled the operation, result will be undefined
 	if (result !== undefined) {
-		try {
-			const currentConfig = vscode.workspace.getConfiguration(configSection())
-			await currentConfig.update("customStoragePath", result, vscode.ConfigurationTarget.Global)
+                try {
+                        const section = (configSection as () => string)()
+                        const currentConfig = vscode.workspace.getConfiguration(section)
+                        await currentConfig.update("customStoragePath", result, vscode.ConfigurationTarget.Global)
 
 			if (result) {
 				try {
@@ -133,18 +132,20 @@ export async function promptForCustomStoragePath(): Promise<void> {
 					await fs.mkdir(result, { recursive: true })
 					vscode.window.showInformationMessage(t("common:info.custom_storage_path_set", { path: result }))
 				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
 					vscode.window.showErrorMessage(
 						t("common:errors.cannot_access_path", {
 							path: result,
-							error: error instanceof Error ? error.message : String(error),
+							error: errorMessage,
 						}),
-					)
+					);
 				}
 			} else {
-				vscode.window.showInformationMessage(t("common:info.default_storage_path"))
+				vscode.window.showInformationMessage(t("common:info.default_storage_path"));
 			}
 		} catch (error) {
-			console.error("Failed to update configuration", error)
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.error(t("common:errors.failed_to_update_config", { error: errorMessage }));
 		}
 	}
 }

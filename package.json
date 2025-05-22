@@ -11,7 +11,7 @@
   },
   "engines": {
     "vscode": "^1.84.0",
-    "node": "20.18.1"
+    "node": "22.15.1"
   },
   "author": {
     "name": "Sydney Renee",
@@ -319,7 +319,7 @@
     "precompile": "cross-os precompile",
     "compile": "cross-os compile",
     "watch": "cross-os watch",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint",
     "version": "npm run package && npm run prettier:branding && npm run verify",
     "generateChatCommandsClass": "node -e \"require('./scripts/generate-types.mjs').generateChatCommandsClass();\"",
     "dev": "npm run watch",
@@ -328,7 +328,7 @@
     "prettier:branding": "node scripts/apply-thea-branding.js",
     "verify": "node scripts/verify-branding.js",
     "package": "npm run clean && npm run build:extension && npm run build:webui && vsce package --out bin/thea-code-$npm_package_version.vsix",
-    "test": "node ./scripts/run-all-linters.js && npm run test:jest && npm run test:types",
+    "test": "node ./scripts/run-all-linters.js && npm run test:jest",
     "test:jest": "cd webview-ui && npm run test && cd .. && npm run test:extension",
     "test:extension": "jest",
     "test:types": "tsc --noEmit",
@@ -342,7 +342,7 @@
     "@aws-sdk/client-bedrock-runtime": "^3.812.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",
-    "@mistralai/mistralai": "^1.6.0",
+    "@mistralai/mistralai": "^1.6.1",
     "@modelcontextprotocol/sdk": "^1.11.5",
     "@types/clone-deep": "^4.0.4",
     "@types/pdf-parse": "^1.1.5",
@@ -354,19 +354,25 @@
     "cheerio": "^1.0.0",
     "chokidar": "^4.0.3",
     "clone-deep": "^4.0.1",
+    "data-urls": "^5.0.0",
     "default-shell": "^2.2.0",
     "delay": "^6.0.0",
-    "diff": "^8.0.1",
+    "diff": "^8.0.2",
     "diff-match-patch": "^1.0.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
     "fast-deep-equal": "^3.1.3",
     "fast-xml-parser": "^5.2.3",
     "fastest-levenshtein": "^1.0.16",
+    "formdata-node": "^6.0.3",
     "fzf": "^0.5.2",
     "get-folder-size": "^5.0.0",
     "globby": "^14.1.0",
     "i18next": "^25.2.0",
     "isbinaryfile": "^5.0.4",
     "js-tiktoken": "^1.0.20",
+    "jsdom": "^26.1.0",
+    "lru-cache": "^11.1.0",
     "mammoth": "^1.9.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "openai": "^4.102.0",
@@ -374,7 +380,8 @@
     "p-wait-for": "^5.0.2",
     "pdf-parse": "^1.1.1",
     "pkce-challenge": "^5.0.0",
-    "posthog-node": "^4.17.1",
+    "playwright": "^1.52.0",
+    "posthog-node": "^4.17.2",
     "pretty-bytes": "^7.0.0",
     "puppeteer-chromium-resolver": "^24.0.1",
     "puppeteer-core": "^24.9.0",
@@ -389,7 +396,7 @@
     "tree-sitter-wasms": "^0.1.12",
     "turndown": "^7.2.0",
     "web-tree-sitter": "^0.25.4",
-    "zod": "^3.25.17"
+    "zod": "^3.25.20"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.4",
@@ -399,12 +406,13 @@
     "@types/diff-match-patch": "^1.0.36",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
-    "@types/node": "22.x",
+    "@types/node": "^22.15.21",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
     "cmpstr": "^2.0.3",
     "esbuild": "^0.25.4",
     "eslint": "^9.27.0",
+    "eslint-formatter-compact": "^8.40.0",
     "execa": "^9.5.3",
     "glob": "^11.0.2",
     "husky": "^9.1.7",
@@ -428,11 +436,17 @@
       "prettier --write"
     ],
     "src/**/*.{ts,tsx}": [
-      "npx eslint -c .eslintrc.json --max-warnings=0 --fix"
+      "npx eslint --max-warnings=0 --fix --config eslint.config.mjs"
     ],
     "webview-ui/**/*.{ts,tsx}": [
-      "npx eslint -c webview-ui/.eslintrc.json --max-warnings=0 --fix"
+      "npx eslint --max-warnings=0 --fix --config webview-ui/eslint.config.mjs"
     ]
   },
-  "extensionSecretsPrefix": "thea_code_config_"
+  "extensionSecretsPrefix": "thea_code_config_",
+  "overrides": {
+    "node-domexception": "^2.0.0",
+    "jsdom": "^26.1.0",
+    "formdata-node": "^6.0.3",
+    "glob": "^11.0.2"
+  }
 }

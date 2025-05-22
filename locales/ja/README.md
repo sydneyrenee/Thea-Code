@@ -130,19 +130,19 @@ Thea Codeをあなた好みに動作させる方法：
 git clone https://github.com/SolaceHarmony/Thea-Code.git
 ```
 
-2. **依存関係をインストール**：
+1. **依存関係をインストール**：
 
 ```sh
 npm run install:all
 ```
 
-3. **ウェブビュー（Vite/ReactアプリとHMR）を起動**：
+1. **ウェブビュー（Vite/ReactアプリとHMR）を起動**：
 
 ```sh
 npm run dev
 ```
 
-4. **デバッグ**：
+1. **デバッグ**：
    VSCodeで`F5`（または**実行**→**デバッグの開始**）を押すと、Thea Codeがロードされた新しいセッションが開きます。
 
 ウェブビューへの変更はすぐに表示されます。コア拡張機能への変更には拡張機能ホストの再起動が必要です。

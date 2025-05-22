@@ -62,8 +62,6 @@ dist/
 /src/**/__mocks__/**/*.js.map
 # Ignore tsbuildinfo
 /tsconfig.tsbuildinfo
-/scripts/**/*.js.map
-/scripts/**/*.js
 # Ignore build output in webview-ui
 /webview-ui/build/
 /webview-ui/tsconfig.tsbuildinfo

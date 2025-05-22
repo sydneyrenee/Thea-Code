@@ -29,6 +29,7 @@ type SecretKey = (typeof SECRET_KEYS)[number]
 
 type CheckSecretKeysExhaustiveness = Exclude<SecretKey, (typeof SECRET_KEYS)[number]> extends never ? true : false
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _checkSecretKeysExhaustiveness: CheckSecretKeysExhaustiveness = true
 
 export const GLOBAL_STATE_KEYS = [
@@ -143,6 +144,7 @@ export const PASS_THROUGH_STATE_KEYS = ["taskHistory"] as const
 type CheckGlobalStateKeysExhaustiveness =
 	Exclude<GlobalStateKey, (typeof GLOBAL_STATE_KEYS)[number]> extends never ? true : false
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _checkGlobalStateKeysExhaustiveness: CheckGlobalStateKeysExhaustiveness = true
 
 export const isSecretKey = (key: string): key is SecretKey => SECRET_KEYS.includes(key as SecretKey)

@@ -102,8 +102,8 @@ export interface MessageContent {
 	// Tool use and result fields
 	toolUseId?: string
 	name?: string
-	input?: any
-	output?: any // Used for tool_result type
+        input?: Record<string, unknown>
+        output?: unknown // Used for tool_result type
 }
 
 export type BedrockModelId = keyof typeof bedrockModels

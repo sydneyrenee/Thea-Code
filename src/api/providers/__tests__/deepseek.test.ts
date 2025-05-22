@@ -1,7 +1,7 @@
 import { DeepSeekHandler } from "../deepseek"
 import { ApiHandlerOptions, deepSeekDefaultModelId } from "../../../shared/api"
 import OpenAI from "openai"
-import { Anthropic } from "@anthropic-ai/sdk"
+import { NeutralConversationHistory, NeutralMessage } from "../../../shared/neutral-history"
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -196,15 +196,10 @@ describe("DeepSeekHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [ // Explicitly type as NeutralConversationHistory
 			{
 				role: "user",
-				content: [
-					{
-						type: "text" as const,
-						text: "Hello!",
-					},
-				],
+				content: "Hello!",
 			},
 		]
 

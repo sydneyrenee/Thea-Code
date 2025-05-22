@@ -160,28 +160,45 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 				case "message_stop":
 					// No usage data, just an indicator that the message is done.
 					break
-				case "content_block_start":
-					switch (chunk.content_block.type) {
-						case "thinking":
-							// We may receive multiple text blocks, in which
-							// case just insert a line break between them.
-							if (chunk.index > 0) {
-								yield { type: "reasoning", text: "\n" }
-							}
+                                case "content_block_start":
+                                        if (chunk.content_block.type === "tool_use") {
+                                                // Process tool use using MCP integration
+                                                const toolUseBlock = chunk.content_block as Anthropic.ToolUseBlock;
+                                                const toolResult = await this.processToolUse({
+                                                        id: toolUseBlock.id,
+                                                        name: toolUseBlock.name,
+                                                        input: toolUseBlock.input
+                                                });
 
-							yield { type: "reasoning", text: chunk.content_block.thinking }
-							break
-						case "text":
-							// We may receive multiple text blocks, in which
-							// case just insert a line break between them.
-							if (chunk.index > 0) {
-								yield { type: "text", text: "\n" }
-							}
+                                                // Yield tool result
+                                                yield {
+                                                        type: 'tool_result',
+                                                        id: toolUseBlock.id,
+                                                        content: toolResult
+                                                };
+                                        } else {
+                                                switch (chunk.content_block.type) {
+                                                        case "thinking":
+                                                                // We may receive multiple text blocks, in which
+                                                                // case just insert a line break between them.
+                                                                if (chunk.index > 0) {
+                                                                        yield { type: "reasoning", text: "\n" }
+                                                                }
 
-							yield { type: "text", text: chunk.content_block.text }
-							break
-					}
-					break
+                                                                yield { type: "reasoning", text: chunk.content_block.thinking }
+                                                                break
+                                                        case "text":
+                                                                // We may receive multiple text blocks, in which
+                                                                // case just insert a line break between them.
+                                                                if (chunk.index > 0) {
+                                                                        yield { type: "text", text: "\n" }
+                                                                }
+
+                                                                yield { type: "text", text: chunk.content_block.text }
+                                                                break
+                                                }
+                                        }
+                                        break
 				case "content_block_delta":
 					switch (chunk.delta.type) {
 						case "thinking_delta":
@@ -193,27 +210,8 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 					}
 
 					break
-				case "content_block_stop":
-					break;
-				case "content_block_start":
-					// Check if the content block is a tool use block
-					if (chunk.content_block.type === "tool_use") {
-						// Process tool use using MCP integration
-						const toolUseBlock = chunk.content_block as Anthropic.ToolUseBlock;
-						const toolResult = await this.processToolUse({
-							id: toolUseBlock.id,
-							name: toolUseBlock.name,
-							input: toolUseBlock.input
-						});
-						
-						// Yield tool result
-						yield {
-							type: 'tool_result',
-							id: toolUseBlock.id,
-							content: toolResult
-						};
-					}
-					break;
+                                case "content_block_stop":
+                                        break;
 			}
 		}
 	}

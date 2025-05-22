@@ -21,7 +21,7 @@ interface MockEmbeddedMcpProviderInstance extends EventEmitter {
 // Mock the EmbeddedMcpProvider module
 jest.mock("../../providers/EmbeddedMcpProvider", () => {
   // Create a mock class that extends EventEmitter
-  const MockEmbeddedMcpServer = jest.fn().mockImplementation(() => {
+  const MockEmbeddedMcpProvider = jest.fn().mockImplementation(() => {
     const instance = new EventEmitter() as MockEmbeddedMcpProviderInstance;
     
     // Add mock methods
@@ -51,7 +51,7 @@ jest.mock("../../providers/EmbeddedMcpProvider", () => {
   });
   
   return {
-    EmbeddedMcpProvider: MockEmbeddedMcpServer
+    EmbeddedMcpProvider: MockEmbeddedMcpProvider
   };
 });
 

@@ -1,5 +1,5 @@
 import * as path from "path"
-import Parser from "web-tree-sitter"
+import { Parser } from "web-tree-sitter"
 import {
 	javascriptQuery,
 	typescriptQuery,

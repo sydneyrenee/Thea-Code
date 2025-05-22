@@ -11,7 +11,7 @@
   },
   "engines": {
     "vscode": "^1.84.0",
-    "node": "20.18.1"
+    "node": "22.15.1"
   },
   "author": {
     "name": "Sydney Renee",
@@ -381,9 +381,9 @@
     "p-wait-for": "^5.0.2",
     "pdf-parse": "^1.1.1",
     "pkce-challenge": "^5.0.0",
+    "playwright": "^1.52.0",
     "posthog-node": "^4.17.2",
     "pretty-bytes": "^7.0.0",
-    "puppeteer-core": "^24.9.0",
     "react": "^19.1.0",
     "reconnecting-eventsource": "^1.6.4",
     "say": "^0.16.0",

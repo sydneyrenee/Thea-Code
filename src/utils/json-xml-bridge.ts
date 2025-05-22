@@ -16,9 +16,9 @@ import { XmlMatcher, XmlMatcherResult } from './xml-matcher';
 
 export interface GenericParsedJson {
   type?: string;
-  content?: any;
-  text?: any;
-  [key: string]: any; // Allow for arbitrary properties
+  content?: unknown;
+  text?: unknown;
+  [key: string]: unknown; // Allow for arbitrary properties
 }
 
 export interface FormatDetectedJson extends GenericParsedJson {
@@ -336,13 +336,14 @@ export class FormatDetector {
             return 'json';
           } // This closing brace was misplaced
         }
-      } catch (e) {
+      } catch {
         // Not valid JSON, or incomplete JSON object
         // console.error("JSON parsing error in detectFormat:", e); // For debugging
       }
     }
     
     return 'unknown';
+  }
 }
 
 /**

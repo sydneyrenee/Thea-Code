@@ -16,6 +16,7 @@ import {
   ToolUseJsonObject, // Added ToolUseJsonObject import
   ToolResultJsonObject // Added ToolResultJsonObject import
 } from '../json-xml-bridge';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unused-vars */
 
 describe('json-xml-bridge', () => {
   describe('JsonMatcher', () => {
@@ -575,7 +576,7 @@ describe('json-xml-bridge', () => {
         content: 'Not a tool use'
       };
       
-      expect(neutralToolUseToOpenAiFunctionCall(nonToolUse as any)).toBeNull();
+      expect(neutralToolUseToOpenAiFunctionCall(nonToolUse as unknown as ToolUseJsonObject)).toBeNull();
     });
   });
 

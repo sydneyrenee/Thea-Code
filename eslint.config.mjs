@@ -91,7 +91,7 @@ export default [
     "build/",
     "coverage/",
     "*.cjs",
-    "src/__mocks__/**/*.js",
+    "src/__mocks__/**/*",
     "webview-ui/",
     "e2e/",
     "esbuild.js",
@@ -145,6 +145,8 @@ export default [
     ".vscodeignore",
     "flake.lock",
     "flake.nix",
+    "**/*.gitkeep",
+    "**/*.snap",
   ]),
   {
     files: ["src/**/*.{ts,tsx}", "!src/**/*.js", "!src/__mocks__/**/*"],

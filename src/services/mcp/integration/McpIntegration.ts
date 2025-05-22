@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import { McpToolExecutor } from "../core/McpToolExecutor";
 import { McpToolRouter } from "../core/McpToolRouter";
+import { McpToolRegistry } from "../core/McpToolRegistry";
 import { ToolDefinition } from "../types/McpProviderTypes";
 import { ToolUseFormat } from "../types/McpToolTypes";
 import { SseTransportConfig } from "../types/McpTransportTypes";
@@ -46,6 +47,11 @@ export class McpIntegration extends EventEmitter {
     this.mcpToolRouter.on('tool-unregistered', (name: string) => this.emit('tool-unregistered', name));
     this.mcpToolRouter.on('started', (info: unknown) => this.emit('started', info));
     this.mcpToolRouter.on('stopped', () => this.emit('stopped'));
+  }
+
+  /** Check whether the integration has been initialized. */
+  public isReady(): boolean {
+    return this.isInitialized;
   }
   
   /**
@@ -153,7 +159,7 @@ export class McpIntegration extends EventEmitter {
    * Get the tool registry
    * @returns The tool registry
    */
-  public getToolRegistry(): any {
+  public getToolRegistry(): McpToolRegistry {
     return this.mcpToolSystem.getToolRegistry();
   }
 
@@ -177,9 +183,9 @@ export class McpIntegration extends EventEmitter {
  */
 export async function handleToolUse(content: string | Record<string, unknown>): Promise<string | Record<string, unknown>> {
   const mcpIntegration = McpIntegration.getInstance();
-  
+
   // Initialize if not already initialized
-  if (!(mcpIntegration as any).isInitialized) {
+  if (!mcpIntegration.isReady()) {
     await mcpIntegration.initialize();
   }
   

@@ -17,7 +17,7 @@ export class MockMcpProvider extends EventEmitter implements IMcpProvider {
     super();
   }
 
-  async start(): Promise<void> {
+  start(): void {
     if (this.isStarted) {
       return;
     }
@@ -26,7 +26,7 @@ export class MockMcpProvider extends EventEmitter implements IMcpProvider {
     this.emit("started", { url: this.serverUrl.toString() });
   }
 
-  async stop(): Promise<void> {
+  stop(): void {
     if (!this.isStarted) {
       return;
     }

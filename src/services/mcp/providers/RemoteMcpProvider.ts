@@ -5,6 +5,7 @@ import {
   IMcpProvider,
 } from "../types/McpProviderTypes";
 import { SseClientFactory } from "../client/SseClientFactory";
+import { McpClient } from "../client/McpClient";
 
 /**
  * RemoteMcpProvider provides a provider for connecting to external MCP servers.
@@ -13,7 +14,7 @@ export class RemoteMcpProvider extends EventEmitter implements IMcpProvider {
   private tools: Map<string, ToolDefinition> = new Map();
   private isStarted = false;
   private serverUrl?: URL;
-  private client?: any;
+  private client?: McpClient;
 
   constructor(private readonly url: URL) {
     super();
@@ -68,7 +69,8 @@ export class RemoteMcpProvider extends EventEmitter implements IMcpProvider {
       throw new Error("Remote MCP provider not started");
     }
     try {
-      const result = await this.client.callTool({ name, arguments: args });
+      interface ToolCallResponse { content: Array<{ type: string; text?: string }>; status?: string }
+      const result = await this.client.callTool({ name, arguments: args }) as ToolCallResponse;
       return { content: result.content, isError: result.status === "error" };
     } catch (error) {
       return {

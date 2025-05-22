@@ -4,6 +4,7 @@ import tseslintPlugin from "@typescript-eslint/eslint-plugin";
 import tseslintParser from "@typescript-eslint/parser";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
+import * as espree from "espree";
 import { globalIgnores } from "eslint/config";
 
 const commonTsReactConfig = {
@@ -45,7 +46,7 @@ export default [
   {
     files: ["src/__mocks__/**/*.{ts,tsx,js,jsx}"],
     languageOptions: {
-      parser: 'espree', // Use espree for mock files
+      parser: espree, // Use espree for mock files
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: "module",
@@ -95,6 +96,7 @@ export default [
     "e2e/",
     "esbuild.js",
     "jest.config.js",
+    "eslint.config.mjs",
     "temp_similarity_check.js",
     "scripts/",
     "test/",
@@ -191,7 +193,7 @@ export default [
   {
     files: ["**/*.{js,mjs,cjs,jsx}"],
     languageOptions: {
-      parser: 'espree',
+      parser: espree,
       ecmaVersion: 2022,
       sourceType: "module",
       globals: {

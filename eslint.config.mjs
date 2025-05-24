@@ -7,18 +7,16 @@ import reactHooksPlugin from "eslint-plugin-react-hooks";
 import * as espree from "espree";
 import { globalIgnores } from "eslint/config";
 
-const commonTsReactConfig = {
+const commonTsConfig = {
   languageOptions: {
     parser: tseslintParser,
     parserOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
       ecmaFeatures: {
-        jsx: true,
       },
     },
     globals: {
-      ...globals.browser,
       ...globals.node,
       ...globals.jest,
       ...globals.mocha,
@@ -26,18 +24,9 @@ const commonTsReactConfig = {
   },
   plugins: {
     "@typescript-eslint": tseslintPlugin,
-    "react": reactPlugin,
-    "react-hooks": reactHooksPlugin
-  },
-  settings: {
-    react: {
-      version: "detect",
-    },
   },
   rules: {
     ...tseslintPlugin.configs['recommended-type-checked'].rules,
-    ...reactPlugin.configs.recommended.rules,
-    ...reactHooksPlugin.configs.recommended.rules,
     "@typescript-eslint/no-explicit-any": "warn",
   },
 };
@@ -150,44 +139,56 @@ export default [
   ]),
   {
     files: ["src/**/*.{ts,tsx}", "!src/**/*.js", "!src/__mocks__/**/*"],
-    ...commonTsReactConfig,
+    ...commonTsConfig,
     languageOptions: {
-      ...commonTsReactConfig.languageOptions,
+      ...commonTsConfig.languageOptions,
       parserOptions: {
-        ...commonTsReactConfig.languageOptions.parserOptions,
+        ...commonTsConfig.languageOptions.parserOptions,
+        ecmaFeatures: {
+          jsx: true,
+        },
         project: './tsconfig.json',
       },
     },
   },
   {
     files: ["benchmark/**/*.{ts,tsx}", "!benchmark/**/*.js"],
-    ...commonTsReactConfig,
+    ...commonTsConfig,
     languageOptions: {
-      ...commonTsReactConfig.languageOptions,
+      ...commonTsConfig.languageOptions,
       parserOptions: {
-        ...commonTsReactConfig.languageOptions.parserOptions,
+        ...commonTsConfig.languageOptions.parserOptions,
+        ecmaFeatures: {
+          jsx: true,
+        },
         project: './benchmark/tsconfig.json',
       },
     },
   },
   {
     files: ["e2e/src/**/*.{ts,tsx}", "!e2e/src/**/*.js"],
-    ...commonTsReactConfig,
+    ...commonTsConfig,
     languageOptions: {
-      ...commonTsReactConfig.languageOptions,
+      ...commonTsConfig.languageOptions,
       parserOptions: {
-        ...commonTsReactConfig.languageOptions.parserOptions,
+        ...commonTsConfig.languageOptions.parserOptions,
+        ecmaFeatures: {
+          jsx: true,
+        },
         project: './e2e/tsconfig.json',
       },
     },
   },
   {
     files: ["test/**/*.{ts,tsx}", "!test/benchmark/**", "!test/e2e/**", "!test/**/*.js"],
-    ...commonTsReactConfig,
+    ...commonTsConfig,
     languageOptions: {
-      ...commonTsReactConfig.languageOptions,
+      ...commonTsConfig.languageOptions,
       parserOptions: {
-        ...commonTsReactConfig.languageOptions.parserOptions,
+        ...commonTsConfig.languageOptions.parserOptions,
+        ecmaFeatures: {
+          jsx: true,
+        },
         project: './tsconfig.json',
       },
     },

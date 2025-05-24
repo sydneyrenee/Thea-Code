@@ -3,7 +3,8 @@
 // can run `npm run generate-types`.
 
 import { z } from "zod"
-import { SETTING_KEYS } from "../../dist/thea-config" // Import branded constant
+// NOTE: `SETTING_KEYS` is imported in the generated types file, but it's not
+// needed directly in this schema module.
 import { Equals, Keys, AssertEqual } from "../utils/type-fu"
 
 /**
@@ -298,6 +299,8 @@ const experimentsSchema = z.object({
 
 export type Experiments = z.infer<typeof experimentsSchema>
 
+// Used purely to ensure type coverage during development.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type _AssertExperiments = AssertEqual<Equals<ExperimentId, Keys<Experiments>>>
 
 /**

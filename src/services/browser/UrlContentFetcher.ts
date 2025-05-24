@@ -8,11 +8,24 @@ export class UrlContentFetcher {
 	private browser?: Browser
 	private page?: Page
 
-	constructor(context: vscode.ExtensionContext) {
-		this.context = context
-	}
+        constructor(context: vscode.ExtensionContext) {
+                this.context = context
+        }
 
-	async launchBrowser(): Promise<void> {
+        // Historically BrowserSession relied on a puppeteer-based helper to
+        // download Chromium if necessary. Playwright bundles a compatible
+        // browser so here we simply expose its executable path alongside the
+        // puppeteer module for backward compatibility.
+        async ensureChromiumExists(): Promise<{
+                puppeteer: typeof import("puppeteer-core")
+                executablePath: string
+        }> {
+                const puppeteer = await import("puppeteer-core")
+                const executablePath = puppeteer.executablePath()
+                return { puppeteer, executablePath }
+        }
+
+        async launchBrowser(): Promise<void> {
 		if (this.browser) {
 			return
 		}

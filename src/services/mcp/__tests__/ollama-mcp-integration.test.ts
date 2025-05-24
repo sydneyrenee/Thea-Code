@@ -1,4 +1,5 @@
-import { Client } from '@modelcontextprotocol/sdk/client';
+import { McpClient } from '../client/McpClient';
+import OpenAI from 'openai';
 import { McpIntegration } from '../integration/McpIntegration';
 import { SseClientFactory } from '../client/SseClientFactory';
 import { McpConverters } from '../core/McpConverters';
@@ -9,7 +10,10 @@ jest.mock('openai', () => {
     OpenAI: jest.fn().mockImplementation(() => ({
       chat: {
         completions: {
-          create: jest.fn().mockImplementation(async ({ functions, function_call }) => {
+          create: jest.fn().mockImplementation(async ({ functions: _functions, function_call: _functionCall }) => {
+            void _functions;
+            void _functionCall;
+            await Promise.resolve();
             // Mock streaming response
             const stream = {
               [Symbol.asyncIterator]: () => {
@@ -31,6 +35,7 @@ jest.mock('openai', () => {
                 
                 return {
                   next: async () => {
+                    await Promise.resolve();
                     if (count < messages.length) {
                       return { value: messages[count++], done: false };
                     }
@@ -49,7 +54,7 @@ jest.mock('openai', () => {
 
 describe('Ollama MCP Integration with SSE Transport', () => {
   let mcpIntegration: McpIntegration;
-  let client: Client;
+  let client: McpClient;
   
   beforeEach(async () => {
     // Initialize MCP integration with SSE transport
@@ -76,10 +81,11 @@ describe('Ollama MCP Integration with SSE Transport', () => {
         required: ['param']
       },
       handler: async (args) => {
+        await Promise.resolve();
         return {
-          content: [{ 
-            type: 'text', 
-            text: `Tool executed with param: ${args.param}` 
+          content: [{
+            type: 'text',
+            text: `Tool executed with param: ${String(args.param)}`
           }]
         };
       }
@@ -105,7 +111,9 @@ describe('Ollama MCP Integration with SSE Transport', () => {
   
   test('should list available tools', async () => {
     // List available tools
-    const toolsResult = await client.listTools();
+    const toolsResult = await client.listTools() as {
+      tools: Array<{ name: string; description: string; inputSchema: unknown }>;
+    };
     
     // Verify that the test tool is available
     expect(toolsResult.tools).toHaveLength(1);
@@ -128,7 +136,10 @@ describe('Ollama MCP Integration with SSE Transport', () => {
     const result = await client.callTool({
       name: 'test_tool',
       arguments: { param: 'test value' }
-    });
+    }) as {
+      content: Array<{ type: string; text: string }>;
+      isError: boolean;
+    };
     
     // Verify the result
     expect(result.content).toHaveLength(1);
@@ -137,7 +148,7 @@ describe('Ollama MCP Integration with SSE Transport', () => {
     expect(result.isError).toBeFalsy();
   });
   
-  test('should convert tool definitions to OpenAI functions', async () => {
+  test('should convert tool definitions to OpenAI functions', () => {
     // Get all tools from the MCP integration
     const toolRegistry = mcpIntegration['mcpToolSystem']['toolRegistry'];
     const availableTools = toolRegistry.getAllTools();
@@ -171,20 +182,25 @@ describe('Ollama MCP Integration with SSE Transport', () => {
     
     try {
       // Call the tool from each client
-      const [result1, result2, result3] = await Promise.all([
+      const promiseAll = Promise.all([
         client.callTool({
           name: 'test_tool',
           arguments: { param: 'client 1' }
-        }),
+        }) as Promise<{ content: Array<{ type: string; text: string }> }>,
         client2.callTool({
           name: 'test_tool',
           arguments: { param: 'client 2' }
-        }),
+        }) as Promise<{ content: Array<{ type: string; text: string }> }>,
         client3.callTool({
           name: 'test_tool',
           arguments: { param: 'client 3' }
-        })
-      ]);
+        }) as Promise<{ content: Array<{ type: string; text: string }> }>
+      ]) as Promise<[
+        { content: Array<{ type: string; text: string }> },
+        { content: Array<{ type: string; text: string }> },
+        { content: Array<{ type: string; text: string }> }
+      ]>;
+      const [result1, result2, result3] = await promiseAll;
       
       // Verify the results
       expect(result1.content[0].text).toBe('Tool executed with param: client 1');
@@ -203,7 +219,7 @@ describe('Ollama MCP Integration with SSE Transport', () => {
     // Mock the Ollama handler
     const ollamaHandler = {
       mcpIntegration: mcpIntegration,
-      client: new (require('openai').OpenAI)(),
+      client: new OpenAI(),
       getModel: () => ({ id: 'llama2' }),
       options: { modelTemperature: 0.7 }
     };

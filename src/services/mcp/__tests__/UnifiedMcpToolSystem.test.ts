@@ -1,38 +1,24 @@
-import { EventEmitter } from 'events';
 import { McpToolExecutor } from '../core/McpToolExecutor';
-import { NeutralToolUseRequest, NeutralToolResult, ToolUseFormat } from '../types/McpToolTypes';
+import { NeutralToolResult, ToolUseFormat } from '../types/McpToolTypes';
 import { McpConverters } from '../core/McpConverters';
 import { McpToolRouter } from '../core/McpToolRouter';
-import { EmbeddedMcpProvider } from '../providers/EmbeddedMcpProvider';
-import { McpToolRegistry } from '../core/McpToolRegistry';
-import { ToolDefinition } from '../types/McpProviderTypes';
 
-interface MockServerInterface extends EventEmitter {
-  start: jest.Mock;
-  stop: jest.Mock;
-  registerToolDefinition: jest.Mock;
-  unregisterTool: jest.Mock;
-  executeTool: jest.Mock;
-}
-
-interface MockToolRegistry {
-  registerTool: jest.Mock;
-  unregisterTool: jest.Mock;
-  getTool: jest.Mock;
-  getAllTools: jest.Mock;
-  hasTool: jest.Mock;
-  executeTool: jest.Mock;
-}
-
-// Create mock registry
-const createMockToolRegistry = (): MockToolRegistry => ({
-  registerTool: jest.fn(),
-  unregisterTool: jest.fn().mockReturnValue(true),
-  getTool: jest.fn(),
-  getAllTools: jest.fn(),
-  hasTool: jest.fn(),
-  executeTool: jest.fn()
-});
+// Types for accessing private fields in tests
+type McpToolExecutorInternal = {
+  mcpProvider: {
+    start: jest.Mock;
+    unregisterTool: jest.Mock;
+    registerToolDefinition: jest.Mock;
+  };
+  toolRegistry: {
+    registerTool: jest.Mock;
+    unregisterTool: jest.Mock;
+    getTool: jest.Mock;
+    getAllTools: jest.Mock;
+    hasTool: jest.Mock;
+    executeTool: jest.Mock;
+  };
+};
 
 describe('McpToolExecutor', () => {
   let mcpToolSystem: McpToolExecutor;
@@ -42,8 +28,8 @@ describe('McpToolExecutor', () => {
     jest.clearAllMocks();
     
     // Get a fresh instance for each test
-    // @ts-ignore - Reset the singleton instance
-    (McpToolExecutor as any).instance = undefined;
+    // @ts-expect-error - Reset the singleton instance for testing
+    (McpToolExecutor as unknown as { instance: McpToolExecutor | undefined }).instance = undefined;
     mcpToolSystem = McpToolExecutor.getInstance();
   });
   
@@ -51,7 +37,7 @@ describe('McpToolExecutor', () => {
     it('should initialize the MCP server', async () => {
       await mcpToolSystem.initialize();
       
-      const mcpProvider = (mcpToolSystem as any).mcpProvider;
+      const { mcpProvider } = mcpToolSystem as unknown as McpToolExecutorInternal;
       expect(mcpProvider.start).toHaveBeenCalled();
     });
     
@@ -60,7 +46,7 @@ describe('McpToolExecutor', () => {
       await mcpToolSystem.initialize();
       
       // Clear the mock
-      const mcpProvider = (mcpToolSystem as any).mcpProvider;
+      const { mcpProvider } = mcpToolSystem as unknown as McpToolExecutorInternal;
       mcpProvider.start.mockClear();
       
       // Initialize again
@@ -77,13 +63,15 @@ describe('McpToolExecutor', () => {
         name: 'test_tool',
         description: 'A test tool',
         paramSchema: { type: 'object' },
-        handler: async () => ({ content: [], isError: false })
+        handler: async () => {
+          await Promise.resolve();
+          return { content: [], isError: false };
+        }
       };
       
       mcpToolSystem.registerTool(toolDefinition);
       
-      const mcpProvider = (mcpToolSystem as any).mcpProvider;
-      const toolRegistry = (mcpToolSystem as any).toolRegistry;
+      const { mcpProvider, toolRegistry } = mcpToolSystem as unknown as McpToolExecutorInternal;
 
       expect(mcpProvider.registerToolDefinition).toHaveBeenCalledWith(toolDefinition);
       expect(toolRegistry.registerTool).toHaveBeenCalledWith(toolDefinition);
@@ -92,8 +80,7 @@ describe('McpToolExecutor', () => {
     it('should unregister a tool from both the MCP server and the tool registry', () => {
       const result = mcpToolSystem.unregisterTool('test_tool');
       
-      const mcpProvider = (mcpToolSystem as any).mcpProvider;
-      const toolRegistry = (mcpToolSystem as any).toolRegistry;
+      const { mcpProvider, toolRegistry } = mcpToolSystem as unknown as McpToolExecutorInternal;
 
       expect(mcpProvider.unregisterTool).toHaveBeenCalledWith('test_tool');
       expect(toolRegistry.unregisterTool).toHaveBeenCalledWith('test_tool');
@@ -144,7 +131,12 @@ describe('McpConverters', () => {
         }
       };
       
-      const result = McpConverters.jsonToMcp(jsonContent);
+      const result = McpConverters.jsonToMcp(jsonContent) as {
+        type: string;
+        id: string;
+        name: string;
+        input: { [key: string]: string };
+      };
       
       expect(result.type).toBe('tool_use');
       expect(result.id).toBe('test-123');
@@ -162,7 +154,8 @@ describe('McpConverters', () => {
       };
       
       const result = McpConverters.mcpToJson(mcpResult);
-      const parsed = JSON.parse(result);
+      const parsed: { type: string; tool_use_id: string; status: string; content: Array<{ text: string }> } =
+        JSON.parse(result) as { type: string; tool_use_id: string; status: string; content: Array<{ text: string }> };
       
       expect(parsed.type).toBe('tool_result');
       expect(parsed.tool_use_id).toBe('test-123');
@@ -181,7 +174,12 @@ describe('McpConverters', () => {
         }
       };
       
-      const result = McpConverters.openAiToMcp(functionCall);
+      const result = McpConverters.openAiToMcp(functionCall) as {
+        type: string;
+        id: string;
+        name: string;
+        input: Record<string, unknown>;
+      };
       
       expect(result.type).toBe('tool_use');
       expect(result.id).toBe('call_abc123');
@@ -198,7 +196,11 @@ describe('McpConverters', () => {
         status: 'success'
       };
       
-      const result = McpConverters.mcpToOpenAi(mcpResult);
+      const result = McpConverters.mcpToOpenAi(mcpResult) as {
+        role: string;
+        tool_call_id: string;
+        content: string;
+      };
       
       expect(result.role).toBe('tool');
       expect(result.tool_call_id).toBe('call_abc123');
@@ -215,7 +217,7 @@ describe('McpToolRouter', () => {
     jest.clearAllMocks();
     
     // Get a fresh instance for each test
-    // @ts-ignore - Reset the singleton instance
+    // @ts-expect-error - Reset the singleton instance for testing
     McpToolRouter['instance'] = undefined;
     mcpToolRouter = McpToolRouter.getInstance();
   });
@@ -260,8 +262,8 @@ describe('McpToolRouter', () => {
         status: 'success'
       });
       
-      // @ts-ignore - Replace the method
-      (mcpToolRouter as any).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
+      // @ts-expect-error - Replace the method for mocking
+      (mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
       
       const request = {
         format: ToolUseFormat.XML,
@@ -286,8 +288,8 @@ describe('McpToolRouter', () => {
         status: 'success'
       });
       
-      // @ts-ignore - Replace the method
-      (mcpToolRouter as any).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
+      // @ts-expect-error - Replace the method for mocking
+      (mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
       
       const request = {
         format: ToolUseFormat.JSON,
@@ -302,7 +304,13 @@ describe('McpToolRouter', () => {
       const result = await mcpToolRouter.routeToolUse(request);
       
       expect(result.format).toBe(ToolUseFormat.JSON);
-      const parsed = JSON.parse(result.content as string);
+      const parsed: { type: string; tool_use_id: string; status: string; content: Array<{ text: string }> } =
+        JSON.parse(result.content as string) as {
+          type: string;
+          tool_use_id: string;
+          status: string;
+          content: Array<{ text: string }>;
+        };
       expect(parsed.type).toBe('tool_result');
       expect(parsed.tool_use_id).toBe('test-123');
       expect(parsed.status).toBe('success');
@@ -314,8 +322,8 @@ describe('McpToolRouter', () => {
       // Mock the McpToolExecutor's executeToolFromNeutralFormat method to throw an error
       const mockExecute = jest.fn().mockRejectedValue(new Error('Test error'));
       
-      // @ts-ignore - Replace the method
-      (mcpToolRouter as any).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
+      // @ts-expect-error - Replace the method for mocking
+      (mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
       
       const request = {
         format: ToolUseFormat.XML,

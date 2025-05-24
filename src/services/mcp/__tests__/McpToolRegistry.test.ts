@@ -23,9 +23,9 @@ describe('McpToolRegistry', () => {
       paramSchema: {
         param: { type: 'string', description: 'A test parameter' }
       },
-      handler: async (args: Record<string, unknown>) => {
+      handler: (args: Record<string, unknown>) => {
         return {
-          content: [{ type: 'text', text: `Executed test_tool with param: ${args.param}` }]
+          content: [{ type: 'text', text: `Executed test_tool with param: ${String(args.param)}` }]
         };
       }
     };
@@ -43,7 +43,7 @@ describe('McpToolRegistry', () => {
     const toolDefinition: ToolDefinition = {
       name: 'test_tool',
       description: 'A test tool',
-      handler: async () => ({ content: [] })
+      handler: () => ({ content: [] })
     };
     
     registry.registerTool(toolDefinition);
@@ -71,14 +71,14 @@ describe('McpToolRegistry', () => {
     const tool1: ToolDefinition = {
       name: 'tool1',
       description: 'Tool 1',
-      handler: async () => ({ content: [] })
+      handler: () => ({ content: [] })
     };
     
-    const tool2: ToolDefinition = {
-      name: 'tool2',
-      description: 'Tool 2',
-      handler: async () => ({ content: [] })
-    };
+      const tool2: ToolDefinition = {
+        name: 'tool2',
+        description: 'Tool 2',
+        handler: () => ({ content: [] })
+      };
     
     registry.registerTool(tool1);
     registry.registerTool(tool2);
@@ -97,9 +97,9 @@ describe('McpToolRegistry', () => {
     const toolDefinition: ToolDefinition = {
       name: 'test_tool',
       description: 'A test tool',
-      handler: async (args: Record<string, unknown>) => {
+      handler: (args: Record<string, unknown>) => {
         return {
-          content: [{ type: 'text', text: `Executed with param: ${args.param}` }]
+          content: [{ type: 'text', text: `Executed with param: ${String(args.param)}` }]
         };
       }
     };
@@ -127,7 +127,7 @@ describe('McpToolRegistry', () => {
     const toolDefinition: ToolDefinition = {
       name: 'error_tool',
       description: 'A tool that throws an error',
-      handler: async () => {
+      handler: () => {
         throw new Error('Test error');
       }
     };
@@ -152,7 +152,7 @@ describe('McpToolRegistry', () => {
     const toolDefinition: ToolDefinition = {
       name: 'test_tool',
       description: 'A test tool',
-      handler: async () => ({ content: [] })
+      handler: () => ({ content: [] })
     };
     
     // Register the tool

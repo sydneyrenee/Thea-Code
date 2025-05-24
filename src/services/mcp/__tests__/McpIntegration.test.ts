@@ -1,6 +1,4 @@
 import { McpIntegration, handleToolUse } from '../integration/McpIntegration';
-import { McpToolRouter } from '../core/McpToolRouter';
-import { McpToolExecutor } from '../core/McpToolExecutor';
 
 // Mock the McpToolRouter
 jest.mock('../core/McpToolRouter', () => {
@@ -9,12 +7,10 @@ jest.mock('../core/McpToolRouter', () => {
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
     detectFormat: jest.fn().mockReturnValue('xml'),
-    routeToolUse: jest.fn().mockImplementation(async (request) => {
-      return {
-        format: request.format,
-        content: `Routed ${request.format} request`
-      };
-    })
+    routeToolUse: jest.fn().mockImplementation((request) => ({
+      format: request.format,
+      content: `Routed ${request.format} request`
+    }))
   };
   
   return {
@@ -35,18 +31,12 @@ jest.mock('../core/McpToolExecutor', () => {
   const mockInstance = {
     registerTool: jest.fn(),
     unregisterTool: jest.fn().mockReturnValue(true),
-    processXmlToolUse: jest.fn().mockImplementation(async (content) => {
-      return `Processed XML: ${content}`;
-    }),
-    processJsonToolUse: jest.fn().mockImplementation(async (content) => {
-      return `Processed JSON: ${typeof content === 'string' ? content : JSON.stringify(content)}`;
-    }),
-    processOpenAiFunctionCall: jest.fn().mockImplementation(async (content) => {
-      return {
-        role: 'tool',
-        content: `Processed OpenAI: ${JSON.stringify(content)}`
-      };
-    })
+    processXmlToolUse: jest.fn().mockImplementation((content) => `Processed XML: ${content}`),
+    processJsonToolUse: jest.fn().mockImplementation((content) => `Processed JSON: ${typeof content === 'string' ? content : JSON.stringify(content)}`),
+    processOpenAiFunctionCall: jest.fn().mockImplementation((content) => ({
+      role: 'tool',
+      content: `Processed OpenAI: ${JSON.stringify(content)}`
+    }))
   };
   
   return {
@@ -64,7 +54,7 @@ describe('McpIntegration', () => {
     jest.clearAllMocks();
     
     // Get a fresh instance for each test
-    // @ts-ignore - Reset the singleton instance
+    // @ts-expect-error - Reset the singleton instance
     McpIntegration['instance'] = undefined;
     mcpIntegration = McpIntegration.getInstance();
   });
@@ -73,6 +63,8 @@ describe('McpIntegration', () => {
     it('should initialize the MCP tool router', async () => {
       await mcpIntegration.initialize();
       
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
       expect(mcpToolRouter.initialize).toHaveBeenCalled();
     });
@@ -82,6 +74,8 @@ describe('McpIntegration', () => {
       await mcpIntegration.initialize();
       
       // Clear the mock
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
       mcpToolRouter.initialize.mockClear();
       
@@ -99,7 +93,7 @@ describe('McpIntegration', () => {
         name: 'test_tool',
         description: 'A test tool',
         paramSchema: { type: 'object' },
-        handler: async () => ({ content: [], isError: false })
+        handler: () => ({ content: [], isError: false })
       };
       
       mcpIntegration.registerTool(toolDefinition);
@@ -127,6 +121,7 @@ describe('McpIntegration', () => {
 
       const result = await mcpIntegration.processXmlToolUse(xmlContent);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'xml',
@@ -147,6 +142,7 @@ describe('McpIntegration', () => {
 
       const result = await mcpIntegration.processJsonToolUse(jsonContent);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'json',
@@ -166,6 +162,7 @@ describe('McpIntegration', () => {
 
       const result = await mcpIntegration.processOpenAiFunctionCall(functionCall);
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'openai',
@@ -196,7 +193,7 @@ describe('handleToolUse', () => {
     jest.clearAllMocks();
     
     // Reset the singleton instance
-    // @ts-ignore
+    // @ts-expect-error
     McpIntegration['instance'] = undefined;
   });
   
@@ -209,6 +206,7 @@ describe('handleToolUse', () => {
     const mcpIntegration = McpIntegration.getInstance();
     
     // Check that initialize was called
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
     expect(mcpToolRouter.initialize).toHaveBeenCalled();
   });
@@ -222,6 +220,7 @@ describe('handleToolUse', () => {
     const mcpIntegration = McpIntegration.getInstance();
     
     // Check that routeToolUse was called
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
     expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
       format: 'xml',

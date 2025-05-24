@@ -4,11 +4,11 @@ import { SseTransportConfig } from '../transport/config/SseTransportConfig';
 
 describe('SSE Transport', () => {
   let server: EmbeddedMcpProvider;
-  
-  beforeEach(() => {
+
+  beforeEach(async () => {
     // Create a new server with a random port for each test
-    server = new EmbeddedMcpProvider({
-      port: 0, // Use random port for tests
+    server = await EmbeddedMcpProvider.create({
+      port: 0,
       hostname: 'localhost'
     });
   });
@@ -47,9 +47,12 @@ describe('SSE Transport', () => {
       {
         message: { type: 'string' }
       },
-      async (args) => ({
-        content: [{ type: 'text', text: `Received: ${args.message}` }]
-      })
+      async (args) => {
+        await Promise.resolve();
+        return {
+          content: [{ type: 'text', text: `Received: ${String(args.message)}` }]
+        };
+      }
     );
     
     // Create a client and connect to the server
@@ -57,7 +60,9 @@ describe('SSE Transport', () => {
     
     try {
       // List available tools
-      const toolsResult = await client.listTools();
+      const toolsResult = await client.listTools() as {
+        tools: Array<{ name: string; description: string; inputSchema: unknown }>;
+      };
       expect(toolsResult.tools).toHaveLength(1);
       expect(toolsResult.tools[0].name).toBe('test_tool');
       
@@ -65,7 +70,9 @@ describe('SSE Transport', () => {
       const result = await client.callTool({
         name: 'test_tool',
         arguments: { message: 'Hello, world!' }
-      });
+      }) as {
+        content: Array<{ type: string; text: string }>;
+      };
       
       // Verify the result
       expect(result.content).toHaveLength(1);
@@ -92,9 +99,12 @@ describe('SSE Transport', () => {
       {
         message: { type: 'string' }
       },
-      async (args) => ({
-        content: [{ type: 'text', text: `Received: ${args.message}` }]
-      })
+      async (args) => {
+        await Promise.resolve();
+        return {
+          content: [{ type: 'text', text: `Received: ${String(args.message)}` }]
+        };
+      }
     );
     
     // Create multiple clients
@@ -104,20 +114,25 @@ describe('SSE Transport', () => {
     
     try {
       // Call the tool from each client
-      const [result1, result2, result3] = await Promise.all([
+      const promiseAll = Promise.all([
         client1.callTool({
           name: 'test_tool',
           arguments: { message: 'Client 1' }
-        }),
+        }) as Promise<{ content: Array<{ type: string; text: string }> }>,
         client2.callTool({
           name: 'test_tool',
           arguments: { message: 'Client 2' }
-        }),
+        }) as Promise<{ content: Array<{ type: string; text: string }> }>,
         client3.callTool({
           name: 'test_tool',
           arguments: { message: 'Client 3' }
-        })
-      ]);
+        }) as Promise<{ content: Array<{ type: string; text: string }> }>
+      ]) as Promise<[
+        { content: Array<{ type: string; text: string }> },
+        { content: Array<{ type: string; text: string }> },
+        { content: Array<{ type: string; text: string }> }
+      ]>;
+      const [result1, result2, result3] = await promiseAll;
       
       // Verify the results
       expect(result1.content[0].text).toBe('Received: Client 1');
@@ -143,7 +158,7 @@ describe('SSE Transport', () => {
       apiPath: '/custom/api'
     };
     
-    const customServer = new EmbeddedMcpProvider(customConfig);
+    const customServer = await EmbeddedMcpProvider.create(customConfig);
     
     try {
       // Start the server

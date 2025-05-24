@@ -52,26 +52,26 @@ class WorkspaceTracker {
 
 		// Renaming files triggers a delete and create event
 		this.disposables.push(
-			watcher.onDidDelete(async (uri) => {
-				if (await this.removeFilePath(uri.fsPath)) {
-					this.workspaceDidUpdate()
-				}
-			}),
+                        watcher.onDidDelete((uri) => {
+                                if (this.removeFilePath(uri.fsPath)) {
+                                        this.workspaceDidUpdate()
+                                }
+                        }),
 		)
 
 		this.disposables.push(watcher)
 
 		// Listen for tab changes and call workspaceDidUpdate directly
 		this.disposables.push(
-			vscode.window.tabGroups.onDidChangeTabs(() => {
-				// Reset if workspace path has changed
-				if (this.prevWorkSpacePath !== this.cwd) {
-					this.workspaceDidReset()
-				} else {
-					// Otherwise just update
-					this.workspaceDidUpdate()
-				}
-			}),
+                        vscode.window.tabGroups.onDidChangeTabs(() => {
+                                // Reset if workspace path has changed
+                                if (this.prevWorkSpacePath !== this.cwd) {
+                                        void this.workspaceDidReset()
+                                } else {
+                                        // Otherwise just update
+                                        this.workspaceDidUpdate()
+                                }
+                        }),
 		)
 	}
 
@@ -93,23 +93,25 @@ class WorkspaceTracker {
 		)
 	}
 
-	private async workspaceDidReset() {
-		if (this.resetTimer) {
-			clearTimeout(this.resetTimer)
-		}
-		this.resetTimer = setTimeout(async () => {
-			if (this.prevWorkSpacePath !== this.cwd) {
-				await this.providerRef.deref()?.postMessageToWebview({
-					type: "workspaceUpdated",
-					filePaths: [],
-					openedTabs: this.getOpenedTabsInfo(),
-				})
-				this.filePaths.clear()
-				this.prevWorkSpacePath = this.cwd
-				await this.initializeFilePaths()
-			}
-		}, 300) // Debounce for 300ms
-	}
+        private workspaceDidReset() {
+                if (this.resetTimer) {
+                        clearTimeout(this.resetTimer)
+                }
+                this.resetTimer = setTimeout(() => {
+                        void (async () => {
+                                if (this.prevWorkSpacePath !== this.cwd) {
+                                        await this.providerRef.deref()?.postMessageToWebview({
+                                        type: "workspaceUpdated",
+                                        filePaths: [],
+                                        openedTabs: this.getOpenedTabsInfo(),
+                                        })
+                                        this.filePaths.clear()
+                                        this.prevWorkSpacePath = this.cwd
+                                        await this.initializeFilePaths()
+                                }
+                        })()
+                }, 300) // Debounce for 300ms
+        }
 
 	private workspaceDidUpdate() {
 		if (this.updateTimer) {
@@ -120,12 +122,12 @@ class WorkspaceTracker {
 				return
 			}
 
-			const relativeFilePaths = Array.from(this.filePaths).map((file) => toRelativePath(file, this.cwd))
-			this.providerRef.deref()?.postMessageToWebview({
-				type: "workspaceUpdated",
-				filePaths: relativeFilePaths,
-				openedTabs: this.getOpenedTabsInfo(),
-			})
+                        const relativeFilePaths = Array.from(this.filePaths).map((file) => toRelativePath(file, this.cwd))
+                        void this.providerRef.deref()?.postMessageToWebview({
+                                type: "workspaceUpdated",
+                                filePaths: relativeFilePaths,
+                                openedTabs: this.getOpenedTabsInfo(),
+                        })
 			this.updateTimer = null
 		}, 300) // Debounce for 300ms
 	}
@@ -155,10 +157,10 @@ class WorkspaceTracker {
 		}
 	}
 
-	private async removeFilePath(filePath: string): Promise<boolean> {
-		const normalizedPath = this.normalizeFilePath(filePath)
-		return this.filePaths.delete(normalizedPath) || this.filePaths.delete(normalizedPath + "/")
-	}
+        private removeFilePath(filePath: string): boolean {
+                const normalizedPath = this.normalizeFilePath(filePath)
+                return this.filePaths.delete(normalizedPath) || this.filePaths.delete(normalizedPath + "/")
+        }
 
 	public dispose() {
 		if (this.updateTimer) {
@@ -169,8 +171,10 @@ class WorkspaceTracker {
 			clearTimeout(this.resetTimer)
 			this.resetTimer = null
 		}
-		this.disposables.forEach((d) => d.dispose())
-	}
+                this.disposables.forEach((d) => {
+                        d.dispose()
+                })
+        }
 }
 
 export default WorkspaceTracker

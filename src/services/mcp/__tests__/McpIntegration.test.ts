@@ -55,6 +55,7 @@ describe('McpIntegration', () => {
     
     // Get a fresh instance for each test
     // @ts-expect-error accessing private singleton for reset
+
     McpIntegration['instance'] = undefined;
     mcpIntegration = McpIntegration.getInstance();
   });
@@ -64,6 +65,7 @@ describe('McpIntegration', () => {
       await mcpIntegration.initialize();
       
       const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { initialize: jest.Mock } }).mcpToolRouter;
+
       expect(mcpToolRouter.initialize).toHaveBeenCalled();
     });
     
@@ -73,6 +75,7 @@ describe('McpIntegration', () => {
       
       // Clear the mock
       const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { initialize: jest.Mock } }).mcpToolRouter;
+
       mcpToolRouter.initialize.mockClear();
       
       // Initialize again
@@ -157,6 +160,7 @@ describe('McpIntegration', () => {
       const result = await mcpIntegration.processOpenAiFunctionCall(functionCall);
 
       const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { routeToolUse: jest.Mock } }).mcpToolRouter;
+
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'openai',
         content: functionCall
@@ -187,6 +191,7 @@ describe('handleToolUse', () => {
     
     // Reset the singleton instance
     // @ts-expect-error accessing private singleton for reset
+
     McpIntegration['instance'] = undefined;
   });
   
@@ -200,6 +205,7 @@ describe('handleToolUse', () => {
     
     // Check that initialize was called
     const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { initialize: jest.Mock; routeToolUse: jest.Mock } }).mcpToolRouter;
+
     expect(mcpToolRouter.initialize).toHaveBeenCalled();
   });
   
@@ -213,6 +219,7 @@ describe('handleToolUse', () => {
     
     // Check that routeToolUse was called
     const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { routeToolUse: jest.Mock } }).mcpToolRouter;
+
     expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
       format: 'xml',
       content

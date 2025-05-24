@@ -24,19 +24,24 @@ export class BrowserSession {
 	/**
 	 * Gets the viewport size from global state or returns default
 	 */
-	private getViewport() {
-		const size = (this.context.globalState.get("browserViewportSize")) || "900x600"
-		const [width, height] = size.split("x").map(Number)
-		return { width, height }
-	}
+        private getViewport(): { width: number; height: number } {
+                const size =
+                        (this.context.globalState.get<string>("browserViewportSize")) ??
+                        "900x600"
+                const [width, height] = size.split("x").map(Number)
+                return { width, height }
+        }
 
 	/**
 	 * Launches a local browser instance
 	 */
 	private async launchLocalBrowser(): Promise<void> {
 		console.log("Launching local browser")
-		const stats = await this.urlContentFetcher.ensureChromiumExists()
-		this.browser = await stats.puppeteer.launch({
+                const stats = (await this.urlContentFetcher.ensureChromiumExists()) as {
+                        puppeteer: typeof import("puppeteer-core")
+                        executablePath: string
+                }
+                this.browser = await stats.puppeteer.launch({
 			args: [
 				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
 			],
@@ -72,12 +77,12 @@ export class BrowserSession {
 	 * Attempts to connect to a remote browser using various methods
 	 * Returns true if connection was successful, false otherwise
 	 */
-	private async connectToRemoteBrowser(): Promise<boolean> {
-		let remoteBrowserHost = this.context.globalState.get("remoteBrowserHost")
-		let reconnectionAttempted = false
+        private async connectToRemoteBrowser(): Promise<boolean> {
+                const remoteBrowserHost = this.context.globalState.get<string>("remoteBrowserHost")
+                let reconnectionAttempted = false
 
 		// Try to connect with cached endpoint first if it exists and is recent (less than 1 hour old)
-		const cachedChromeHostUrl = this.context.globalState.get("cachedChromeHostUrl")
+                const cachedChromeHostUrl = this.context.globalState.get<string>("cachedChromeHostUrl")
 		if (cachedChromeHostUrl && this.lastConnectionAttempt && Date.now() - this.lastConnectionAttempt < 3_600_000) {
 			console.log(`Attempting to connect using cached Chrome Host Url: ${cachedChromeHostUrl}`)
 			if (await this.connectWithChromeHostUrl(cachedChromeHostUrl)) {
@@ -95,10 +100,10 @@ export class BrowserSession {
 		}
 
 		// If user provided a remote browser host, try to connect to it
-		else if (remoteBrowserHost && !reconnectionAttempted) {
-			console.log(`Attempting to connect to remote browser at ${remoteBrowserHost}`)
-			try {
-				const hostIsValid = await tryChromeHostUrl(remoteBrowserHost)
+                else if (remoteBrowserHost && !reconnectionAttempted) {
+                        console.log(`Attempting to connect to remote browser at ${remoteBrowserHost}`)
+                        try {
+                                const hostIsValid = await tryChromeHostUrl(remoteBrowserHost)
 
 				if (!hostIsValid) {
 					throw new Error("Could not find chromeHostUrl in the response")
@@ -134,7 +139,7 @@ export class BrowserSession {
 		console.log("launch browser called")
 
 		// Check if remote browser connection is enabled
-		const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled")
+                const remoteBrowserEnabled = this.context.globalState.get<boolean>("remoteBrowserEnabled")
 
 		if (!remoteBrowserEnabled) {
 			console.log("Launching local browser")
@@ -166,7 +171,7 @@ export class BrowserSession {
 		if (this.browser || this.page) {
 			console.log("closing browser...")
 
-			const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled")
+                        const remoteBrowserEnabled = this.context.globalState.get<boolean>("remoteBrowserEnabled")
 			if (remoteBrowserEnabled && this.browser) {
 				await this.browser.disconnect().catch(() => {})
 			} else {
@@ -218,11 +223,12 @@ export class BrowserSession {
 
 		try {
 			await action(this.page)
-		} catch (err) {
-			if (!(err instanceof TimeoutError)) {
-				logs.push(`[Error] ${err.toString()}`)
-			}
-		}
+                } catch (err) {
+                        if (!(err instanceof TimeoutError)) {
+                                const msg = err instanceof Error ? err.message : String(err)
+                                logs.push(`[Error] ${msg}`)
+                        }
+                }
 
 		// Wait for console inactivity, with a timeout
 		await pWaitFor(() => Date.now() - lastLogTs >= 500, {
@@ -241,20 +247,20 @@ export class BrowserSession {
 			// },
 		}
 
-		let screenshotBase64 = await this.page.screenshot({
-			...options,
-			type: "webp",
-			quality: ((await this.context.globalState.get("screenshotQuality"))) ?? 75,
-		})
-		let screenshot = `data:image/webp;base64,${screenshotBase64}`
+                let screenshotBase64 = (await this.page.screenshot({
+                        ...options,
+                        type: "webp",
+                        quality: (this.context.globalState.get<number>("screenshotQuality")) ?? 75,
+                })) as string
+                let screenshot = `data:image/webp;base64,${screenshotBase64}`
 
 		if (!screenshotBase64) {
 			console.log("webp screenshot failed, trying png")
-			screenshotBase64 = await this.page.screenshot({
-				...options,
-				type: "png",
-			})
-			screenshot = `data:image/png;base64,${screenshotBase64}`
+                        screenshotBase64 = (await this.page.screenshot({
+                                ...options,
+                                type: "png",
+                        })) as string
+                        screenshot = `data:image/png;base64,${screenshotBase64}`
 		}
 
 		if (!screenshotBase64) {

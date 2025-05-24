@@ -43,14 +43,14 @@ export async function isPortOpen(host: string, port: number, timeout = 1000): Pr
  * Try to connect to Chrome at a specific IP address
  */
 export async function tryChromeHostUrl(chromeHostUrl: string): Promise<boolean> {
-	try {
-		console.log(`Trying to connect to Chrome at: ${chromeHostUrl}/json/version`)
-		const response = await axios.get(`${chromeHostUrl}/json/version`, { timeout: 1000 })
-		const data = response.data
-		return true
-	} catch (error) {
-		return false
-	}
+        try {
+                console.log(`Trying to connect to Chrome at: ${chromeHostUrl}/json/version`)
+                const response = await axios.get(`${chromeHostUrl}/json/version`, { timeout: 1000 })
+                return response.status === 200
+        } catch (error) {
+                console.error(`Failed to reach Chrome at ${chromeHostUrl}`, error)
+                return false
+        }
 }
 
 /**
@@ -59,19 +59,22 @@ export async function tryChromeHostUrl(chromeHostUrl: string): Promise<boolean> 
 export async function getDockerHostIP(): Promise<string | null> {
 	try {
 		// Try to resolve host.docker.internal (works on Docker Desktop)
-		return new Promise((resolve) => {
-			dns.lookup("host.docker.internal", (err: any, address: string) => {
-				if (err) {
-					resolve(null)
-				} else {
-					resolve(address)
-				}
-			})
-		})
-	} catch (error) {
-		console.log("Could not determine Docker host IP:", error)
-		return null
-	}
+                return new Promise((resolve) => {
+                        dns.lookup(
+                                "host.docker.internal",
+                                (err: NodeJS.ErrnoException | null, address: string) => {
+                                        if (err) {
+                                                resolve(null)
+                                        } else {
+                                                resolve(address)
+                                        }
+                                },
+                        )
+                })
+        } catch (error) {
+                console.log("Could not determine Docker host IP:", error)
+                return null
+        }
 }
 
 /**

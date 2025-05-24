@@ -100,16 +100,18 @@ describe("WorkspaceTracker", () => {
 
 		expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "workspaceUpdated",
-			filePaths: expect.arrayContaining(["file1.ts", "file2.ts"]),
+                        filePaths: expect.arrayContaining(["file1.ts", "file2.ts"]) as unknown[],
 			openedTabs: [],
 		})
-		expect((mockProvider.postMessageToWebview as jest.Mock).mock.calls[0][0].filePaths).toHaveLength(2)
+                const firstCall = (mockProvider.postMessageToWebview as jest.Mock).mock.calls[0] as [{ filePaths: string[] }]
+                expect(firstCall[0].filePaths).toHaveLength(2)
 	})
 
 	it("should handle file creation events", async () => {
 		// Get the creation callback and call it
-		const [[callback]] = mockOnDidCreate.mock.calls
-		await callback({ fsPath: "/test/workspace/newfile.ts" })
+                const createCalls = mockOnDidCreate.mock.calls as [[(args: { fsPath: string }) => Promise<void>]]
+                const callback = createCalls[0][0]
+                await callback({ fsPath: "/test/workspace/newfile.ts" })
 		jest.runAllTimers()
 
 		expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
@@ -121,13 +123,15 @@ describe("WorkspaceTracker", () => {
 
 	it("should handle file deletion events", async () => {
 		// First add a file
-		const [[createCallback]] = mockOnDidCreate.mock.calls
-		await createCallback({ fsPath: "/test/workspace/file.ts" })
+                const createCalls2 = mockOnDidCreate.mock.calls as [[(args: { fsPath: string }) => Promise<void>]]
+                const createCallback = createCalls2[0][0]
+                await createCallback({ fsPath: "/test/workspace/file.ts" })
 		jest.runAllTimers()
 
 		// Then delete it
-		const [[deleteCallback]] = mockOnDidDelete.mock.calls
-		await deleteCallback({ fsPath: "/test/workspace/file.ts" })
+                const deleteCalls = mockOnDidDelete.mock.calls as [[(args: { fsPath: string }) => Promise<void>]]
+                const deleteCallback = deleteCalls[0][0]
+                await deleteCallback({ fsPath: "/test/workspace/file.ts" })
 		jest.runAllTimers()
 
 		// The last call should have empty filePaths
@@ -142,17 +146,18 @@ describe("WorkspaceTracker", () => {
 		// Mock stat to return directory type
 		;(vscode.workspace.fs.stat as jest.Mock).mockResolvedValueOnce({ type: 2 }) // FileType.Directory = 2
 
-		const [[callback]] = mockOnDidCreate.mock.calls
-		await callback({ fsPath: "/test/workspace/newdir" })
+                const dirCalls = mockOnDidCreate.mock.calls as [[(args: { fsPath: string }) => Promise<void>]]
+                const callback = dirCalls[0][0]
+                await callback({ fsPath: "/test/workspace/newdir" })
 		jest.runAllTimers()
 
 		expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "workspaceUpdated",
-			filePaths: expect.arrayContaining(["newdir"]),
+                        filePaths: expect.arrayContaining(["newdir"]) as unknown[],
 			openedTabs: [],
 		})
-		const lastCall = (mockProvider.postMessageToWebview as jest.Mock).mock.calls.slice(-1)[0]
-		expect(lastCall[0].filePaths).toHaveLength(1)
+                const lastCall = (mockProvider.postMessageToWebview as jest.Mock).mock.calls.slice(-1)[0] as [{ filePaths: string[] }]
+                expect(lastCall[0].filePaths).toHaveLength(1)
 	})
 
 	it("should respect file limits", async () => {
@@ -165,37 +170,39 @@ describe("WorkspaceTracker", () => {
 
 		// Should only have 1000 files initially
 		const expectedFiles = Array.from({ length: 1000 }, (_, i) => `file${i}.ts`).sort()
-		const calls = (mockProvider.postMessageToWebview as jest.Mock).mock.calls
+                const calls = (mockProvider.postMessageToWebview as jest.Mock).mock.calls as [{ filePaths: string[] }[]]
 
 		expect(mockProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "workspaceUpdated",
-			filePaths: expect.arrayContaining(expectedFiles),
+                        filePaths: expect.arrayContaining(expectedFiles) as unknown[],
 			openedTabs: [],
 		})
-		expect(calls[0][0].filePaths).toHaveLength(1000)
+                expect(calls[0][0].filePaths).toHaveLength(1000)
 
 		// Should allow adding up to 2000 total files
-		const [[callback]] = mockOnDidCreate.mock.calls
-		for (let i = 0; i < 1000; i++) {
-			await callback({ fsPath: `/test/workspace/extra${i}.ts` })
-		}
+                const extraCalls = mockOnDidCreate.mock.calls as [[(args: { fsPath: string }) => Promise<void>]]
+                const callback = extraCalls[0][0]
+                for (let i = 0; i < 1000; i++) {
+                        await callback({ fsPath: `/test/workspace/extra${i}.ts` })
+                }
 		jest.runAllTimers()
 
-		const lastCall = (mockProvider.postMessageToWebview as jest.Mock).mock.calls.slice(-1)[0]
-		expect(lastCall[0].filePaths).toHaveLength(2000)
+                const lastCall = (mockProvider.postMessageToWebview as jest.Mock).mock.calls.slice(-1)[0] as [{ filePaths: string[] }]
+                expect(lastCall[0].filePaths).toHaveLength(2000)
 
 		// Adding one more file beyond 2000 should not increase the count
-		await callback({ fsPath: "/test/workspace/toomany.ts" })
-		jest.runAllTimers()
+                await callback({ fsPath: "/test/workspace/toomany.ts" })
+                jest.runAllTimers()
 
-		const finalCall = (mockProvider.postMessageToWebview as jest.Mock).mock.calls.slice(-1)[0]
-		expect(finalCall[0].filePaths).toHaveLength(2000)
+                const finalCall = (mockProvider.postMessageToWebview as jest.Mock).mock.calls.slice(-1)[0] as [{ filePaths: string[] }]
+                expect(finalCall[0].filePaths).toHaveLength(2000)
 	})
 
 	it("should clean up watchers and timers on dispose", () => {
 		// Set up updateTimer
-		const [[callback]] = mockOnDidCreate.mock.calls
-		callback({ fsPath: "/test/workspace/file.ts" })
+                const disposeCalls = mockOnDidCreate.mock.calls as [[(args: { fsPath: string }) => void]]
+                const callback = disposeCalls[0][0]
+                callback({ fsPath: "/test/workspace/file.ts" })
 
 		workspaceTracker.dispose()
 		expect(mockDispose).toHaveBeenCalled()

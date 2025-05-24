@@ -6,15 +6,15 @@ import { EXTENSION_DISPLAY_NAME } from "../../../../dist/thea-config" // Import 
 // Mock vscode.window.createTerminal
 const mockCreateTerminal = jest.fn()
 jest.mock("vscode", () => ({
-	window: {
-		createTerminal: (...args: any[]) => {
-			mockCreateTerminal(...args)
-			return {
-				exitStatus: undefined,
-			}
-		},
-	},
-	ThemeIcon: jest.fn(),
+        window: {
+                createTerminal: (...args: unknown[]) => {
+                        mockCreateTerminal(...args)
+                        return {
+                                exitStatus: undefined,
+                        }
+                },
+        },
+        ThemeIcon: jest.fn(),
 }))
 
 describe("TerminalRegistry", () => {
@@ -28,8 +28,8 @@ describe("TerminalRegistry", () => {
 
 			expect(mockCreateTerminal).toHaveBeenCalledWith({
 				cwd: "/test/path",
-				name: EXTENSION_DISPLAY_NAME,
-				iconPath: expect.any(Object),
+                                name: EXTENSION_DISPLAY_NAME as string,
+                                iconPath: expect.any(Object) as unknown,
 				env: {
 					PAGER: "cat",
 					PROMPT_COMMAND: "sleep 0.050",

@@ -12,6 +12,7 @@ import { fileExistsAtPath } from "../../../utils/fs"
 import { ShadowCheckpointService } from "../ShadowCheckpointService"
 import { RepoPerTaskCheckpointService } from "../RepoPerTaskCheckpointService"
 import { RepoPerWorkspaceCheckpointService } from "../RepoPerWorkspaceCheckpointService"
+import type { CheckpointEventMap } from "../types"
 
 jest.mock("globby", () => ({
 	globby: jest.fn().mockResolvedValue([]),
@@ -572,10 +573,11 @@ describe.each([
 
 			// Verify the event was emitted.
 			expect(restoreHandler).toHaveBeenCalledTimes(1)
-			const eventData = restoreHandler.mock.calls[0][0]
-			expect(eventData.type).toBe("restore")
-			expect(eventData.commitHash).toBe(commit!.commit)
-			expect(typeof eventData.duration).toBe("number")
+                        const eventData = restoreHandler.mock
+                                .calls[0][0] as CheckpointEventMap["restore"]
+                        expect(eventData.type).toBe("restore")
+                        expect(eventData.commitHash).toBe(commit!.commit)
+                        expect(typeof eventData.duration).toBe("number")
 
 			// Verify the file was actually restored.
 			expect(await fs.readFile(testFile, "utf-8")).toBe("Content for restore test")
@@ -589,17 +591,17 @@ describe.each([
 			const invalidCommitHash = "invalid-commit-hash"
 
 			// Try to restore an invalid checkpoint.
-			try {
-				await service.restoreCheckpoint(invalidCommitHash)
-			} catch (error) {
-				// Expected to throw, we're testing the event emission.
-			}
+                        try {
+                                await service.restoreCheckpoint(invalidCommitHash)
+                        } catch {
+                                // Expected to throw, we're testing the event emission.
+                        }
 
 			// Verify the error event was emitted.
 			expect(errorHandler).toHaveBeenCalledTimes(1)
-			const eventData = errorHandler.mock.calls[0][0]
-			expect(eventData.type).toBe("error")
-			expect(eventData.error).toBeInstanceOf(Error)
+                        const eventData = errorHandler.mock.calls[0][0] as CheckpointEventMap["error"]
+                        expect(eventData.type).toBe("error")
+                        expect(eventData.error).toBeInstanceOf(Error)
 		})
 
 		it("supports multiple event listeners for the same event", async () => {
@@ -616,8 +618,8 @@ describe.each([
 			expect(checkpointHandler1).toHaveBeenCalledTimes(1)
 			expect(checkpointHandler2).toHaveBeenCalledTimes(1)
 
-			const eventData1 = checkpointHandler1.mock.calls[0][0]
-			const eventData2 = checkpointHandler2.mock.calls[0][0]
+                        const eventData1 = checkpointHandler1.mock.calls[0][0] as CheckpointEventMap["checkpoint"]
+                        const eventData2 = checkpointHandler2.mock.calls[0][0] as CheckpointEventMap["checkpoint"]
 
 			expect(eventData1).toEqual(eventData2)
 			expect(eventData1.type).toBe("checkpoint")
@@ -710,8 +712,8 @@ describe("ShadowCheckpointService", () => {
 			// Create git repo without adding the specific branch
 			const git = simpleGit(workspaceRepoDir)
 			await git.init()
-			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME)
-			await git.addConfig("user.email", AUTHOR_EMAIL)
+                        await git.addConfig("user.name", EXTENSION_DISPLAY_NAME as string)
+                        await git.addConfig("user.email", AUTHOR_EMAIL as string)
 
 			// We need to create a commit, but we won't create the specific branch
 			const testFile = path.join(workspaceRepoDir, "test.txt")

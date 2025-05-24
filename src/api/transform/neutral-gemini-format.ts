@@ -38,12 +38,19 @@ export function convertToGeminiHistory(
                     return { text: block.text } as TextPart;
                 } else if (block.type === 'image') {
                     // Convert Neutral image source to Gemini image part
-                    return {
-                        inlineData: {
-                            mimeType: block.source.media_type,
-                            data: block.source.data // Base64 data
-                        }
-                    } as InlineDataPart;
+                    // Type guard for image block
+                    if (block.type === 'image' && 'source' in block && 
+                        typeof block.source === 'object' && block.source !== null &&
+                        'media_type' in block.source && 'data' in block.source) {
+                        return {
+                            inlineData: {
+                                mimeType: String(block.source.media_type),
+                                data: String(block.source.data) // Base64 data
+                            }
+                        } as InlineDataPart;
+                    }
+                    // Fallback if the block doesn't have the expected structure
+                    return { text: "[Image could not be processed]" } as TextPart;
                 } else if (block.type === 'tool_use') {
                     // Convert to Gemini function call format
                     return {
@@ -55,20 +62,20 @@ export function convertToGeminiHistory(
                 } else if (block.type === 'tool_result') {
                     // Extract function name from tool_use_id (assuming format: "name-id")
                     const name = block.tool_use_id.split("-")[0];
-                    
+
                     // Handle different content formats
                     if (Array.isArray(block.content)) {
                         const textParts = block.content.filter(part => part.type === 'text');
                         const imageParts = block.content.filter(part => part.type === 'image');
-                        
+
                         const text = textParts.length > 0 
                             ? textParts.map(part => part.text).join('\n\n') 
                             : '';
-                        
+
                         const imageText = imageParts.length > 0 
                             ? '\n\n(See next part for image)' 
                             : '';
-                        
+
                         // Create function response part and any image parts
                         const parts: Part[] = [
                             {
@@ -81,23 +88,30 @@ export function convertToGeminiHistory(
                                 }
                             } as FunctionResponsePart
                         ];
-                        
+
                         // Add image parts if any
                         if (imageParts.length > 0) {
                             imageParts.forEach(part => {
-                                parts.push({
-                                    inlineData: {
-                                        mimeType: part.source.media_type,
-                                        data: part.source.data
-                                    }
-                                } as InlineDataPart);
+                                // Type guard for image part
+                                if ('source' in part && 
+                                    typeof part.source === 'object' && part.source !== null &&
+                                    'media_type' in part.source && 'data' in part.source) {
+                                    parts.push({
+                                        inlineData: {
+                                            mimeType: String(part.source.media_type),
+                                            data: String(part.source.data)
+                                        }
+                                    } as InlineDataPart);
+                                } else {
+                                    console.warn('Invalid image part structure in tool_result');
+                                }
                             });
                         }
-                        
+
                         return parts;
                     }
                 }
-                
+
                 // Handle other potential block types if necessary
                 console.warn(`convertToGeminiHistory: Unsupported Neutral block type: ${block.type}`);
                 return { text: `[Unsupported Neutral block type: ${block.type}]` } as TextPart;
@@ -123,12 +137,20 @@ export function convertToGeminiContentBlocks(
             if (block.type === 'text') {
                 geminiParts.push({ text: block.text } as TextPart);
             } else if (block.type === 'image') {
-                geminiParts.push({
-                    inlineData: {
-                        mimeType: block.source.media_type,
-                        data: block.source.data
-                    }
-                } as InlineDataPart);
+                // Type guard for image block
+                if ('source' in block && 
+                    typeof block.source === 'object' && block.source !== null &&
+                    'media_type' in block.source && 'data' in block.source) {
+                    geminiParts.push({
+                        inlineData: {
+                            mimeType: String(block.source.media_type),
+                            data: String(block.source.data)
+                        }
+                    } as InlineDataPart);
+                } else {
+                    console.warn('Invalid image block structure in convertToGeminiContentBlocks');
+                    geminiParts.push({ text: "[Image could not be processed]" } as TextPart);
+                }
             }
             // Tool_use and tool_result blocks are not typically included directly in ContentPart for generation requests
             // They are usually part of the history structure or handled separately.
@@ -154,7 +176,7 @@ export function convertToNeutralHistoryFromGemini(
         // Process each part in the Gemini message
         if (geminiMessage.parts && Array.isArray(geminiMessage.parts)) {
             const contentBlocks: NeutralMessageContent = [];
-            
+
             geminiMessage.parts.forEach((part: Part) => {
                 // Handle text parts
                 if ('text' in part && part.text) {
@@ -186,20 +208,20 @@ export function convertToNeutralHistoryFromGemini(
                 // Handle function responses (tool results)
                 else if ('functionResponse' in part && part.functionResponse) {
                     const toolUseId = `${part.functionResponse.name}-${Date.now()}`; // This is a simplification
-                    
+
                     // Create a text block for the function response content
                     const responseContent: Array<NeutralTextContentBlock | NeutralImageContentBlock> = [];
-                    
+
                     // Cast response to the expected structure
                     const response = part.functionResponse.response as FunctionResponseContent;
-                    
+
                     if (response && response.content) {
                         responseContent.push({
                             type: 'text',
                             text: response.content
                         } as NeutralTextContentBlock);
                     }
-                    
+
                     contentBlocks.push({
                         type: 'tool_result',
                         tool_use_id: toolUseId,
@@ -215,10 +237,10 @@ export function convertToNeutralHistoryFromGemini(
                     } as NeutralTextContentBlock);
                 }
             });
-            
+
             neutralMessage.content = contentBlocks;
         }
-        
+
         return neutralMessage;
     });
 }

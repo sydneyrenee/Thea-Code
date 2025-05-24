@@ -10,7 +10,6 @@ module.exports = {
 	moduleNameMapper: {
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy",
 		"^vscrui$": "<rootDir>/src/__mocks__/vscrui.ts",
-		"^@vscode/webview-ui-toolkit/react$": "<rootDir>/src/__mocks__/@vscode/webview-ui-toolkit/react.ts",
 		"^@/(.*)$": "<rootDir>/src/$1",
 		"^src/i18n/setup$": "<rootDir>/src/__mocks__/i18n/setup.ts",
 		"^\\.\\./setup$": "<rootDir>/src/__mocks__/i18n/setup.ts",
@@ -21,7 +20,7 @@ module.exports = {
 	},
 	reporters: [["jest-simple-dot-reporter", {}]],
 	transformIgnorePatterns: [
-		"/node_modules/(?!(rehype-highlight|react-remark|unist-util-visit|unist-util-find-after|vfile|unified|bail|is-plain-obj|trough|vfile-message|unist-util-stringify-position|mdast-util-from-markdown|mdast-util-to-string|micromark|decode-named-character-reference|character-entities|markdown-table|zwitch|longest-streak|escape-string-regexp|unist-util-is|hast-util-to-text|@vscode/webview-ui-toolkit|@microsoft/fast-react-wrapper|@microsoft/fast-element|@microsoft/fast-foundation|@microsoft/fast-web-utilities|exenv-es6|vscrui)/)",
+		"/node_modules/(?!(rehype-highlight|react-remark|unist-util-visit|unist-util-find-after|vfile|unified|bail|is-plain-obj|trough|vfile-message|unist-util-stringify-position|mdast-util-from-markdown|mdast-util-to-string|micromark|decode-named-character-reference|character-entities|markdown-table|zwitch|longest-streak|escape-string-regexp|unist-util-is|hast-util-to-text|@microsoft/fast-react-wrapper|@microsoft/fast-element|@microsoft/fast-foundation|@microsoft/fast-web-utilities|exenv-es6|vscrui)/)",
 	],
 	roots: ["<rootDir>/src"],
 	moduleDirectories: ["node_modules", "src"],

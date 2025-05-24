@@ -440,15 +440,24 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					
 					if (jsonEnd !== -1) {
 						const jsonStr = content.substring(jsonStart, jsonEnd);
-						const jsonObj = JSON.parse(jsonStr);
+						 
+						const jsonObj = JSON.parse(jsonStr) as { type: string; name: string; id?: string; input?: Record<string, unknown> }; // Assert type
 						
+						 
+						 
 						if (jsonObj.type === 'tool_use' && jsonObj.name) {
 							// Create tool call object in OpenAI format
 							toolCalls.push({
+								 
+								 
 								id: jsonObj.id || `${jsonObj.name}-${Date.now()}`,
 								type: 'function',
 								function: {
+									 
+									 
 									name: jsonObj.name,
+									 
+									 
 									arguments: JSON.stringify(jsonObj.input || {})
 								}
 							});
@@ -579,8 +588,11 @@ export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
 		}
 
 		const response = await axios.get(`${baseUrl}/models`, config)
-		const modelsArray = response.data?.data?.map((model: { id: string }) => model.id) || []
-		return [...new Set<string>(modelsArray)]
+		const responseData = response.data as { data: { id: string; [key: string]: unknown }[] } | undefined;
+		 
+		 
+		const modelsArray = responseData?.data?.map((model: { id: string }) => model.id) || []
+		return [...new Set<string>(modelsArray)];
 	} catch (error) {
 		console.error("Failed to fetch OpenAI models:", error)
 		return {}

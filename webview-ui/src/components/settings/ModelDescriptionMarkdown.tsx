@@ -1,5 +1,5 @@
-import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
-import { memo, useEffect, useRef, useState } from "react"
+import React, { memo, useEffect, useRef, useState } from "react"
+import { VSCodeLink } from "@/components/ui/vscode-components"
 import { useRemark } from "react-remark"
 
 import { cn } from "@/lib/utils"

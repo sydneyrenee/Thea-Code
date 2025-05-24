@@ -199,7 +199,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 							break
 						}
 						case "tool_use": {
-							const toolUseBlock = chunk.content_block as Anthropic.ToolUseBlock;
+							const toolUseBlock = chunk.content_block;
 							// Process tool use using MCP integration via BaseProvider.processToolUse
 							const toolResult = await this.processToolUse({
 								id: toolUseBlock.id,

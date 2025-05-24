@@ -1,9 +1,9 @@
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
-import { useCallback, useState } from "react"
+import { VSCodeCheckbox, VSCodeLink } from "../ui/vscode-components"
+import "../ui/vscode-components.css"
+import React, { useCallback, useState } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { useAppTranslation } from "../../i18n/TranslationContext"
 import { Trans } from "react-i18next"
-import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { vscode } from "../../utils/vscode"
 
 interface AutoApproveAction {

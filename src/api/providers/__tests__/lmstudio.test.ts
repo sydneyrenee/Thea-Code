@@ -1,7 +1,11 @@
 import { LmStudioHandler } from "../lmstudio"
 import { ApiHandlerOptions } from "../../../shared/api"
-import OpenAI from "openai"
-import { Anthropic } from "@anthropic-ai/sdk"
+// Unused OpenAI import removed
+// Unused Anthropic import removed
+import type OpenAI from "openai"; // Added for types
+import type { ApiStreamChunk } from '../../transform/stream'; // Added for types
+// import type { Anthropic } from "@anthropic-ai/sdk"; // No longer needed directly in this test file for messages
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"; // Import for messages type
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -11,7 +15,7 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: mockCreate.mockImplementation(async (options) => {
+					create: mockCreate.mockImplementation((options: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
 						if (!options.stream) {
 							return {
 								id: "test-completion",
@@ -31,7 +35,7 @@ jest.mock("openai", () => {
 						}
 
 						return {
-							[Symbol.asyncIterator]: async function* () {
+							[Symbol.asyncIterator]: function* () {
 								yield {
 									choices: [
 										{
@@ -94,16 +98,16 @@ describe("LmStudioHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "user",
-				content: "Hello!",
+				content: [{ type: "text", text: "Hello!" }],
 			},
 		]
 
 		it("should handle streaming responses", async () => {
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: ApiStreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -120,7 +124,8 @@ describe("LmStudioHandler", () => {
 			const stream = handler.createMessage(systemPrompt, messages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				for await (const _chunk of stream) {
 					// Should not reach here
 				}
 			}).rejects.toThrow("Please check the LM Studio developer logs to debug what went wrong")

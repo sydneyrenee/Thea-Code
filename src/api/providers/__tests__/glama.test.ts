@@ -6,7 +6,8 @@ import axios from "axios"
 import { GlamaHandler } from "../glama"
 import { ApiHandlerOptions } from "../../../shared/api"
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"; // Fixed import path
-
+import type OpenAI from "openai";
+import type { ApiStreamChunk } from '../../transform/stream';
 // Mock OpenAI client
 const mockCreate = jest.fn()
 const mockWithResponse = jest.fn()
@@ -17,9 +18,9 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: (...args: any[]) => {
+					create: (options: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
 						const stream = {
-							[Symbol.asyncIterator]: async function* () {
+							[Symbol.asyncIterator]: function* () {
 								yield {
 									choices: [
 										{
@@ -45,8 +46,9 @@ jest.mock("openai", () => {
 							},
 						}
 
-						const result = mockCreate(...args)
-						if (args[0].stream) {
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+						const result = mockCreate(options) // Changed from ...args
+						if (options.stream) {
 							mockWithResponse.mockReturnValue(
 								Promise.resolve({
 									data: stream,
@@ -58,8 +60,10 @@ jest.mock("openai", () => {
 									},
 								}),
 							)
+							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 							result.withResponse = mockWithResponse
 						}
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 						return result
 					},
 				},
@@ -131,7 +135,7 @@ describe("GlamaHandler", () => {
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: ApiStreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -166,9 +170,10 @@ describe("GlamaHandler", () => {
 					chunks.push(chunk)
 				}
 				fail("Expected error to be thrown")
-			} catch (error) {
+			} catch (e) {
+				const error = e as Error; // Type assertion
 				expect(error).toBeInstanceOf(Error)
-				expect(error.message).toBe("API Error")
+				expect(error.message).toBe("API Error") // Now safe
 			}
 		})
 	})
@@ -225,6 +230,7 @@ describe("GlamaHandler", () => {
 					temperature: 0,
 				}),
 			)
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect(mockCreate.mock.calls[0][0]).not.toHaveProperty("max_tokens")
 		})
 	})

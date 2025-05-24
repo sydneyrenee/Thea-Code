@@ -9,7 +9,7 @@ import {
 	VSCodeRadioGroup,
 	VSCodeRadio,
 	VSCodeCheckbox,
-} from "@vscode/webview-ui-toolkit/react"
+} from "@/components/ui/vscode-components"
 
 import { vscode } from "@/utils/vscode"
 import { formatLargeNumber, formatDate } from "@/utils/format"

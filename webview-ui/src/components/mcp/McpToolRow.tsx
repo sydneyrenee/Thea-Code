@@ -1,4 +1,4 @@
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { Checkbox } from "vscrui"
 import { McpTool } from "../../../../src/shared/mcp"
 import { useAppTranslation } from "../../i18n/TranslationContext"
 import { vscode } from "../../utils/vscode"
@@ -38,9 +38,9 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 					<span style={{ fontWeight: 500 }}>{tool.name}</span>
 				</div>
 				{serverName && alwaysAllowMcp && (
-					<VSCodeCheckbox checked={tool.alwaysAllow} onChange={handleAlwaysAllowChange} data-tool={tool.name}>
+					<Checkbox checked={tool.alwaysAllow} onChange={handleAlwaysAllowChange} data-tool={tool.name}>
 						{t("mcp:tool.alwaysAllow")}
-					</VSCodeCheckbox>
+					</Checkbox>
 				)}
 			</div>
 			{tool.description && (
@@ -56,7 +56,7 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 			)}
 			{tool.inputSchema &&
 				"properties" in tool.inputSchema &&
-				Object.keys(tool.inputSchema.properties as Record<string, any>).length > 0 && (
+				Object.keys(tool.inputSchema.properties as Record<string, unknown>).length > 0 && (
 					<div
 						style={{
 							marginTop: "8px",
@@ -69,7 +69,7 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 							style={{ marginBottom: "4px", opacity: 0.8, fontSize: "11px", textTransform: "uppercase" }}>
 							{t("mcp:tool.parameters")}
 						</div>
-						{Object.entries(tool.inputSchema.properties as Record<string, any>).map(
+						{Object.entries(tool.inputSchema.properties as Record<string, unknown>).map(
 							([paramName, schema]) => {
 								const isRequired =
 									tool.inputSchema &&

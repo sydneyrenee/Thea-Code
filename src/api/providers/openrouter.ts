@@ -10,10 +10,7 @@ import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
 
 import { convertToR1Format } from "../transform/r1-format"
 import type {
-  NeutralConversationHistory,
-  NeutralImageContentBlock,
-  NeutralToolUseContentBlock,
-  NeutralToolResultContentBlock
+  NeutralConversationHistory
 } from "../../shared/neutral-history"
 
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
@@ -81,20 +78,20 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 					} else if (block.type === "image_url" || block.type === "image_base64") {
 						return {
 							type: "image",
-							source: (block as NeutralImageContentBlock).source,
+							source: (block).source,
 						} as Anthropic.Messages.ImageBlockParam
 					} else if (block.type === "tool_use") {
 						return {
 							type: "tool_use",
-							id: (block as NeutralToolUseContentBlock).id,
-							name: (block as NeutralToolUseContentBlock).name,
-							input: (block as NeutralToolUseContentBlock).input,
+							id: (block).id,
+							name: (block).name,
+							input: (block).input,
 						} as Anthropic.Messages.ToolUseBlockParam
 					} else if (block.type === "tool_result") {
 						return {
 							type: "tool_result",
-							tool_use_id: (block as NeutralToolResultContentBlock).tool_use_id,
-							content: (block as NeutralToolResultContentBlock).content,
+							tool_use_id: (block).tool_use_id,
+							content: (block).content,
 						} as Anthropic.Messages.ToolResultBlockParam
 					}
 					return { type: "text", text: `[Unknown block type: ${block.type}]` } as Anthropic.Messages.TextBlockParam
@@ -305,6 +302,30 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 	}
 }
 
+interface OpenRouterRawModel {
+  id: string;
+  top_provider?: {
+    max_completion_tokens?: number | null;
+    [key: string]: unknown;
+  } | null;
+  context_length?: number | null;
+  architecture?: {
+    modality?: string | null;
+    [key: string]: unknown;
+  } | null;
+  pricing?: {
+    prompt?: string | null;
+    completion?: string | null;
+    [key: string]: unknown;
+  } | null;
+  description?: string | null;
+  [key: string]: unknown;
+}
+
+interface OpenRouterModelsResponse {
+  data: OpenRouterRawModel[];
+}
+
 export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 	const models: Record<string, ModelInfo> = {}
 
@@ -312,17 +333,17 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 
 	try {
 		const response = await axios.get(`${baseURL}/models`)
-		const rawModels = response.data.data
+		const rawModels = (response.data as OpenRouterModelsResponse).data
 
 		for (const rawModel of rawModels) {
 			const modelInfo: ModelInfo = {
 				maxTokens: rawModel.top_provider?.max_completion_tokens,
-				contextWindow: rawModel.context_length,
+				contextWindow: rawModel.context_length ?? 0, // Default to 0 if null/undefined
 				supportsImages: rawModel.architecture?.modality?.includes("image"),
 				supportsPromptCache: false,
 				inputPrice: parseApiPrice(rawModel.pricing?.prompt),
 				outputPrice: parseApiPrice(rawModel.pricing?.completion),
-				description: rawModel.description,
+				description: rawModel.description ?? undefined, // Default to undefined if null
 				thinking: rawModel.id === "anthropic/claude-3.7-sonnet:thinking",
 			}
 

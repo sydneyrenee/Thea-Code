@@ -76,7 +76,8 @@ function convertAnthropicContentToGemini(content: Anthropic.Messages.MessagePara
 					]
 				}
 			default:
-				throw new Error(`Unsupported content block type: ${(block as any).type}`)
+				// Use a type assertion to a more specific type or use a safe string
+				throw new Error(`Unsupported content block type: ${String(block.type || "unknown")}`)
 		}
 	})
 }

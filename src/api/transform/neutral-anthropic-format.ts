@@ -61,7 +61,7 @@ export function convertToNeutralHistory(
                         type: 'tool_use',
                         id: block.id,
                         name: block.name,
-                        input: block.input as Record<string, any> // Assuming input is compatible
+                        input: block.input as Record<string, unknown> // Assuming input is compatible
                     } as NeutralToolUseContentBlock;
                 } else if (block.type === 'tool_result') {
                     // Convert Anthropic tool result content to Neutral content
@@ -77,8 +77,8 @@ export function convertToNeutralHistory(
                                      type: 'image_base64',
                                      source: {
                                          type: 'base64',
-                                         media_type: part.source.media_type,
-                                         data: part.source.data
+                                         media_type: part.source.media_type as string,
+                                         data: part.source.data as string
                                      }
                                   });
                              }
@@ -94,7 +94,7 @@ export function convertToNeutralHistory(
                     } as NeutralToolResultContentBlock;
                 }
                 // Handle other potential block types if necessary, or return a default/error block
-                return { type: 'text', text: `[Unsupported Anthropic block type: ${(block as any).type}]` } as NeutralTextContentBlock;
+                return { type: 'text', text: `[Unsupported Anthropic block type: ${(block as { type: string }).type}]` } as NeutralTextContentBlock;
             });
         }
 

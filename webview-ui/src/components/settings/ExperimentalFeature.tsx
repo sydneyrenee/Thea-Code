@@ -1,4 +1,5 @@
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import React from "react"
+import { VSCodeCheckbox } from "@/components/ui/vscode-components"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
 interface ExperimentalFeatureProps {

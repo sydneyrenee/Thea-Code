@@ -2,7 +2,7 @@
 
 import { convertToBedrockConverseMessages } from "../bedrock-converse-format"
 import { Anthropic } from "@anthropic-ai/sdk"
-import { ContentBlock, ToolResultContentBlock } from "@aws-sdk/client-bedrock-runtime"
+import { ToolResultContentBlock } from "@aws-sdk/client-bedrock-runtime"
 
 describe("convertToBedrockConverseMessages", () => {
 	test("converts simple text messages correctly", () => {
@@ -57,7 +57,7 @@ describe("convertToBedrockConverseMessages", () => {
 		expect(result[0].content).toHaveLength(2)
 		expect(result[0].content[0]).toEqual({ text: "Look at this image:" })
 
-		const imageBlock = result[0].content[1] as ContentBlock
+		const imageBlock = result[0].content[1]
 		if ("image" in imageBlock && imageBlock.image && imageBlock.image.source) {
 			expect(imageBlock.image.format).toBe("jpeg")
 			expect(imageBlock.image.source).toBeDefined()
@@ -92,7 +92,7 @@ describe("convertToBedrockConverseMessages", () => {
 		}
 
 		expect(result[0].role).toBe("assistant")
-		const toolBlock = result[0].content[0] as ContentBlock
+		const toolBlock = result[0].content[0]
 		if ("toolUse" in toolBlock && toolBlock.toolUse) {
 			expect(toolBlock.toolUse).toEqual({
 				toolUseId: "test-id",
@@ -126,7 +126,7 @@ describe("convertToBedrockConverseMessages", () => {
 		}
 
 		expect(result[0].role).toBe("assistant")
-		const resultBlock = result[0].content[0] as ContentBlock
+		const resultBlock = result[0].content[0]
 		if ("toolResult" in resultBlock && resultBlock.toolResult) {
 			const expectedContent: ToolResultContentBlock[] = [{ text: "File contents here" }]
 			expect(resultBlock.toolResult).toEqual({
@@ -161,7 +161,7 @@ describe("convertToBedrockConverseMessages", () => {
 
 		expect(result[0].role).toBe("user")
 		expect(result[0].content).toHaveLength(1)
-		const textBlock = result[0].content[0] as ContentBlock
+		const textBlock = result[0].content[0]
 		expect(textBlock).toEqual({ text: "Hello world" })
 	})
 })

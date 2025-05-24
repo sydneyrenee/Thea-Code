@@ -8,7 +8,7 @@ import {
 	ModelInfo,
 } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
-import { convertToMistralMessages, convertToMistralContent } from "../transform/neutral-mistral-format"
+import { convertToMistralMessages } from "../transform/neutral-mistral-format"
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 

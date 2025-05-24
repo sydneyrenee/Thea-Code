@@ -1,6 +1,6 @@
-import { VSCodeButton, VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import React, { HTMLAttributes, useEffect, useMemo, useState } from "react"
+import { VSCodeButton, VSCodeCheckbox, VSCodeTextField } from "@/components/ui/vscode-components"
 import { SquareMousePointer } from "lucide-react"
-import { HTMLAttributes, useEffect, useMemo, useState } from "react"
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue, Slider } from "@/components/ui"
 import { useAppTranslation } from "@/i18n/TranslationContext"

@@ -18,7 +18,7 @@ export function convertToOpenAiHistory(
     return neutralHistory.map(neutralMessage => {
         // Create a properly typed message based on role
         let openAiMessage: OpenAI.Chat.ChatCompletionMessageParam;
-        
+
         // Initialize with the appropriate role-specific type
         switch (neutralMessage.role) {
             case 'user':
@@ -47,7 +47,7 @@ export function convertToOpenAiHistory(
                 };
                 break;
             default:
-                console.warn(`Unknown role type: ${neutralMessage.role}, defaulting to 'user'`);
+                console.warn(`Unknown role type: ${String(neutralMessage.role)}, defaulting to 'user'`);
                 openAiMessage = {
                     role: 'user',
                     content: "" // Empty string instead of null
@@ -61,15 +61,26 @@ export function convertToOpenAiHistory(
         } else if (Array.isArray(neutralMessage.content)) {
             // If content is an array of blocks, convert to OpenAI format
             const contentBlocks = convertToOpenAiContentBlocks(neutralMessage.content);
-            
+
             // Check if there are tool calls or tool results
-            const toolUseBlocks = neutralMessage.content.filter(block => block.type === 'tool_use') as NeutralToolUseContentBlock[];
-            
+            const toolUseBlocks = neutralMessage.content.filter(block => block.type === 'tool_use');
+
             if (toolUseBlocks.length > 0 && neutralMessage.role === 'assistant') {
                 // For assistant messages with tool calls, use the special tool_calls format
-                // We need to cast to any here because the TypeScript definitions
+                // We need to cast to a more specific type because the TypeScript definitions
                 // don't include tool_calls on the base message type
-                (openAiMessage as any).tool_calls = toolUseBlocks.map(block => ({
+                interface AssistantMessageWithToolCalls extends OpenAI.Chat.ChatCompletionAssistantMessageParam {
+                    tool_calls: Array<{
+                        id: string;
+                        type: 'function';
+                        function: {
+                            name: string;
+                            arguments: string;
+                        };
+                    }>;
+                }
+
+                (openAiMessage as AssistantMessageWithToolCalls).tool_calls = toolUseBlocks.map(block => ({
                     id: block.id,
                     type: 'function' as const,
                     function: {
@@ -77,9 +88,9 @@ export function convertToOpenAiHistory(
                         arguments: JSON.stringify(block.input)
                     }
                 }));
-                
+
                 // Filter out non-tool blocks for the content
-                const textBlocks = neutralMessage.content.filter(block => block.type === 'text') as NeutralTextContentBlock[];
+                const textBlocks = neutralMessage.content.filter(block => block.type === 'text');
                 if (textBlocks.length > 0) {
                     // If there are text blocks, combine them
                     openAiMessage.content = textBlocks.map(block => block.text).join('\n\n');
@@ -93,23 +104,24 @@ export function convertToOpenAiHistory(
                 if (toolResultBlock) {
                     // For tool messages, we can directly set tool_call_id
                     (openAiMessage as OpenAI.Chat.ChatCompletionToolMessageParam).tool_call_id = toolResultBlock.tool_use_id;
-                    
+
                     // Combine all text content from the tool result
                     const textContent = toolResultBlock.content
                         .filter(block => block.type === 'text')
-                        .map(block => (block as NeutralTextContentBlock).text)
+                        .map(block => (block).text)
                         .join('\n\n');
-                    
+
                     openAiMessage.content = textContent;
                 }
             } else {
                 // For regular messages with multiple content blocks
                 if (contentBlocks.length === 1 && typeof contentBlocks[0] === 'string') {
                     // If there's only one text block, use it directly
-                    openAiMessage.content = contentBlocks[0] as string;
+                    openAiMessage.content = contentBlocks[0];
                 } else if (contentBlocks.length > 0) {
                     // If there are multiple blocks or non-text blocks, use the array format
-                    openAiMessage.content = contentBlocks as any;
+                    // Use a type assertion to a more specific type
+                    openAiMessage.content = contentBlocks as Array<OpenAI.Chat.ChatCompletionContentPart>;
                 }
             }
         }
@@ -118,27 +130,6 @@ export function convertToOpenAiHistory(
     });
 }
 
-/**
- * Maps neutral roles to OpenAI roles
- */
-// Define the OpenAI role type for better type safety
-type OpenAIRole = 'system' | 'user' | 'assistant' | 'tool' | 'function';
-
-function mapRoleToOpenAi(role: string): OpenAIRole {
-    switch (role) {
-        case 'user':
-            return 'user';
-        case 'assistant':
-            return 'assistant';
-        case 'system':
-            return 'system';
-        case 'tool':
-            return 'tool';
-        default:
-            console.warn(`Unknown role type: ${role}, defaulting to 'user'`);
-            return 'user';
-    }
-}
 
 /**
  * Converts NeutralMessageContent to OpenAI content format.
@@ -151,25 +142,25 @@ export function convertToOpenAiContentBlocks(
     if (typeof neutralContent === 'string') {
         return neutralContent;
     }
-    
+
     // If it's an array with only one text block, return it as a string for simplicity
     if (neutralContent.length === 1 && neutralContent[0].type === 'text') {
-        return (neutralContent[0] as NeutralTextContentBlock).text;
+        return (neutralContent[0]).text;
     }
-    
+
     // Otherwise, convert each block to the appropriate OpenAI format
     // Create a properly typed array
     const result: Array<OpenAI.Chat.ChatCompletionContentPart> = [];
-    
+
     // Process each block
     for (const block of neutralContent) {
         if (block.type === 'text') {
             result.push({
                 type: 'text',
-                text: (block as NeutralTextContentBlock).text
+                text: (block).text
             });
         } else if (block.type === 'image') {
-            const imageBlock = block as NeutralImageContentBlock;
+            const imageBlock = block;
             result.push({
                 type: 'image_url',
                 image_url: {
@@ -193,7 +184,7 @@ export function convertToOpenAiContentBlocks(
             });
         }
     }
-    
+
     return result;
 }
 
@@ -230,7 +221,7 @@ export function convertToNeutralHistoryFromOpenAi(
                     const url = typeof part.image_url === 'string'
                         ? part.image_url
                         : part.image_url.url;
-                    
+
                     // Check if it's a base64 image
                     if (url.startsWith('data:')) {
                         const matches = url.match(/^data:([^;]+);base64,(.+)$/);
@@ -245,7 +236,7 @@ export function convertToNeutralHistoryFromOpenAi(
                             } as NeutralImageContentBlock;
                         }
                     }
-                    
+
                     // For non-base64 images, we'd need a different approach
                     console.warn('Non-base64 image URLs not fully supported');
                     return {
@@ -253,7 +244,7 @@ export function convertToNeutralHistoryFromOpenAi(
                         text: `[Image: ${url}]`
                     } as NeutralTextContentBlock;
                 }
-                
+
                 // Handle other part types
                 console.warn(`Unsupported OpenAI content part type: ${part.type}`);
                 return {
@@ -264,11 +255,21 @@ export function convertToNeutralHistoryFromOpenAi(
         }
 
         // Handle tool calls for assistant messages
-        // Handle tool calls for assistant messages
-        const assistantMessage = openAiMessage as OpenAI.Chat.ChatCompletionAssistantMessageParam;
-        // Use a type assertion to access the non-standard property
-        const assistantWithTools = assistantMessage as any;
-        
+        // Define a more specific interface for assistant messages with tool calls
+        interface AssistantMessageWithToolCalls extends OpenAI.Chat.ChatCompletionAssistantMessageParam {
+            tool_calls: Array<{
+                id: string;
+                type: string;
+                function: {
+                    name: string;
+                    arguments: string;
+                };
+            }>;
+        }
+
+        // Cast to the more specific type
+        const assistantWithTools = openAiMessage as AssistantMessageWithToolCalls;
+
         if (assistantWithTools.tool_calls && openAiMessage.role === 'assistant') {
             assistantWithTools.tool_calls.forEach((toolCall: {
                 id: string;
@@ -280,14 +281,14 @@ export function convertToNeutralHistoryFromOpenAi(
             }) => {
                 if (toolCall.type === 'function') {
                     // Parse the arguments JSON
-                    let args = {};
+                    let args: Record<string, unknown> = {};
                     try {
-                        args = JSON.parse(toolCall.function.arguments);
+                        args = JSON.parse(toolCall.function.arguments) as Record<string, unknown>;
                     } catch (e) {
                         console.warn('Failed to parse tool call arguments:', e);
                         args = { raw: toolCall.function.arguments };
                     }
-                    
+
                     // Add tool use block
                     (neutralMessage.content as NeutralMessageContent).push({
                         type: 'tool_use',
@@ -300,12 +301,19 @@ export function convertToNeutralHistoryFromOpenAi(
         }
 
         // Handle tool results for tool messages
-        // We need to cast to any here to access tool_call_id
-        if (openAiMessage.role === 'tool' && (openAiMessage as any).tool_call_id) {
+        // Define a more specific interface for tool messages with tool_call_id
+        interface ToolMessageWithCallId extends OpenAI.Chat.ChatCompletionToolMessageParam {
+            tool_call_id: string;
+        }
+
+        // Cast to the more specific type
+        const toolMessage = openAiMessage as ToolMessageWithCallId;
+
+        if (openAiMessage.role === 'tool' && toolMessage.tool_call_id) {
             // Create a tool result block
             const toolResult: NeutralToolResultContentBlock = {
                 type: 'tool_result',
-                tool_use_id: (openAiMessage as any).tool_call_id,
+                tool_use_id: toolMessage.tool_call_id,
                 content: [{
                     type: 'text',
                     text: typeof openAiMessage.content === 'string'
@@ -313,7 +321,7 @@ export function convertToNeutralHistoryFromOpenAi(
                         : JSON.stringify(openAiMessage.content)
                 }]
             };
-            
+
             // Replace the content with the tool result
             neutralMessage.content = [toolResult];
         }

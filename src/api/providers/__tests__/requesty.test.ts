@@ -1,8 +1,8 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-import type { NeutralConversationHistory, NeutralMessageContent } from '../../../shared/neutral-history';
+// import { Anthropic } from "@anthropic-ai/sdk" // Unused
+import type { NeutralConversationHistory } from '../../../shared/neutral-history'; // NeutralMessageContent was unused
 import type { ApiStreamChunk } from '../../transform/stream';
 import OpenAI from "openai"
-import { ApiHandlerOptions, ModelInfo, requestyDefaultModelInfo } from "../../../shared/api"
+import { ApiHandlerOptions } from "../../../shared/api" // ModelInfo, requestyDefaultModelInfo were unused
 import { RequestyHandler } from "../requesty"
 import { convertToOpenAiMessages } from "../../transform/openai-format"
 import { convertToR1Format } from "../../transform/r1-format"
@@ -56,8 +56,8 @@ describe("RequestyHandler", () => {
 		)
 
 		// Mock transform functions
-		;(convertToOpenAiMessages as jest.Mock).mockImplementation((messages) => messages)
-		;(convertToR1Format as jest.Mock).mockImplementation((messages) => messages)
+		;(convertToOpenAiMessages as jest.Mock).mockImplementation((messages: any) => messages) // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+		;(convertToR1Format as jest.Mock).mockImplementation((messages: any) => messages) // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 
 		// Create handler instance
 		handler = new RequestyHandler(defaultOptions)
@@ -83,7 +83,7 @@ describe("RequestyHandler", () => {
 		describe("with streaming enabled", () => {
 			beforeEach(() => {
 				const stream = {
-					[Symbol.asyncIterator]: async function* () {
+					[Symbol.asyncIterator]: function* () {  
 						yield {
 							choices: [{ delta: { content: "Hello" } }],
 						}
@@ -147,7 +147,7 @@ describe("RequestyHandler", () => {
 
 				expect(mockCreate).toHaveBeenCalledWith(
 					expect.not.objectContaining({
-						max_tokens: expect.any(Number),
+						max_tokens: expect.any(Number), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 					}),
 				)
 			})
@@ -234,11 +234,13 @@ describe("RequestyHandler", () => {
 		it("should complete prompt successfully", async () => {
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Completed response")
+			 
+			 
 			expect(mockCreate).toHaveBeenCalledWith({
 				model: defaultOptions.requestyModelId,
 				messages: [{ role: "user", content: "Test prompt" }],
-				max_tokens: expect.any(Number), // Expect max_tokens to be included
-				temperature: expect.any(Number), // Expect temperature to be included
+				max_tokens: expect.any(Number), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				temperature: expect.any(Number), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 				stream: false, // Expect stream to be false
 			})
 		})

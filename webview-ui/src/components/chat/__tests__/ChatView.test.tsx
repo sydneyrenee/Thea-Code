@@ -85,7 +85,7 @@ jest.mock("../TaskHeader", () => ({
 }))
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+jest.mock("@/components/ui/vscode-components", () => ({
 	VSCodeButton: function MockVSCodeButton({
 		children,
 		onClick,

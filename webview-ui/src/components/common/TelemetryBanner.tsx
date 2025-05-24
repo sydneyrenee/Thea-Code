@@ -1,4 +1,5 @@
-import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeLink } from "../ui/vscode-components"
+import "../ui/vscode-components.css"
 import { memo, useState } from "react"
 import styled from "styled-components"
 import { vscode } from "../../utils/vscode"

@@ -88,10 +88,11 @@ describe("convertAnthropicMessageToVertexGemini", () => {
 			content: [
 				{
 					type: "image",
+					// @ts-expect-error Testing unsupported image source type
 					source: {
 						type: "url", // Not supported
 						url: "https://example.com/image.jpg",
-					} as any,
+					},
 				},
 			],
 		}
@@ -168,7 +169,8 @@ describe("convertAnthropicMessageToVertexGemini", () => {
 				{
 					type: "tool_result",
 					tool_use_id: "calculator-123",
-					content: null as any, // Empty content
+					// @ts-expect-error Testing null content
+					content: null, // Empty content
 				},
 			],
 		}
@@ -325,9 +327,10 @@ describe("convertAnthropicMessageToVertexGemini", () => {
 			role: "user",
 			content: [
 				{
+					// @ts-expect-error Testing unsupported content block type
 					type: "unknown_type", // Unsupported type
 					data: "some data",
-				} as any,
+				},
 			],
 		}
 

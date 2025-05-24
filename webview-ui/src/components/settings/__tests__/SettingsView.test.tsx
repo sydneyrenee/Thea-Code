@@ -42,7 +42,7 @@ jest.mock("../ApiConfigManager", () => ({
 }))
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+jest.mock("@/components/ui/vscode-components", () => ({
 	VSCodeButton: ({ children, onClick, appearance, "data-testid": dataTestId }: any) =>
 		appearance === "icon" ? (
 			<button

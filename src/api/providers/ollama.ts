@@ -5,7 +5,7 @@ import { SingleCompletionHandler } from "../"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { convertToOllamaHistory, convertToOllamaContentBlocks } from "../transform/neutral-ollama-format"
-import { ApiStream } from "../transform/stream"
+import { ApiStream, type ApiStreamChunk } from "../transform/stream"
 import { HybridMatcher } from "../../utils/json-xml-bridge"
 import { BaseProvider } from "./base-provider"
 import { OpenAiHandler } from "./openai"
@@ -54,14 +54,8 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 		// Hybrid matching logic for reasoning/thinking blocks only
 		const matcher = new HybridMatcher(
 			"think",  // XML tag name for reasoning
-			"thinking", // JSON type for reasoning
-			(chunk) => {
-				// Regular reasoning/text handling
-				return {
-					type: chunk.matched ? "reasoning" : "text",
-					text: typeof chunk.data === 'string' ? chunk.data : JSON.stringify(chunk.data),
-				} as const;
-			}
+			"thinking" // JSON type for reasoning
+			// Removed transformFn, transformation will happen in the loop
 		);
 		
 		for await (const chunk of stream) {
@@ -95,15 +89,21 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 					}
 				} else {
 					// If no tool use was detected, use the matcher for regular content
-					for (const chunk of matcher.update(delta.content)) {
-						yield chunk;
+					for (const matchedChunk of matcher.update(delta.content)) {
+						yield {
+							type: matchedChunk.matched ? "reasoning" : "text",
+							text: typeof matchedChunk.data === 'string' ? matchedChunk.data : JSON.stringify(matchedChunk.data),
+						} as ApiStreamChunk; // Ensure it conforms to ApiStreamChunk
 					}
 				}
 			}
 		}
 		
-		for (const chunk of matcher.final()) {
-			yield chunk
+		for (const finalChunk of matcher.final()) {
+			yield {
+				type: finalChunk.matched ? "reasoning" : "text",
+				text: typeof finalChunk.data === 'string' ? finalChunk.data : JSON.stringify(finalChunk.data),
+			} as ApiStreamChunk; // Ensure it conforms to ApiStreamChunk
 		}
 	}
 
@@ -165,8 +165,9 @@ export async function getOllamaModels(baseUrl = "http://localhost:10000") {
 		}
 
 		const response = await axios.get(`${baseUrl}/api/tags`)
-		const modelsArray = response.data?.models?.map((model: { name: string }) => model.name) || []
-		return [...new Set<string>(modelsArray)]
+		const responseData = response.data as { models: { name: string; [key: string]: unknown }[] } | undefined;
+		const modelsArray = responseData?.models?.map((model: { name: string }) => model.name) || []
+		return [...new Set<string>(modelsArray)]; // Assert modelsArray is string[] for Set
 	} catch {
 		// Silently return empty array on error
 		return []

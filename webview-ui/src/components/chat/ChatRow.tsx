@@ -1,4 +1,6 @@
-import { VSCodeBadge, VSCodeButton, VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react"
+import { Button } from "vscrui"
+import { Badge } from "@radix-ui/react-badge"
+import { Progress } from "@radix-ui/react-progress"
 import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import { useSize } from "react-use"
@@ -31,7 +33,7 @@ interface ChatRowProps {
 	onSuggestionClick?: (answer: string, event?: React.MouseEvent) => void
 }
 
-interface ChatRowContentProps extends Omit<ChatRowProps, "onHeightChange"> {}
+type ChatRowContentProps = Omit<ChatRowProps, "onHeightChange">
 
 const ChatRow = memo(
 	(props: ChatRowProps) => {
@@ -577,10 +579,10 @@ export const ChatRowContent = ({
 								<div style={{ display: "flex", alignItems: "center", gap: "10px", flexGrow: 1 }}>
 									{icon}
 									{title}
-									<VSCodeBadge
+									<Badge
 										style={{ opacity: cost !== null && cost !== undefined && cost > 0 ? 1 : 0 }}>
 										${Number(cost || 0)?.toFixed(4)}
-									</VSCodeBadge>
+									</Badge>
 								</div>
 								<span className={`codicon codicon-chevron-${isExpanded ? "up" : "down"}`}></span>
 							</div>
@@ -682,7 +684,7 @@ export const ChatRowContent = ({
 								<span style={{ display: "block", flexGrow: 1, padding: "4px" }}>
 									{highlightMentions(message.text)}
 								</span>
-								<VSCodeButton
+								<Button
 									appearance="icon"
 									style={{
 										padding: "3px",
@@ -701,7 +703,7 @@ export const ChatRowContent = ({
 										})
 									}}>
 									<span className="codicon codicon-trash"></span>
-								</VSCodeButton>
+								</Button>
 							</div>
 							{message.images && message.images.length > 0 && (
 								<Thumbnails images={message.images} style={{ marginTop: "8px" }} />
@@ -1050,7 +1052,7 @@ export const ProgressIndicator = () => (
 			justifyContent: "center",
 		}}>
 		<div style={{ transform: "scale(0.55)", transformOrigin: "center" }}>
-			<VSCodeProgressRing />
+			<Progress value={33} />
 		</div>
 	</div>
 )
@@ -1085,7 +1087,7 @@ const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boo
 							}
 						`}
 					</style>
-					<VSCodeButton
+					<Button
 						className="copy-button"
 						appearance="icon"
 						style={{
@@ -1108,7 +1110,7 @@ const Markdown = memo(({ markdown, partial }: { markdown?: string; partial?: boo
 						}}
 						title="Copy as markdown">
 						<span className="codicon codicon-copy"></span>
-					</VSCodeButton>
+					</Button>
 				</div>
 			)}
 		</div>

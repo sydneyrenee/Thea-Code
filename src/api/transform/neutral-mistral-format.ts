@@ -34,7 +34,8 @@ export function convertToMistralMessages(
             });
         } else {
             if (neutralMessage.role === "user") {
-                const { nonToolMessages, toolMessages } = neutralMessage.content.reduce<{
+                // Only extract nonToolMessages since toolMessages aren't used
+                const { nonToolMessages } = neutralMessage.content.reduce<{
                     nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
                     toolMessages: NeutralToolResultContentBlock[]
                 }>(
@@ -61,12 +62,17 @@ export function convertToMistralMessages(
                                     },
                                 };
                             }
-                            return { type: "text", text: part.text };
+                            // Ensure type safety with proper type guard
+                            if (part.type === "text" && typeof part.text === "string") {
+                                return { type: "text", text: part.text };
+                            }
+                            return { type: "text", text: "[Text content could not be processed]" };
                         }),
                     });
                 }
             } else if (neutralMessage.role === "assistant") {
-                const { nonToolMessages, toolMessages } = neutralMessage.content.reduce<{
+                // Only extract nonToolMessages since toolMessages aren't used
+                const { nonToolMessages } = neutralMessage.content.reduce<{
                     nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
                     toolMessages: NeutralToolUseContentBlock[]
                 }>(
@@ -88,7 +94,11 @@ export function convertToMistralMessages(
                             if (part.type === "image") {
                                 return ""; // impossible as the assistant cannot send images
                             }
-                            return part.text;
+                            // Ensure type safety with proper type guard
+                            if (part.type === "text" && typeof part.text === "string") {
+                                return part.text;
+                            }
+                            return "[Text content could not be processed]";
                         })
                         .join("\n");
                 }
@@ -101,9 +111,9 @@ export function convertToMistralMessages(
                 // Handle system messages
                 const textContent = neutralMessage.content
                     .filter(block => block.type === "text")
-                    .map(block => (block as NeutralTextContentBlock).text)
+                    .map(block => (block).text)
                     .join("\n");
-                
+
                 mistralMessages.push({
                     role: "system",
                     content: textContent,
@@ -118,9 +128,17 @@ export function convertToMistralMessages(
 /**
  * Converts a message content from the Neutral format to Mistral format.
  */
+// Define specific types for Mistral content
+type MistralTextContent = { type: "text"; text: string };
+type MistralImageContent = { 
+    type: "image_url"; 
+    imageUrl: { url: string } | string 
+};
+type MistralContentPart = MistralTextContent | MistralImageContent;
+
 export function convertToMistralContent(
     neutralContent: NeutralMessageContent
-): string | any[] {
+): string | MistralContentPart[] {
     if (typeof neutralContent === "string") {
         return neutralContent;
     }
@@ -150,7 +168,7 @@ export function convertToNeutralHistoryFromMistral(
 ): NeutralConversationHistory {
     return mistralMessages.map(mistralMessage => {
         const neutralMessage: NeutralMessage = {
-            role: mistralMessage.role as NeutralMessage['role'],
+            role: mistralMessage.role,
             content: []
         };
 
@@ -177,7 +195,11 @@ export function convertToNeutralHistoryFromMistral(
                         } as NeutralImageContentBlock;
                     }
                 }
-                return { type: "text", text: `[Unsupported Mistral content type: ${(part as any).type}]` } as NeutralTextContentBlock;
+                // Use a safer approach without accessing properties on 'any'
+                return { 
+                    type: "text", 
+                    text: "[Unsupported Mistral content type]" 
+                } as NeutralTextContentBlock;
             });
         }
 

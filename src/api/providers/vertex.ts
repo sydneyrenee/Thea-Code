@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
 import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
 
@@ -8,12 +7,9 @@ import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vert
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
 import {
-    convertToVertexGeminiMessage,
     convertToVertexGeminiHistory,
     convertToVertexClaudeHistory,
-    convertToVertexClaudeMessage,
-    formatMessageForCache,
-    convertToVertexClaudeContentBlocks
+    formatMessageForCache
 } from "../transform/neutral-vertex-format"
 import { BaseProvider } from "./base-provider"
 
@@ -67,7 +63,8 @@ interface VertexMessage {
 	ts?: number;
 }
 
-interface VertexMessageCreateParams {
+// This type is used for type checking in the anthropic.messages.create calls
+type MessageCreateParamsNonStreaming = {
 	model: string
 	max_tokens: number
 	temperature: number
@@ -138,7 +135,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				region: this.options.vertexRegion ?? "us-east5",
 				googleAuth: new GoogleAuth({
 					scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-					credentials: JSON.parse(this.options.vertexJsonCredentials),
+					credentials: JSON.parse(this.options.vertexJsonCredentials) as Record<string, unknown>,
 				}),
 			})
 		} else if (this.options.vertexKeyFile) {
@@ -164,7 +161,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				project: this.options.vertexProjectId ?? "not-provided",
 				location: this.options.vertexRegion ?? "us-east5",
 				googleAuthOptions: {
-					credentials: JSON.parse(this.options.vertexJsonCredentials),
+					credentials: JSON.parse(this.options.vertexJsonCredentials) as Record<string, unknown>,
 				},
 			})
 		} else if (this.options.vertexKeyFile) {
@@ -188,7 +185,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	private formatMessageForCacheOld(message: VertexMessage, shouldCache: boolean): VertexMessage {
 		// Assistant messages are kept as-is since they can't be cached
 		if (message.role === "assistant") {
-			return message as VertexMessage
+			return message
 		}
 
 		// For string content, we convert to array format with optional cache control
@@ -208,17 +205,17 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 		// For array content, find the last text block index once before mapping
 		const lastTextBlockIndex = Array.isArray(message.content) ? message.content.reduce(
-			(lastIndex: number, content: any, index: number) => (content.type === "text" ? index : lastIndex),
+			(lastIndex: number, content: VertexContentBlock, index: number) => (content.type === "text" ? index : lastIndex),
 			-1,
 		) : -1;
 
 		// Then use this pre-calculated index in the map function
 		return {
 			...message,
-			content: Array.isArray(message.content) ? message.content.map((content: any, contentIndex: number) => {
+			content: Array.isArray(message.content) ? message.content.map((content: VertexContentBlock, contentIndex: number) => {
 				// Images and other non-text content are passed through unchanged
 				if (content.type === "image") {
-					return content as VertexImageBlock;
+					return content;
 				}
 
 				// Check if this is the last text block using our pre-calculated index
@@ -271,7 +268,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 	private async *createClaudeMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const model = this.getModel()
-		let { id, info, temperature, maxTokens, thinking } = model
+		let { id, temperature, maxTokens, thinking } = model
 		const useCache = model.info.supportsPromptCache
 
 		// Find indices of user messages that we want to cache
@@ -308,7 +305,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		}
 
 		const stream = (await this.anthropicClient.messages.create(
-			params as any, // Cast to any to avoid type errors
+			params as MessageCreateParamsNonStreaming
 		)) as unknown as AnthropicStream<VertexMessageStreamEvent>
 
 		// Process the stream chunks
@@ -355,9 +352,16 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 									text: "\n",
 								}
 							}
+							// Define a type for the thinking content block
+							interface ThinkingContentBlock {
+								type: "thinking";
+								thinking: string;
+							}
+							// Type assertion with a specific interface
+							const thinkingBlock = chunk.content_block as ThinkingContentBlock;
 							yield {
 								type: "reasoning",
-								text: (chunk.content_block as any).thinking,
+								text: thinkingBlock.thinking,
 							}
 							break
 						}
@@ -374,9 +378,16 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 							break
 						}
 						case "thinking_delta": {
+							// Define a type for the thinking delta
+							interface ThinkingDelta {
+								type: "thinking_delta";
+								thinking: string;
+							}
+							// Type assertion with a specific interface
+							const thinkingDelta = chunk.delta as ThinkingDelta;
 							yield {
 								type: "reasoning",
-								text: (chunk.delta as any).thinking,
+								text: thinkingDelta.thinking,
 							}
 							break
 						}
@@ -478,7 +489,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				useCache ? formatMessageForCache(message, true) : message
 			);
 
-			const params: any = { // Use any type to avoid dependency on Anthropic types
+			const params: MessageCreateParamsNonStreaming = {
 				model: id,
 				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 				temperature,
@@ -513,19 +524,12 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	 */
 	override async countTokens(content: NeutralMessageContent): Promise<number> {
 		try {
-			// For Claude models, convert to Vertex Claude content blocks
+			// For Claude models, we could convert to Vertex Claude content blocks
+			// but we'll just use the base provider's implementation directly
+			// as Vertex doesn't have a native token counting API
 			if (this.modelType === this.MODEL_CLAUDE) {
-				// Convert neutral content to Vertex Claude content blocks
-				const vertexContentBlocks = convertToVertexClaudeContentBlocks(content);
-				
-				// Create a mock message to simulate token counting
-				const mockMessage = {
-					role: "user" as const,
-					content: vertexContentBlocks
-				};
-				
-				// Use the base provider's implementation with the converted content
-				// Vertex doesn't have a native token counting API
+				// We could use convertToVertexClaudeContentBlocks(content) here
+				// but it's not necessary for token counting
 				return super.countTokens(content);
 			} else {
 				// For Gemini models, use the base provider's implementation directly

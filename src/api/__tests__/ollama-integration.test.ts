@@ -1,9 +1,7 @@
 import { OllamaHandler } from '../providers/ollama';
 import { NeutralConversationHistory } from '../../shared/neutral-history';
 import OpenAI from 'openai';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ChatCompletionChunk } from 'openai/resources/chat/completions';
-import { HybridMatcher } from '../../utils/json-xml-bridge';
+ 
 
 // Note: This test uses port 10000 which is for Msty, a service that uses Ollama on the backend
 
@@ -11,27 +9,28 @@ import { HybridMatcher } from '../../utils/json-xml-bridge';
 jest.mock('../../utils/json-xml-bridge', () => {
   return {
     HybridMatcher: jest.fn().mockImplementation(() => ({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+       
       update: jest.fn().mockImplementation((text: string) => {
         if (text.includes('<think>')) {
           return [{ matched: true, type: 'reasoning', data: text.replace(/<\/?think>/g, '') }];
         }
         if (text.includes('{"type":"thinking"')) {
           try {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             const jsonObj = JSON.parse(text);
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (jsonObj.type === 'thinking') {
               // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              return [{ matched: true, type: 'reasoning', data: jsonObj.content }];
+              return [{ matched: true, type: 'reasoning', data: String(jsonObj.content) }];
             }
-          } catch (e: any) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          } catch (_e: unknown) {
             // Not valid JSON, treat as text
           }
         }
         return [{ matched: false, type: 'text', data: text, text: text }];
       }),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return
+       
       final: jest.fn().mockImplementation((text: string) => {
         if (text) {
           return [{ matched: false, type: 'text', data: text, text: text }];
@@ -46,13 +45,13 @@ jest.mock('../../utils/json-xml-bridge', () => {
 jest.mock('../../utils/xml-matcher', () => {
   return {
     XmlMatcher: jest.fn().mockImplementation(() => ({
-      update: jest.fn().mockImplementation((text) => {
+      update: jest.fn().mockImplementation((text: string) => {
         if (text.includes('<think>')) {
           return [{ matched: true, type: 'reasoning', data: text.replace(/<\/?think>/g, '') }];
         }
         return [{ matched: false, type: 'text', data: text, text: text }];
       }),
-      final: jest.fn().mockImplementation((text) => {
+      final: jest.fn().mockImplementation((text: string) => {
         if (text) {
           return [{ matched: false, type: 'text', data: text, text: text }];
         }
@@ -70,15 +69,15 @@ jest.mock('openai', () => {
     // Simulate streaming response
     if (stream) {
       return {
-        [Symbol.asyncIterator]: async function* () {
+        [Symbol.asyncIterator]: function* () {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const hasSystemMessage = messages.some((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system');
           
           // Check for specific test cases based on user message content
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+           
           const userMessage = messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'user')?.content || '';
           
-          // eslint-disable-next-line @typescript-eslint/require-await
+           
           if (typeof userMessage === 'string' && userMessage.includes('reasoning')) {
             // Test case for reasoning/thinking
             yield {
@@ -87,7 +86,7 @@ jest.mock('openai', () => {
                 index: 0,
                 finish_reason: null,
               }],
-              id: 'chatcmpl-reasoning-1', created: 1678886400, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-reasoning-1', created: 1678886400, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
             yield {
               choices: [{
@@ -95,7 +94,7 @@ jest.mock('openai', () => {
                 index: 0,
                 finish_reason: null,
               }],
-              id: 'chatcmpl-reasoning-2', created: 1678886401, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-reasoning-2', created: 1678886401, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
             yield {
               choices: [{
@@ -103,20 +102,21 @@ jest.mock('openai', () => {
                 index: 0,
                 finish_reason: 'stop',
               }],
-              id: 'chatcmpl-reasoning-3', created: 1678886402, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-reasoning-3', created: 1678886402, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
           } else if (typeof userMessage === 'string' && userMessage.includes('multi-turn')) {
             // Test case for multi-turn conversations
             // Return a response that acknowledges previous messages
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const previousAssistantMessage = String(messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'assistant')?.content || '');
+             
+            const assistantMsgContent = messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'assistant')?.content;
+            const previousAssistantMessage = typeof assistantMsgContent === 'string' ? assistantMsgContent : '';
             yield {
               choices: [{
                 delta: { content: `I see our previous conversation where I said "${previousAssistantMessage}". ` },
                 index: 0,
                 finish_reason: null,
               }],
-              id: 'chatcmpl-multi-turn-1', created: 1678886403, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-multi-turn-1', created: 1678886403, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
             yield {
               choices: [{
@@ -124,19 +124,20 @@ jest.mock('openai', () => {
                 index: 0,
                 finish_reason: 'stop',
               }],
-              id: 'chatcmpl-multi-turn-2', created: 1678886404, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-multi-turn-2', created: 1678886404, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
           } else if (typeof userMessage === 'string' && userMessage.includes('system prompt')) {
             // Test case for system prompt
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const systemMessage = String(messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system')?.content || 'No system prompt');
+             
+            const systemMsgContent = messages.find((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system')?.content;
+            const systemMessage = typeof systemMsgContent === 'string' ? systemMsgContent : 'No system prompt';
             yield {
               choices: [{
                 delta: { content: `I'm following the system prompt: "${systemMessage}". ` },
                 index: 0,
                 finish_reason: null,
               }],
-              id: 'chatcmpl-system-prompt-1', created: 1678886405, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-system-prompt-1', created: 1678886405, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
             yield {
               choices: [{
@@ -144,7 +145,7 @@ jest.mock('openai', () => {
                 index: 0,
                 finish_reason: 'stop',
               }],
-              id: 'chatcmpl-system-prompt-2', created: 1678886406, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-system-prompt-2', created: 1678886406, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
           } else {
             // Default response
@@ -154,7 +155,7 @@ jest.mock('openai', () => {
                 index: 0,
                 finish_reason: null,
               }],
-              id: 'chatcmpl-default-1', created: 1678886407, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-default-1', created: 1678886407, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
             yield {
               choices: [{
@@ -162,7 +163,7 @@ jest.mock('openai', () => {
                 index: 0,
                 finish_reason: 'stop',
               }],
-              id: 'chatcmpl-default-2', created: 1678886408, model: 'llama2', object: 'chat.completion.chunk',
+              id: 'chatcmpl-default-2', created: 1678886408, model: 'llama2', object: 'chat.completion.chunk' as const,
             };
           }
         }
@@ -253,33 +254,30 @@ describe('Ollama Integration', () => {
     ];
     
     // Mock the OpenAI client's create method for this specific test
-    (jest.spyOn(handler['client'].chat.completions, 'create') as any).mockImplementationOnce(async () => {
-      // eslint-disable-next-line @typescript-eslint/require-await
-      const stream = (async function* () {
+    jest.spyOn(handler['client'].chat.completions, 'create').mockImplementationOnce(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-argument
+      ((_body: OpenAI.Chat.ChatCompletionCreateParams, _options?: OpenAI.RequestOptions) => {
+      const stream = (function* () {
         yield {
           choices: [{
             delta: { content: 'I see our previous conversation where I said "Hi there!". ' },
             index: 0,
             finish_reason: null,
           }],
-          id: 'chatcmpl-multi-turn-mock-1', created: 1678886409, model: 'llama2', object: 'chat.completion.chunk',
+          id: 'chatcmpl-multi-turn-mock-1', created: 1678886409, model: 'llama2', object: 'chat.completion.chunk' as const,
           };
         yield {
           choices: [{
             delta: { content: 'Now I can continue from there.' },
             index: 0,
-            finish_reason: 'stop',
+            finish_reason: 'stop' as const,
           }],
-          id: 'chatcmpl-multi-turn-mock-2', created: 1678886410, model: 'llama2', object: 'chat.completion.chunk',
+          id: 'chatcmpl-multi-turn-mock-2', created: 1678886410, model: 'llama2', object: 'chat.completion.chunk' as const,
           };
       })();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment
-      return {
-        [Symbol.asyncIterator]: () => stream[Symbol.asyncIterator](),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        then: (resolve: any) => Promise.resolve(stream).then(resolve),
-      } as any; // Cast to any to satisfy APIPromise type
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return Promise.resolve(stream as any); // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
+    }) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     // Call createMessage
     const stream = handler.createMessage('You are helpful.', neutralHistory);
@@ -409,16 +407,17 @@ describe('Ollama Integration', () => {
     ];
     
     // Mock the OpenAI client's create method for this specific test
-    (jest.spyOn(handler['client'].chat.completions, 'create') as any).mockImplementationOnce(async () => {
-      // eslint-disable-next-line @typescript-eslint/require-await
-      const stream = (async function* () {
+    jest.spyOn(handler['client'].chat.completions, 'create').mockImplementationOnce(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-argument
+      ((_body: OpenAI.Chat.ChatCompletionCreateParams, _options?: OpenAI.RequestOptions) => {
+      const stream = (function* () {
         yield {
           choices: [{
             delta: { content: 'I need to think about this. ' },
             index: 0,
             finish_reason: null,
           }],
-          id: 'chatcmpl-json-reasoning-1', created: 1678886411, model: 'llama2', object: 'chat.completion.chunk',
+          id: 'chatcmpl-json-reasoning-1', created: 1678886411, model: 'llama2', object: 'chat.completion.chunk' as const,
         };
         yield {
           choices: [{
@@ -426,24 +425,20 @@ describe('Ollama Integration', () => {
             index: 0,
             finish_reason: null,
           }],
-          id: 'chatcmpl-json-reasoning-2', created: 1678886412, model: 'llama2', object: 'chat.completion.chunk',
+          id: 'chatcmpl-json-reasoning-2', created: 1678886412, model: 'llama2', object: 'chat.completion.chunk' as const,
         };
         yield {
           choices: [{
             delta: { content: ' After thinking, my answer is 42.' },
             index: 0,
-            finish_reason: 'stop',
+            finish_reason: 'stop' as const,
           }],
-          id: 'chatcmpl-json-reasoning-3', created: 1678886413, model: 'llama2', object: 'chat.completion.chunk',
+          id: 'chatcmpl-json-reasoning-3', created: 1678886413, model: 'llama2', object: 'chat.completion.chunk' as const,
         };
       })();
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment
-      return {
-        [Symbol.asyncIterator]: () => stream[Symbol.asyncIterator](),
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        then: (resolve: any) => Promise.resolve(stream).then(resolve),
-      } as any; // Cast to any to satisfy APIPromise type
-    });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return Promise.resolve(stream as any); // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
+    }) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     // Call createMessage
     const stream = handler.createMessage('You are helpful.', neutralHistory);

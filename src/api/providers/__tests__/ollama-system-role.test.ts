@@ -1,17 +1,19 @@
-import { OllamaHandler, getOllamaModels } from '../ollama';
+import { OllamaHandler } from '../ollama';
 import { NeutralConversationHistory } from '../../../shared/neutral-history';
 import OpenAI from 'openai';
 
 // Mock the OpenAI client
 jest.mock('openai', () => {
   // Create a mock that captures the messages sent to the API
-  const mockCreate = jest.fn().mockImplementation(({ messages }) => {
-    // Store the messages for later inspection
-    (mockCreate as any).lastMessages = messages;
+  const mockCreate = jest.fn().mockImplementation(
+    ({ messages }: { messages: OpenAI.Chat.ChatCompletionMessageParam[] }) => {
+      // Store the messages for later inspection
+      // Assign to the mock function instance itself. Requires mockCreate to be typed to allow this.
+      (mockCreate as jest.Mock & { lastMessages?: OpenAI.Chat.ChatCompletionMessageParam[] }).lastMessages = messages;
     
     // Return a simple response
     return {
-      [Symbol.asyncIterator]: async function* () {
+      [Symbol.asyncIterator]: function* () {
         yield {
           choices: [{
             delta: { content: 'Response' }
@@ -26,7 +28,7 @@ jest.mock('openai', () => {
     default: jest.fn().mockImplementation(() => ({
       chat: {
         completions: {
-          create: mockCreate
+          create: mockCreate // Use the outer mockCreate here
         }
       }
     }))
@@ -66,26 +68,30 @@ describe('Ollama System Role Handling', () => {
     const stream = handler.createMessage(systemPrompt, neutralHistory);
     
     // Consume the stream to ensure the API is called
-    for await (const chunk of stream) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _chunk of stream) {
       // Do nothing with the chunks
     }
     
     // Get the messages that were sent to the API
-    const mockCreate = (handler['client'].chat.completions.create as jest.Mock);
-    const sentMessages = (mockCreate as any).lastMessages;
+     
+     
+     
+    // const mockApiCreate = (handler['client'].chat.completions.create as jest.Mock); // mockApiCreate is unused if we use the global mockCreate
+    const sentMessages = (handler['client'].chat.completions.create as jest.Mock & { lastMessages?: OpenAI.Chat.ChatCompletionMessageParam[] }).lastMessages;
     
     // Verify that the system prompt was sent with the system role
     expect(sentMessages).toBeDefined();
-    expect(sentMessages.length).toBeGreaterThanOrEqual(2);
+    expect(sentMessages!.length).toBeGreaterThanOrEqual(2);
     
     // The first message should be the system prompt with role 'system'
-    expect(sentMessages[0]).toEqual({
+    expect(sentMessages![0]).toEqual({
       role: 'system',
       content: systemPrompt
     });
     
     // The second message should be the user message
-    expect(sentMessages[1]).toEqual({
+    expect(sentMessages![1]).toEqual({
       role: 'user',
       content: 'Hello'
     });
@@ -110,32 +116,36 @@ describe('Ollama System Role Handling', () => {
     const stream = handler.createMessage(systemPrompt, neutralHistory);
     
     // Consume the stream to ensure the API is called
-    for await (const chunk of stream) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _chunk of stream) {
       // Do nothing with the chunks
     }
     
     // Get the messages that were sent to the API
-    const mockCreate = (handler['client'].chat.completions.create as jest.Mock);
-    const sentMessages = (mockCreate as any).lastMessages;
+     
+     
+     
+    // const mockApiCreate = (handler['client'].chat.completions.create as jest.Mock); // mockApiCreate is unused
+    const sentMessages = (handler['client'].chat.completions.create as jest.Mock & { lastMessages?: OpenAI.Chat.ChatCompletionMessageParam[] }).lastMessages;
     
     // Verify that both system messages were preserved
     expect(sentMessages).toBeDefined();
-    expect(sentMessages.length).toBeGreaterThanOrEqual(2);
+    expect(sentMessages!.length).toBeGreaterThanOrEqual(2);
     
     // The first message should be the existing system message
-    expect(sentMessages[0]).toEqual({
+    expect(sentMessages![0]).toEqual({
       role: 'system',
       content: 'Existing system message'
     });
     
     // The second message should be the user message
-    expect(sentMessages[1]).toEqual({
+    expect(sentMessages![1]).toEqual({
       role: 'user',
       content: 'Hello'
     });
     
     // The additional system prompt should not be added since there's already a system message
-    const systemMessages = sentMessages.filter((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system');
+    const systemMessages = sentMessages!.filter((msg: OpenAI.Chat.ChatCompletionMessageParam) => msg.role === 'system');
     expect(systemMessages.length).toBe(1);
   });
   
@@ -156,31 +166,35 @@ describe('Ollama System Role Handling', () => {
     const stream = handler.createMessage('', neutralHistory);
     
     // Consume the stream to ensure the API is called
-    for await (const chunk of stream) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _chunk of stream) {
       // Do nothing with the chunks
     }
     
     // Get the messages that were sent to the API
-    const mockCreate = (handler['client'].chat.completions.create as jest.Mock);
-    const sentMessages = (mockCreate as any).lastMessages;
+     
+     
+     
+    // const mockApiCreate = (handler['client'].chat.completions.create as jest.Mock); // mockApiCreate is unused
+    const sentMessages = (handler['client'].chat.completions.create as jest.Mock & { lastMessages?: OpenAI.Chat.ChatCompletionMessageParam[] }).lastMessages;
     
     // Verify that both system messages were preserved
     expect(sentMessages).toBeDefined();
-    expect(sentMessages.length).toBeGreaterThanOrEqual(3);
+    expect(sentMessages!.length).toBeGreaterThanOrEqual(3);
     
     // The first two messages should be the system messages
-    expect(sentMessages[0]).toEqual({
+    expect(sentMessages![0]).toEqual({
       role: 'system',
       content: 'System message 1'
     });
     
-    expect(sentMessages[1]).toEqual({
+    expect(sentMessages![1]).toEqual({
       role: 'system',
       content: 'System message 2'
     });
     
     // The third message should be the user message
-    expect(sentMessages[2]).toEqual({
+    expect(sentMessages![2]).toEqual({
       role: 'user',
       content: 'Hello'
     });
@@ -227,23 +241,27 @@ describe('Ollama System Role Handling', () => {
     const stream = handler.createMessage(systemPrompt, neutralHistory);
     
     // Consume the stream to ensure the API is called
-    for await (const chunk of stream) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _chunk of stream) {
       // Do nothing with the chunks
     }
     
     // Get the messages that were sent to the API
-    const mockCreate = (handler['client'].chat.completions.create as jest.Mock);
-    const sentMessages = (mockCreate as any).lastMessages;
+     
+     
+     
+    // const mockApiCreate = (handler['client'].chat.completions.create as jest.Mock); // mockApiCreate is unused
+    const sentMessages = (handler['client'].chat.completions.create as jest.Mock & { lastMessages?: OpenAI.Chat.ChatCompletionMessageParam[] }).lastMessages;
     
     // Verify that the system prompt was sent with the system role
     expect(sentMessages).toBeDefined();
-    expect(sentMessages[0]).toEqual({
+    expect(sentMessages![0]).toEqual({
       role: 'system',
       content: systemPrompt
     });
     
     // Verify that no tool information was converted to user messages
-    const userMessages = sentMessages.filter((msg: OpenAI.Chat.ChatCompletionMessageParam) => 
+    const userMessages = sentMessages!.filter((msg: OpenAI.Chat.ChatCompletionMessageParam) =>
       msg.role === 'user' && typeof msg.content === 'string' && msg.content.includes('calculator')
     );
     expect(userMessages.length).toBe(0);

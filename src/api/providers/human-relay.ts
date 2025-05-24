@@ -1,9 +1,6 @@
-import { ApiHandlerOptions, ModelInfo } from "../../shared/api"
-import { ApiHandler, SingleCompletionHandler } from "../index"
-import { ApiStream } from "../transform/stream"
-import * as vscode from "vscode"
-import { EXTENSION_NAME } from "../../../dist/thea-config" // Import branded constant
-import { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history";
+// import * as vscode from "vscode" // Unused
+// import { EXTENSION_NAME } from "../../../dist/thea-config" // Unused
+// import { NeutralConversationHistory } from "../../shared/neutral-history"; // Unused
 /**
  * Human Relay API processor
  * This processor does not directly call the API, but interacts with the model through human operations copy and paste.
@@ -91,44 +88,45 @@ import { NeutralConversationHistory, NeutralMessageContent } from "../../shared/
 // 	}
 // }
 
-/**
- * Extract text content from message object
- * @param message
- */
-function getMessageContent(message: NeutralConversationHistory[0]): string {
-	if (typeof message.content === "string") {
-		return message.content
-	} else if (Array.isArray(message.content)) {
-		return message.content
-			.filter((item) => item.type === "text")
-			.map((item) => (item.type === "text" ? item.text : ""))
-			.join("\n")
-	}
-	return ""
-}
-/**
- * Displays the human relay dialog and waits for user response.
- * @param promptText The prompt text that needs to be copied.
- * @returns The user's input response or undefined (if canceled).
- */
-async function showHumanRelayDialog(promptText: string): Promise<string | undefined> {
-	return new Promise<string | undefined>((resolve) => {
-		// Create a unique request ID
-		const requestId = Date.now().toString()
-
-		// Register a global callback function
-		vscode.commands.executeCommand(
-			`${EXTENSION_NAME}.registerHumanRelayCallback`,
-			requestId,
-			(response: string | undefined) => {
-				resolve(response)
-			},
-		)
-
-		// Open the dialog box directly using the current panel
-		vscode.commands.executeCommand(`${EXTENSION_NAME}.showHumanRelayDialog`, {
-			requestId,
-			promptText,
-		})
-	})
-}
+// Unused functions, removed to clear lint errors.
+// /**
+//  * Extract text content from message object
+//  * @param message
+//  */
+// function getMessageContent(message: NeutralConversationHistory[0]): string {
+// 	if (typeof message.content === "string") {
+// 		return message.content
+// 	} else if (Array.isArray(message.content)) {
+// 		return message.content
+// 			.filter((item) => item.type === "text")
+// 			.map((item) => (item.type === "text" ? item.text : ""))
+// 			.join("\n")
+// 	}
+// 	return ""
+// }
+// /**
+//  * Displays the human relay dialog and waits for user response.
+//  * @param promptText The prompt text that needs to be copied.
+//  * @returns The user's input response or undefined (if canceled).
+//  */
+// async function showHumanRelayDialog(promptText: string): Promise<string | undefined> {
+// 	return new Promise<string | undefined>((resolve) => {
+// 		// Create a unique request ID
+// 		const requestId = Date.now().toString()
+//
+// 		// Register a global callback function
+// 		vscode.commands.executeCommand(
+// 			`${EXTENSION_NAME}.registerHumanRelayCallback`,
+// 			requestId,
+// 			(response: string | undefined) => {
+// 				resolve(response)
+// 			},
+// 		)
+//
+// 		// Open the dialog box directly using the current panel
+// 		vscode.commands.executeCommand(`${EXTENSION_NAME}.showHumanRelayDialog`, {
+// 			requestId,
+// 			promptText,
+// 		})
+// 	})
+// }

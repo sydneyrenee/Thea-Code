@@ -69,7 +69,7 @@ export function convertToBedrockConverseMessages(anthropicMessages: Anthropic.Me
 			if (messageBlock.type === "tool_use") {
 				// Convert tool use to XML format
 				const toolParams = Object.entries(messageBlock.input || {})
-					.map(([key, value]) => `<${key}>\n${value}\n</${key}>`)
+					.map(([key, value]) => `<${key}>\n${String(value)}\n</${key}>`)
 					.join("\n")
 
 				return {

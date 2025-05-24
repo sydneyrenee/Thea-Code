@@ -45,7 +45,7 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 	const { context } = options
 
 	for (const [command, callback] of Object.entries(getCommandsMap(options))) {
-		context.subscriptions.push(vscode.commands.registerCommand(command, callback as (...args: any[]) => any));
+		context.subscriptions.push(vscode.commands.registerCommand(command, callback as (...args: unknown[]) => unknown));
 	}
 }
 

@@ -495,7 +495,7 @@ describe("TheaTask", () => {
 				})
 
 				// Verify extra properties were removed
-				expect(Object.keys(cleanedMessage!)).toEqual(["role", "content"])
+				expect(Object.keys(cleanedMessage)).toEqual(["role", "content"])
 			})
 
 			it("should handle image blocks based on model capabilities", async () => {

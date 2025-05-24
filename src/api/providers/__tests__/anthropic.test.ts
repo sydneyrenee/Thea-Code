@@ -4,6 +4,7 @@ import { AnthropicHandler } from "../anthropic"
 import { ApiHandlerOptions } from "../../../shared/api"
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import { ApiStreamUsageChunk, ApiStreamTextChunk, ApiStreamReasoningChunk, ApiStreamToolUseChunk, ApiStreamToolResultChunk } from "../../transform/stream"
+import type * as AnthropicSDK from "@anthropic-ai/sdk";
 
 // Internal type for test mocks that matches the structure of ApiStreamChunk
 type Chunk =
@@ -24,7 +25,7 @@ jest.mock("@anthropic-ai/sdk", () => {
 	return {
 		Anthropic: jest.fn().mockImplementation(() => ({
 			messages: {
-				create: mockCreate.mockImplementation(async (options) => {
+				create: mockCreate.mockImplementation((options: AnthropicSDK.Anthropic.MessageCreateParams) => {
 					if (!options.stream) {
 						return {
 							id: "test-completion",
@@ -38,7 +39,7 @@ jest.mock("@anthropic-ai/sdk", () => {
 						}
 					}
 					return {
-						async *[Symbol.asyncIterator]() {
+						*[Symbol.asyncIterator]() {
 							yield {
 								type: "message_start",
 								message: {
@@ -176,7 +177,7 @@ describe("AnthropicHandler", () => {
 		})
 
 		it("should handle non-text content", async () => {
-			mockCreate.mockImplementationOnce(async () => ({
+			mockCreate.mockImplementationOnce(() => ({
 				content: [{ type: "image" }],
 			}))
 			const result = await handler.completePrompt("Test prompt")
@@ -184,7 +185,7 @@ describe("AnthropicHandler", () => {
 		})
 
 		it("should handle empty response", async () => {
-			mockCreate.mockImplementationOnce(async () => ({
+			mockCreate.mockImplementationOnce(() => ({
 				content: [{ type: "text", text: "" }],
 			}))
 			const result = await handler.completePrompt("Test prompt")
@@ -270,7 +271,8 @@ describe("AnthropicHandler", () => {
 			
 			// Verify the API was called with converted content
 			expect(mockCountTokens).toHaveBeenCalled();
-			const callArg = mockCountTokens.mock.calls[0][0];
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			const callArg = mockCountTokens.mock.calls[0][0] as AnthropicSDK.Anthropic.MessageCreateParams;
 			expect(callArg.messages[0].role).toBe("user");
 			expect(callArg.messages[0].content).toEqual([
 				{ type: "text", text: "Test message" }

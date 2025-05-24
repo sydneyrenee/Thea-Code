@@ -45,7 +45,7 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 					{
 						type: "text",
 						text: systemPrompt,
-						// @ts-ignore-next-line
+						// @ts-expect-error - Adding non-standard property for Anthropic API
 						cache_control: { type: "ephemeral" },
 					},
 				],
@@ -69,7 +69,7 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 						lastTextPart = { type: "text", text: "..." }
 						msg.content.push(lastTextPart)
 					}
-					// @ts-ignore-next-line
+					// @ts-expect-error - Adding non-standard property for Anthropic API
 					lastTextPart["cache_control"] = { type: "ephemeral" }
 				}
 			})
@@ -94,7 +94,7 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 			requestOptions.temperature = this.options.modelTemperature ?? 0
 		}
 
-		const { data: completion, response } = await this.client.chat.completions
+		const { data: completion } = await this.client.chat.completions
 			.create(requestOptions, {
 				headers: {
 					"X-Unbound-Metadata": JSON.stringify({
@@ -196,19 +196,29 @@ export async function getUnboundModels() {
 		const response = await axios.get("https://api.getunbound.ai/models")
 
 		if (response.data) {
-			const rawModels: Record<string, any> = response.data
+			const rawModels = response.data as Record<string, {
+				maxTokens?: string;
+				contextWindow?: string;
+				supportsImages?: boolean;
+				supportsPromptCaching?: boolean;
+				supportsComputerUse?: boolean;
+				inputTokenPrice?: string;
+				outputTokenPrice?: string;
+				cacheWritePrice?: string;
+				cacheReadPrice?: string;
+			}>
 
 			for (const [modelId, model] of Object.entries(rawModels)) {
 				const modelInfo: ModelInfo = {
-					maxTokens: model?.maxTokens ? parseInt(model.maxTokens) : undefined,
-					contextWindow: model?.contextWindow ? parseInt(model.contextWindow) : 0,
-					supportsImages: model?.supportsImages ?? false,
-					supportsPromptCache: model?.supportsPromptCaching ?? false,
-					supportsComputerUse: model?.supportsComputerUse ?? false,
-					inputPrice: model?.inputTokenPrice ? parseFloat(model.inputTokenPrice) : undefined,
-					outputPrice: model?.outputTokenPrice ? parseFloat(model.outputTokenPrice) : undefined,
-					cacheWritesPrice: model?.cacheWritePrice ? parseFloat(model.cacheWritePrice) : undefined,
-					cacheReadsPrice: model?.cacheReadPrice ? parseFloat(model.cacheReadPrice) : undefined,
+					maxTokens: model.maxTokens ? parseInt(model.maxTokens) : undefined,
+					contextWindow: model.contextWindow ? parseInt(model.contextWindow) : 0,
+					supportsImages: model.supportsImages ?? false,
+					supportsPromptCache: model.supportsPromptCaching ?? false,
+					supportsComputerUse: model.supportsComputerUse ?? false,
+					inputPrice: model.inputTokenPrice ? parseFloat(model.inputTokenPrice) : undefined,
+					outputPrice: model.outputTokenPrice ? parseFloat(model.outputTokenPrice) : undefined,
+					cacheWritesPrice: model.cacheWritePrice ? parseFloat(model.cacheWritePrice) : undefined,
+					cacheReadsPrice: model.cacheReadPrice ? parseFloat(model.cacheReadPrice) : undefined,
 				}
 
 				switch (true) {

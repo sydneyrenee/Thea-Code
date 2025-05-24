@@ -319,7 +319,7 @@
     "precompile": "cross-os precompile",
     "compile": "cross-os compile",
     "watch": "cross-os watch",
-    "lint": "eslint",
+    "lint": "eslint src --ext .ts,.tsx",
     "version": "npm run package && npm run prettier:branding && npm run verify",
     "generateChatCommandsClass": "node -e \"require('./scripts/generate-types.mjs').generateChatCommandsClass();\"",
     "dev": "npm run watch",

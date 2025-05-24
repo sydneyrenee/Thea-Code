@@ -1,4 +1,4 @@
-import { OllamaHandler, getOllamaModels } from '../ollama';
+import { OllamaHandler } from '../ollama';
 import { convertToOllamaHistory, convertToOllamaContentBlocks } from '../../transform/neutral-ollama-format';
 import { NeutralConversationHistory, NeutralMessageContent } from '../../../shared/neutral-history';
 import { XmlMatcher } from '../../../utils/xml-matcher';
@@ -14,7 +14,7 @@ jest.mock('../../transform/neutral-ollama-format', () => ({
 jest.mock('openai', () => {
   const mockCreate = jest.fn().mockImplementation(() => {
     return {
-      [Symbol.asyncIterator]: async function* () {
+      [Symbol.asyncIterator]: function* () {
         yield {
           choices: [{
             delta: { content: 'Hello' }
@@ -50,7 +50,7 @@ jest.mock('openai', () => {
 jest.mock('../../../utils/xml-matcher', () => {
   return {
     XmlMatcher: jest.fn().mockImplementation(() => ({
-      update: jest.fn().mockImplementation((text) => {
+      update: jest.fn().mockImplementation((text: string) => {
         if (text.includes('<think>')) {
           return [{ type: 'reasoning', text: text.replace(/<\/?think>/g, '') }];
         }
@@ -106,8 +106,10 @@ describe('OllamaHandler', () => {
       expect(convertToOllamaHistory).toHaveBeenCalledWith(neutralHistory);
       
       // Verify client.chat.completions.create was called with the correct arguments
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
         model: modelId, // Use the modelId from the .each loop
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         messages: expect.arrayContaining([
           { role: 'system', content: 'You are helpful.' },
           { role: 'user', content: 'Hello' }
@@ -144,12 +146,14 @@ describe('OllamaHandler', () => {
       const stream = handler.createMessage('You are helpful.', neutralHistory);
       
       // Collect stream chunks (just to complete the generator)
-      for await (const chunk of stream) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _chunk of stream) {
         // Do nothing
       }
       
       // Verify client.chat.completions.create was called with the correct arguments
       // Should not add the new system prompt
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
         model: modelId, // Use the modelId from the .each loop
         messages: [
@@ -181,12 +185,14 @@ describe('OllamaHandler', () => {
       const stream = handler.createMessage('', neutralHistory);
       
       // Collect stream chunks (just to complete the generator)
-      for await (const chunk of stream) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for await (const _chunk of stream) {
         // Do nothing
       }
       
       // Verify client.chat.completions.create was called with the correct arguments
       // Should not add system prompt
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
         model: modelId, // Use the modelId from the .each loop
         messages: [
@@ -229,11 +235,15 @@ describe('OllamaHandler', () => {
       );
       
       // Verify XmlMatcher.update was called for each chunk
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const xmlMatcherInstance = (XmlMatcher as jest.Mock).mock.results[0].value;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(xmlMatcherInstance.update).toHaveBeenCalledWith('Hello');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(xmlMatcherInstance.update).toHaveBeenCalledWith(' world');
       
       // Verify XmlMatcher.final was called
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(xmlMatcherInstance.final).toHaveBeenCalled();
     });
   });

@@ -15,11 +15,12 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 
 	beforeEach(() => {
 		// Mock the BedrockRuntimeClient.prototype.send method
-		mockSend = jest.spyOn(BedrockRuntimeClient.prototype, "send").mockImplementation(async () => {
-			return {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		mockSend = jest.spyOn(BedrockRuntimeClient.prototype, "send").mockImplementation((() => {
+			return Promise.resolve({
 				stream: createMockStream([]),
-			}
-		})
+			});
+		}) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 	})
 
 	afterEach(() => {
@@ -29,7 +30,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 	// Helper function to create a mock async iterable stream
 	function createMockStream(events: StreamEvent[]) {
 		return {
-			[Symbol.asyncIterator]: async function* () {
+			[Symbol.asyncIterator]: function* () {
 				for (const event of events) {
 					yield event
 				}
@@ -62,7 +63,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		const getModelSpy = jest.spyOn(handler, "getModelByName")
 
 		// Mock the stream to include an event with invokedModelId and usage metadata
-		mockSend.mockImplementationOnce(async () => {
+		mockSend.mockImplementationOnce(() => {
 			return {
 				stream: createMockStream([
 					// First event with invokedModelId and usage metadata
@@ -141,7 +142,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		const handler = new AwsBedrockHandler(mockOptions)
 
 		// Mock the stream without an invokedModelId event
-		mockSend.mockImplementationOnce(async () => {
+		mockSend.mockImplementationOnce(() => {
 			return {
 				stream: createMockStream([
 					// Some content events but no invokedModelId
@@ -180,6 +181,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		const messageGenerator = handler.createMessage("system prompt", [{ role: "user", content: "user message" }])
 
 		// Consume the generator
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		for await (const _ of messageGenerator) {
 			// Just consume the messages
 		}
@@ -204,7 +206,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		const handler = new AwsBedrockHandler(mockOptions)
 
 		// Mock the stream with an invalid invokedModelId
-		mockSend.mockImplementationOnce(async () => {
+		mockSend.mockImplementationOnce(() => {
 			return {
 				stream: createMockStream([
 					// Event with invalid invokedModelId format
@@ -229,7 +231,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		})
 
 		// Mock getModel to return expected values
-		const getModelSpy = jest.spyOn(handler, "getModel").mockReturnValue({
+		jest.spyOn(handler, "getModel").mockReturnValue({
 			id: "anthropic.claude-3-5-sonnet-20241022-v2:0",
 			info: {
 				maxTokens: 4096,
@@ -243,6 +245,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		const messageGenerator = handler.createMessage("system prompt", [{ role: "user", content: "user message" }])
 
 		// Consume the generator
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		for await (const _ of messageGenerator) {
 			// Just consume the messages
 		}
@@ -264,7 +267,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		const handler = new AwsBedrockHandler(mockOptions)
 
 		// Mock the stream with a valid invokedModelId
-		mockSend.mockImplementationOnce(async () => {
+		mockSend.mockImplementationOnce(() => {
 			return {
 				stream: createMockStream([
 					// Event with valid invokedModelId
@@ -302,6 +305,7 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		const messageGenerator = handler.createMessage("system prompt", [{ role: "user", content: "user message" }])
 
 		// Consume the generator
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		for await (const _ of messageGenerator) {
 			// Just consume the messages
 		}

@@ -1,6 +1,7 @@
-import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeLink } from "../ui/vscode-components"
+import "../ui/vscode-components.css"
 import debounce from "debounce"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
@@ -677,7 +678,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 			// For read/write operations, check if it's outside workspace and if we have permission for that
 			if (message.ask === "tool") {
-				let tool: any = {}
+				let tool: TheaSayTool = { tool: "" }
 				try {
 					tool = JSON.parse(message.text || "{}")
 				} catch (error) {
@@ -1323,7 +1324,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 																		? t("chat:proceedWhileRunning.tooltip")
 																		: undefined
 									}
-									onClick={(e) => handlePrimaryButtonClick(inputValue, selectedImages)}>
+									onClick={() => handlePrimaryButtonClick(inputValue, selectedImages)}>
 									{primaryButtonText}
 								</VSCodeButton>
 							)}
@@ -1346,7 +1347,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 														? t("chat:terminate.tooltip")
 														: undefined
 									}
-									onClick={(e) => handleSecondaryButtonClick(inputValue, selectedImages)}>
+									onClick={() => handleSecondaryButtonClick(inputValue, selectedImages)}>
 									{isStreaming ? t("chat:cancel.title") : secondaryButtonText}
 								</VSCodeButton>
 							)}

@@ -534,7 +534,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					if (toolUseBlocks.length > 0) {
 						const existingToolResults = existingUserContent.filter(
 							(block) => block.type === "tool_result",
-						) as Anthropic.ToolResultBlockParam[]
+						)
 
 						const missingToolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks
 							.filter(

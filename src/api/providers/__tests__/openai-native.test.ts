@@ -122,6 +122,7 @@ describe("OpenAiNativeHandler", () => {
 			mockCreate.mockRejectedValueOnce(new Error("API Error"))
 			const stream = handler.createMessage(systemPrompt, messages)
 			await expect(async () => {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				for await (const _ of stream) {
 					// Should not reach here
 				}

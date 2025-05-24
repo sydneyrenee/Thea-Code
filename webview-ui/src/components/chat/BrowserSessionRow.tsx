@@ -11,7 +11,8 @@ import {
 import { vscode } from "../../utils/vscode"
 import CodeBlock, { CODE_BLOCK_BG_COLOR } from "../common/CodeBlock"
 import { ChatRowContent, ProgressIndicator } from "./ChatRow"
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton } from "../ui/vscode-components"
+import "../ui/vscode-components.css"
 import { useTranslation } from "react-i18next"
 
 interface BrowserSessionRowProps {

@@ -1,6 +1,6 @@
-import { HTMLAttributes } from "react"
+import React, { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox } from "@/components/ui/vscode-components"
 import { Cog } from "lucide-react"
 
 import { EXPERIMENT_IDS, ExperimentId } from "../../../../src/shared/experiments"
@@ -25,7 +25,6 @@ export const AdvancedSettings = ({
 	diffEnabled,
 	fuzzyMatchThreshold,
 	setCachedStateField,
-	experiments,
 	setExperimentEnabled,
 	className,
 	...props
@@ -64,7 +63,7 @@ export const AdvancedSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={diffEnabled}
-						onChange={(e: any) => {
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 							setCachedStateField("diffEnabled", e.target.checked)
 							if (!e.target.checked) {
 								// Reset experimental strategies when diffs are disabled.

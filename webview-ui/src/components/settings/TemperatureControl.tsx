@@ -1,5 +1,5 @@
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
-import { useEffect, useState } from "react"
+import { Checkbox } from "vscrui"
+import { useEffect, useState, ChangeEvent } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { useDebounce } from "react-use"
 
@@ -28,9 +28,9 @@ export const TemperatureControl = ({ value, onChange, maxValue = 1 }: Temperatur
 	return (
 		<>
 			<div>
-				<VSCodeCheckbox
+				<Checkbox
 					checked={isCustomTemperature}
-					onChange={(e: any) => {
+					onChange={(e: ChangeEvent<HTMLInputElement>) => {
 						const isChecked = e.target.checked
 						setIsCustomTemperature(isChecked)
 
@@ -41,7 +41,7 @@ export const TemperatureControl = ({ value, onChange, maxValue = 1 }: Temperatur
 						}
 					}}>
 					<label className="block font-medium mb-1">{t("settings:temperature.useCustom")}</label>
-				</VSCodeCheckbox>
+				</Checkbox>
 				<div className="text-sm text-vscode-descriptionForeground mt-1">
 					{t("settings:temperature.description")}
 				</div>

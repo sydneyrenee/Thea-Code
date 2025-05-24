@@ -1,6 +1,6 @@
-import { HTMLAttributes, useState } from "react"
+import React, { HTMLAttributes, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeButton, VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeCheckbox, VSCodeTextField } from "@/components/ui/vscode-components"
 import { CheckCheck } from "lucide-react"
 
 import { vscode } from "@/utils/vscode"
@@ -62,6 +62,11 @@ export const AutoApproveSettings = ({
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
 
+	const handleCheckboxChange = (field: keyof AutoApproveSettingsProps["setCachedStateField"]) => 
+		(e: React.ChangeEvent<HTMLInputElement>) => {
+			setCachedStateField(field, e.target.checked)
+		}
+
 	const handleAddCommand = () => {
 		const currentCommands = allowedCommands ?? []
 		if (commandInput && !currentCommands.includes(commandInput)) {
@@ -73,7 +78,7 @@ export const AutoApproveSettings = ({
 	}
 
 	return (
-		<div {...props}>
+		<div className={className} {...props}>
 			<SectionHeader description={t("settings:autoApprove.description")}>
 				<div className="flex items-center gap-2">
 					<CheckCheck className="w-4" />
@@ -85,7 +90,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysAllowReadOnly}
-						onChange={(e: any) => setCachedStateField("alwaysAllowReadOnly", e.target.checked)}
+						onChange={handleCheckboxChange("alwaysAllowReadOnly")}
 						data-testid="always-allow-readonly-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.readOnly.label")}</span>
 					</VSCodeCheckbox>

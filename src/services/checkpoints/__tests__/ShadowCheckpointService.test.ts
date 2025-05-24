@@ -47,7 +47,7 @@ const initWorkspaceRepo = async ({
 
 	// Create initial commit.
 	await git.add(".")
-	await git.commit("Initial commit")!
+	await git.commit("Initial commit")
 
 	return { git, testFile }
 }

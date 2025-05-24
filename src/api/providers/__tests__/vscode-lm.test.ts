@@ -15,7 +15,7 @@ jest.mock("vscode", () => {
 		constructor(
 			public callId: string,
 			public name: string,
-			public input: Record<string, any>,
+			public input: Record<string, unknown>,
 		) {}
 	}
 
@@ -23,7 +23,7 @@ type MockLanguageModelPart = MockLanguageModelTextPart | MockLanguageModelToolCa
 
 return {
 	workspace: {
-		onDidChangeConfiguration: jest.fn((_callback: any) => ({ // eslint-disable-line @typescript-eslint/no-unused-vars
+		onDidChangeConfiguration: jest.fn((_callback: (e: vscode.ConfigurationChangeEvent) => void) => ({ // eslint-disable-line @typescript-eslint/no-unused-vars
 			dispose: jest.fn(),
 		})),
 	},
@@ -173,8 +173,8 @@ describe("VsCodeLmHandler", () => {
 			})
 			expect(chunks[1]).toMatchObject({
 				type: "usage",
-				inputTokens: expect.any(Number as any), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-				outputTokens: expect.any(Number as any), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				inputTokens: expect.any(Number), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				outputTokens: expect.any(Number), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 			})
 		})
 

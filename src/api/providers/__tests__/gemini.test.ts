@@ -70,6 +70,7 @@ describe("GeminiHandler", () => {
 
 			// Setup the mock implementation
 			const mockGenerateContentStream = jest.fn().mockResolvedValue(mockStream)
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
@@ -98,6 +99,7 @@ describe("GeminiHandler", () => {
 			})
 
 			// Verify the model configuration
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			expect((handler["client"] as any).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
@@ -121,6 +123,7 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContentStream = jest.fn().mockRejectedValue(mockError)
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
@@ -128,7 +131,8 @@ describe("GeminiHandler", () => {
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 
 			await expect(async () => {
-				for await (const chunk of stream) {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				for await (const _chunk of stream) {
 					// Should throw before yielding any chunks
 				}
 			}).rejects.toThrow("Gemini API error")
@@ -142,12 +146,14 @@ describe("GeminiHandler", () => {
 					text: () => "Test response",
 				},
 			})
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			expect((handler["client"] as any).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
@@ -167,6 +173,7 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContent = jest.fn().mockRejectedValue(mockError)
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
@@ -182,6 +189,7 @@ describe("GeminiHandler", () => {
 					text: () => "",
 				},
 			})
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
@@ -237,13 +245,14 @@ describe("GeminiHandler", () => {
 		it("should handle mixed content including images", async () => {
 			// Mock the base provider's countTokens method
 			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
-				.mockImplementation(async (content) => {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+				.mockImplementation(((content: NeutralMessageContent) => {
 					// Return 5 tokens for text content
 					if (Array.isArray(content) && content.length === 1 && content[0].type === "text") {
 						return 5;
 					}
 					return 0;
-				});
+				}) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 			
 			// Create mixed content with text and image
 			const mixedContent: NeutralMessageContent = [ // Explicitly type as NeutralMessageContent
@@ -271,13 +280,14 @@ describe("GeminiHandler", () => {
 		it("should handle tool use content", async () => {
 			// Mock the base provider's countTokens method
 			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
-				.mockImplementation(async (content) => {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+				.mockImplementation(((content: NeutralMessageContent) => {
 					// Return 15 tokens for the JSON string representation
 					if (Array.isArray(content) && content.length === 1 && content[0].type === "text") {
 						return 15;
 					}
 					return 0;
-				});
+				}) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 			
 			// Create tool use content
 			const toolUseContent = [

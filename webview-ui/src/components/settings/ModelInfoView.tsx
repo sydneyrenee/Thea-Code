@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeLink } from "@/components/ui/vscode-components"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 
 import { formatPrice } from "@/utils/formatPrice"

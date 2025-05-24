@@ -5,10 +5,13 @@ import { Anthropic } from "@anthropic-ai/sdk"
 import { convertToVsCodeLmMessages, convertToAnthropicRole } from "../vscode-lm-format"
 
 // Mock crypto
-const mockCrypto = {
-	randomUUID: () => "test-uuid",
-}
-global.crypto = mockCrypto as any
+// @ts-expect-error Mocking crypto for tests
+Object.defineProperty(global, 'crypto', {
+  value: {
+    randomUUID: () => "test-uuid",
+  },
+  configurable: true
+});
 
 // Define types for our mocked classes
 interface MockLanguageModelTextPart {
@@ -20,7 +23,7 @@ interface MockLanguageModelToolCallPart {
 	type: "tool_call"
 	callId: string
 	name: string
-	input: any
+	input: Record<string, unknown>
 }
 
 interface MockLanguageModelToolResultPart {
@@ -46,7 +49,7 @@ jest.mock("vscode", () => {
 		constructor(
 			public callId: string,
 			public name: string,
-			public input: any,
+			public input: Record<string, unknown>,
 		) {}
 	}
 
@@ -60,12 +63,12 @@ jest.mock("vscode", () => {
 
 	return {
 		LanguageModelChatMessage: {
-			Assistant: jest.fn((content) => ({
+			Assistant: jest.fn((content: string | MockLanguageModelTextPart[]) => ({
 				role: LanguageModelChatMessageRole.Assistant,
 				name: "assistant",
 				content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content)],
 			})),
-			User: jest.fn((content) => ({
+			User: jest.fn((content: string | MockLanguageModelTextPart[]) => ({
 				role: LanguageModelChatMessageRole.User,
 				name: "user",
 				content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content)],
@@ -175,18 +178,25 @@ describe("convertToVsCodeLmMessages", () => {
 })
 
 describe("convertToAnthropicRole", () => {
+	// Get the mock LanguageModelChatMessageRole from the jest.mock
+	const LanguageModelChatMessageRole = {
+		Assistant: "assistant",
+		User: "user"
+	}
+
 	it("should convert assistant role correctly", () => {
-		const result = convertToAnthropicRole("assistant" as any)
+		const result = convertToAnthropicRole(LanguageModelChatMessageRole.Assistant)
 		expect(result).toBe("assistant")
 	})
 
 	it("should convert user role correctly", () => {
-		const result = convertToAnthropicRole("user" as any)
+		const result = convertToAnthropicRole(LanguageModelChatMessageRole.User)
 		expect(result).toBe("user")
 	})
 
 	it("should return null for unknown roles", () => {
-		const result = convertToAnthropicRole("unknown" as any)
+		// @ts-expect-error Testing with an invalid role value
+		const result = convertToAnthropicRole("unknown")
 		expect(result).toBeNull()
 	})
 })

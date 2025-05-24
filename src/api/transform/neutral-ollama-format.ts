@@ -3,10 +3,7 @@ import type {
     NeutralConversationHistory,
     NeutralMessage,
     NeutralMessageContent,
-    NeutralTextContentBlock,
-    NeutralImageContentBlock,
-    NeutralToolUseContentBlock,
-    NeutralToolResultContentBlock
+    NeutralTextContentBlock
 } from "../../shared/neutral-history";
 
 /**
@@ -19,7 +16,7 @@ export function convertToOllamaHistory(
     return neutralHistory.map(neutralMessage => {
         // Create a properly typed message based on role
         let ollamaMessage: OpenAI.Chat.ChatCompletionMessageParam;
-        
+
         // Initialize with the appropriate role-specific type
         switch (neutralMessage.role) {
             case 'user':
@@ -57,11 +54,11 @@ export function convertToOllamaHistory(
             // since it doesn't support complex content types
             const textBlocks = neutralMessage.content
                 .filter(block => block.type === 'text')
-                .map(block => (block as NeutralTextContentBlock).text);
-            
+                .map(block => (block).text);
+
             // Join all text blocks with newlines
             ollamaMessage.content = textBlocks.join('\n\n');
-            
+
             // If there are non-text blocks, log a warning
             if (neutralMessage.content.some(block => block.type !== 'text')) {
                 console.warn('Ollama does not support non-text content. Some content may be lost.');
@@ -83,12 +80,12 @@ export function convertToOllamaContentBlocks(
     if (typeof neutralContent === 'string') {
         return neutralContent;
     }
-    
+
     // Extract text from all text blocks
     const textBlocks = neutralContent
         .filter(block => block.type === 'text')
-        .map(block => (block as NeutralTextContentBlock).text);
-    
+        .map(block => (block).text);
+
     // Join all text blocks with newlines
     return textBlocks.join('\n\n');
 }

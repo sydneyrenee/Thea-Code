@@ -13,12 +13,12 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => {
   const mockConverseStreamCommand = jest.fn();
   const mockConverseCommand = jest.fn();
 
-  const mockSend = jest.fn().mockImplementation(async (command) => {
+  const mockSend = jest.fn().mockImplementation((command) => { // Removed async
     // Check if the command is an instance of the mocked constructors from the imported mock
     if (command instanceof BedrockRuntimeClientMock.ConverseStreamCommand) {
-      return {
+      return Promise.resolve({ // Added Promise.resolve
         stream: {
-          [Symbol.asyncIterator]: async function* () {
+          [Symbol.asyncIterator]: function* () { // Removed async
             // Metadata event (object)
             yield {
               metadata: {
@@ -42,16 +42,16 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => {
             };
           },
         },
-      };
+      });
     } else if (command instanceof BedrockRuntimeClientMock.ConverseCommand) {
-      return {
+      return Promise.resolve({ // Added Promise.resolve
         output: new TextEncoder().encode(
           JSON.stringify({ content: "Test completion" })
         ),
-      };
+      });
     }
     // Default return for any other command type
-    return {};
+    return Promise.resolve({}); // Added Promise.resolve
   });
 
   return {
@@ -126,7 +126,7 @@ describe("AwsBedrockHandler", () => {
         "countTokens"
       ).mockResolvedValue(15);
 
-      const content = [{ type: "text", text: "Hello" }] as any;
+      const content: NeutralConversationHistory[0]['content'] = [{ type: "text", text: "Hello" }];
       const result = await handler.countTokens(content);
 
       expect(baseCountTokens).toHaveBeenCalledWith(content);

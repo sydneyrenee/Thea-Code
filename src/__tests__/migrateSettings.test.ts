@@ -13,7 +13,7 @@ jest.mock("../utils/fs")
 // We're testing the real migrateSettings function
 
 declare global {
-// eslint-disable-next-line no-var
+ 
 var outputChannel: vscode.OutputChannel
 }
 

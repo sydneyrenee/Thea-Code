@@ -1,9 +1,9 @@
-import { HTMLAttributes } from "react"
+import React, { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Trans } from "react-i18next"
 import { Info, Download, Upload, TriangleAlert } from "lucide-react"
 
-import { VSCodeCheckbox, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox, VSCodeLink } from "@/components/ui/vscode-components"
 import { API_REFERENCES } from "../../../../dist/thea-config" // Import branded constants
 
 import { TelemetrySetting } from "../../../../src/shared/TelemetrySetting"
@@ -37,7 +37,7 @@ export const About = ({ version, telemetrySetting, setTelemetrySetting, classNam
 				<div>
 					<VSCodeCheckbox
 						checked={telemetrySetting === "enabled"}
-						onChange={(e: any) => {
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 							const checked = e.target.checked === true
 							setTelemetrySetting(checked ? "enabled" : "disabled")
 						}}>

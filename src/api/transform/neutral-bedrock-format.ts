@@ -13,6 +13,44 @@ import type {
  * Convert Neutral messages to Bedrock Converse format
  */
 export function convertToBedrockConverseMessages(neutralHistory: NeutralConversationHistory): Message[] {
+    // Helper function to safely get string value
+    const safeString = (value: unknown): string => {
+        if (typeof value === 'string') {
+            return value;
+        }
+        if (value === null || value === undefined) {
+            return '';
+        }
+        try {
+            // Handle different types appropriately
+            if (typeof value === 'object') {
+                return JSON.stringify(value);
+            }
+            if (typeof value === 'number' || typeof value === 'boolean') {
+                return value.toString();
+            }
+            // For other types, use an empty string
+            return '';
+        } catch {
+            return '';
+        }
+    };
+
+    // Helper function to safely split a string
+    const safeSplit = (str: unknown, separator: string): string[] => {
+        const safeStr = safeString(str);
+        try {
+            return safeStr ? safeStr.split(separator) : [];
+        } catch {
+            return [];
+        }
+    };
+
+    // Helper function to safely get format from media type
+    const getFormatFromMediaType = (mediaType: unknown): string => {
+        const parts = safeSplit(mediaType, '/');
+        return parts.length > 1 ? parts[1] : '';
+    };
     return neutralHistory.map((neutralMessage) => {
         // Map Neutral roles to Bedrock roles
         const role: ConversationRole = neutralMessage.role === "assistant" ? "assistant" : "user";
@@ -39,18 +77,33 @@ export function convertToBedrockConverseMessages(neutralHistory: NeutralConversa
             if (block.type === "image") {
                 // Convert base64 string to byte array if needed
                 let byteArray: Uint8Array;
-                if (typeof block.source.data === "string") {
-                    const binaryString = atob(block.source.data);
-                    byteArray = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        byteArray[i] = binaryString.charCodeAt(i);
+
+                // Safely get the data from the source
+                // Use type assertion to avoid unsafe assignment
+                const sourceData = block.source?.data as string | undefined;
+                if (block.source && typeof sourceData === "string") {
+                    // Use explicit string type to avoid unsafe call
+                    const safeBase64: string = sourceData;
+                    try {
+                        // Use explicit string type to avoid unsafe argument
+                        const binaryString = atob(safeBase64);
+                        byteArray = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            byteArray[i] = binaryString.charCodeAt(i);
+                        }
+                    } catch (error) {
+                        console.error("Error decoding base64 data:", error);
+                        byteArray = new Uint8Array(0);
                     }
+                } else if (block.source && sourceData) {
+                    byteArray = new Uint8Array(sourceData as unknown as ArrayBuffer);
                 } else {
-                    byteArray = block.source.data as unknown as Uint8Array;
+                    byteArray = new Uint8Array(0);
                 }
 
                 // Extract format from media_type (e.g., "image/jpeg" -> "jpeg")
-                const format = block.source.media_type.split("/")[1];
+                const format = getFormatFromMediaType(block.source?.media_type);
+
                 if (!["png", "jpeg", "gif", "webp"].includes(format)) {
                     throw new Error(`Unsupported image format: ${format}`);
                 }
@@ -67,15 +120,21 @@ export function convertToBedrockConverseMessages(neutralHistory: NeutralConversa
 
             if (block.type === "tool_use") {
                 // Convert tool use to XML format
-                const toolParams = Object.entries(block.input || {})
-                    .map(([key, value]) => `<${key}>\n${value}\n</${key}>`)
+                const input = block.input || {};
+                const toolParams = Object.entries(input)
+                    .map(([key, value]) => {
+                        const safeKey = String(key);
+                        const safeValue = typeof value === 'string' ? value : JSON.stringify(value);
+                        return `<${safeKey}>\n${safeValue}\n</${safeKey}>`;
+                    })
                     .join("\n");
 
+                const safeName = block.name || "";
                 return {
                     toolUse: {
                         toolUseId: block.id || "",
-                        name: block.name || "",
-                        input: `<${block.name}>\n${toolParams}\n</${block.name}>`,
+                        name: safeName,
+                        input: `<${safeName}>\n${toolParams}\n</${safeName}>`,
                     },
                 } as ContentBlock;
             }
@@ -174,13 +233,16 @@ export function convertToNeutralHistoryFromBedrock(bedrockMessages: Message[]): 
 
             if ("toolUse" in block && block.toolUse) {
                 // Parse XML-formatted input to extract parameters
-                const input: Record<string, any> = {};
+                const input: Record<string, string | number | boolean> = {};
                 // Simple parsing logic - in a real implementation, this would need to be more robust
-                const xmlContent = String(block.toolUse.input || "");
+                const toolUseInput = block.toolUse.input;
+                const xmlContent = typeof toolUseInput === 'string' 
+                    ? toolUseInput 
+                    : toolUseInput ? JSON.stringify(toolUseInput) : "";
                 // Use a safer approach than matchAll for TypeScript compatibility
                 const regex = /<([^>]+)>\s*([\s\S]*?)\s*<\/\1>/g;
                 let match;
-                
+
                 while ((match = regex.exec(xmlContent)) !== null) {
                     const key = match[1];
                     const value = match[2];
@@ -199,7 +261,7 @@ export function convertToNeutralHistoryFromBedrock(bedrockMessages: Message[]): 
 
             if ("toolResult" in block && block.toolResult) {
                 const content: Array<NeutralTextContentBlock | NeutralImageContentBlock> = [];
-                
+
                 if (block.toolResult.content && Array.isArray(block.toolResult.content)) {
                     block.toolResult.content.forEach((item) => {
                         if ("text" in item && item.text) {
@@ -248,21 +310,39 @@ export function convertToBedrockContentBlocks(
             } as ContentBlock;
         }
 
-        if (block.type === "image") {
+        if (block.type === "image" && block.source) {
             // Convert base64 string to byte array
             let byteArray: Uint8Array;
-            if (typeof block.source.data === "string") {
-                const binaryString = atob(block.source.data);
-                byteArray = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    byteArray[i] = binaryString.charCodeAt(i);
+
+            // Safely get the data from the source
+            // Use type assertion to avoid unsafe assignment
+            const sourceData = block.source?.data as string | undefined;
+            if (block.source && typeof sourceData === "string") {
+                // Use explicit string type to avoid unsafe call
+                const safeBase64: string = sourceData;
+                try {
+                    // Use explicit string type to avoid unsafe argument
+                    const binaryString = atob(safeBase64);
+                    byteArray = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        byteArray[i] = binaryString.charCodeAt(i);
+                    }
+                } catch (error) {
+                    console.error("Error decoding base64 data:", error);
+                    byteArray = new Uint8Array(0);
                 }
+            } else if (block.source && sourceData) {
+                byteArray = new Uint8Array(sourceData as unknown as ArrayBuffer);
             } else {
-                byteArray = block.source.data as unknown as Uint8Array;
+                byteArray = new Uint8Array(0);
             }
 
             // Extract format from media_type
-            const format = block.source.media_type.split("/")[1];
+            // Use type assertion to avoid unsafe assignment and call
+            const mediaType = block.source?.media_type as string | undefined;
+            const format: string = typeof mediaType === 'string' ? 
+                (mediaType.split('/')[1] || '') : '';
+
             if (!["png", "jpeg", "gif", "webp"].includes(format)) {
                 throw new Error(`Unsupported image format: ${format}`);
             }

@@ -1,0 +1,115 @@
+/* Basic styles for VSCode components */
+.vscode-button {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-button-foreground);
+  background-color: var(--vscode-button-background);
+  border: 1px solid transparent;
+  padding: 4px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+
+.vscode-button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+.vscode-button:active {
+  background-color: var(--vscode-button-background);
+  transform: translateY(1px);
+}
+
+.vscode-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vscode-button.primary {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.vscode-button.secondary {
+  background-color: var(--vscode-button-secondaryBackground, var(--vscode-button-background));
+  color: var(--vscode-button-secondaryForeground, var(--vscode-button-foreground));
+}
+
+.vscode-checkbox {
+  display: flex;
+  align-items: center;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+}
+
+.vscode-checkbox input[type="checkbox"] {
+  margin-right: 6px;
+}
+
+.vscode-textfield input {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-input-foreground);
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 4px 6px;
+  border-radius: 2px;
+  outline: none;
+  width: 100%;
+}
+
+.vscode-textfield input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.vscode-link {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.vscode-link:hover {
+  text-decoration: underline;
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.vscode-textarea {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-input-foreground);
+  background-color: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 4px 6px;
+  border-radius: 2px;
+  outline: none;
+  width: 100%;
+  resize: vertical;
+}
+
+.vscode-textarea:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.vscode-dropdown {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-dropdown-foreground);
+  background-color: var(--vscode-dropdown-background);
+  border: 1px solid var(--vscode-dropdown-border);
+  padding: 4px 6px;
+  border-radius: 2px;
+  outline: none;
+}
+
+.vscode-radio {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+}
+
+.vscode-radio input[type="radio"] {
+  margin-right: 6px;
+}

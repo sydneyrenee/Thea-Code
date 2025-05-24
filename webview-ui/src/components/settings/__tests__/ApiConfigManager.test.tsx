@@ -6,7 +6,7 @@ import { render, screen, fireEvent, within } from "@testing-library/react"
 import ApiConfigManager from "../ApiConfigManager"
 
 // Mock VSCode components
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+jest.mock("@/components/ui/vscode-components", () => ({
 	VSCodeTextField: ({ value, onInput, placeholder, onKeyDown, "data-testid": dataTestId }: any) => (
 		<input
 			value={value}

@@ -1,6 +1,6 @@
 import { VertexHandler } from "../vertex";
 import { ApiHandlerOptions } from "../../../shared/api";
-import { NeutralConversationHistory } from "../../../shared/neutral-history";
+import { NeutralConversationHistory, NeutralMessageContent } from "../../../shared/neutral-history";
 import * as neutralVertexFormat from "../../transform/neutral-vertex-format";
 
 // Mock the Vertex AI SDK
@@ -11,7 +11,7 @@ jest.mock("@google-cloud/vertexai", () => {
         generateContentStream: jest.fn().mockImplementation(() => {
           return {
             stream: {
-              [Symbol.asyncIterator]: async function* () {
+              [Symbol.asyncIterator]: function* () {  
                 yield {
                   candidates: [
                     {
@@ -54,7 +54,7 @@ jest.mock("@anthropic-ai/vertex-sdk", () => {
       messages: {
         create: jest.fn().mockImplementation(() => {
           return {
-            [Symbol.asyncIterator]: async function* () {
+            [Symbol.asyncIterator]: function* () {  
               // Message start event
               yield {
                 type: "message_start",
@@ -98,7 +98,7 @@ jest.mock("../../transform/neutral-vertex-format", () => ({
   convertToVertexGeminiHistory: jest.fn().mockReturnValue([
     { role: "user", parts: [{ text: "Test message" }] },
   ]),
-  formatMessageForCache: jest.fn().mockImplementation((msg) => msg),
+  formatMessageForCache: jest.fn().mockImplementation((msg: any) => msg), // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
   convertToVertexClaudeContentBlocks: jest.fn().mockReturnValue([
     { type: "text", text: "Test content" },
   ]),
@@ -155,7 +155,7 @@ describe("VertexHandler", () => {
           "countTokens"
         ).mockResolvedValue(15);
 
-        const content = [{ type: "text", text: "Hello" }] as any;
+        const content: NeutralMessageContent = [{ type: "text", text: "Hello" }];
         const result = await handler.countTokens(content);
 
         expect(baseCountTokens).toHaveBeenCalledWith(content);

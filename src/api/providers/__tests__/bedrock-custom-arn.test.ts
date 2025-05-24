@@ -28,7 +28,7 @@ describe("AwsBedrockHandler with custom ARN", () => {
 		awsRegion: "us-east-1",
 	}
 
-	it("should use the custom ARN as the model ID", async () => {
+	it("should use the custom ARN as the model ID", () => {
 		const handler = new AwsBedrockHandler(mockOptions)
 		const model = handler.getModel()
 
@@ -41,6 +41,7 @@ describe("AwsBedrockHandler with custom ARN", () => {
 	it("should extract region from ARN and use it for client configuration", () => {
 		// Test with matching region
 		const handler1 = new AwsBedrockHandler(mockOptions)
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 		expect((handler1 as any).client.config.region).toBe("us-east-1")
 
 		// Test with mismatched region
@@ -50,6 +51,7 @@ describe("AwsBedrockHandler with custom ARN", () => {
 		}
 		const handler2 = new AwsBedrockHandler(mismatchOptions)
 		// Should use the ARN region, not the provided region
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 		expect((handler2 as any).client.config.region).toBe("us-east-1")
 	})
 

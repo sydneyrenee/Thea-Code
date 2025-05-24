@@ -54,7 +54,7 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 					{
 						type: "text",
 						text: systemPrompt,
-						// @ts-ignore-next-line
+						// @ts-expect-error Property 'cache_control' does not exist on type 'MessageContentText'.
 						cache_control: { type: "ephemeral" },
 					},
 				],
@@ -78,8 +78,8 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 						lastTextPart = { type: "text", text: "..." }
 						msg.content.push(lastTextPart)
 					}
-					// @ts-ignore-next-line
-					lastTextPart["cache_control"] = { type: "ephemeral" }
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					(lastTextPart as Record<string, any>)["cache_control"] = { type: "ephemeral" }
 				}
 			})
 		}
@@ -148,16 +148,16 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 					},
 				)
 
-				const completionRequest = response.data
+				const completionRequest = response.data as { tokenUsage?: { cacheCreationInputTokens?: number; cacheReadInputTokens?: number; promptTokens?: number; completionTokens?: number; }; totalCostUsd?: string | number; }
 
-				if (completionRequest.tokenUsage && completionRequest.totalCostUsd) {
+				if (completionRequest?.tokenUsage && completionRequest?.totalCostUsd) {
 					yield {
 						type: "usage",
-						cacheWriteTokens: completionRequest.tokenUsage.cacheCreationInputTokens,
-						cacheReadTokens: completionRequest.tokenUsage.cacheReadInputTokens,
-						inputTokens: completionRequest.tokenUsage.promptTokens,
-						outputTokens: completionRequest.tokenUsage.completionTokens,
-						totalCost: parseFloat(completionRequest.totalCostUsd),
+						cacheWriteTokens: completionRequest.tokenUsage.cacheCreationInputTokens || 0,
+						cacheReadTokens: completionRequest.tokenUsage.cacheReadInputTokens || 0,
+						inputTokens: completionRequest.tokenUsage.promptTokens || 0,
+						outputTokens: completionRequest.tokenUsage.completionTokens || 0,
+						totalCost: parseFloat(String(completionRequest.totalCostUsd)),
 					}
 
 					break
@@ -201,28 +201,25 @@ export async function getGlamaModels() {
 
 	try {
 		const response = await axios.get("https://glama.ai/api/gateway/v1/models")
-		const rawModels = response.data
+		const rawModels = response.data as { id: string; maxTokensOutput?: number; maxTokensInput?: number; capabilities?: string[]; pricePerToken?: { input?: string | number; output?: string | number; cacheWrite?: string | number; cacheRead?: string | number; } }[]
 
 		for (const rawModel of rawModels) {
 			const modelInfo: ModelInfo = {
-				maxTokens: rawModel.maxTokensOutput,
-				contextWindow: rawModel.maxTokensInput,
-				supportsImages: rawModel.capabilities?.includes("input:image"),
-				supportsComputerUse: rawModel.capabilities?.includes("computer_use"),
-				supportsPromptCache: rawModel.capabilities?.includes("caching"),
+				maxTokens: rawModel.maxTokensOutput, // maxTokens can be undefined in ModelInfo, so this is fine
+				contextWindow: rawModel.maxTokensInput ?? 0,
+				supportsImages: rawModel.capabilities?.includes("input:image"), // supportsImages can be undefined in ModelInfo
+				supportsComputerUse: rawModel.capabilities?.includes("computer_use"), // supportsComputerUse can be undefined
+				supportsPromptCache: rawModel.capabilities?.includes("caching") ?? false,
 				inputPrice: parseApiPrice(rawModel.pricePerToken?.input),
 				outputPrice: parseApiPrice(rawModel.pricePerToken?.output),
-				description: undefined,
+				description: undefined, // Ensure description is explicitly undefined if not present
 				cacheWritesPrice: parseApiPrice(rawModel.pricePerToken?.cacheWrite),
 				cacheReadsPrice: parseApiPrice(rawModel.pricePerToken?.cacheRead),
 			}
 
-			switch (rawModel.id) {
-				case rawModel.id.startsWith("anthropic/"):
-					modelInfo.maxTokens = 8192
-					break
-				default:
-					break
+			 
+			if (rawModel.id.startsWith("anthropic/")) {
+				modelInfo.maxTokens = 8192
 			}
 
 			models[rawModel.id] = modelInfo

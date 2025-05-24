@@ -25,7 +25,7 @@ export abstract class BaseProvider implements ApiHandler {
 		this.mcpIntegration = McpIntegration.getInstance();
 		
 		// Initialize MCP integration
-		this.mcpIntegration.initialize();
+		void this.mcpIntegration.initialize();
 
 		// Register tools
 		this.registerTools();
@@ -42,7 +42,7 @@ export abstract class BaseProvider implements ApiHandler {
 	 * @returns A promise resolving to the token count
 	 */
 	// Updated to accept NeutralMessageContent
-	async countTokens(content: NeutralMessageContent): Promise<number> {
+	countTokens(content: NeutralMessageContent): Promise<number> {
 		// Note: This default implementation only handles text content for simplicity.
 		// Providers that support image or other block types should override this method.
 		if (typeof content === 'string') {
@@ -50,7 +50,7 @@ export abstract class BaseProvider implements ApiHandler {
 			if (!this.encoder) {
 				this.encoder = new Tiktoken(o200kBase);
 			}
-			return Math.ceil(this.encoder.encode(content).length * TOKEN_FUDGE_FACTOR);
+			return Promise.resolve(Math.ceil(this.encoder.encode(content).length * TOKEN_FUDGE_FACTOR));
 		} else if (Array.isArray(content)) {
 			// If content is an array of blocks, sum tokens for text blocks
 			let totalTokens = 0;
@@ -68,9 +68,9 @@ export abstract class BaseProvider implements ApiHandler {
 				// Image, tool_use, and tool_result blocks are not handled by the default implementation.
 				// Providers should override countTokens to handle these if necessary.
 			}
-			return Math.ceil(totalTokens * TOKEN_FUDGE_FACTOR);
+			return Promise.resolve(Math.ceil(totalTokens * TOKEN_FUDGE_FACTOR));
 		}
-		return 0; // Return 0 for unexpected content types
+		return Promise.resolve(0); // Return 0 for unexpected content types
 	}
 
         protected registerTools(): void {
@@ -98,7 +98,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['path']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('read_file execution handled by MCP provider');
                         }
                 });
@@ -115,7 +115,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['path', 'content', 'line_count']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('write_to_file execution handled by MCP provider');
                         }
                 });
@@ -131,7 +131,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['path']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('list_files execution handled by MCP provider');
                         }
                 });
@@ -148,7 +148,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['path', 'regex']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('search_files execution handled by MCP provider');
                         }
                 });
@@ -164,7 +164,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['path', 'diff']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('apply_diff execution handled by MCP provider');
                         }
                 });
@@ -180,7 +180,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['path', 'operations']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('insert_content execution handled by MCP provider');
                         }
                 });
@@ -196,7 +196,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['path', 'operations']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('search_and_replace execution handled by MCP provider');
                         }
                 });
@@ -212,7 +212,7 @@ export abstract class BaseProvider implements ApiHandler {
                                 },
                                 required: ['question']
                         },
-                        handler: async () => {
+                        handler: () => {
                                 throw new Error('ask_followup_question execution handled by MCP provider');
                         }
                 });

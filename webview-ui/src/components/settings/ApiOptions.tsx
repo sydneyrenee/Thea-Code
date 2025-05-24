@@ -5,7 +5,19 @@ import { getRequestyAuthUrl, getOpenRouterAuthUrl, getGlamaAuthUrl } from "../..
 import { useDebounce, useEvent } from "react-use"
 import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
-import { VSCodeLink, VSCodeRadio, VSCodeRadioGroup, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import { Button, Input } from "@/components/ui"
+// Simple replacements for VSCodeRadio and VSCodeRadioGroup
+const VSCodeRadio: React.FC<{ value: string; children: React.ReactNode }> = ({ value, children, ...props }) => (
+	<label style={{ display: "inline-flex", alignItems: "center", margin: "4px 0" }}>
+		<input type="radio" value={value} {...props} />
+		<span style={{ marginLeft: "4px" }}>{children}</span>
+	</label>
+)
+const VSCodeRadioGroup: React.FC<{ onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; children: React.ReactNode }> = ({ onChange, children, ...props }) => (
+	<div role="radiogroup" onChange={onChange} {...props}>
+		{children}
+	</div>
+)
 import { ExternalLinkIcon } from "@radix-ui/react-icons"
 
 import {

@@ -38,12 +38,12 @@ export class RequestyHandler extends OpenAiHandler {
 		}
 	}
 
-	protected override processUsageMetrics(usage: any, modelInfo?: ModelInfo): ApiStreamUsageChunk {
-		const requestyUsage = usage as RequestyUsage
-		const inputTokens = requestyUsage?.prompt_tokens || 0
-		const outputTokens = requestyUsage?.completion_tokens || 0
-		const cacheWriteTokens = requestyUsage?.prompt_tokens_details?.caching_tokens || 0
-		const cacheReadTokens = requestyUsage?.prompt_tokens_details?.cached_tokens || 0
+	protected override processUsageMetrics(usage: RequestyUsage, modelInfo?: ModelInfo): ApiStreamUsageChunk {
+		// const requestyUsage = usage as RequestyUsage; // No longer needed as usage is typed
+		const inputTokens = usage?.prompt_tokens || 0
+		const outputTokens = usage?.completion_tokens || 0
+		const cacheWriteTokens = usage?.prompt_tokens_details?.caching_tokens || 0
+		const cacheReadTokens = usage?.prompt_tokens_details?.cached_tokens || 0
 		const totalCost = modelInfo
 			? calculateApiCostOpenAI(modelInfo, inputTokens, outputTokens, cacheWriteTokens, cacheReadTokens)
 			: 0
@@ -58,12 +58,31 @@ export class RequestyHandler extends OpenAiHandler {
 	}
 }
 
+interface RequestyRawModel {
+  id: string;
+  max_output_tokens?: number | null;
+  context_window?: number | null;
+  supports_caching?: boolean | null;
+  supports_vision?: boolean | null;
+  supports_computer_use?: boolean | null;
+  input_price?: string | number | null;
+  output_price?: string | number | null;
+  description?: string | null;
+  caching_price?: string | number | null;
+  cached_price?: string | number | null;
+  [key: string]: unknown;
+}
+
+interface RequestyModelsResponse {
+  data: RequestyRawModel[];
+}
+
 export async function getRequestyModels() {
 	const models: Record<string, ModelInfo> = {}
 
 	try {
 		const response = await axios.get("https://router.requesty.ai/v1/models")
-		const rawModels = response.data.data
+		const rawModels = (response.data as RequestyModelsResponse).data
 
 		for (const rawModel of rawModels) {
 			// {
@@ -83,14 +102,14 @@ export async function getRequestyModels() {
 			// }
 
 			const modelInfo: ModelInfo = {
-				maxTokens: rawModel.max_output_tokens,
-				contextWindow: rawModel.context_window,
-				supportsPromptCache: rawModel.supports_caching,
-				supportsImages: rawModel.supports_vision,
-				supportsComputerUse: rawModel.supports_computer_use,
+				maxTokens: rawModel.max_output_tokens ?? undefined,
+				contextWindow: rawModel.context_window ?? 0,
+				supportsPromptCache: rawModel.supports_caching ?? false,
+				supportsImages: rawModel.supports_vision ?? false,
+				supportsComputerUse: rawModel.supports_computer_use ?? false,
 				inputPrice: parseApiPrice(rawModel.input_price),
 				outputPrice: parseApiPrice(rawModel.output_price),
-				description: rawModel.description,
+				description: rawModel.description ?? undefined,
 				cacheWritesPrice: parseApiPrice(rawModel.caching_price),
 				cacheReadsPrice: parseApiPrice(rawModel.cached_price),
 			}

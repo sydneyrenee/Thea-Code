@@ -10,7 +10,7 @@ import {
 	VSCodeCheckbox,
 	VSCodeRadioGroup,
 	VSCodeRadio,
-} from "@vscode/webview-ui-toolkit/react"
+} from "@/components/ui/vscode-components"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import {
 	Mode,

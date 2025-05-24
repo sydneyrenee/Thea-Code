@@ -23,7 +23,7 @@ jest.mock("../../../utils/vscode", () => ({
 	},
 }))
 
-jest.mock("@vscode/webview-ui-toolkit/react", () => ({
+jest.mock("@/components/ui/vscode-components", () => ({
 	VSCodeCheckbox: function MockVSCodeCheckbox({
 		children,
 		checked,

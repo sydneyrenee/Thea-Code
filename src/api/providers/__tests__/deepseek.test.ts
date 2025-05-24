@@ -1,8 +1,8 @@
 import { DeepSeekHandler } from "../deepseek"
 import { ApiHandlerOptions, deepSeekDefaultModelId } from "../../../shared/api"
 import OpenAI from "openai"
-import { NeutralConversationHistory, NeutralMessage } from "../../../shared/neutral-history"
-
+import { NeutralConversationHistory } from "../../../shared/neutral-history"
+import type { ApiStreamChunk } from '../../transform/stream';
 // Mock OpenAI client
 const mockCreate = jest.fn()
 jest.mock("openai", () => {
@@ -11,7 +11,7 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: mockCreate.mockImplementation(async (options) => {
+					create: mockCreate.mockImplementation((options: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
 						if (!options.stream) {
 							return {
 								id: "test-completion",
@@ -36,7 +36,7 @@ jest.mock("openai", () => {
 
 						// Return async iterator for streaming
 						return {
-							[Symbol.asyncIterator]: async function* () {
+							[Symbol.asyncIterator]: function* () {
 								yield {
 									choices: [
 										{
@@ -205,7 +205,7 @@ describe("DeepSeekHandler", () => {
 
 		it("should handle streaming responses", async () => {
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: ApiStreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -218,7 +218,7 @@ describe("DeepSeekHandler", () => {
 
 		it("should include usage information", async () => {
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: ApiStreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -231,7 +231,7 @@ describe("DeepSeekHandler", () => {
 
 		it("should include cache metrics in usage information", async () => {
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: any[] = []
+			const chunks: ApiStreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -247,7 +247,7 @@ describe("DeepSeekHandler", () => {
 		it("should correctly process usage metrics including cache information", () => {
 			// We need to access the protected method, so we'll create a test subclass
 			class TestDeepSeekHandler extends DeepSeekHandler {
-				public testProcessUsageMetrics(usage: any) {
+				public testProcessUsageMetrics(usage: OpenAI.CompletionUsage) {
 					return this.processUsageMetrics(usage)
 				}
 			}
@@ -275,7 +275,7 @@ describe("DeepSeekHandler", () => {
 
 		it("should handle missing cache metrics gracefully", () => {
 			class TestDeepSeekHandler extends DeepSeekHandler {
-				public testProcessUsageMetrics(usage: any) {
+				public testProcessUsageMetrics(usage: OpenAI.CompletionUsage) {
 					return this.processUsageMetrics(usage)
 				}
 			}

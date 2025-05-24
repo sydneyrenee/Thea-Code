@@ -1,10 +1,9 @@
 import React from "react"
-import { VSCodeButton } from "@vscode/webview-ui-toolkit/react"
+import { Button } from "vscrui"
 
-interface VSCodeButtonLinkProps {
+interface VSCodeButtonLinkProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	href: string
 	children: React.ReactNode
-	[key: string]: any
 }
 
 export const VSCodeButtonLink = ({ href, children, ...props }: VSCodeButtonLinkProps) => (
@@ -14,6 +13,6 @@ export const VSCodeButtonLink = ({ href, children, ...props }: VSCodeButtonLinkP
 			textDecoration: "none",
 			color: "inherit",
 		}}>
-		<VSCodeButton {...props}>{children}</VSCodeButton>
+		<Button {...props}>{children}</Button>
 	</a>
 )

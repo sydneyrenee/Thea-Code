@@ -4,7 +4,7 @@ import * as vscode from "vscode"
 /**
  * Safely converts a value into a plain object.
  */
-function asObjectSafe(value: any): object {
+function asObjectSafe(value: unknown): object {
 	// Handle null/undefined
 	if (!value) {
 		return {}
@@ -13,7 +13,7 @@ function asObjectSafe(value: any): object {
 	try {
 		// Handle strings that might be JSON
 		if (typeof value === "string") {
-			return JSON.parse(value)
+			return JSON.parse(value) as object
 		}
 
 		// Handle pre-existing objects

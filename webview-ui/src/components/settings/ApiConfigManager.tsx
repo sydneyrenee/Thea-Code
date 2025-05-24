@@ -1,5 +1,5 @@
-import { memo, useEffect, useRef, useState } from "react"
-import { VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
+import React, { memo, useEffect, useRef, useState } from "react"
+import { VSCodeTextField } from "@/components/ui/vscode-components"
 
 import { ApiConfigMeta } from "../../../../src/shared/ExtensionMessage"
 
@@ -41,8 +41,8 @@ const ApiConfigManager = ({
 	const [inputValue, setInputValue] = useState("")
 	const [newProfileName, setNewProfileName] = useState("")
 	const [error, setError] = useState<string | null>(null)
-	const inputRef = useRef<any>(null)
-	const newProfileInputRef = useRef<any>(null)
+	const inputRef = useRef<HTMLInputElement>(null)
+	const newProfileInputRef = useRef<HTMLInputElement>(null)
 
 	const validateName = (name: string, isNewProfile: boolean): string | null => {
 		const trimmed = name.trim()

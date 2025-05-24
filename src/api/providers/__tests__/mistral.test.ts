@@ -1,6 +1,6 @@
 import { MistralHandler } from "../mistral";
 import { ApiHandlerOptions } from "../../../shared/api";
-import { NeutralConversationHistory } from "../../../shared/neutral-history";
+import { NeutralConversationHistory, NeutralMessageContent } from "../../../shared/neutral-history";
 import * as neutralMistralFormat from "../../transform/neutral-mistral-format";
 
 // Mock the Mistral client
@@ -10,7 +10,7 @@ jest.mock("@mistralai/mistralai", () => {
       chat: {
         stream: jest.fn().mockImplementation(() => {
           return {
-            [Symbol.asyncIterator]: async function* () {
+            [Symbol.asyncIterator]: function* () {
               yield {
                 data: {
                   choices: [
@@ -100,7 +100,7 @@ describe("MistralHandler", () => {
         "countTokens"
       ).mockResolvedValue(15);
 
-      const content = [{ type: "text", text: "Hello" }] as any;
+      const content: NeutralMessageContent = [{ type: "text", text: "Hello" }];
       const result = await handler.countTokens(content);
 
       expect(baseCountTokens).toHaveBeenCalledWith(content);

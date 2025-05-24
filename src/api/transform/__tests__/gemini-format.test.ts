@@ -1,5 +1,6 @@
 // npx jest src/api/transform/__tests__/gemini-format.test.ts
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment */
 import { Anthropic } from "@anthropic-ai/sdk"
 
 import { convertAnthropicMessageToGemini } from "../gemini-format"
@@ -86,11 +87,13 @@ describe("convertAnthropicMessageToGemini", () => {
 		const anthropicMessage: Anthropic.Messages.MessageParam = {
 			role: "user",
 			content: [
+				 
 				{
 					type: "image",
 					source: {
 						type: "url", // Not supported
 						url: "https://example.com/image.jpg",
+						 
 					} as any,
 				},
 			],

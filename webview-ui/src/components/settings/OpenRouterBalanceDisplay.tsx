@@ -1,4 +1,4 @@
-import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeLink } from "@/components/ui/vscode-components"
 
 import { useOpenRouterKeyInfo } from "@/components/ui/hooks/useOpenRouterKeyInfo"
 

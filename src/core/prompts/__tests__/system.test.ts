@@ -435,7 +435,7 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // mcpHub
 			undefined, // diffStrategy
 			undefined, // browserViewportSize
-			defaultModeSlug as Mode, // mode
+			defaultModeSlug, // mode
 			customModePrompts, // customModePrompts
 			undefined, // customModes
 			undefined, // globalCustomInstructions
@@ -465,7 +465,7 @@ describe("SYSTEM_PROMPT", () => {
 			undefined, // mcpHub
 			undefined, // diffStrategy
 			undefined, // browserViewportSize
-			defaultModeSlug as Mode, // mode
+			defaultModeSlug, // mode
 			customModePrompts, // customModePrompts
 			undefined, // customModes
 			undefined, // globalCustomInstructions

@@ -1,20 +1,19 @@
 import { OllamaHandler, getOllamaModels } from '../ollama';
 import { McpIntegration } from '../../../services/mcp/integration/McpIntegration';
 import { NeutralConversationHistory } from '../../../shared/neutral-history';
-import { HybridMatcher } from '../../../utils/json-xml-bridge';
+// import { HybridMatcher } from '../../../utils/json-xml-bridge'; // Removed unused import
 import { OpenAiHandler } from '../openai';
+import type OpenAI from "openai";
+import type { ApiStreamChunk } from '../../transform/stream';
 
 // Mock the OpenAI handler
 jest.mock('../openai', () => {
-  const mockExtractToolCalls = jest.fn().mockImplementation((delta) => {
-    if (delta.tool_calls) {
-      return delta.tool_calls;
-    }
-    return [];
+  const mockExtractToolCalls = jest.fn().mockImplementation((delta: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta): OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta.ToolCall[] => {
+    return delta.tool_calls || [];
   });
 
-  const mockHasToolCalls = jest.fn().mockImplementation((delta) => {
-    return mockExtractToolCalls(delta).length > 0;
+  const mockHasToolCalls = jest.fn().mockImplementation((delta: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta) => {
+    return (mockExtractToolCalls(delta) as unknown[]).length > 0;  
   });
 
   return {
@@ -31,7 +30,7 @@ jest.mock('../openai', () => {
 
 // Mock the McpIntegration
 jest.mock('../../../services/mcp/integration/McpIntegration', () => {
-  const mockRouteToolUse = jest.fn().mockImplementation((content) => {
+  const mockRouteToolUse = jest.fn().mockImplementation((content: OpenAI.Chat.Completions.ChatCompletionMessageToolCall) => {
     // For OpenAI-compatible providers like Ollama, only JSON format is supported
     return Promise.resolve(JSON.stringify({
       type: 'tool_result',
@@ -66,7 +65,7 @@ jest.mock('../../../services/mcp/integration/McpIntegration', () => {
 jest.mock('openai', () => {
   const mockCreate = jest.fn().mockImplementation(() => {
     return {
-      [Symbol.asyncIterator]: async function* () {
+      [Symbol.asyncIterator]: function* () {
         // First yield a regular text response
         yield {
           choices: [{
@@ -100,7 +99,7 @@ jest.mock('openai', () => {
 jest.mock('../../../utils/json-xml-bridge', () => {
   return {
     HybridMatcher: jest.fn().mockImplementation(() => ({
-      update: jest.fn().mockImplementation((text) => {
+      update: jest.fn().mockImplementation((text: string) => {
         if (text.includes('{"type":"tool_use"')) {
           return []; // Return empty array to let the JSON tool use detection handle it
         }
@@ -167,7 +166,7 @@ describe('Ollama MCP Integration', () => {
       const stream = handler.createMessage('You are helpful.', neutralHistory);
       
       // Collect stream chunks
-      const chunks = [];
+      const chunks: ApiStreamChunk[] = [];
       for await (const chunk of stream) {
         chunks.push(chunk);
       }
@@ -179,7 +178,9 @@ describe('Ollama MCP Integration', () => {
   
   it('should initialize McpIntegration in constructor', () => {
     // Verify McpIntegration was initialized
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(McpIntegration.getInstance).toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(handler['mcpIntegration'].initialize).toHaveBeenCalled();
   });
   
@@ -206,17 +207,18 @@ describe('Ollama MCP Integration', () => {
     const stream = handler.createMessage('You are helpful.', neutralHistory);
     
     // Collect stream chunks
-    const chunks = [];
+    const chunks: ApiStreamChunk[] = [];
     for await (const chunk of stream) {
       chunks.push(chunk);
     }
     
     // Verify McpIntegration.routeToolUse was called with JSON content
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(handler['mcpIntegration'].routeToolUse).toHaveBeenCalledWith(expect.objectContaining({
       type: 'tool_use',
       name: 'weather',
       id: 'weather-123',
-      input: expect.objectContaining({
+      input: expect.objectContaining({ // eslint-disable-line @typescript-eslint/no-unsafe-assignment
         location: 'San Francisco'
       })
     }));
@@ -271,6 +273,7 @@ describe('Ollama MCP Integration', () => {
       expect(handler['openAiHandler']).toBeDefined();
       
       // Verify the OpenAI handler has the extractToolCalls method
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(handler['openAiHandler'].extractToolCalls).toBeDefined();
       expect(typeof handler['openAiHandler'].extractToolCalls).toBe('function');
     });
@@ -280,7 +283,7 @@ describe('Ollama MCP Integration', () => {
       // Mock the OpenAI client to return JSON content
       const mockCreate = jest.fn().mockImplementation(() => {
         return {
-          [Symbol.asyncIterator]: async function* () {
+          [Symbol.asyncIterator]: function* () {
             // First yield a JSON tool use
             yield {
               choices: [{
@@ -308,7 +311,7 @@ describe('Ollama MCP Integration', () => {
       const stream = handler.createMessage('You are helpful.', neutralHistory);
       
       // Collect stream chunks
-      const chunks = [];
+      const chunks: ApiStreamChunk[] = [];
       for await (const chunk of stream) {
         chunks.push(chunk);
       }
@@ -327,7 +330,7 @@ describe('Ollama MCP Integration', () => {
       // Mock the OpenAI client to return a tool call in OpenAI format
       const mockCreate = jest.fn().mockImplementation(() => {
         return {
-          [Symbol.asyncIterator]: async function* () {
+          [Symbol.asyncIterator]: function* () {
             yield {
               choices: [{
                 delta: {
@@ -362,14 +365,14 @@ describe('Ollama MCP Integration', () => {
       const stream = handler.createMessage('You are helpful.', neutralHistory);
       
       // Collect stream chunks
-      const chunks = [];
+      const chunks: ApiStreamChunk[] = [];
       let error;
       try {
         for await (const chunk of stream) {
           chunks.push(chunk);
         }
       } catch (e) {
-        error = e;
+        error = e as Error;
       }
       
       // Verify an error was thrown
@@ -386,6 +389,7 @@ describe('Ollama MCP Integration', () => {
       
       // Verify the Ollama handler has access to McpIntegration
       expect(handler['mcpIntegration']).toBeDefined();
+      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(handler['mcpIntegration'].routeToolUse).toBeDefined();
       expect(typeof handler['mcpIntegration'].routeToolUse).toBe('function');
     });

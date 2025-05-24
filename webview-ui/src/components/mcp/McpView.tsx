@@ -1,12 +1,6 @@
 import { useState } from "react"
-import {
-	VSCodeButton,
-	VSCodeCheckbox,
-	VSCodeLink,
-	VSCodePanels,
-	VSCodePanelTab,
-	VSCodePanelView,
-} from "@vscode/webview-ui-toolkit/react"
+import { VSCodeButton, VSCodeCheckbox, VSCodeLink } from "@/components/ui/vscode-components"
+import { Checkbox } from "vscrui"
 
 import { McpServer } from "../../../../src/shared/mcp"
 

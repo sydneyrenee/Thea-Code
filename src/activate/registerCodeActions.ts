@@ -78,7 +78,7 @@ const registerCodeAction = (
 				({ filePath, selectedText, startLine, endLine, diagnostics } = context);
 			}
 
-			const params: Record<string, string | any[]> = {
+			const params: Record<string, string | vscode.Diagnostic[]> = {
 				filePath,
 				selectedText,
 			};
@@ -90,7 +90,7 @@ const registerCodeAction = (
 				params.endLine = endLine.toString();
 			}
 			if (diagnostics) {
-				params.diagnostics = diagnostics as any[];
+				params.diagnostics = diagnostics;
 			}
 			if (userInput) {
 				params.userInput = userInput;

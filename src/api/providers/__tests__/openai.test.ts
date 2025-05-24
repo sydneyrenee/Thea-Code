@@ -108,11 +108,12 @@ describe("OpenAiHandler", () => {
 
 		it("should set default headers correctly", () => {
 			// Get the mock constructor from the jest mock system
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			const openAiMock = jest.requireMock("openai").default as jest.Mocked<typeof OpenAI>;
 
 			expect(openAiMock).toHaveBeenCalledWith({
-				baseURL: expect.any(String),
-				apiKey: expect.any(String),
+				baseURL: expect.any(String), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				apiKey: expect.any(String), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 				defaultHeaders: {
 					"HTTP-Referer": API_REFERENCES.HOMEPAGE,
 					"X-Title": API_REFERENCES.APP_TITLE,
@@ -221,8 +222,8 @@ describe("OpenAiHandler", () => {
 			expect(mockCreate).toHaveBeenCalledWith({
 				model: mockOptions.openAiModelId,
 				messages: [{ role: "user", content: "Test prompt" }],
-				max_tokens: expect.any(Number as any),
-				temperature: expect.any(Number as any),
+				max_tokens: expect.any(Number), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				temperature: expect.any(Number), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 				stream: false, // Expect stream to be false
 			})
 		})

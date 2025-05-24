@@ -25,7 +25,7 @@ export class BrowserSession {
 	 * Gets the viewport size from global state or returns default
 	 */
 	private getViewport() {
-		const size = (this.context.globalState.get("browserViewportSize") as string | undefined) || "900x600"
+		const size = (this.context.globalState.get("browserViewportSize")) || "900x600"
 		const [width, height] = size.split("x").map(Number)
 		return { width, height }
 	}
@@ -73,11 +73,11 @@ export class BrowserSession {
 	 * Returns true if connection was successful, false otherwise
 	 */
 	private async connectToRemoteBrowser(): Promise<boolean> {
-		let remoteBrowserHost = this.context.globalState.get("remoteBrowserHost") as string | undefined
+		let remoteBrowserHost = this.context.globalState.get("remoteBrowserHost")
 		let reconnectionAttempted = false
 
 		// Try to connect with cached endpoint first if it exists and is recent (less than 1 hour old)
-		const cachedChromeHostUrl = this.context.globalState.get("cachedChromeHostUrl") as string | undefined
+		const cachedChromeHostUrl = this.context.globalState.get("cachedChromeHostUrl")
 		if (cachedChromeHostUrl && this.lastConnectionAttempt && Date.now() - this.lastConnectionAttempt < 3_600_000) {
 			console.log(`Attempting to connect using cached Chrome Host Url: ${cachedChromeHostUrl}`)
 			if (await this.connectWithChromeHostUrl(cachedChromeHostUrl)) {
@@ -134,7 +134,7 @@ export class BrowserSession {
 		console.log("launch browser called")
 
 		// Check if remote browser connection is enabled
-		const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled") as boolean | undefined
+		const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled")
 
 		if (!remoteBrowserEnabled) {
 			console.log("Launching local browser")
@@ -166,7 +166,7 @@ export class BrowserSession {
 		if (this.browser || this.page) {
 			console.log("closing browser...")
 
-			const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled") as boolean | undefined
+			const remoteBrowserEnabled = this.context.globalState.get("remoteBrowserEnabled")
 			if (remoteBrowserEnabled && this.browser) {
 				await this.browser.disconnect().catch(() => {})
 			} else {
@@ -244,7 +244,7 @@ export class BrowserSession {
 		let screenshotBase64 = await this.page.screenshot({
 			...options,
 			type: "webp",
-			quality: ((await this.context.globalState.get("screenshotQuality")) as number | undefined) ?? 75,
+			quality: ((await this.context.globalState.get("screenshotQuality"))) ?? 75,
 		})
 		let screenshot = `data:image/webp;base64,${screenshotBase64}`
 

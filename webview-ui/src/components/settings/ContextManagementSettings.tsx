@@ -1,6 +1,6 @@
-import { HTMLAttributes } from "react"
+import React, { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
-import { VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react"
+import { VSCodeCheckbox } from "@/components/ui/vscode-components"
 import { Database } from "lucide-react"
 
 import { cn } from "@/lib/utils"

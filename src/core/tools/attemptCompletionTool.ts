@@ -92,7 +92,7 @@ export async function attemptCompletionTool(
 					return
 				}
 
-				const [userRejected, execCommandResult] = await theaTask.executeCommandTool(command!) // Use theaTask method
+				const [userRejected, execCommandResult] = await theaTask.executeCommandTool(command) // Use theaTask method
 
 				if (userRejected) {
 					theaTask.didRejectTool = true

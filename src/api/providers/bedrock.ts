@@ -3,7 +3,7 @@ import {
 	ConverseStreamCommand,
 	ConverseCommand,
 	BedrockRuntimeClientConfig,
-	ConverseStreamCommandOutput,
+	// ConverseStreamCommandOutput, // Unused
 } from "@aws-sdk/client-bedrock-runtime"
 import { fromIni } from "@aws-sdk/credential-providers"
 import { SingleCompletionHandler } from "../"
@@ -17,7 +17,7 @@ import {
 } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
-import { convertToBedrockConverseMessages, convertToBedrockContentBlocks } from "../transform/neutral-bedrock-format"
+import { convertToBedrockConverseMessages } from "../transform/neutral-bedrock-format" // convertToBedrockContentBlocks was unused
 import { BaseProvider } from "./base-provider"
 import { logger } from "../../utils/logging"
 
@@ -111,7 +111,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 	protected options: ApiHandlerOptions
 	private client: BedrockRuntimeClient
 
-	private costModelConfig: { id: BedrockModelId | string; info: ModelInfo } = {
+	private costModelConfig: { id: string; info: ModelInfo } = {
 		id: "",
 		info: { maxTokens: 0, contextWindow: 0, supportsPromptCache: false, supportsImages: false },
 	}
@@ -266,7 +266,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				// Parse the chunk as JSON if it's a string (for tests)
 				let streamEvent: StreamEvent
 				try {
-					streamEvent = typeof chunk === "string" ? JSON.parse(chunk) : (chunk as unknown as StreamEvent)
+					streamEvent = typeof chunk === "string" ? JSON.parse(chunk) as StreamEvent : (chunk as unknown as StreamEvent)  
 				} catch (e) {
 					logger.error("Failed to parse stream event", {
 						ctx: "bedrock",
@@ -378,7 +378,7 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 
 1. The ARN is correct and points to a valid model
 2. Your AWS credentials have permission to access this model (check IAM policies)
-3. The region in the ARN (${this.client.config.region}) matches the region where the model is deployed
+3. The region in the ARN (${String(this.client.config.region)}) matches the region where the model is deployed
 4. If using a provisioned model, ensure it's active and not in a failed state
 5. If using a custom model, ensure your account has been granted access to it`,
 						}
@@ -485,7 +485,7 @@ Please check:
 	}
 
 	//Prompt Router responses come back in a different sequence and the yield calls are not resulting in costs getting updated
-	getModelByName(modelName: string): { id: BedrockModelId | string; info: ModelInfo } {
+	getModelByName(modelName: string): { id: string; info: ModelInfo } {
 		// Try to find the model in bedrockModels
 		if (modelName in bedrockModels) {
 			const id = modelName as BedrockModelId
@@ -493,20 +493,20 @@ Please check:
 			//Do a deep copy of the model info so that later in the code the model id and maxTokens can be set.
 			// The bedrockModels array is a constant and updating the model ID from the returned invokedModelID value
 			// in a prompt router response isn't possible on the constant.
-			let model = JSON.parse(JSON.stringify(bedrockModels[id]))
+			let model = JSON.parse(JSON.stringify(bedrockModels[id])) as ModelInfo  
 
 			// If modelMaxTokens is explicitly set in options, override the default
 			if (this.options.modelMaxTokens && this.options.modelMaxTokens > 0) {
-				model.maxTokens = this.options.modelMaxTokens
+				model.maxTokens = this.options.modelMaxTokens  
 			}
 
-			return { id, info: model }
+			return { id, info: model }  
 		}
 
 		return { id: bedrockDefaultModelId, info: bedrockModels[bedrockDefaultModelId] }
 	}
 
-	override getModel(): { id: BedrockModelId | string; info: ModelInfo } {
+	override getModel(): { id: string; info: ModelInfo } {
 		if (this.costModelConfig.id.trim().length > 0) {
 			return this.costModelConfig
 		}
@@ -671,9 +671,9 @@ Please check:
 			if (response.output && response.output instanceof Uint8Array) {
 				try {
 					const outputStr = new TextDecoder().decode(response.output)
-					const output = JSON.parse(outputStr)
-					if (output.content) {
-						return output.content
+					const output = JSON.parse(outputStr) as { content?: string }  
+					if (output.content) {  
+						return output.content  
 					}
 				} catch (parseError) {
 					logger.error("Failed to parse Bedrock response", {

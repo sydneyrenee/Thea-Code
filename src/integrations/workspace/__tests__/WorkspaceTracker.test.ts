@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import * as vscode from "vscode"
 import WorkspaceTracker from "../WorkspaceTracker"
 import { TheaProvider } from "../../../core/webview/TheaProvider" // Renamed import
@@ -14,30 +15,34 @@ let registeredTabChangeCallback: (() => Promise<void>) | null = null
 
 // Mock workspace path
 jest.mock("../../../utils/path", () => ({
-	getWorkspacePath: jest.fn().mockReturnValue("/test/workspace"),
-	toRelativePath: jest.fn((path, cwd) => {
-		// Simple mock that preserves the original behavior for tests
-		const relativePath = path.replace(`${cwd}/`, "")
-		// Add trailing slash if original path had one
-		return path.endsWith("/") ? relativePath + "/" : relativePath
-	}),
+        getWorkspacePath: jest.fn().mockReturnValue("/test/workspace"),
+        toRelativePath: jest.fn((p: string, cwd: string) => {
+                // Simple mock that preserves the original behavior for tests
+                const relativePath = p.replace(`${cwd}/`, "")
+                // Add trailing slash if original path had one
+                return p.endsWith("/") ? relativePath + "/" : relativePath
+        }),
 }))
 
 // Mock watcher - must be defined after mockDispose but before jest.mock("vscode")
-const mockWatcher = {
-	onDidCreate: mockOnDidCreate.mockReturnValue({ dispose: mockDispose }),
-	onDidDelete: mockOnDidDelete.mockReturnValue({ dispose: mockDispose }),
-	dispose: mockDispose,
+const mockWatcher: {
+        onDidCreate: jest.Mock
+        onDidDelete: jest.Mock
+        dispose: jest.Mock
+} = {
+        onDidCreate: mockOnDidCreate.mockReturnValue({ dispose: mockDispose }),
+        onDidDelete: mockOnDidDelete.mockReturnValue({ dispose: mockDispose }),
+        dispose: mockDispose,
 }
 
 // Mock vscode
 jest.mock("vscode", () => ({
 	window: {
 		tabGroups: {
-			onDidChangeTabs: jest.fn((callback) => {
-				registeredTabChangeCallback = callback
-				return { dispose: mockDispose }
-			}),
+                        onDidChangeTabs: jest.fn((callback: () => Promise<void>) => {
+                                registeredTabChangeCallback = callback
+                                return { dispose: mockDispose }
+                        }),
 			all: [],
 		},
 		onDidChangeActiveTextEditor: jest.fn(() => ({ dispose: jest.fn() })),

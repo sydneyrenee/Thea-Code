@@ -14,7 +14,7 @@ import { CheckpointStorage } from "../../shared/checkpoints"
 import { GIT_DISABLED_SUFFIX } from "./constants"
 import { CheckpointDiff, CheckpointResult, CheckpointEventMap } from "./types"
 import { getExcludePatterns } from "./excludes"
-import { EXTENSION_DISPLAY_NAME, BRANCH_PREFIX, AUTHOR_NAME, AUTHOR_EMAIL } from "../../../dist/thea-config" // Import branded constants
+import { EXTENSION_DISPLAY_NAME, BRANCH_PREFIX, AUTHOR_EMAIL } from "../../../dist/thea-config" // Import branded constants
 
 export abstract class ShadowCheckpointService extends EventEmitter {
 	public readonly taskId: string
@@ -79,15 +79,20 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			if (!(await fileExistsAtPath(this.checkpointsDir))) {
 				throw new Error(`Checkpoint directory does not exist after creation attempt: ${this.checkpointsDir}`)
 			}
-		} catch (error) {
-			throw new Error(
-				`Cannot initialize git: failed to create checkpoint directory: ${this.checkpointsDir}: ${error.message}`,
-			)
+                } catch (error) {
+                        const message =
+                                error instanceof Error
+                                        ? error.message
+                                        : String(error)
+                        throw new Error(
+                                `Cannot initialize git: failed to create checkpoint directory: ${this.checkpointsDir}: ${message}`,
+                        )
 		}
 
 		const git = simpleGit(this.checkpointsDir)
-		const gitVersion = await git.version()
-		this.log(`[${this.constructor.name}#create] git = ${gitVersion}`)
+                const gitVersion = await git.version()
+                const gitVersionStr = `${gitVersion.major}.${gitVersion.minor}.${gitVersion.patch}`
+                this.log(`[${this.constructor.name}#create] git = ${gitVersionStr}`)
 
 		let created = false
 		const startTime = Date.now()
@@ -109,8 +114,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.init()
 			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
-			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME)
-			await git.addConfig("user.email", AUTHOR_EMAIL)
+                        await git.addConfig("user.name", EXTENSION_DISPLAY_NAME as string)
+                        await git.addConfig("user.email", AUTHOR_EMAIL as string)
 			await this.writeExcludeFile()
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })

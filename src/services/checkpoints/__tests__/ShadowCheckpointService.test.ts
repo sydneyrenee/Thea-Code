@@ -13,6 +13,7 @@ import { ShadowCheckpointService } from "../ShadowCheckpointService"
 import { RepoPerTaskCheckpointService } from "../RepoPerTaskCheckpointService"
 import { RepoPerWorkspaceCheckpointService } from "../RepoPerWorkspaceCheckpointService"
 import type { CheckpointEventMap } from "../types"
+import { globby } from "globby"
 
 jest.mock("globby", () => ({
 	globby: jest.fn().mockResolvedValue([]),
@@ -22,8 +23,8 @@ const tmpDir = path.join(os.tmpdir(), "CheckpointService")
 
 const initWorkspaceRepo = async ({
 	workspaceDir,
-	userName = EXTENSION_DISPLAY_NAME,
-	userEmail = AUTHOR_EMAIL,
+        userName = EXTENSION_DISPLAY_NAME as string,
+        userEmail = AUTHOR_EMAIL as string,
 	testFileName = "test.txt",
 	textFileContent = "Hello, world!",
 }: {
@@ -63,8 +64,8 @@ describe.each([
 	let testFile: string
 	let service: RepoPerTaskCheckpointService | RepoPerWorkspaceCheckpointService
 
-	beforeEach(async () => {
-		jest.mocked(require("globby").globby).mockClear().mockResolvedValue([])
+        beforeEach(async () => {
+                jest.mocked(globby).mockClear().mockResolvedValue([])
 
 		const shadowDir = path.join(tmpDir, `${prefix}-${Date.now()}`)
 		const workspaceDir = path.join(tmpDir, `workspace-${Date.now()}`)
@@ -73,13 +74,13 @@ describe.each([
 		workspaceGit = repo.git
 		testFile = repo.testFile
 
-		service = await klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
+                service = klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
 		await service.initShadowGit()
 	})
 
-	afterEach(async () => {
-		jest.restoreAllMocks()
-	})
+        afterEach(() => {
+                jest.restoreAllMocks()
+        })
 
 	afterAll(async () => {
 		await fs.rm(tmpDir, { recursive: true, force: true })
@@ -361,7 +362,7 @@ describe.each([
 			expect(await fs.readFile(newTestFile, "utf-8")).toBe("Hello, world!")
 
 			// Ensure the git repository was initialized.
-			const newService = await klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
+                        const newService = klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
 			const { created } = await newService.initShadowGit()
 			expect(created).toBeTruthy()
 
@@ -397,16 +398,16 @@ describe.each([
 			await fs.mkdir(workspaceDir, { recursive: true })
 			const mainGit = simpleGit(workspaceDir)
 			await mainGit.init()
-			await mainGit.addConfig("user.name", EXTENSION_DISPLAY_NAME)
-			await mainGit.addConfig("user.email", AUTHOR_EMAIL)
+                        await mainGit.addConfig("user.name", EXTENSION_DISPLAY_NAME as string)
+                        await mainGit.addConfig("user.email", AUTHOR_EMAIL as string)
 
 			// Create a nested repo inside the workspace.
 			const nestedRepoPath = path.join(workspaceDir, "nested-project")
 			await fs.mkdir(nestedRepoPath, { recursive: true })
 			const nestedGit = simpleGit(nestedRepoPath)
 			await nestedGit.init()
-			await nestedGit.addConfig("user.name", EXTENSION_DISPLAY_NAME)
-			await nestedGit.addConfig("user.email", AUTHOR_EMAIL)
+                        await nestedGit.addConfig("user.name", EXTENSION_DISPLAY_NAME as string)
+                        await nestedGit.addConfig("user.email", AUTHOR_EMAIL as string)
 
 			// Add a file to the nested repo.
 			const nestedFile = path.join(nestedRepoPath, "nested-file.txt")
@@ -429,7 +430,7 @@ describe.each([
 			// Configure globby mock to return our nested git repository.
 			const relativeGitPath = path.relative(workspaceDir, nestedGitDir)
 
-			jest.mocked(require("globby").globby).mockImplementation((pattern: string | string[]) => {
+                        jest.mocked(globby).mockImplementation((pattern: string | string[]) => {
 				if (pattern === "**/.git") {
 					return Promise.resolve([relativeGitPath])
 				} else if (pattern === "**/.git_disabled") {
@@ -468,7 +469,7 @@ describe.each([
 			expect(enableCall).toBe(true)
 
 			// Verify rename was called with correct paths.
-			const renameCallsArgs = renameSpy.mock.calls.map((call) => call[0] + " -> " + call[1])
+                        const renameCallsArgs = renameSpy.mock.calls.map((call) => String(call[0]) + " -> " + String(call[1]))
 			expect(
 				renameCallsArgs.some((args) => args.includes(nestedGitDir) && args.includes(nestedGitDisabledDir)),
 			).toBe(true)
@@ -500,17 +501,17 @@ describe.each([
 			const emitSpy = jest.spyOn(EventEmitter.prototype, "emit")
 
 			// Create the service - this will trigger the initialize event.
-			const newService = await klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
+                        const newService = klass.create({ taskId, shadowDir, workspaceDir, log: () => {} })
 			await newService.initShadowGit()
 
 			// Find the initialize event in the emit calls.
-			let initializeEvent = null
+                        let initializeEvent: CheckpointEventMap["initialize"] | null = null
 
 			for (let i = 0; i < emitSpy.mock.calls.length; i++) {
 				const call = emitSpy.mock.calls[i]
 
-				if (call[0] === "initialize") {
-					initializeEvent = call[1]
+                                if (call[0] === "initialize") {
+                                        initializeEvent = call[1] as CheckpointEventMap["initialize"]
 					break
 				}
 			}
@@ -540,7 +541,7 @@ describe.each([
 		})
 
 		it("emits checkpoint event when saving checkpoint", async () => {
-			const checkpointHandler = jest.fn()
+                        const checkpointHandler = jest.fn<void, [CheckpointEventMap["checkpoint"]]>()
 			service.on("checkpoint", checkpointHandler)
 
 			await fs.writeFile(testFile, "Changed content for checkpoint event test")
@@ -548,11 +549,11 @@ describe.each([
 			expect(result?.commit).toBeDefined()
 
 			expect(checkpointHandler).toHaveBeenCalledTimes(1)
-			const eventData = checkpointHandler.mock.calls[0][0]
-			expect(eventData.type).toBe("checkpoint")
-			expect(eventData.toHash).toBeDefined()
-			expect(eventData.toHash).toBe(result!.commit)
-			expect(typeof eventData.duration).toBe("number")
+                        const eventData = checkpointHandler.mock.calls[0][0]
+                        expect(eventData.type).toBe("checkpoint")
+                        expect(eventData.toHash).toBeDefined()
+                        expect(eventData.toHash).toBe(result!.commit)
+                        expect(typeof eventData.duration).toBe("number")
 		})
 
 		it("emits restore event when restoring checkpoint", async () => {
@@ -565,7 +566,7 @@ describe.each([
 			await fs.writeFile(testFile, "Changed after checkpoint")
 
 			// Setup restore event listener.
-			const restoreHandler = jest.fn()
+                        const restoreHandler = jest.fn<void, [CheckpointEventMap["restore"]]>()
 			service.on("restore", restoreHandler)
 
 			// Restore the checkpoint.
@@ -573,8 +574,7 @@ describe.each([
 
 			// Verify the event was emitted.
 			expect(restoreHandler).toHaveBeenCalledTimes(1)
-                        const eventData = restoreHandler.mock
-                                .calls[0][0] as CheckpointEventMap["restore"]
+                        const eventData = restoreHandler.mock.calls[0][0]
                         expect(eventData.type).toBe("restore")
                         expect(eventData.commitHash).toBe(commit!.commit)
                         expect(typeof eventData.duration).toBe("number")
@@ -584,7 +584,7 @@ describe.each([
 		})
 
 		it("emits error event when an error occurs", async () => {
-			const errorHandler = jest.fn()
+                        const errorHandler = jest.fn<void, [CheckpointEventMap["error"]]>()
 			service.on("error", errorHandler)
 
 			// Force an error by providing an invalid commit hash.
@@ -599,14 +599,14 @@ describe.each([
 
 			// Verify the error event was emitted.
 			expect(errorHandler).toHaveBeenCalledTimes(1)
-                        const eventData = errorHandler.mock.calls[0][0] as CheckpointEventMap["error"]
+                        const eventData = errorHandler.mock.calls[0][0]
                         expect(eventData.type).toBe("error")
                         expect(eventData.error).toBeInstanceOf(Error)
 		})
 
 		it("supports multiple event listeners for the same event", async () => {
-			const checkpointHandler1 = jest.fn()
-			const checkpointHandler2 = jest.fn()
+                        const checkpointHandler1 = jest.fn<void, [CheckpointEventMap["checkpoint"]]>()
+                        const checkpointHandler2 = jest.fn<void, [CheckpointEventMap["checkpoint"]]>()
 
 			service.on("checkpoint", checkpointHandler1)
 			service.on("checkpoint", checkpointHandler2)
@@ -618,8 +618,8 @@ describe.each([
 			expect(checkpointHandler1).toHaveBeenCalledTimes(1)
 			expect(checkpointHandler2).toHaveBeenCalledTimes(1)
 
-                        const eventData1 = checkpointHandler1.mock.calls[0][0] as CheckpointEventMap["checkpoint"]
-                        const eventData2 = checkpointHandler2.mock.calls[0][0] as CheckpointEventMap["checkpoint"]
+                        const eventData1 = checkpointHandler1.mock.calls[0][0]
+                        const eventData2 = checkpointHandler2.mock.calls[0][0]
 
 			expect(eventData1).toEqual(eventData2)
 			expect(eventData1.type).toBe("checkpoint")
@@ -627,7 +627,7 @@ describe.each([
 		})
 
 		it("allows removing event listeners", async () => {
-			const checkpointHandler = jest.fn()
+                        const checkpointHandler = jest.fn<void, [CheckpointEventMap["checkpoint"]]>()
 
 			// Add the listener.
 			service.on("checkpoint", checkpointHandler)

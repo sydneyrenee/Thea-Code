@@ -1,6 +1,4 @@
 import { McpIntegration, handleToolUse } from '../integration/McpIntegration';
-import { McpToolRouter } from '../core/McpToolRouter';
-import { McpToolExecutor } from '../core/McpToolExecutor';
 
 // Mock the McpToolRouter
 jest.mock('../core/McpToolRouter', () => {
@@ -9,12 +7,10 @@ jest.mock('../core/McpToolRouter', () => {
     initialize: jest.fn().mockResolvedValue(undefined),
     shutdown: jest.fn().mockResolvedValue(undefined),
     detectFormat: jest.fn().mockReturnValue('xml'),
-    routeToolUse: jest.fn().mockImplementation(async (request) => {
-      return {
-        format: request.format,
-        content: `Routed ${request.format} request`
-      };
-    })
+    routeToolUse: jest.fn().mockImplementation((request: { format: string }) => ({
+      format: request.format,
+      content: `Routed ${request.format} request`
+    }))
   };
   
   return {
@@ -35,18 +31,12 @@ jest.mock('../core/McpToolExecutor', () => {
   const mockInstance = {
     registerTool: jest.fn(),
     unregisterTool: jest.fn().mockReturnValue(true),
-    processXmlToolUse: jest.fn().mockImplementation(async (content) => {
-      return `Processed XML: ${content}`;
-    }),
-    processJsonToolUse: jest.fn().mockImplementation(async (content) => {
-      return `Processed JSON: ${typeof content === 'string' ? content : JSON.stringify(content)}`;
-    }),
-    processOpenAiFunctionCall: jest.fn().mockImplementation(async (content) => {
-      return {
-        role: 'tool',
-        content: `Processed OpenAI: ${JSON.stringify(content)}`
-      };
-    })
+    processXmlToolUse: jest.fn().mockImplementation((content) => `Processed XML: ${content}`),
+    processJsonToolUse: jest.fn().mockImplementation((content) => `Processed JSON: ${typeof content === 'string' ? content : JSON.stringify(content)}`),
+    processOpenAiFunctionCall: jest.fn().mockImplementation((content) => ({
+      role: 'tool',
+      content: `Processed OpenAI: ${JSON.stringify(content)}`
+    }))
   };
   
   return {
@@ -64,7 +54,7 @@ describe('McpIntegration', () => {
     jest.clearAllMocks();
     
     // Get a fresh instance for each test
-    // @ts-ignore - Reset the singleton instance
+    // @ts-expect-error accessing private singleton for reset
     McpIntegration['instance'] = undefined;
     mcpIntegration = McpIntegration.getInstance();
   });
@@ -73,7 +63,7 @@ describe('McpIntegration', () => {
     it('should initialize the MCP tool router', async () => {
       await mcpIntegration.initialize();
       
-      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { initialize: jest.Mock } }).mcpToolRouter;
       expect(mcpToolRouter.initialize).toHaveBeenCalled();
     });
     
@@ -82,7 +72,7 @@ describe('McpIntegration', () => {
       await mcpIntegration.initialize();
       
       // Clear the mock
-      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { initialize: jest.Mock } }).mcpToolRouter;
       mcpToolRouter.initialize.mockClear();
       
       // Initialize again
@@ -99,19 +89,19 @@ describe('McpIntegration', () => {
         name: 'test_tool',
         description: 'A test tool',
         paramSchema: { type: 'object' },
-        handler: async () => ({ content: [], isError: false })
+        handler: () => ({ content: [], isError: false })
       };
       
       mcpIntegration.registerTool(toolDefinition);
       
-      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
+      const mcpToolSystem = (mcpIntegration as unknown as { mcpToolSystem: { registerTool: jest.Mock } }).mcpToolSystem;
       expect(mcpToolSystem.registerTool).toHaveBeenCalledWith(toolDefinition);
     });
     
     it('should unregister a tool from the MCP tool system', () => {
       const result = mcpIntegration.unregisterTool('test_tool');
       
-      const mcpToolSystem = (mcpIntegration as any).mcpToolSystem;
+      const mcpToolSystem = (mcpIntegration as unknown as { mcpToolSystem: { unregisterTool: jest.Mock } }).mcpToolSystem;
       expect(mcpToolSystem.unregisterTool).toHaveBeenCalledWith('test_tool');
       expect(result).toBe(true);
     });
@@ -127,7 +117,7 @@ describe('McpIntegration', () => {
 
       const result = await mcpIntegration.processXmlToolUse(xmlContent);
 
-      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { routeToolUse: jest.Mock } }).mcpToolRouter;
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'xml',
         content: xmlContent
@@ -147,7 +137,7 @@ describe('McpIntegration', () => {
 
       const result = await mcpIntegration.processJsonToolUse(jsonContent);
 
-      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { routeToolUse: jest.Mock } }).mcpToolRouter;
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'json',
         content: jsonContent
@@ -166,7 +156,7 @@ describe('McpIntegration', () => {
 
       const result = await mcpIntegration.processOpenAiFunctionCall(functionCall);
 
-      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { routeToolUse: jest.Mock } }).mcpToolRouter;
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'openai',
         content: functionCall
@@ -179,7 +169,7 @@ describe('McpIntegration', () => {
       
       const result = await mcpIntegration.routeToolUse(content);
       
-      const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+      const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { detectFormat: jest.Mock; routeToolUse: jest.Mock } }).mcpToolRouter;
       expect(mcpToolRouter.detectFormat).toHaveBeenCalledWith(content);
       expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
         format: 'xml',
@@ -196,7 +186,7 @@ describe('handleToolUse', () => {
     jest.clearAllMocks();
     
     // Reset the singleton instance
-    // @ts-ignore
+    // @ts-expect-error accessing private singleton for reset
     McpIntegration['instance'] = undefined;
   });
   
@@ -209,7 +199,7 @@ describe('handleToolUse', () => {
     const mcpIntegration = McpIntegration.getInstance();
     
     // Check that initialize was called
-    const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+    const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { initialize: jest.Mock; routeToolUse: jest.Mock } }).mcpToolRouter;
     expect(mcpToolRouter.initialize).toHaveBeenCalled();
   });
   
@@ -222,7 +212,7 @@ describe('handleToolUse', () => {
     const mcpIntegration = McpIntegration.getInstance();
     
     // Check that routeToolUse was called
-    const mcpToolRouter = (mcpIntegration as any).mcpToolRouter;
+    const mcpToolRouter = (mcpIntegration as unknown as { mcpToolRouter: { routeToolUse: jest.Mock } }).mcpToolRouter;
     expect(mcpToolRouter.routeToolUse).toHaveBeenCalledWith({
       format: 'xml',
       content

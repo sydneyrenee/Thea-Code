@@ -1,11 +1,9 @@
-import type { McpHub as McpHubType } from "../management/McpHub"
-import type { TheaProvider } from "../../../core/webview/TheaProvider" // Renamed import
-import type { ExtensionContext, Uri } from "vscode"
-import type { McpConnection } from "../management/McpHub"
-import { ServerConfigSchema } from "../management/McpHub"
-
-const fs = require("fs/promises")
-const { McpHub } = require("../management/McpHub")
+import type { McpHub as McpHubType } from "../management/McpHub";
+import type { TheaProvider } from "../../../core/webview/TheaProvider"; // Renamed import
+import type { ExtensionContext, Uri } from "vscode";
+import type { McpConnection } from "../management/McpHub";
+import { ServerConfigSchema, McpHub } from "../management/McpHub";
+import fs from "fs/promises";
 
 jest.mock("vscode", () => ({
 	workspace: {

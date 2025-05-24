@@ -1,11 +1,11 @@
 import { McpConverters } from '../core/McpConverters';
 import { ToolDefinition } from '../types/McpProviderTypes';
-import { NeutralToolUseRequest, NeutralToolResult } from '../types/McpToolTypes';
+import { NeutralToolResult } from '../types/McpToolTypes';
 
 // Mock the json-xml-bridge utilities
 jest.mock('../../../utils/json-xml-bridge', () => ({
   jsonToolUseToXml: jest.fn((json) => `<mock_xml>${json}</mock_xml>`),
-  xmlToolUseToJson: jest.fn((xml) => '{"type":"tool_use","id":"test","name":"test_tool","input":{"param":"test"}}'),
+  xmlToolUseToJson: jest.fn(() => '{"type":"tool_use","id":"test","name":"test_tool","input":{"param":"test"}}'),
   openAiFunctionCallToNeutralToolUse: jest.fn(() => ({
     type: 'tool_use',
     id: 'test',
@@ -34,7 +34,7 @@ describe('McpConverters', () => {
           },
           required: ['param']
         },
-        handler: async () => ({ content: [] })
+        handler: () => ({ content: [] })
       });
       
       tools.set('another_tool', {
@@ -54,7 +54,7 @@ describe('McpConverters', () => {
           },
           required: ['option']
         },
-        handler: async () => ({ content: [] })
+        handler: () => ({ content: [] })
       });
       
       // Convert to OpenAI functions
@@ -107,7 +107,7 @@ describe('McpConverters', () => {
       tools.set('simple_tool', {
         name: 'simple_tool',
         description: 'A simple tool without schema',
-        handler: async () => ({ content: [] })
+        handler: () => ({ content: [] })
       });
       
       // Convert to OpenAI functions
@@ -132,7 +132,7 @@ describe('McpConverters', () => {
       
       tools.set('no_description', {
         name: 'no_description',
-        handler: async () => ({ content: [] })
+        handler: () => ({ content: [] })
       });
       
       // Convert to OpenAI functions
@@ -237,7 +237,7 @@ describe('McpConverters', () => {
       };
       
       const result = McpConverters.mcpToJson(mcpResult);
-      const parsed = JSON.parse(result);
+      const parsed = JSON.parse(result) as unknown as NeutralToolResult;
       
       expect(parsed).toEqual(mcpResult);
     });

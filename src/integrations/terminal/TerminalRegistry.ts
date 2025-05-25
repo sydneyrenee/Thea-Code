@@ -20,8 +20,8 @@ export class TerminalRegistry {
 
 		try {
 			// onDidStartTerminalShellExecution
-			const startDisposable = vscode.window.onDidStartTerminalShellExecution?.(
-				async (e: vscode.TerminalShellExecutionStartEvent) => {
+                        const startDisposable = vscode.window.onDidStartTerminalShellExecution?.(
+                                (e: vscode.TerminalShellExecutionStartEvent) => {
 					// Get a handle to the stream as early as possible:
 					const stream = e?.execution.read()
 					const terminalInfo = this.getTerminalByVSCETerminal(e.terminal)
@@ -45,8 +45,8 @@ export class TerminalRegistry {
 			)
 
 			// onDidEndTerminalShellExecution
-			const endDisposable = vscode.window.onDidEndTerminalShellExecution?.(
-				async (e: vscode.TerminalShellExecutionEndEvent) => {
+                        const endDisposable = vscode.window.onDidEndTerminalShellExecution?.(
+                                (e: vscode.TerminalShellExecutionEndEvent) => {
 					const terminalInfo = this.getTerminalByVSCETerminal(e.terminal)
 					const process = terminalInfo?.process
 
@@ -112,7 +112,7 @@ export class TerminalRegistry {
 	static createTerminal(cwd: string | vscode.Uri): Terminal {
 		const terminal = vscode.window.createTerminal({
 			cwd,
-			name: EXTENSION_DISPLAY_NAME,
+                        name: EXTENSION_DISPLAY_NAME as string,
 			iconPath: new vscode.ThemeIcon("rocket"),
 			env: {
 				PAGER: "cat",
@@ -258,10 +258,12 @@ export class TerminalRegistry {
 		})
 	}
 
-	static cleanup() {
-		this.disposables.forEach((disposable) => disposable.dispose())
-		this.disposables = []
-	}
+        static cleanup() {
+                this.disposables.forEach((disposable) => {
+                        disposable.dispose()
+                })
+                this.disposables = []
+        }
 
 	/**
 	 * Releases all terminals associated with a task
@@ -284,7 +286,7 @@ export class TerminalRegistry {
 	 * @param taskId Optional task ID to associate with the terminal
 	 * @returns A Terminal instance
 	 */
-	static async getOrCreateTerminal(cwd: string, requiredCwd: boolean = false, taskId?: string): Promise<Terminal> {
+        static getOrCreateTerminal(cwd: string, requiredCwd: boolean = false, taskId?: string): Terminal {
 		const terminals = this.getAllTerminals()
 		let terminal: Terminal | undefined
 

@@ -702,7 +702,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			return [false, `Working directory '${workingDir}' does not exist.`]
 		}
 
-		const terminalInfo = await TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, this.taskId)
+                const terminalInfo = TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, this.taskId)
 
 		// Update the working directory in case the terminal we asked for has
 		// a different working directory so that the model will know where the

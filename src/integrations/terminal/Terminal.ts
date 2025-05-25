@@ -180,9 +180,9 @@ export class Terminal {
 
 			// Wait for shell integration before executing the command
 			pWaitFor(() => this.terminal.shellIntegration !== undefined, { timeout: Terminal.shellIntegrationTimeout })
-				.then(() => {
-					process.run(command)
-				})
+                                .then(() => {
+                                        void process.run(command)
+                                })
 				.catch(() => {
 					console.log(`[Terminal ${this.id}] Shell integration not available. Command execution aborted.`)
 					process.emit(

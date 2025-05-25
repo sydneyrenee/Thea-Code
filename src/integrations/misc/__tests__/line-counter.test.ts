@@ -1,34 +1,35 @@
 import fs from "fs"
+import * as readline from "readline"
 import { countFileLines } from "../line-counter"
 
 // Mock the fs module
 jest.mock("fs", () => {
-	const originalModule = jest.requireActual("fs")
-	return {
-		...originalModule,
-		createReadStream: jest.fn(),
-		promises: {
-			access: jest.fn(),
-		},
-	}
+        const originalModule: typeof import("fs") = jest.requireActual("fs")
+        return {
+                ...originalModule,
+                createReadStream: jest.fn(),
+                promises: {
+                        access: jest.fn(),
+                },
+        } as typeof import("fs")
 })
 
 // Mock readline
 jest.mock("readline", () => ({
-	createInterface: jest.fn().mockReturnValue({
-		on: jest.fn().mockImplementation(function (this: any, event, callback) {
-			if (event === "line" && this.mockLines) {
-				for (let i = 0; i < this.mockLines; i++) {
-					callback()
-				}
-			}
-			if (event === "close") {
-				callback()
-			}
-			return this
-		}),
-		mockLines: 0,
-	}),
+        createInterface: jest.fn().mockReturnValue({
+                on: jest.fn().mockImplementation(function (this: { mockLines?: number }, event: string, callback: () => void) {
+                        if (event === "line" && this.mockLines) {
+                                for (let i = 0; i < this.mockLines; i++) {
+                                        callback()
+                                }
+                        }
+                        if (event === "close") {
+                                callback()
+                        }
+                        return this
+                }),
+                mockLines: 0,
+        }),
 }))
 
 describe("countFileLines", () => {
@@ -48,30 +49,29 @@ describe("countFileLines", () => {
 		// Setup
 		;(fs.promises.access as jest.Mock).mockResolvedValueOnce(undefined)
 
-		const mockEventEmitter = {
-			on: jest.fn().mockImplementation(function (this: any, event, callback) {
-				if (event === "line") {
-					// Simulate 10 lines
-					for (let i = 0; i < 10; i++) {
-						callback()
-					}
-				}
-				if (event === "close") {
-					callback()
-				}
-				return this
-			}),
-		}
+                const mockEventEmitter = {
+                        on: jest.fn().mockImplementation(function (this: { mockLines?: number }, event: string, callback: () => void) {
+                                if (event === "line") {
+                                        for (let i = 0; i < 10; i++) {
+                                                callback()
+                                        }
+                                }
+                                if (event === "close") {
+                                        callback()
+                                }
+                                return this
+                        }),
+                }
 
-		const mockReadStream = {
-			on: jest.fn().mockImplementation(function (this: any, event, callback) {
-				return this
-			}),
-		}
+                const mockReadStream = {
+                        on: jest.fn().mockImplementation(function (this: unknown) {
+                                return this
+                        }),
+                }
 
-		;(fs.createReadStream as jest.Mock).mockReturnValueOnce(mockReadStream)
-		const readline = require("readline")
-		readline.createInterface.mockReturnValueOnce(mockEventEmitter)
+                ;(fs.createReadStream as jest.Mock).mockReturnValueOnce(mockReadStream)
+                const readlineMock = jest.mocked(readline)
+                readlineMock.createInterface.mockReturnValueOnce(mockEventEmitter as unknown as readline.Interface)
 
 		// Test
 		const result = await countFileLines("test-file.txt")
@@ -86,24 +86,24 @@ describe("countFileLines", () => {
 		// Setup
 		;(fs.promises.access as jest.Mock).mockResolvedValueOnce(undefined)
 
-		const mockEventEmitter = {
-			on: jest.fn().mockImplementation(function (this: any, event, callback) {
-				if (event === "close") {
-					callback()
-				}
-				return this
-			}),
-		}
+                const mockEventEmitter = {
+                        on: jest.fn().mockImplementation(function (this: { mockLines?: number }, event: string, callback: () => void) {
+                                if (event === "close") {
+                                        callback()
+                                }
+                                return this
+                        }),
+                }
 
-		const mockReadStream = {
-			on: jest.fn().mockImplementation(function (this: any, event, callback) {
-				return this
-			}),
-		}
+                const mockReadStream = {
+                        on: jest.fn().mockImplementation(function (this: unknown) {
+                                return this
+                        }),
+                }
 
-		;(fs.createReadStream as jest.Mock).mockReturnValueOnce(mockReadStream)
-		const readline = require("readline")
-		readline.createInterface.mockReturnValueOnce(mockEventEmitter)
+                ;(fs.createReadStream as jest.Mock).mockReturnValueOnce(mockReadStream)
+                const readlineMock = jest.mocked(readline)
+                readlineMock.createInterface.mockReturnValueOnce(mockEventEmitter as unknown as readline.Interface)
 
 		// Test
 		const result = await countFileLines("empty-file.txt")
@@ -116,24 +116,24 @@ describe("countFileLines", () => {
 		// Setup
 		;(fs.promises.access as jest.Mock).mockResolvedValueOnce(undefined)
 
-		const mockEventEmitter = {
-			on: jest.fn().mockImplementation(function (this: any, event, callback) {
-				if (event === "error" && callback) {
-					callback(new Error("Read error"))
-				}
-				return this
-			}),
-		}
+                const mockEventEmitter = {
+                        on: jest.fn().mockImplementation(function (this: { mockLines?: number }, event: string, callback: (err?: Error) => void) {
+                                if (event === "error") {
+                                        callback(new Error("Read error"))
+                                }
+                                return this
+                        }),
+                }
 
-		const mockReadStream = {
-			on: jest.fn().mockImplementation(function (this: any, event, callback) {
-				return this
-			}),
-		}
+                const mockReadStream = {
+                        on: jest.fn().mockImplementation(function (this: unknown) {
+                                return this
+                        }),
+                }
 
-		;(fs.createReadStream as jest.Mock).mockReturnValueOnce(mockReadStream)
-		const readline = require("readline")
-		readline.createInterface.mockReturnValueOnce(mockEventEmitter)
+                ;(fs.createReadStream as jest.Mock).mockReturnValueOnce(mockReadStream)
+                const readlineMock = jest.mocked(readline)
+                readlineMock.createInterface.mockReturnValueOnce(mockEventEmitter as unknown as readline.Interface)
 
 		// Test & Assert
 		await expect(countFileLines("error-file.txt")).rejects.toThrow("Read error")

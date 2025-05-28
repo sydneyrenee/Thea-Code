@@ -18,7 +18,7 @@ function convertAnthropicContentToGemini(content: Anthropic.Messages.MessagePara
 				return {
 					inlineData: {
 						data: block.source.data, // Now safe to access
-						mimeType: block.source.media_type, // Now safe to access
+						mimeType: block.source.media_type as string, // Now safe to access
 					},
 				} as InlineDataPart
 			case "tool_use":
@@ -69,7 +69,7 @@ function convertAnthropicContentToGemini(content: Anthropic.Messages.MessagePara
 							return {
 								inlineData: {
 									data: part.source.data, // Now safe to access
-									mimeType: part.source.media_type, // Now safe to access
+									mimeType: part.source.media_type as string, // Now safe to access
 								},
 							} as InlineDataPart
 						}),

@@ -163,7 +163,7 @@ export function isToolAllowedForMode(
         experiments?: Record<string, boolean>,
 ): boolean {
         // Always allow these tools
-        if (ALWAYS_AVAILABLE_TOOLS.includes(tool)) {
+        if ((ALWAYS_AVAILABLE_TOOLS as readonly string[]).includes(tool)) {
 		return true
 	}
 

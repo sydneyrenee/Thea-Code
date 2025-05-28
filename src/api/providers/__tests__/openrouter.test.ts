@@ -131,8 +131,8 @@ describe("OpenRouterHandler", () => {
 		})()
 
 		// Mock OpenAI chat.completions.create
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-		const mockCreate = jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as any);
+		 
+		const mockCreate = jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as unknown as { type: string });
 
 		const systemPrompt = "test system prompt"
 		const messages: NeutralMessage[] = [{ role: "user", content: "test message" }];
@@ -194,8 +194,8 @@ describe("OpenRouterHandler", () => {
 			};
 		})()
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-		const mockCreate = jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as any);
+		 
+		const mockCreate = jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as unknown as { type: string });
 		;(axios.get as jest.Mock).mockResolvedValue({ data: { data: {} } })
 
 		await handler.createMessage("test", []).next();
@@ -230,8 +230,8 @@ describe("OpenRouterHandler", () => {
 			};
 		})()
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-		const mockCreate = jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as any);
+		 
+		const mockCreate = jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as unknown as { type: string });
 		;(axios.get as jest.Mock).mockResolvedValue({ data: { data: {} } })
 
 		const messages: NeutralMessage[] = [
@@ -264,8 +264,8 @@ describe("OpenRouterHandler", () => {
 			throw new Error("API Error"); // Throw error directly from the stream
 		})()
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-		jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as any);
+		 
+		jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as unknown as { type: string });
 
 		const generator = handler.createMessage("test", [])
 		await expect(generator.next()).rejects.toThrow("OpenRouter API Error 500: API Error")
@@ -339,11 +339,11 @@ describe("OpenRouterHandler", () => {
                         };
                 })()
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-                jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as any);
+                 
+                jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(() => mockStream as unknown as { type: string });
               
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const processSpy = jest.spyOn(handler as any, "processToolUse").mockResolvedValue({ result: "ok" });
+                 
+                const processSpy = jest.spyOn(handler as unknown as { type: string }, "processToolUse").mockResolvedValue({ result: "ok" });
               
                 const generator = handler.createMessage("test", [])
                 const chunks: ApiStreamChunk[] = []

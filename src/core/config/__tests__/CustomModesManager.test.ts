@@ -38,7 +38,7 @@ describe("CustomModesManager", () => {
 		} as unknown as vscode.ExtensionContext
 
 		mockWorkspaceFolders = [{ uri: { fsPath: "/mock/workspace" } }]
-		;(vscode.workspace as any).workspaceFolders = mockWorkspaceFolders
+		;(vscode.workspace as unknown as { type: string }).workspaceFolders = mockWorkspaceFolders
 		;(vscode.workspace.onDidSaveTextDocument as jest.Mock).mockReturnValue({ dispose: jest.fn() })
 		;(getWorkspacePath as jest.Mock).mockReturnValue("/mock/workspace")
 		;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {

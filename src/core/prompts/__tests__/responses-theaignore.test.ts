@@ -101,7 +101,7 @@ describe("TheaIgnore Response Formatting", () => {
 			]
 
 			// Format with controller
-			const result = formatResponse.formatFilesList(TEST_CWD, files, false, controller as any, true)
+			const result = formatResponse.formatFilesList(TEST_CWD, files, false, controller as unknown as { type: string }, true)
 
 			// Should contain each file
 			expect(result).toContain("src/app.ts")
@@ -149,7 +149,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				files,
 				false,
-				controller as any,
+				controller as unknown as { type: string },
 				false, // showTheaIgnoredFiles = false
 			)
 
@@ -181,7 +181,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				["file1.txt", "file2.txt"],
 				true, // didHitLimit = true
-				controller as any,
+				controller as unknown as { type: string },
 				true,
 			)
 
@@ -199,7 +199,7 @@ describe("TheaIgnore Response Formatting", () => {
 			await controller.initialize()
 
 			// Format with empty files array
-			const result = formatResponse.formatFilesList(TEST_CWD, [], false, controller as any, true)
+			const result = formatResponse.formatFilesList(TEST_CWD, [], false, controller as unknown as { type: string }, true)
 
 			// Should show "No files found"
 			expect(result).toBe("No files found.")

@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 
 import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
-import { ToolUse } from "../assistant-message"
+import type { ToolUse } from "../assistant-message"
 import { formatResponse } from "../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import path from "path"

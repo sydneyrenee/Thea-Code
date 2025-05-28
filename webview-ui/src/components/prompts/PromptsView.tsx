@@ -292,10 +292,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 	// Handler for group checkbox changes
 	const handleGroupChange = useCallback(
 		(group: ToolGroup, isCustomMode: boolean, customMode: ModeConfig | undefined) =>
-			(e: Event | React.FormEvent<HTMLElement>) => {
+			(checked: boolean) => {
 				if (!isCustomMode) return // Prevent changes to built-in modes
-				const target = (e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
-				const checked = target.checked
 				const oldGroups = customMode?.groups || []
 				let newGroups: GroupEntry[]
 				if (checked) {
@@ -317,7 +315,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 	// Handle clicks outside the config menu
 	useEffect(() => {
-		const handleClickOutside = (event: MouseEvent) => {
+		const handleClickOutside = () => {
 			if (showConfigMenu) {
 				setShowConfigMenu(false)
 			}
@@ -418,10 +416,6 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										e.preventDefault()
 										e.stopPropagation()
 										setShowConfigMenu((prev) => !prev)
-									}}
-									onBlur={() => {
-										// Add slight delay to allow menu item clicks to register
-										setTimeout(() => setShowConfigMenu(false), 200)
 									}}>
 									<span className="codicon codicon-json"></span>
 								</VSCodeButton>
@@ -502,7 +496,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										onChange={(e: Event | React.FormEvent<HTMLElement>) => {
 											const target =
 												(e as CustomEvent)?.detail?.target ||
-												((e as any).target as HTMLInputElement)
+												((e as Event).target as HTMLInputElement)
 											const customMode = findModeBySlug(mode, customModes)
 											if (customMode) {
 												updateCustomMode(mode, {
@@ -558,8 +552,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as CustomEvent)?.detail?.target?.value ||
-									((e as any).target as HTMLTextAreaElement).value
+									((e as unknown as CustomEvent)?.detail?.target?.value) ||
+									(e.target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(mode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
@@ -590,8 +584,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							<div style={{ marginBottom: "8px" }}>
 								<VSCodeDropdown
 									value={currentApiConfigName || ""}
-									onChange={(e: any) => {
-										const value = e.detail?.target?.value || e.target?.value
+									onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+										const value = e.target.value
 										vscode.postMessage({
 											type: "loadApiConfiguration",
 											text: value,
@@ -743,7 +737,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									(e as CustomEvent)?.detail?.target?.value ||
+									((e as unknown as CustomEvent)?.detail?.target?.value) ||
 									((e as any).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(mode, customModes)
 								if (customMode) {
@@ -903,7 +897,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						value={customInstructions ?? ""}
 						onChange={(e) => {
 							const value =
-								(e as CustomEvent)?.detail?.target?.value ||
+								((e as unknown as CustomEvent)?.detail?.target?.value) ||
 								((e as any).target as HTMLTextAreaElement).value
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({
@@ -1018,7 +1012,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							value={getSupportPromptValue(activeSupportTab)}
 							onChange={(e) => {
 								const value =
-									(e as CustomEvent)?.detail?.target?.value ||
+									((e as unknown as CustomEvent)?.detail?.target?.value) ||
 									((e as any).target as HTMLTextAreaElement).value
 								const trimmedValue = value.trim()
 								updateSupportPrompt(activeSupportTab, trimmedValue || undefined)
@@ -1197,7 +1191,6 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									{t("prompts:createModeDialog.saveLocation.description")}
 								</div>
 								<VSCodeRadioGroup
-									value={newModeSource}
 									onChange={(e: Event | React.FormEvent<HTMLElement>) => {
 										const target = ((e as CustomEvent)?.detail?.target ||
 											(e.target as HTMLInputElement)) as HTMLInputElement
@@ -1239,7 +1232,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									value={newModeRoleDefinition}
 									onChange={(e) => {
 										const value =
-											(e as CustomEvent)?.detail?.target?.value ||
+											((e as unknown as CustomEvent)?.detail?.target?.value) ||
 											((e as any).target as HTMLTextAreaElement).value
 										setNewModeRoleDefinition(value)
 									}}
@@ -1275,10 +1268,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										<VSCodeCheckbox
 											key={group}
 											checked={newModeGroups.some((g) => getGroupName(g) === group)}
-											onChange={(e: Event | React.FormEvent<HTMLElement>) => {
-												const target =
-													(e as CustomEvent)?.detail?.target || (e.target as HTMLInputElement)
-												const checked = target.checked
+											onChange={(checked: boolean) => {
 												if (checked) {
 													setNewModeGroups([...newModeGroups, group])
 												} else {
@@ -1311,7 +1301,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									value={newModeCustomInstructions}
 									onChange={(e) => {
 										const value =
-											(e as CustomEvent)?.detail?.target?.value ||
+											((e as unknown as CustomEvent)?.detail?.target?.value) ||
 											((e as any).target as HTMLTextAreaElement).value
 										setNewModeCustomInstructions(value)
 									}}

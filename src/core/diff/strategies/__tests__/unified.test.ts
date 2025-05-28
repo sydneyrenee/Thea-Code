@@ -21,7 +21,7 @@ describe("UnifiedDiffStrategy", () => {
 
 	describe("applyDiff", () => {
                 it.skip("should successfully apply a function modification diff", async () => {
-			const originalContent = `import { Logger } from '../logger';
+			const originalContent = `import type { Logger } from "../logger";
 
 function calculateTotal(items: number[]): number {
   return items.reduce((sum, item) => {
@@ -34,7 +34,7 @@ export { calculateTotal };`
 			const diffContent = `--- src/utils/helper.ts
 +++ src/utils/helper.ts
 @@ -1,9 +1,10 @@
- import { Logger } from '../logger';
+ import type { Logger } from "../logger";
  
  function calculateTotal(items: number[]): number {
 -  return items.reduce((sum, item) => {
@@ -47,7 +47,7 @@ export { calculateTotal };`
  
  export { calculateTotal };`
 
-			const expected = `import { Logger } from '../logger';
+			const expected = `import type { Logger } from "../logger";
 
 function calculateTotal(items: number[]): number {
   const total = items.reduce((sum, item) => {

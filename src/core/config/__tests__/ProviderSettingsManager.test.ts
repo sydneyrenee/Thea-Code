@@ -1,7 +1,7 @@
 // npx jest src/core/config/__tests__/ProviderSettingsManager.test.ts
 
 import { ExtensionContext } from "vscode"
-import { EXTENSION_SECRETS_PREFIX } from "../../../../dist/thea-config" // Import branded constant
+import type { EXTENSION_SECRETS_PREFIX } from "../../../../dist/thea-config" // Import branded constant
 
 import { ProviderSettings } from "../../../schemas"
 import { ProviderSettingsManager, ProviderProfiles } from "../ProviderSettingsManager"

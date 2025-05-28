@@ -1,5 +1,5 @@
 import { Mode, isToolAllowedForMode, ModeConfig } from "../shared/modes"
-import { ToolName } from "../shared/tool-groups"
+import type { ToolName } from "../shared/tool-groups"
 
 export { isToolAllowedForMode }
 export type { ToolName }

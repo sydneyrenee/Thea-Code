@@ -193,7 +193,7 @@ export class EditorUtils {
 			const diagnostics = vscode.languages
 				.getDiagnostics(document.uri)
 				.filter((d) => this.hasIntersectingRange(effectiveRange.range, d.range))
-				.map(this.createDiagnosticData)
+				.map(d => this.createDiagnosticData(d))
 
 			return {
 				filePath,

@@ -310,7 +310,7 @@
     }
   },
   "scripts": {
-    "build": "npm run clean && npm run brand && npm run build:extension && npm run build:webui",
+    "build": "npm run clean && npm run build:extension && npm run build:webui",
     "build:extension": "npx esbuild --bundle ./src/extension.ts --external:vscode --platform=node --format=esm --outfile=dist/extension.js --sourcemap",
     "build:webui": "cd webview-ui && npm run build",
     "brand": "npm run prettier:branding",
@@ -320,7 +320,7 @@
     "compile": "cross-os compile",
     "watch": "cross-os watch",
     "lint": "eslint src --ext .ts,.tsx",
-    "version": "npm run package && npm run prettier:branding && npm run verify",
+    "version": "npm run package && npm run verify",
     "generateChatCommandsClass": "node -e \"require('./scripts/generate-types.mjs').generateChatCommandsClass();\"",
     "dev": "npm run watch",
     "pretty": "prettier --write --ignore-unknown \"**/*\"",

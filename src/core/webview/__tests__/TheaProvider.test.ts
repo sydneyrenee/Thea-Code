@@ -12,7 +12,7 @@ import { ProviderSettingsManager } from "../../config/ProviderSettingsManager"
 import { CustomModesManager } from "../../config/CustomModesManager"
 import { TheaTask } from "../../TheaTask" // Renamed import
 import { McpServerManager } from "../../../services/mcp/management/McpServerManager"
-import { defaultModeSlug } from "../../../shared/modes"
+import type { defaultModeSlug } from "../../../shared/modes"
 import { HistoryItem } from "../../../shared/HistoryItem"
 import { t } from "../../../i18n"
 
@@ -561,7 +561,8 @@ describe("TheaProvider", () => {
 		expect(mockTheaTaskStack.getCurrentTheaTask).toHaveBeenCalled() // Updated to new method name
 		expect(currentTheaTask).toBe(mockTheaTask) // Renamed variable
 
-		const stackSize = theaProvider.getStackSize() // Updated to new method name
+		// Call getStackSize and verify the method was called
+		theaProvider.getStackSize() // Updated to new method name
 		expect(mockTheaTaskStack.getSize).toHaveBeenCalled() // Renamed variable
 	})
 })

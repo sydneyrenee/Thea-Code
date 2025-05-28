@@ -40,7 +40,7 @@ Complete Example:
 
 Original file (with line numbers):
 \`\`\`
-1 | import { Logger } from '../logger';
+1 | import type { Logger } from "../logger";
 2 | 
 3 | function calculateTotal(items: number[]): number {
 4 |   return items.reduce((sum, item) => {
@@ -53,7 +53,7 @@ Original file (with line numbers):
 
 After applying the diff, the file would look like:
 \`\`\`
-1 | import { Logger } from '../logger';
+1 | import type { Logger } from "../logger";
 2 | 
 3 | function calculateTotal(items: number[]): number {
 4 |   const total = items.reduce((sum, item) => {
@@ -70,7 +70,7 @@ Diff to modify the file:
 --- src/utils/helper.ts
 +++ src/utils/helper.ts
 @@ -1,9 +1,10 @@
- import { Logger } from '../logger';
+ import type { Logger } from "../logger";
  
  function calculateTotal(items: number[]): number {
 -  return items.reduce((sum, item) => {

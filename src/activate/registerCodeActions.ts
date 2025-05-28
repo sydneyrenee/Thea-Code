@@ -3,7 +3,7 @@ import * as vscode from "vscode"
 import { ACTION_NAMES, COMMAND_IDS } from "../core/CodeActionProvider"
 import { EditorUtils } from "../core/EditorUtils"
 import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
-import { AI_IDENTITY_NAME } from "../../dist/thea-config" // Import branded constant
+import type { AI_IDENTITY_NAME } from "../../dist/thea-config" // Import branded constant
 
 export const registerCodeActions = (context: vscode.ExtensionContext) => {
 	registerCodeActionPair(

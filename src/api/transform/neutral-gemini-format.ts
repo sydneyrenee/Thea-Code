@@ -44,7 +44,7 @@ export function convertToGeminiHistory(
                         'media_type' in block.source && 'data' in block.source) {
                         return {
                             inlineData: {
-                                mimeType: String(block.source.media_type),
+                                mimeType: String(block.source.media_type as string),
                                 data: String(block.source.data) // Base64 data
                             }
                         } as InlineDataPart;
@@ -98,7 +98,7 @@ export function convertToGeminiHistory(
                                     'media_type' in part.source && 'data' in part.source) {
                                     parts.push({
                                         inlineData: {
-                                            mimeType: String(part.source.media_type),
+                                            mimeType: String(part.source.media_type as string),
                                             data: String(part.source.data)
                                         }
                                     } as InlineDataPart);
@@ -143,7 +143,7 @@ export function convertToGeminiContentBlocks(
                     'media_type' in block.source && 'data' in block.source) {
                     geminiParts.push({
                         inlineData: {
-                            mimeType: String(block.source.media_type),
+                            mimeType: String(block.source.media_type as string),
                             data: String(block.source.data)
                         }
                     } as InlineDataPart);

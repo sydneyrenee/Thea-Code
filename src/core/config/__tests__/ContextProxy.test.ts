@@ -409,7 +409,7 @@ describe("ContextProxy", () => {
 
 		it("should reinitialize caches after reset", async () => {
 			// Spy on initialization methods
-			const initializeSpy = jest.spyOn(proxy as any, "initialize")
+			const initializeSpy = jest.spyOn(proxy as unknown as { type: string }, "initialize")
 
 			// Reset all state
 			await proxy.resetAllState()

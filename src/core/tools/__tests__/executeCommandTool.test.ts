@@ -6,7 +6,7 @@ import { TheaTask } from "../../TheaTask" // Renamed import
 import { ToolUse } from "../../assistant-message"
 import { formatResponse } from "../../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../types"
-import { TheaAsk } from "../../../schemas" // Renamed import
+import type { TheaAsk } from "../../../schemas" // Renamed import
 import { TheaAskResponse } from "../../../shared/WebviewMessage" // Import response type
 
 // Mock dependencies
@@ -52,7 +52,7 @@ describe("executeCommandTool", () => {
 				ask: jest
 					.fn<() => Promise<{ response: TheaAskResponse; text?: string; images?: string[] }>>()
 					.mockResolvedValue({ response: "yesButtonClicked" }),
-			} as any, // Cast partial mock to any
+			} as unknown as { type: string }, // Cast partial mock to any
 			taskStateManager: {
 				// Add state manager mock setup
 				getTokenUsage: jest
@@ -65,7 +65,7 @@ describe("executeCommandTool", () => {
 						}
 					>()
 					.mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 }),
-			} as any, // Cast partial mock to any
+			} as unknown as { type: string }, // Cast partial mock to any
 		}
 
 		// @ts-expect-error - Jest mock function type issues

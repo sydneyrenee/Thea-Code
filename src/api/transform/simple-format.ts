@@ -15,7 +15,7 @@ export function convertToSimpleContent(content: Anthropic.Messages.MessageParam[
 				return block.text
 			}
 			if (block.type === "image") {
-				return `[Image: ${block.source.media_type}]`
+				return `[Image: ${block.source.media_type as string}]`
 			}
 			if (block.type === "tool_use") {
 				return `[Tool Use: ${block.name}]`
@@ -31,7 +31,7 @@ export function convertToSimpleContent(content: Anthropic.Messages.MessageParam[
 								return part.text
 							}
 							if (part.type === "image") {
-								return `[Image: ${part.source.media_type}]`
+								return `[Image: ${part.source.media_type as string}]`
 							}
 							return ""
 						})

@@ -70,8 +70,8 @@ describe("GeminiHandler", () => {
 
 			// Setup the mock implementation
 			const mockGenerateContentStream = jest.fn().mockResolvedValue(mockStream)
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
+			 
+			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
 
@@ -99,8 +99,8 @@ describe("GeminiHandler", () => {
 			})
 
 			// Verify the model configuration
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			expect((handler["client"] as any).getGenerativeModel).toHaveBeenCalledWith(
+			 
+			expect((handler["client"] as unknown as { type: string }).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
 					systemInstruction: systemPrompt,
@@ -123,8 +123,8 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContentStream = jest.fn().mockRejectedValue(mockError)
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
+			 
+			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
 
@@ -146,15 +146,15 @@ describe("GeminiHandler", () => {
 					text: () => "Test response",
 				},
 			})
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
+			 
+			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			expect((handler["client"] as any).getGenerativeModel).toHaveBeenCalledWith(
+			 
+			expect((handler["client"] as unknown as { type: string }).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
 				},
@@ -173,8 +173,8 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContent = jest.fn().mockRejectedValue(mockError)
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
+			 
+			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 
@@ -189,8 +189,8 @@ describe("GeminiHandler", () => {
 					text: () => "",
 				},
 			})
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-			;(handler["client"] as any).getGenerativeModel = jest.fn().mockReturnValue({
+			 
+			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 

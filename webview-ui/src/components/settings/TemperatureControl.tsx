@@ -1,5 +1,5 @@
 import { Checkbox } from "vscrui"
-import { useEffect, useState, ChangeEvent } from "react"
+import { useEffect, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { useDebounce } from "react-use"
 
@@ -30,11 +30,10 @@ export const TemperatureControl = ({ value, onChange, maxValue = 1 }: Temperatur
 			<div>
 				<Checkbox
 					checked={isCustomTemperature}
-					onChange={(e: ChangeEvent<HTMLInputElement>) => {
-						const isChecked = e.target.checked
-						setIsCustomTemperature(isChecked)
+					onChange={(checked: boolean) => {
+						setIsCustomTemperature(checked)
 
-						if (!isChecked) {
+						if (!checked) {
 							setInputValue(null) // Unset the temperature, note that undefined is unserializable.
 						} else {
 							setInputValue(value ?? 0) // Use the value from apiConfiguration, if set.

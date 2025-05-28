@@ -98,7 +98,7 @@ const mockFs = {
 
 		// Handle file not found
 		const error = new Error(`ENOENT: no such file or directory, open '${filePath}'`)
-		;(error as any).code = "ENOENT"
+		;(error as unknown as { type: string }).code = "ENOENT"
 		throw error
 	}),
 
@@ -131,7 +131,7 @@ const mockFs = {
 			currentPath += "/" + parts[i]
 			if (!mockDirectories.has(currentPath)) {
 				const error = new Error(`ENOENT: no such file or directory, mkdir '${path}'`)
-				;(error as any).code = "ENOENT"
+				;(error as unknown as { type: string }).code = "ENOENT"
 				throw error
 			}
 		}
@@ -148,7 +148,7 @@ const mockFs = {
 			return Promise.resolve()
 		}
 		const error = new Error(`ENOENT: no such file or directory, access '${path}'`)
-		;(error as any).code = "ENOENT"
+		;(error as unknown as { type: string }).code = "ENOENT"
 		throw error
 	}),
 
@@ -164,7 +164,7 @@ const mockFs = {
 		}
 		// If old file doesn't exist, throw an error
 		const error = new Error(`ENOENT: no such file or directory, rename '${oldPath}'`)
-		;(error as any).code = "ENOENT"
+		;(error as unknown as { type: string }).code = "ENOENT"
 		throw error
 	}),
 

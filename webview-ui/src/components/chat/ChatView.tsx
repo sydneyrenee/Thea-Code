@@ -120,7 +120,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		// basically as long as a task is active, the conversation history will be persisted
 		if (lastMessage) {
 			switch (lastMessage.type) {
-				case "ask":
+				case "ask": {
 					const isPartial = lastMessage.partial === true
 					switch (lastMessage.ask) {
 						case "api_req_failed":
@@ -146,7 +146,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							// setPrimaryButtonText(undefined)
 							// setSecondaryButtonText(undefined)
 							break
-						case "tool":
+						case "tool": {
 							if (!isAutoApproved(lastMessage)) {
 								playSound("notification")
 							}
@@ -171,7 +171,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 									break
 							}
 							break
-						case "browser_action_launch":
+						}
+						case "browser_action_launch": {
 							if (!isAutoApproved(lastMessage)) {
 								playSound("notification")
 							}
@@ -181,7 +182,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setPrimaryButtonText(t("chat:approve.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
 							break
-						case "command":
+						}
+						case "command": {
 							if (!isAutoApproved(lastMessage)) {
 								playSound("notification")
 							}
@@ -191,21 +193,24 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setPrimaryButtonText(t("chat:runCommand.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
 							break
-						case "command_output":
+						}
+						case "command_output": {
 							setTextAreaDisabled(false)
 							setTheaAsk("command_output") // Use renamed setter
 							setEnableButtons(true)
 							setPrimaryButtonText(t("chat:proceedWhileRunning.title"))
 							setSecondaryButtonText(undefined)
 							break
-						case "use_mcp_server":
+						}
+						case "use_mcp_server": {
 							setTextAreaDisabled(isPartial)
 							setTheaAsk("use_mcp_server") // Use renamed setter
 							setEnableButtons(!isPartial)
 							setPrimaryButtonText(t("chat:approve.title"))
 							setSecondaryButtonText(t("chat:reject.title"))
 							break
-						case "completion_result":
+						}
+						case "completion_result": {
 							// extension waiting for feedback. but we can just present a new task button
 							playSound("celebration")
 							setTextAreaDisabled(isPartial)
@@ -214,7 +219,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setPrimaryButtonText(t("chat:startNewTask.title"))
 							setSecondaryButtonText(undefined)
 							break
-						case "resume_task":
+						}
+						case "resume_task": {
 							setTextAreaDisabled(false)
 							setTheaAsk("resume_task") // Use renamed setter
 							setEnableButtons(true)
@@ -222,7 +228,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setSecondaryButtonText(t("chat:terminate.title"))
 							setDidClickCancel(false) // special case where we reset the cancel button state
 							break
-						case "resume_completed_task":
+						}
+						case "resume_completed_task": {
 							setTextAreaDisabled(false)
 							setTheaAsk("resume_completed_task") // Use renamed setter
 							setEnableButtons(true)
@@ -230,9 +237,11 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							setSecondaryButtonText(undefined)
 							setDidClickCancel(false)
 							break
+						}
 					}
 					break
-				case "say":
+				}
+				case "say": {
 					// don't want to reset since there could be a "say" after an "ask" while ask is waiting for response
 					switch (lastMessage.say) {
 						case "api_req_retry_delayed":
@@ -262,6 +271,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							break
 					}
 					break
+				}
 			}
 		} else {
 			// this would get called after sending the first message, so we have to watch messages.length instead
@@ -505,7 +515,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							break
 					}
 					break
-				case "selectedImages":
+				case "selectedImages": {
 					const newImages = message.images ?? []
 					if (newImages.length > 0) {
 						setSelectedImages((prevImages) =>
@@ -513,6 +523,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 						)
 					}
 					break
+				}
 				case "invoke":
 					switch (message.invoke!) {
 						case "newChat":
@@ -678,7 +689,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 
 			// For read/write operations, check if it's outside workspace and if we have permission for that
 			if (message.ask === "tool") {
-				let tool: TheaSayTool = { tool: "" }
+				let tool: TheaSayTool = { tool: "readFile" } // Default to a valid tool type
 				try {
 					tool = JSON.parse(message.text || "{}")
 				} catch (error) {

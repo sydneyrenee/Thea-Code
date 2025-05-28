@@ -206,15 +206,15 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		// Initialize State Manager FIRST
 		this.taskStateManager = new TaskStateManager({
 			taskId: this.taskId,
-			providerRef: this.providerRef as WeakRef<any>, // TODO: Fix type in TaskStateManager constructor
+			providerRef: this.providerRef, // Fixed type
 			taskNumber: this.taskNumber,
 			// Callbacks to update TheaTask's view or trigger side effects
-			onMessagesUpdate: async (messages) => {
+			onMessagesUpdate: () => {
 				// If TheaTask needs its own copy, update it here.
 				// Otherwise, just trigger webview update if needed.
-				await this.providerRef.deref()?.postStateToWebview()
+				void this.providerRef.deref()?.postStateToWebview()
 			},
-			onHistoryUpdate: (history) => {
+			onHistoryUpdate: () => {
 				// If TheaTask needs its own copy, update it here.
 			},
 			onTokenUsageUpdate: (usage) => {
@@ -224,7 +224,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		this.diffViewProvider = new DiffViewProvider(this.cwd)
 		// Initialize Webview Communicator SECOND
 		this.webviewCommunicator = new TaskWebviewCommunicator({
-			providerRef: this.providerRef as WeakRef<any>, // TODO: Fix type in TaskWebviewCommunicator constructor
+			providerRef: this.providerRef, // Fixed type
 			getMessages: () => this.taskStateManager.theaTaskMessages, // Use state manager // Renamed type
 			addMessage: (message: TheaMessage) => this.addMessageToStateAndEmit(message), // Wrapper // Renamed type
 			updateMessageUi: (message: TheaMessage) => this.updateUiMessage(message), // Wrapper // Renamed type
@@ -239,7 +239,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		if (enableCheckpoints) {
 			this.checkpointManager = new TaskCheckpointManager({
 				taskId: this.taskId,
-				providerRef: this.providerRef as WeakRef<any>, // TODO: Fix type in TaskCheckpointManager constructor
+ 			providerRef: this.providerRef, // Fixed type
 				checkpointStorage: checkpointStorage,
 				getMessages: () => this.taskStateManager.theaTaskMessages, // Pass getter for messages
 				saveMessages: () => this.taskStateManager.saveClineMessages(), // Use state manager method // Renamed type
@@ -257,15 +257,15 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		}
 
 		// Initialize diffStrategy based on current state.
-		this.updateDiffStrategy(experiments ?? {})
+		void this.updateDiffStrategy(experiments ?? {})
 
 		onCreated?.(this)
 
 		if (startTask) {
 			if (task || images) {
-				this.startTask(task, images)
+				void this.startTask(task, images)
 			} else if (historyItem) {
-				this.resumeTaskFromHistory()
+				void this.resumeTaskFromHistory()
 			} else {
 				throw new Error("Either historyItem or task/images must be provided")
 			}
@@ -310,7 +310,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	}
 
 	// Add method to update diffStrategy.
-	async updateDiffStrategy(experiments: Partial<Record<ExperimentId, boolean>>) {
+	updateDiffStrategy(experiments: Partial<Record<ExperimentId, boolean>>) {
 		this.diffStrategy = getDiffStrategy({
 			model: this.api.getModel().id,
 			experiments,
@@ -374,7 +374,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				],
 			})
 		} catch (error) {
-			this.providerRef
+			void this.providerRef
 				.deref()
 				?.log(`Error failed to add reply from subtast into conversation of parent task, error: ${error}`)
 			throw error
@@ -402,7 +402,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		)
 		if (lastApiReqStartedIndex !== -1) {
 			const lastApiReqStarted = modifiedClineMessages[lastApiReqStartedIndex]
-			const { cost, cancelReason }: TheaApiReqInfo = JSON.parse(lastApiReqStarted.text || "{}") // Renamed type
+			const { cost, cancelReason } = JSON.parse(lastApiReqStarted.text || "{}") as TheaApiReqInfo // Renamed type
 			if (cost === undefined && cancelReason === undefined) {
 				modifiedClineMessages.splice(lastApiReqStartedIndex, 1)
 			}
@@ -698,7 +698,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		// Check if directory exists
 		try {
 			await fs.access(workingDir)
-		} catch (error) {
+		} catch {
 			return [false, `Working directory '${workingDir}' does not exist.`]
 		}
 
@@ -733,11 +733,11 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		const { terminalOutputLineLimit = 500 } =
 			(await this.providerRef.deref()?.theaStateManagerInstance.getState()) ?? {} // Renamed getter
 
-		process.on("line", (line) => {
+		void process.on("line", (line) => {
 			if (!didContinue) {
-				sendCommandOutput(Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
+				void sendCommandOutput(Terminal.compressTerminalOutput(line, terminalOutputLineLimit))
 			} else {
-				this.webviewCommunicator.say(
+				void this.webviewCommunicator.say(
 					"command_output",
 					Terminal.compressTerminalOutput(line, terminalOutputLineLimit),
 				)
@@ -747,18 +747,18 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		let completed = false
 		let result: string = ""
 		let exitDetails: ExitCodeDetails | undefined
-		process.once("completed", (output?: string) => {
+		void process.once("completed", (output?: string) => {
 			// Use provided output if available, otherwise keep existing result.
 			result = output ?? ""
 			completed = true
 		})
 
-		process.once("shell_execution_complete", (details: ExitCodeDetails) => {
+		void process.once("shell_execution_complete", (details: ExitCodeDetails) => {
 			exitDetails = details
 		})
 
-		process.once("no_shell_integration", async (message: string) => {
-			await this.webviewCommunicator.say("shell_integration_warning", message)
+		void process.once("no_shell_integration", (message: string) => {
+			void this.webviewCommunicator.say("shell_integration_warning", message)
 		})
 
 		await process
@@ -913,7 +913,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				tokensOut = 0,
 				cacheWrites = 0,
 				cacheReads = 0,
-			}: TheaApiReqInfo = JSON.parse(previousRequest) // Renamed type
+			} = JSON.parse(previousRequest) as TheaApiReqInfo // Renamed type
 
 			const totalTokens = tokensIn + tokensOut + cacheWrites + cacheReads
 
@@ -975,12 +975,19 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		} catch (error) {
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (alwaysApproveResubmit) {
-				let errorMsg
+				let errorMsg: string
 
-				if (error.error?.metadata?.raw) {
-					errorMsg = JSON.stringify(error.error.metadata.raw, null, 2)
-				} else if (error.message) {
-					errorMsg = error.message
+				const typedError = error as { 
+					error?: { metadata?: { raw?: unknown } },
+					message?: string,
+					status?: number,
+					errorDetails?: Array<{ "@type"?: string, retryDelay?: string }>
+				}
+
+				if (typedError.error?.metadata?.raw) {
+					errorMsg = JSON.stringify(typedError.error.metadata.raw, null, 2)
+				} else if (typedError.message) {
+					errorMsg = typedError.message
 				} else {
 					errorMsg = "Unknown error"
 				}
@@ -989,13 +996,13 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				let exponentialDelay = Math.ceil(baseDelay * Math.pow(2, retryAttempt))
 
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
-				if (error.status === 429) {
-					const geminiRetryDetails = error.errorDetails?.find(
-						(detail: any) => detail["@type"] === "type.googleapis.com/google.rpc.RetryInfo",
+				if (typedError.status === 429) {
+					const geminiRetryDetails = typedError.errorDetails?.find(
+						detail => detail["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
 					)
 					if (geminiRetryDetails) {
-						const match = geminiRetryDetails?.retryDelay?.match(/^(\d+)s$/)
-						if (match) {
+						const match = geminiRetryDetails.retryDelay?.match(/^(\d+)s$/)
+						if (match && match[1]) {
 							exponentialDelay = Number(match[1]) + 1
 						}
 					}
@@ -1026,9 +1033,10 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				yield* this.attemptApiRequest(previousApiReqIndex, retryAttempt + 1)
 				return
 			} else {
+				const typedError = error as { message?: string }
 				const { response } = await this.webviewCommunicator.ask(
 					"api_req_failed",
-					error.message ?? JSON.stringify(serializeError(error), null, 2),
+					typedError.message ?? JSON.stringify(serializeError(error), null, 2),
 				)
 				if (response !== "yesButtonClicked") {
 					// this will never happen since if noButtonClicked, we will clear current task, aborting this instance
@@ -1315,7 +1323,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					)
 				} catch (error) {
 					this.consecutiveMistakeCount++
-					pushToolResult(formatResponse.toolError(error.message))
+					const typedError = error as { message?: string }
+					pushToolResult(formatResponse.toolError(typedError.message ?? "Unknown error"))
 					break
 				}
 
@@ -1675,7 +1684,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			this.didAlreadyUseTool = false
 			this.presentAssistantMessageLocked = false
 			this.presentAssistantMessageHasPendingUpdates = false
-			await this.diffViewProvider.reset()
+			this.diffViewProvider.reset()
 
 			// Yields only if the first chunk is successful, otherwise will
 			// allow the user to retry the request (most likely due to rate
@@ -1748,9 +1757,10 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				if (!this.abandoned) {
 					await this.abortTask() // if the stream failed, there's various states the task could be in (i.e. could have streamed some tools the user may have executed), so we just resort to replicating a cancel task
 
+					const typedError = error as { message?: string }
 					await abortStream(
 						"streaming_failed",
-						error.message ?? JSON.stringify(serializeError(error), null, 2),
+						typedError.message ?? JSON.stringify(serializeError(error), null, 2),
 					)
 
 					const history = await this.providerRef
@@ -1833,7 +1843,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			}
 
 			return didEndLoop // will always be false for now
-		} catch (error) {
+		} catch {
 			// this should never happen since the only thing that can throw an error is the attemptApiRequest, which is wrapped in a try catch that sends an ask where if noButtonClicked, will clear current task and destroy this instance. However to avoid unhandled promise rejection, we will end this loop which will end execution of this instance (see startTask)
 			return true // needs to be true so parent loop knows to end task
 		}
@@ -1928,7 +1938,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			: visibleFilePaths.map((p) => p.toPosix()).join("\n")
 
 		if (allowedVisibleFiles) {
-			details += `\n${allowedVisibleFiles}`
+			details += `\n${String(allowedVisibleFiles)}`
 		} else {
 			details += "\n(No visible files)"
 		}
@@ -1949,7 +1959,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			: openTabPaths.map((p) => p.toPosix()).join("\n")
 
 		if (allowedOpenTabs) {
-			details += `\n${allowedOpenTabs}`
+			details += `\n${String(allowedOpenTabs)}`
 		} else {
 			details += "\n(No open tabs)"
 		}
@@ -2042,7 +2052,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				// Add this terminal's outputs to the details
 				if (terminalOutputs.length > 0) {
 					terminalDetails += `\n## Terminal ${inactiveTerminal.id}`
-					terminalOutputs.forEach((output, index) => {
+					terminalOutputs.forEach(output => {
 						terminalDetails += `\n### New Output\n${output}`
 					})
 				}
@@ -2199,7 +2209,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			)
 
 			// Re-init task after restore (provider handles cancellation)
-			this.providerRef.deref()?.cancelTask() // Necessary hack? See original code.
+			void this.providerRef.deref()?.cancelTask() // Necessary hack? See original code.
 		}
 	}
 }

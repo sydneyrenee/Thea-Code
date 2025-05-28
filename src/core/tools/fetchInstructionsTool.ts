@@ -1,7 +1,7 @@
 import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { fetchInstructions } from "../prompts/instructions/instructions"
 import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
-import { ToolUse } from "../assistant-message"
+import type { ToolUse } from "../assistant-message"
 import { formatResponse } from "../prompts/responses"
 import { AskApproval, HandleError, PushToolResult } from "./types"
 

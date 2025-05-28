@@ -1,25 +1,122 @@
 import React from "react";
 
-interface VSCodeComponentProps {
+interface VSCodeButtonProps {
   children?: React.ReactNode;
-  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  onInput?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   appearance?: string;
-  checked?: boolean;
-  value?: string | number;
-  placeholder?: string;
-  href?: string;
-  "data-testid"?: string;
-  style?: React.CSSProperties;
-  slot?: string;
-  role?: string;
   disabled?: boolean;
   className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+  "data-testid"?: string;
+}
+
+interface VSCodeCheckboxProps {
+  children?: React.ReactNode;
+  onChange?: (checked: boolean) => void;
+  checked?: boolean;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+  "data-testid"?: string;
+}
+
+interface VSCodeTextFieldProps {
+  children?: React.ReactNode;
+  value?: string | number;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onInput?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+  type?: string;
+  "data-testid"?: string;
+}
+
+interface VSCodeLinkProps {
+  children?: React.ReactNode;
+  href?: string;
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  className?: string;
+  style?: React.CSSProperties;
   title?: string;
 }
 
-export const VSCodeButton: React.FC<VSCodeComponentProps> = ({ 
+interface VSCodeTextAreaProps {
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+  placeholder?: string;
+  rows?: number;
+  resize?: string;
+  "data-testid"?: string;
+}
+
+interface VSCodeDropdownProps {
+  children?: React.ReactNode;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+}
+
+interface VSCodeOptionProps {
+  children?: React.ReactNode;
+  value?: string | number;
+  checked?: boolean;
+}
+
+interface VSCodeRadioProps {
+  children?: React.ReactNode;
+  value?: string;
+  checked?: boolean;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+}
+
+interface VSCodeRadioGroupProps {
+  children?: React.ReactNode;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+}
+
+interface VSCodePanelsProps {
+  children?: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+}
+
+interface VSCodePanelTabProps {
+  children?: React.ReactNode;
+  id: string;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+}
+
+interface VSCodePanelViewProps {
+  children?: React.ReactNode;
+  id: string;
+  className?: string;
+  style?: React.CSSProperties;
+  title?: string;
+}
+
+export const VSCodeButton: React.FC<VSCodeButtonProps> = ({ 
   children, 
   onClick, 
   appearance, 
@@ -45,7 +142,7 @@ export const VSCodeButton: React.FC<VSCodeComponentProps> = ({
   );
 };
 
-export const VSCodeCheckbox: React.FC<VSCodeComponentProps> = ({ 
+export const VSCodeCheckbox: React.FC<VSCodeCheckboxProps> = ({ 
   children, 
   onChange, 
   checked,
@@ -55,12 +152,18 @@ export const VSCodeCheckbox: React.FC<VSCodeComponentProps> = ({
   title,
   ...props 
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onChange) {
+      onChange(e.target.checked);
+    }
+  };
+
   return (
     <label className={`vscode-checkbox ${className || ""}`} style={style} title={title}>
       <input
         type="checkbox"
         checked={checked}
-        onChange={onChange}
+        onChange={handleChange}
         disabled={disabled}
         {...props}
       />
@@ -69,7 +172,7 @@ export const VSCodeCheckbox: React.FC<VSCodeComponentProps> = ({
   );
 };
 
-export const VSCodeTextField = React.forwardRef<HTMLInputElement, VSCodeComponentProps>(({ 
+export const VSCodeTextField = React.forwardRef<HTMLInputElement, VSCodeTextFieldProps>(({ 
   children, 
   value, 
   onInput, 
@@ -97,7 +200,7 @@ export const VSCodeTextField = React.forwardRef<HTMLInputElement, VSCodeComponen
   );
 });
 
-export const VSCodeLink: React.FC<VSCodeComponentProps> = ({ 
+export const VSCodeLink: React.FC<VSCodeLinkProps> = ({ 
   children, 
   href,
   className,
@@ -120,7 +223,7 @@ export const VSCodeLink: React.FC<VSCodeComponentProps> = ({
   );
 };
 
-export const VSCodeTextArea: React.FC<VSCodeComponentProps> = ({ 
+export const VSCodeTextArea: React.FC<VSCodeTextAreaProps> = ({ 
   value, 
   onChange,
   disabled,
@@ -144,7 +247,7 @@ export const VSCodeTextArea: React.FC<VSCodeComponentProps> = ({
   );
 };
 
-export const VSCodeDropdown: React.FC<VSCodeComponentProps> = ({ 
+export const VSCodeDropdown: React.FC<VSCodeDropdownProps> = ({ 
   children, 
   value, 
   onChange,
@@ -169,7 +272,7 @@ export const VSCodeDropdown: React.FC<VSCodeComponentProps> = ({
   );
 };
 
-export const VSCodeOption: React.FC<VSCodeComponentProps> = ({ 
+export const VSCodeOption: React.FC<VSCodeOptionProps> = ({ 
   children, 
   value,
   ...props 
@@ -181,7 +284,7 @@ export const VSCodeOption: React.FC<VSCodeComponentProps> = ({
   );
 };
 
-export const VSCodeRadio: React.FC<VSCodeComponentProps> = ({ 
+export const VSCodeRadio: React.FC<VSCodeRadioProps> = ({ 
   children, 
   value, 
   checked, 
@@ -207,7 +310,7 @@ export const VSCodeRadio: React.FC<VSCodeComponentProps> = ({
   );
 };
 
-export const VSCodeRadioGroup: React.FC<VSCodeComponentProps> = ({ 
+export const VSCodeRadioGroup: React.FC<VSCodeRadioGroupProps> = ({ 
   children, 
   onChange,
   className,
@@ -220,6 +323,67 @@ export const VSCodeRadioGroup: React.FC<VSCodeComponentProps> = ({
       role="radiogroup" 
       onChange={onChange} 
       className={`vscode-radiogroup ${className || ""}`}
+      style={style}
+      title={title}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const VSCodePanels: React.FC<VSCodePanelsProps> = ({ 
+  children, 
+  className,
+  style,
+  title,
+  ...props 
+}) => {
+  return (
+    <div 
+      className={`vscode-panels ${className || ""}`}
+      style={style}
+      title={title}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const VSCodePanelTab: React.FC<VSCodePanelTabProps> = ({ 
+  children, 
+  id,
+  className,
+  style,
+  title,
+  ...props 
+}) => {
+  return (
+    <div 
+      id={id}
+      className={`vscode-panel-tab ${className || ""}`}
+      style={style}
+      title={title}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+export const VSCodePanelView: React.FC<VSCodePanelViewProps> = ({ 
+  children, 
+  id,
+  className,
+  style,
+  title,
+  ...props 
+}) => {
+  return (
+    <div 
+      id={id}
+      className={`vscode-panel-view ${className || ""}`}
       style={style}
       title={title}
       {...props}

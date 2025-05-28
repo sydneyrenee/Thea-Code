@@ -31,7 +31,7 @@ export const experimentDefault: Record<ExperimentId, boolean> = Object.fromEntri
                 EXPERIMENT_IDS[key as ExperimentKey],
                 config.enabled,
         ]),
-)
+) as Record<ExperimentId, boolean>
 
 export const experiments = {
 	get: (id: ExperimentKey): ExperimentConfig | undefined => experimentConfigsMap[id],

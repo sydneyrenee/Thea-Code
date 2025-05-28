@@ -8,8 +8,8 @@ import type {
         SecretStorage,
         EnvironmentVariableCollection,
 } from "vscode";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { McpConnection } from "../management/McpHub";
 import { ServerConfigSchema, McpHub } from "../management/McpHub";
 import fs from "fs/promises";

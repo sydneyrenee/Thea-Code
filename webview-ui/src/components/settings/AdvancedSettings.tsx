@@ -63,9 +63,9 @@ export const AdvancedSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={diffEnabled}
-						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-							setCachedStateField("diffEnabled", e.target.checked)
-							if (!e.target.checked) {
+						onChange={(checked: boolean) => {
+							setCachedStateField("diffEnabled", checked)
+							if (!checked) {
 								// Reset experimental strategies when diffs are disabled.
 								setExperimentEnabled(EXPERIMENT_IDS.DIFF_STRATEGY_UNIFIED, false)
 							}

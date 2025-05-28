@@ -550,7 +550,7 @@ if (otherCondition) {
 	describe("hunk splitting", () => {
 		it("should handle large diffs with multiple non-contiguous changes", async () => {
 			const original = `import { readFile } from 'fs';
-import { join } from 'path';
+import type { join } from "path";
 import { Logger } from './logger';
 
 const logger = new Logger();
@@ -601,7 +601,7 @@ export {
 @@ ... @@
 -import { readFile } from 'fs';
 +import { readFile, writeFile } from 'fs';
- import { join } from 'path';
+ import type { join } from "path";
 -import { Logger } from './logger';
 +import { Logger } from './utils/logger';
 +import { Config } from './types';
@@ -674,7 +674,7 @@ export {
  };`
 
 			const expected = `import { readFile, writeFile } from 'fs';
-import { join } from 'path';
+import type { join } from "path";
 import { Logger } from './utils/logger';
 import { Config } from './types';
 

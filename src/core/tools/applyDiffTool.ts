@@ -1,8 +1,8 @@
 import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { getReadablePath } from "../../utils/path"
-import { ToolUse } from "../assistant-message"
+import type { ToolUse } from "../assistant-message"
 import { TheaTask } from "../TheaTask" // Renamed from Cline
-import { RemoveClosingTag } from "./types"
+import type { RemoveClosingTag } from "./types"
 import { formatResponse } from "../prompts/responses"
 import { AskApproval, HandleError, PushToolResult } from "./types"
 import { fileExistsAtPath } from "../../utils/fs"

@@ -1,7 +1,7 @@
-import { ToolUse } from "../assistant-message"
+import type { ToolUse } from "../assistant-message"
 import { HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import { TheaTask } from "../TheaTask" // Renamed from Cline
-import { AskApproval } from "./types"
+import type { AskApproval } from "./types"
 import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
 import { getReadablePath } from "../../utils/path"
 import path from "path"

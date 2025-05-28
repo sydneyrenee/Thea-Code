@@ -170,13 +170,6 @@ const ApiConfigManager = ({
 								setError(null)
 							}}
 							placeholder={t("settings:providers.enterNewName")}
-							onKeyDown={({ key }) => {
-								if (key === "Enter" && inputValue.trim()) {
-									handleSave()
-								} else if (key === "Escape") {
-									handleCancel()
-								}
-							}}
 							className="grow"
 						/>
 						<Button

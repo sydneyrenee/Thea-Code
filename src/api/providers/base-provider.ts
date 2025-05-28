@@ -1,6 +1,6 @@
 import { McpIntegration } from '../../services/mcp/integration/McpIntegration';
 import { ApiHandler } from ".."
-import { ModelInfo } from "../../shared/api"
+import type { ModelInfo } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types
 import { ApiStream } from "../transform/stream"
 import { Tiktoken } from "js-tiktoken/lite"

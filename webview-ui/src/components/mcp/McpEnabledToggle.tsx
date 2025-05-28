@@ -1,5 +1,4 @@
 import { Checkbox } from "vscrui"
-import { FormEvent } from "react"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { useAppTranslation } from "../../i18n/TranslationContext"
 import { vscode } from "../../utils/vscode"
@@ -8,11 +7,9 @@ const McpEnabledToggle = () => {
 	const { mcpEnabled, setMcpEnabled } = useExtensionState()
 	const { t } = useAppTranslation()
 
-	const handleChange = (e: Event | FormEvent<HTMLElement>) => {
-		const target = ("target" in e ? e.target : null) as HTMLInputElement | null
-		if (!target) return
-		setMcpEnabled(target.checked)
-		vscode.postMessage({ type: "mcpEnabled", bool: target.checked })
+	const handleChange = (checked: boolean) => {
+		setMcpEnabled(checked)
+		vscode.postMessage({ type: "mcpEnabled", bool: checked })
 	}
 
 	return (

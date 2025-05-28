@@ -1,5 +1,5 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
+import type { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import axios from "axios"
 import OpenAI from "openai"
 

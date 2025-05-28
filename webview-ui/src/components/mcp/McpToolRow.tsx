@@ -101,7 +101,7 @@ const McpToolRow = ({ tool, serverName, serverSource, alwaysAllowMcp }: McpToolR
 												overflowWrap: "break-word",
 												wordBreak: "break-word",
 											}}>
-											{schema.description || t("mcp:tool.noDescription")}
+											{(schema as any)?.description || t("mcp:tool.noDescription")}
 										</span>
 									</div>
 								)

@@ -24,7 +24,12 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 		vscode.CodeActionKind.RefactorRewrite,
 	]
 
-	private createAction(title: string, kind: vscode.CodeActionKind, command: string, args: any[]): vscode.CodeAction {
+	private createAction(
+		title: string, 
+		kind: vscode.CodeActionKind, 
+		command: string, 
+		args: Array<string | number | readonly vscode.Diagnostic[]>
+	): vscode.CodeAction {
 		const action = new vscode.CodeAction(title, kind)
 		action.command = { command, title, arguments: args }
 		return action
@@ -34,7 +39,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 		baseTitle: string,
 		kind: vscode.CodeActionKind,
 		baseCommand: string,
-		args: any[],
+		args: Array<string | number | readonly vscode.Diagnostic[]>,
 	): vscode.CodeAction[] {
 		return [
 			this.createAction(`${baseTitle} in New Task`, kind, baseCommand, args),
@@ -85,7 +90,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 				)
 
 				if (relevantDiagnostics.length > 0) {
-					const diagnosticMessages = relevantDiagnostics.map(EditorUtils.createDiagnosticData)
+					const diagnosticMessages = relevantDiagnostics.map(d => EditorUtils.createDiagnosticData(d))
 					actions.push(
 						...this.createActionPair(ACTION_NAMES.FIX, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
 							filePath,

@@ -1,5 +1,5 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { ApiHandler } from "../../api"
+import type { ApiHandler } from "../../api"
 
 /**
  * Default percentage of the context window to use as a buffer when deciding when to truncate
@@ -25,7 +25,7 @@ export async function estimateTokenCount(
                 if (block.type === 'text') {
                         total += await apiHandler.countTokens([block])
                 } else if (block.type === 'image' && (block as any).source) {
-                        const data = String((block as any).source.data || '')
+                        const data = String((block as unknown as { type: string }).source.data || '')
                         total += Math.ceil(Math.sqrt(data.length)) * 1.5
                 } else {
                         const jsonStr = JSON.stringify(block)

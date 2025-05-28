@@ -43,7 +43,7 @@ describe("McpToolRouter", () => {
   // Reset the singleton instance and explicitly create it after mock setup
   beforeEach(async () => {
     // Create a mock object with all necessary methods, including EventEmitter methods
-    const mockExecutor = new EventEmitter() as any
+    const mockExecutor = new EventEmitter() as unknown as { type: string }
     Object.assign(mockExecutor, {
       initialize: jest.fn(async () => {}),
       shutdown: jest.fn(async () => {}),
@@ -63,7 +63,7 @@ describe("McpToolRouter", () => {
     })
 
     // Mock the static getInstance method to return the mock executor
-    jest.spyOn(McpToolExecutor, 'getInstance').mockReturnValue(mockExecutor as any);
+    jest.spyOn(McpToolExecutor, 'getInstance').mockReturnValue(mockExecutor as unknown as { type: string });
 
     // Access private static instance property using type assertion
     (McpToolRouter as any).instance = undefined;

@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 import pWaitFor from "p-wait-for"
 import { ExitCodeDetails, mergePromise, TerminalProcess, TerminalProcessResultPromise } from "./TerminalProcess"
 import { truncateOutput, applyRunLengthEncoding } from "../misc/extract-text"
-import { EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config" // Import branded constant
+import type { EXTENSION_DISPLAY_NAME } from "../../../dist/thea-config" // Import branded constant
 
 export const TERMINAL_SHELL_INTEGRATION_TIMEOUT = 5000
 

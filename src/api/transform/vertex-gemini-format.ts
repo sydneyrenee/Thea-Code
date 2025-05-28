@@ -1,5 +1,5 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import { Content, FunctionCallPart, FunctionResponsePart, InlineDataPart, Part, TextPart } from "@google-cloud/vertexai"
+import type { Anthropic } from "@anthropic-ai/sdk"
 
 function convertAnthropicContentToVertexGemini(content: Anthropic.Messages.MessageParam["content"]): Part[] {
 	if (typeof content === "string") {
@@ -17,7 +17,7 @@ function convertAnthropicContentToVertexGemini(content: Anthropic.Messages.Messa
 				return {
 					inlineData: {
 						data: block.source.data,
-						mimeType: block.source.media_type,
+						mimeType: block.source.media_type as string,
 					},
 				} as InlineDataPart
 			case "tool_use":
@@ -59,18 +59,22 @@ function convertAnthropicContentToVertexGemini(content: Anthropic.Messages.Messa
 							},
 						} as FunctionResponsePart,
 						...imageParts.map(
-							(part) =>
-								({
+							(part) => {
+								const source = part.source as { data: string; media_type: string };
+								return {
 									inlineData: {
-										data: part.source.data,
-										mimeType: part.source.media_type,
+										data: source.data,
+										mimeType: source.media_type,
 									},
-								}) as InlineDataPart,
+								} as InlineDataPart;
+							},
 						),
 					]
 				}
 			default:
-				throw new Error(`Unsupported content block type: ${(block as any).type}`)
+				// Use unknown instead of any for better type safety
+				const unknownBlock = block as unknown as { type: string };
+				throw new Error(`Unsupported content block type: ${unknownBlock.type}`)
 		}
 	})
 }

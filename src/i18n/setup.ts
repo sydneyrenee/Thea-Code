@@ -1,9 +1,9 @@
-import i18next from "i18next"
 import fs from "node:fs"
 import path from "node:path"
+import i18next, { Resource } from "i18next"
 
 // Build translations object
-const translations: Record<string, Record<string, unknown>> = {}
+const translations: Resource = {}
 
 // Determine if running in test environment (jest)
 const isTestEnv = process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined
@@ -42,7 +42,8 @@ if (!isTestEnv) {
 					try {
 						// Read and parse the JSON file
 						const content = fs.readFileSync(filePath, "utf8")
-						translations[language][namespace] = JSON.parse(content)
+						const parsedContent = JSON.parse(content) as Record<string, unknown>
+						translations[language][namespace] = parsedContent
 					} catch (error) {
 						console.error(`Error loading translation file ${filePath}:`, error)
 					}

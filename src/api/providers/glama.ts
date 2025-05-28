@@ -8,7 +8,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
-import { EXTENSION_ID } from "../../../dist/thea-config" // Import branded constant
+import type { EXTENSION_ID } from "../../../dist/thea-config" // Import branded constant
 import { NeutralConversationHistory } from "../../shared/neutral-history"
 const GLAMA_DEFAULT_TEMPERATURE = 0
 

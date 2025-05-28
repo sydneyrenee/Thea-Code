@@ -1,5 +1,5 @@
 import { TheaAsk, ToolProgressStatus } from "../../schemas"
-import { ToolParamName } from "../assistant-message"
+import type { ToolParamName } from "../assistant-message"
 import { ToolResponse } from "../TheaTask"
 
 export type AskApproval = (

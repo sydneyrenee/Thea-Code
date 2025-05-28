@@ -62,9 +62,9 @@ export const AutoApproveSettings = ({
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
 
-	const handleCheckboxChange = (field: keyof AutoApproveSettingsProps["setCachedStateField"]) => 
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			setCachedStateField(field, e.target.checked)
+	const handleCheckboxChange = (field: string) => 
+		(checked: boolean) => {
+			setCachedStateField(field as any, checked)
 		}
 
 	const handleAddCommand = () => {
@@ -104,8 +104,8 @@ export const AutoApproveSettings = ({
 						<div>
 							<VSCodeCheckbox
 								checked={alwaysAllowReadOnlyOutsideWorkspace}
-								onChange={(e: any) =>
-									setCachedStateField("alwaysAllowReadOnlyOutsideWorkspace", e.target.checked)
+								onChange={(checked: boolean) =>
+									setCachedStateField("alwaysAllowReadOnlyOutsideWorkspace", checked)
 								}
 								data-testid="always-allow-readonly-outside-workspace-checkbox">
 								<span className="font-medium">
@@ -122,7 +122,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysAllowWrite}
-						onChange={(e: any) => setCachedStateField("alwaysAllowWrite", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("alwaysAllowWrite", checked)}
 						data-testid="always-allow-write-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.write.label")}</span>
 					</VSCodeCheckbox>
@@ -136,8 +136,8 @@ export const AutoApproveSettings = ({
 						<div>
 							<VSCodeCheckbox
 								checked={alwaysAllowWriteOutsideWorkspace}
-								onChange={(e: any) =>
-									setCachedStateField("alwaysAllowWriteOutsideWorkspace", e.target.checked)
+								onChange={(checked: boolean) =>
+									setCachedStateField("alwaysAllowWriteOutsideWorkspace", checked)
 								}
 								data-testid="always-allow-write-outside-workspace-checkbox">
 								<span className="font-medium">
@@ -170,7 +170,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysAllowBrowser}
-						onChange={(e: any) => setCachedStateField("alwaysAllowBrowser", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("alwaysAllowBrowser", checked)}
 						data-testid="always-allow-browser-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.browser.label")}</span>
 					</VSCodeCheckbox>
@@ -183,7 +183,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysApproveResubmit}
-						onChange={(e: any) => setCachedStateField("alwaysApproveResubmit", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("alwaysApproveResubmit", checked)}
 						data-testid="always-approve-resubmit-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.retry.label")}</span>
 					</VSCodeCheckbox>
@@ -216,7 +216,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysAllowMcp}
-						onChange={(e: any) => setCachedStateField("alwaysAllowMcp", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("alwaysAllowMcp", checked)}
 						data-testid="always-allow-mcp-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.mcp.label")}</span>
 					</VSCodeCheckbox>
@@ -228,7 +228,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysAllowModeSwitch}
-						onChange={(e: any) => setCachedStateField("alwaysAllowModeSwitch", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("alwaysAllowModeSwitch", checked)}
 						data-testid="always-allow-mode-switch-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.modeSwitch.label")}</span>
 					</VSCodeCheckbox>
@@ -240,7 +240,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysAllowSubtasks}
-						onChange={(e: any) => setCachedStateField("alwaysAllowSubtasks", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("alwaysAllowSubtasks", checked)}
 						data-testid="always-allow-subtasks-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.subtasks.label")}</span>
 					</VSCodeCheckbox>
@@ -252,7 +252,7 @@ export const AutoApproveSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={alwaysAllowExecute}
-						onChange={(e: any) => setCachedStateField("alwaysAllowExecute", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("alwaysAllowExecute", checked)}
 						data-testid="always-allow-execute-checkbox">
 						<span className="font-medium">{t("settings:autoApprove.execute.label")}</span>
 					</VSCodeCheckbox>
@@ -276,12 +276,6 @@ export const AutoApproveSettings = ({
 							<VSCodeTextField
 								value={commandInput}
 								onInput={(e: any) => setCommandInput(e.target.value)}
-								onKeyDown={(e: any) => {
-									if (e.key === "Enter") {
-										e.preventDefault()
-										handleAddCommand()
-									}
-								}}
 								placeholder={t("settings:autoApprove.execute.commandPlaceholder")}
 								className="grow"
 								data-testid="command-input"

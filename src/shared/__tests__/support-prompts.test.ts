@@ -1,4 +1,4 @@
-import { supportPrompt } from "../support-prompt.ts"
+import { supportPrompt } from "../support-prompt"
 import * as vscode from "vscode"
 
 describe("Code Action Prompts", () => {

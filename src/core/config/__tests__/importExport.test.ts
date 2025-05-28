@@ -6,7 +6,7 @@ import * as path from "path"
 import * as vscode from "vscode"
 
 import { SPECIFIC_STRINGS } from "../../../../dist/thea-config" // Import branded constant
-import { ProviderName } from "../../../schemas"
+import type { ProviderName } from "../../../schemas"
 import { importSettings, exportSettings } from "../importExport"
 import { ProviderSettingsManager } from "../ProviderSettingsManager"
 import { ContextProxy } from "../ContextProxy"

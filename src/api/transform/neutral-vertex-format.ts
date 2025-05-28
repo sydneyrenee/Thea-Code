@@ -1,13 +1,8 @@
-import { Anthropic } from "@anthropic-ai/sdk";
 import { Content, Part, TextPart, InlineDataPart, FunctionCallPart, FunctionResponsePart } from "@google-cloud/vertexai";
 import type {
     NeutralConversationHistory,
     NeutralMessage,
-    NeutralMessageContent,
-    NeutralTextContentBlock,
-    NeutralImageContentBlock,
-    NeutralToolUseContentBlock,
-    NeutralToolResultContentBlock
+    NeutralMessageContent
 } from "../../shared/neutral-history";
 
 // Define Vertex-specific types
@@ -67,7 +62,7 @@ export function convertToVertexClaudeMessage(
                     source: {
                         type: "base64",
                         media_type: block.source.media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-                        data: block.source.data
+                        data: block.source.data as string
                     }
                 } as VertexImageBlock;
             }
@@ -171,8 +166,8 @@ export function convertToVertexGeminiMessage(
                 // Convert Neutral image source to Gemini image part
                 return {
                     inlineData: {
-                        mimeType: block.source.media_type,
-                        data: block.source.data // Base64 data
+                        mimeType: block.source.media_type as string,
+                        data: block.source.data as string // Base64 data
                     }
                 } as InlineDataPart;
             } else if (block.type === 'tool_use') {
@@ -186,20 +181,20 @@ export function convertToVertexGeminiMessage(
             } else if (block.type === 'tool_result') {
                 // Extract function name from tool_use_id (assuming format: "name-id")
                 const name = block.tool_use_id.split("-")[0];
-                
+
                 // Handle different content formats
                 if (Array.isArray(block.content)) {
                     const textParts = block.content.filter(part => part.type === 'text');
                     const imageParts = block.content.filter(part => part.type === 'image');
-                    
+
                     const text = textParts.length > 0 
                         ? textParts.map(part => part.text).join('\n\n') 
                         : '';
-                    
+
                     const imageText = imageParts.length > 0 
                         ? '\n\n(See next part for image)' 
                         : '';
-                    
+
                     // Create function response part and any image parts
                     const parts: Part[] = [
                         {
@@ -212,23 +207,24 @@ export function convertToVertexGeminiMessage(
                             }
                         } as FunctionResponsePart
                     ];
-                    
+
                     // Add image parts if any
                     if (imageParts.length > 0) {
                         imageParts.forEach(part => {
+                            const source = part.source as { media_type: string; data: string };
                             parts.push({
                                 inlineData: {
-                                    mimeType: part.source.media_type,
-                                    data: part.source.data
+                                    mimeType: source.media_type,
+                                    data: source.data
                                 }
                             } as InlineDataPart);
                         });
                     }
-                    
+
                     return parts;
                 }
             }
-            
+
             // Handle other potential block types if necessary
             console.warn(`convertToVertexGeminiMessage: Unsupported Neutral block type: ${block.type}`);
             return { text: `[Unsupported Neutral block type: ${block.type}]` } as TextPart;
@@ -269,7 +265,7 @@ export function convertToVertexClaudeContentBlocks(
                 source: {
                     type: "base64",
                     media_type: block.source.media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-                    data: block.source.data
+                    data: block.source.data as string
                 }
             } as VertexImageBlock;
         }

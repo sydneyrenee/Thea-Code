@@ -164,7 +164,7 @@ export function convertToOpenAiContentBlocks(
             result.push({
                 type: 'image_url',
                 image_url: {
-                    url: `data:${imageBlock.source.media_type};base64,${imageBlock.source.data}`
+                    url: `data:${imageBlock.source.media_type as string};base64,${imageBlock.source.data as string}`
                 }
             });
         } else if (block.type === 'tool_use' || block.type === 'tool_result') {

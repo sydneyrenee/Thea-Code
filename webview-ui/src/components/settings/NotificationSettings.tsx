@@ -1,4 +1,4 @@
-import { HTMLAttributes, ChangeEvent } from "react"
+import { HTMLAttributes } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Checkbox } from "vscrui"
 import { Bell } from "lucide-react"
@@ -38,7 +38,7 @@ export const NotificationSettings = ({
 				<div>
 					<Checkbox
 						checked={ttsEnabled}
-						onChange={(e: ChangeEvent<HTMLInputElement>) => setCachedStateField("ttsEnabled", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("ttsEnabled", checked)}
 						data-testid="tts-enabled-checkbox">
 						<span className="font-medium">{t("settings:notifications.tts.label")}</span>
 					</Checkbox>
@@ -71,7 +71,7 @@ export const NotificationSettings = ({
 				<div>
 					<Checkbox
 						checked={soundEnabled}
-						onChange={(e: ChangeEvent<HTMLInputElement>) => setCachedStateField("soundEnabled", e.target.checked)}
+						onChange={(checked: boolean) => setCachedStateField("soundEnabled", checked)}
 						data-testid="sound-enabled-checkbox">
 						<span className="font-medium">{t("settings:notifications.sound.label")}</span>
 					</Checkbox>

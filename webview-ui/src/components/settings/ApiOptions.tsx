@@ -5,7 +5,8 @@ import { getRequestyAuthUrl, getOpenRouterAuthUrl, getGlamaAuthUrl } from "../..
 import { useDebounce, useEvent } from "react-use"
 import { LanguageModelChatSelector } from "vscode"
 import { Checkbox } from "vscrui"
-import { Button, Input } from "@/components/ui"
+import { Button } from "@/components/ui"
+import { VSCodeTextField, VSCodeLink } from "../ui/vscode-components"
 // Simple replacements for VSCodeRadio and VSCodeRadioGroup
 const VSCodeRadio: React.FC<{ value: string; children: React.ReactNode }> = ({ value, children, ...props }) => (
 	<label style={{ display: "inline-flex", alignItems: "center", margin: "4px 0" }}>
@@ -57,7 +58,7 @@ import {
 	useOpenRouterModelProviders,
 	OPENROUTER_DEFAULT_PROVIDER_NAME,
 } from "@/components/ui/hooks/useOpenRouterModelProviders"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator, Button } from "@/components/ui"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui"
 
 import { MODELS_BY_PROVIDER, PROVIDERS, AWS_REGIONS, VERTEX_REGIONS } from "./constants"
 import { VSCodeButtonLink } from "../common/VSCodeButtonLink"
@@ -120,12 +121,12 @@ const ApiOptions = ({
 	const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
 	const noTransform = <T,>(value: T) => value
 
-	const inputEventTransform = <E,>(event: E) => (event as { target: HTMLInputElement })?.target?.value as any
+	const inputEventTransform = <E,>(event: E): string => (event as { target: HTMLInputElement })?.target?.value ?? ""
 
 	const handleInputChange = useCallback(
 		<K extends keyof ApiConfiguration, E>(
 			field: K,
-			transform: (event: E) => ApiConfiguration[K] = inputEventTransform,
+			transform: (event: E) => ApiConfiguration[K] = inputEventTransform as (event: E) => ApiConfiguration[K],
 		) =>
 			(event: E | Event) => {
 				setApiConfigurationField(field, transform(event as E))
@@ -295,8 +296,7 @@ const ApiOptions = ({
 						<div className="text-xs text-vscode-descriptionForeground">
 							<VSCodeLink
 								href={getSelectedProviderDocUrl()!.url}
-								className="hover:text-vscode-foreground"
-								target="_blank">
+								className="hover:text-vscode-foreground">
 								{t("settings:providers.providerDocumentation", {
 									provider: getSelectedProviderDocUrl()!.name,
 								})}
@@ -348,8 +348,7 @@ const ApiOptions = ({
 					{!apiConfiguration?.openRouterApiKey && (
 						<VSCodeButtonLink
 							href={getOpenRouterAuthUrl(uriScheme)}
-							style={{ width: "100%" }}
-							appearance="primary">
+							style={{ width: "100%" }}>
 							{t("settings:providers.getOpenRouterApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -383,8 +382,7 @@ const ApiOptions = ({
 								<Trans
 									i18nKey="settings:providers.openRouterTransformsText"
 									components={{
-										// eslint-disable-next-line jsx-a11y/anchor-has-content
-										a: <a href="https://openrouter.ai/docs/transforms" />,
+										a: <a href="https://openrouter.ai/docs/transforms" target="_blank" rel="noopener noreferrer" />,
 									}}
 								/>
 							</Checkbox>
@@ -407,7 +405,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.apiKey && (
-						<VSCodeButtonLink href="https://console.anthropic.com/settings/keys" appearance="secondary">
+						<VSCodeButtonLink href="https://console.anthropic.com/settings/keys">
 							{t("settings:providers.getAnthropicApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -452,8 +450,7 @@ const ApiOptions = ({
 					{!apiConfiguration?.glamaApiKey && (
 						<VSCodeButtonLink
 							href={getGlamaAuthUrl(uriScheme)}
-							style={{ width: "100%" }}
-							appearance="primary">
+							style={{ width: "100%" }}>
 							{t("settings:providers.getGlamaApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -481,8 +478,7 @@ const ApiOptions = ({
 					{!apiConfiguration?.requestyApiKey && (
 						<VSCodeButtonLink
 							href={getRequestyAuthUrl(uriScheme)}
-							style={{ width: "100%" }}
-							appearance="primary">
+							style={{ width: "100%" }}>
 							{t("settings:providers.getRequestyApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -503,7 +499,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.openAiNativeApiKey && (
-						<VSCodeButtonLink href="https://platform.openai.com/api-keys" appearance="secondary">
+						<VSCodeButtonLink href="https://platform.openai.com/api-keys">
 							{t("settings:providers.getOpenAiApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -524,7 +520,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.mistralApiKey && (
-						<VSCodeButtonLink href="https://console.mistral.ai/" appearance="secondary">
+						<VSCodeButtonLink href="https://console.mistral.ai/">
 							{t("settings:providers.getMistralApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -550,16 +546,14 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "bedrock" && (
-				<>
-					<VSCodeRadioGroup
-						value={apiConfiguration?.awsUseProfile ? "profile" : "credentials"}
-						onChange={handleInputChange(
-							"awsUseProfile",
-							(e) => (e.target as HTMLInputElement).value === "profile",
-						)}>
-						<VSCodeRadio value="credentials">{t("settings:providers.awsCredentials")}</VSCodeRadio>
-						<VSCodeRadio value="profile">{t("settings:providers.awsProfile")}</VSCodeRadio>
-					</VSCodeRadioGroup>
+				<>				<VSCodeRadioGroup
+					onChange={handleInputChange(
+						"awsUseProfile",
+						(e) => (e.target as HTMLInputElement).value === "profile",
+					)}>
+					<VSCodeRadio value="credentials">{t("settings:providers.awsCredentials")}</VSCodeRadio>
+					<VSCodeRadio value="profile">{t("settings:providers.awsProfile")}</VSCodeRadio>
+				</VSCodeRadioGroup>
 					<div className="text-sm text-vscode-descriptionForeground -mt-3">
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
@@ -709,7 +703,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.geminiApiKey && (
-						<VSCodeButtonLink href="https://ai.google.dev/" appearance="secondary">
+						<VSCodeButtonLink href="https://ai.google.dev/">
 							{t("settings:providers.getGeminiApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -1186,17 +1180,11 @@ const ApiOptions = ({
 					</VSCodeTextField>
 					{lmStudioModels.length > 0 && (
 						<VSCodeRadioGroup
-							value={
-								lmStudioModels.includes(apiConfiguration?.lmStudioModelId || "")
-									? apiConfiguration?.lmStudioModelId
-									: ""
-							}
 							onChange={handleInputChange("lmStudioModelId")}>
 							{lmStudioModels.map((model) => (
 								<VSCodeRadio
 									key={model}
-									value={model}
-									checked={apiConfiguration?.lmStudioModelId === model}>
+									value={model}>
 									{model}
 								</VSCodeRadio>
 							))}
@@ -1231,11 +1219,6 @@ const ApiOptions = ({
 										{t("settings:providers.lmStudio.selectDraftModel")}
 									</div>
 									<VSCodeRadioGroup
-										value={
-											lmStudioModels.includes(apiConfiguration?.lmStudioDraftModelId || "")
-												? apiConfiguration?.lmStudioDraftModelId
-												: ""
-										}
 										onChange={handleInputChange("lmStudioDraftModelId")}>
 										{lmStudioModels.map((model) => (
 											<VSCodeRadio key={`draft-${model}`} value={model}>
@@ -1289,7 +1272,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.deepSeekApiKey && (
-						<VSCodeButtonLink href="https://platform.deepseek.com/" appearance="secondary">
+						<VSCodeButtonLink href="https://platform.deepseek.com/">
 							{t("settings:providers.getDeepSeekApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -1353,17 +1336,11 @@ const ApiOptions = ({
 					</VSCodeTextField>
 					{ollamaModels.length > 0 && (
 						<VSCodeRadioGroup
-							value={
-								ollamaModels.includes(apiConfiguration?.ollamaModelId || "")
-									? apiConfiguration?.ollamaModelId
-									: ""
-							}
 							onChange={handleInputChange("ollamaModelId")}>
 							{ollamaModels.map((model) => (
 								<VSCodeRadio
 									key={model}
-									value={model}
-									checked={apiConfiguration?.ollamaModelId === model}>
+									value={model}>
 									{model}
 								</VSCodeRadio>
 							))}
@@ -1392,7 +1369,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.unboundApiKey && (
-						<VSCodeButtonLink href="https://gateway.getunbound.ai" appearance="secondary">
+						<VSCodeButtonLink href="https://gateway.getunbound.ai">
 							{t("settings:providers.getUnboundApiKey")}
 						</VSCodeButtonLink>
 					)}

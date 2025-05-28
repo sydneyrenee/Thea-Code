@@ -1,4 +1,4 @@
-import { EXPERIMENT_IDS, experimentConfigsMap, experiments as Experiments, ExperimentId } from '../experiments.ts'
+import { EXPERIMENT_IDS, experimentConfigsMap, experiments as Experiments, ExperimentId } from '../experiments'
 
 describe("experiments", () => {
 	describe("POWER_STEERING", () => {

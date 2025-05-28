@@ -1,5 +1,5 @@
 import * as path from "path"
-import { BRANCH_PREFIX } from "../../../dist/thea-config" // Import branded constant
+import type { BRANCH_PREFIX } from "../../../dist/thea-config" // Import branded constant
 import { CheckpointServiceOptions } from "./types"
 import { ShadowCheckpointService } from "./ShadowCheckpointService"
 

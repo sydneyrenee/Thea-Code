@@ -1,6 +1,4 @@
 import * as vscode from "vscode"
-import * as path from "path"
-import os from "os"
 import EventEmitter from "events"
 import pWaitFor from "p-wait-for"
 import { telemetryService } from "../services/telemetry/TelemetryService"
@@ -11,9 +9,9 @@ import {
 } from "../services/checkpoints"
 import { CheckpointStorage } from "../shared/checkpoints"
 import { TheaProvider } from "./webview/TheaProvider" // Renamed import and path
-import { TheaMessage, TheaApiReqInfo } from "../shared/ExtensionMessage" // Renamed imports
+import { TheaMessage } from "../shared/ExtensionMessage" // Renamed imports
 import { getWorkspacePath } from "../utils/path"
-import { DIFF_VIEW_URI_SCHEME } from "../integrations/editor/DiffViewProvider" // Removed DiffViewProvider as it's not used directly
+import type { DIFF_VIEW_URI_SCHEME } from "../integrations/editor/DiffViewProvider" // Removed DiffViewProvider as it's not used directly
 
 // TODO: Rename types if necessary
 
@@ -62,8 +60,8 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 	private log(message: string) {
 		console.log(`[TaskCheckpointManager:${this.taskId}] ${message}`)
 		try {
-			this.providerRef.deref()?.log(`[TaskCheckpointManager:${this.taskId}] ${message}`)
-		} catch (err) {
+			void this.providerRef.deref()?.log(`[TaskCheckpointManager:${this.taskId}] ${message}`)
+		} catch {
 			// NO-OP
 		}
 	}
@@ -127,7 +125,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 						this.save() // Save initial checkpoint
 					}
 				} catch (err) {
-					this.log(`Error during 'initialize' event: ${err.message}. Disabling checkpoints.`)
+					this.log(`Error during 'initialize' event: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
 					this._isEnabled = false
 					this.service = undefined // Clear service on error
 					this._isInitialized = false
@@ -138,11 +136,11 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 			serviceInstance.on("checkpoint", ({ isFirst, fromHash: from, toHash: to }) => {
 				try {
 					this.log(`Checkpoint saved: ${to} (First: ${isFirst}, From: ${from})`)
-					this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
+					void this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: to })
 					this.emit("checkpointSaved", to)
 					// The 'say' call is now handled by TheaTask listening to 'checkpointSaved'
 				} catch (err) {
-					this.log(`Error during 'checkpoint' event: ${err.message}. Disabling checkpoints.`)
+					this.log(`Error during 'checkpoint' event: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
 					this._isEnabled = false
 					this.service = undefined
 					this._isInitialized = false
@@ -151,7 +149,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 			})
 
 			serviceInstance.initShadowGit().catch((err) => {
-				this.log(`Error initializing shadow Git: ${err.message}. Disabling checkpoints.`)
+				this.log(`Error initializing shadow Git: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
 				console.error(err)
 				this._isEnabled = false
 				this.service = undefined
@@ -159,7 +157,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 				this.emit("checkpointsDisabled")
 			})
 		} catch (err) {
-			this.log(`Unexpected error during initialization: ${err.message}. Disabling checkpoints.`)
+			this.log(`Unexpected error during initialization: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
 			console.error(err)
 			this._isEnabled = false
 			this.service = undefined
@@ -192,7 +190,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 			await pWaitFor(() => this._isInitialized, { interval, timeout })
 			this.log("Checkpoint service is now initialized.")
 			return this.service
-		} catch (err) {
+		} catch {
 			this.log("Timeout waiting for checkpoint service initialization. Disabling checkpoints.")
 			this._isEnabled = false
 			this.service = undefined // Ensure service is cleared on timeout
@@ -257,13 +255,14 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 				]),
 			)
 		} catch (err) {
-			this.log(`Error during diff operation: ${err.message}. Disabling checkpoints.`)
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			this.log(`Error during diff operation: ${errorMessage}. Disabling checkpoints.`)
 			console.error(err)
 			this._isEnabled = false
 			this.service = undefined
 			this._isInitialized = false
 			this.emit("checkpointsDisabled")
-			vscode.window.showErrorMessage(`Failed to generate diff: ${err.message}`)
+			vscode.window.showErrorMessage(`Failed to generate diff: ${errorMessage}`)
 		}
 	}
 
@@ -287,7 +286,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 
 		// Start the checkpoint process in the background.
 		this.service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
-			this.log(`Error saving checkpoint: ${err.message}. Disabling checkpoints.`)
+			this.log(`Error saving checkpoint: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
 			console.error(err)
 			this._isEnabled = false
 			this.service = undefined
@@ -318,19 +317,20 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 			telemetryService.captureCheckpointRestored(this.taskId)
 			this.log(`Checkpoint ${commitHash} restored successfully.`)
 
-			this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
+			void this.providerRef.deref()?.postMessageToWebview({ type: "currentCheckpointUpdated", text: commitHash })
 			this.emit("checkpointRestored", commitHash)
 
 			// Message truncation and task re-init are handled by TheaTask after restore succeeds
 			return true
 		} catch (err) {
-			this.log(`Error restoring checkpoint ${commitHash}: ${err.message}. Disabling checkpoints.`)
+			const errorMessage = err instanceof Error ? err.message : String(err);
+			this.log(`Error restoring checkpoint ${commitHash}: ${errorMessage}. Disabling checkpoints.`)
 			console.error(err)
 			this._isEnabled = false
 			this.service = undefined
 			this._isInitialized = false
 			this.emit("checkpointsDisabled")
-			vscode.window.showErrorMessage(`Failed to restore checkpoint: ${err.message}`)
+			vscode.window.showErrorMessage(`Failed to restore checkpoint: ${errorMessage}`)
 			return false
 		}
 	}

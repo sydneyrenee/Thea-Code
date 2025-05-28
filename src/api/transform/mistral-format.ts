@@ -44,7 +44,7 @@ export function convertToMistralMessages(anthropicMessages: Anthropic.Messages.M
 								return {
 									type: "image_url",
 									imageUrl: {
-										url: `data:${part.source.media_type};base64,${part.source.data}`,
+										url: `data:${part.source.media_type as string};base64,${part.source.data as string}`,
 									},
 								}
 							}

@@ -37,8 +37,7 @@ export const About = ({ version, telemetrySetting, setTelemetrySetting, classNam
 				<div>
 					<VSCodeCheckbox
 						checked={telemetrySetting === "enabled"}
-						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-							const checked = e.target.checked === true
+						onChange={(checked: boolean) => {
 							setTelemetrySetting(checked ? "enabled" : "disabled")
 						}}>
 						{t("settings:footer.telemetry.label")}

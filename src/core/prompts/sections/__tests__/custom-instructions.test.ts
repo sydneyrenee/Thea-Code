@@ -58,7 +58,7 @@ describe("loadRuleFiles", () => {
 				return Promise.resolve("cursor rules content")
 			}
 			return Promise.reject({ code: "ENOENT" })
-		}) as any)
+		}) as unknown as { type: string })
 
 		const result = await loadRuleFiles("/fake/path")
 		expect(result).toBe(
@@ -93,7 +93,7 @@ describe("loadRuleFiles", () => {
 				return Promise.resolve("cursor rules content")
 			}
 			return Promise.reject({ code: "ENOENT" })
-		}) as any)
+		}) as unknown as { type: string })
 
 		const result = await loadRuleFiles("/fake/path")
 		expect(result).toBe("\n# Rules from .cursorrules:\ncursor rules content\n")
@@ -178,7 +178,7 @@ describe("addCustomInstructions", () => {
 				return Promise.reject({ code: "EISDIR" })
 			}
 			return Promise.reject({ code: "ENOENT" })
-		}) as any)
+		}) as unknown as { type: string })
 
 		const result = await addCustomInstructions(
 			"mode instructions",

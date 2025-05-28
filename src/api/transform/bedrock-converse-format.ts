@@ -40,18 +40,18 @@ export function convertToBedrockConverseMessages(anthropicMessages: Anthropic.Me
 			if (messageBlock.type === "image" && messageBlock.source) {
 				// Convert base64 string to byte array if needed
 				let byteArray: Uint8Array
-				if (typeof messageBlock.source.data === "string") {
-					const binaryString = atob(messageBlock.source.data)
+				if (typeof messageBlock.source.data as string === "string") {
+					const binaryString = atob(messageBlock.source.data as string)
 					byteArray = new Uint8Array(binaryString.length)
 					for (let i = 0; i < binaryString.length; i++) {
 						byteArray[i] = binaryString.charCodeAt(i)
 					}
 				} else {
-					byteArray = messageBlock.source.data
+					byteArray = messageBlock.source.data as string
 				}
 
 				// Extract format from media_type (e.g., "image/jpeg" -> "jpeg")
-				const format = messageBlock.source.media_type.split("/")[1]
+				const format = (messageBlock.source.media_type as string).split("/")[1]
 				if (!["png", "jpeg", "gif", "webp"].includes(format)) {
 					throw new Error(`Unsupported image format: ${format}`)
 				}

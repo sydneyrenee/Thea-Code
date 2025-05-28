@@ -1,6 +1,5 @@
-import { useState } from "react"
-import { VSCodeButton, VSCodeCheckbox, VSCodeLink } from "@/components/ui/vscode-components"
-import { Checkbox } from "vscrui"
+import React, { useState } from "react"
+import { VSCodeButton, VSCodeCheckbox, VSCodeLink, VSCodePanels, VSCodePanelTab, VSCodePanelView } from "@/components/ui/vscode-components"
 
 import { McpServer } from "../../../../src/shared/mcp"
 
@@ -63,9 +62,9 @@ const McpView = ({ onDone }: McpViewProps) => {
 						<div style={{ marginBottom: 15 }}>
 							<VSCodeCheckbox
 								checked={enableMcpServerCreation}
-								onChange={(e: any) => {
-									setEnableMcpServerCreation(e.target.checked)
-									vscode.postMessage({ type: "enableMcpServerCreation", bool: e.target.checked })
+								onChange={(checked: boolean) => {
+									setEnableMcpServerCreation(checked)
+									vscode.postMessage({ type: "enableMcpServerCreation", bool: checked })
 								}}>
 								<span style={{ fontWeight: "500" }}>{t("mcp:enableServerCreation.title")}</span>
 							</VSCodeCheckbox>

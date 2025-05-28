@@ -1,6 +1,6 @@
 import { TheaAskUseMcpServer } from "../../shared/ExtensionMessage" // Renamed import
-import { RemoveClosingTag } from "./types"
-import { ToolUse } from "../assistant-message"
+import type { RemoveClosingTag } from "./types"
+import type { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult } from "./types"
 import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { formatResponse } from "../prompts/responses"

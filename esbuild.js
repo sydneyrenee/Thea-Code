@@ -174,7 +174,8 @@ const extensionConfig = {
 			name: "alias-plugin",
 			setup(build) {
 				build.onResolve({ filter: /^pkce-challenge$/ }, (args) => {
-					return { path: require.resolve("pkce-challenge/dist/index.browser.js") }
+					// Use the browser export path
+					return { path: require.resolve("pkce-challenge") }
 				})
 			},
 		},
@@ -184,7 +185,14 @@ const extensionConfig = {
 	sourcesContent: false,
 	platform: "node",
 	outfile: "dist/extension.js",
-	external: ["vscode"],
+	external: [
+		"vscode",
+		"chromium-bidi",
+		"chromium-bidi/lib/cjs/bidiMapper/BidiMapper",
+		"chromium-bidi/lib/cjs/cdp/CdpConnection",
+		"playwright",
+		"playwright-core"
+	],
 }
 
 async function main() {

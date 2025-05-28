@@ -1,4 +1,4 @@
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
+import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react"
 import { useAppTranslation } from "@/i18n/TranslationContext"
 import { Button as VSCodeButton } from "vscrui"
 import {
@@ -61,21 +61,18 @@ export interface SettingsViewRef {
 	checkUnsaveChanges: (then: () => void) => void
 }
 
-const sectionNames = [
-	"providers",
-	"autoApprove",
-	"browser",
-	"checkpoints",
-	"notifications",
-	"contextManagement",
-	"terminal",
-	"advanced",
-	"experimental",
-	"language",
-	"about",
-] as const
-
-type SectionName = (typeof sectionNames)[number]
+type SectionName = 
+	| "providers"
+	| "autoApprove" 
+	| "browser"
+	| "checkpoints"
+	| "notifications"
+	| "contextManagement"
+	| "terminal"
+	| "advanced"
+	| "experimental"
+	| "language"
+	| "about"
 
 type SettingsViewProps = {
 	onDone: () => void
@@ -92,7 +89,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 	const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
 
 	const prevApiConfigName = useRef(currentApiConfigName)
-	const confirmDialogHandler = useRef<() => void>()
+	const confirmDialogHandler = useRef<() => void>(() => {})
 
 	const [cachedState, setCachedState] = useState(extensionState)
 
@@ -288,7 +285,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 	const languageRef = useRef<HTMLDivElement>(null)
 	const aboutRef = useRef<HTMLDivElement>(null)
 
-	const sections: { id: SectionName; icon: LucideIcon; ref: React.RefObject<HTMLDivElement> }[] = useMemo(
+	const sections: { id: SectionName; icon: LucideIcon; ref: React.RefObject<HTMLDivElement | null> }[] = useMemo(
 		() => [
 			{ id: "providers", icon: Webhook, ref: providersRef },
 			{ id: "autoApprove", icon: CheckCheck, ref: autoApproveRef },
@@ -315,7 +312,7 @@ const SettingsView = forwardRef<SettingsViewRef, SettingsViewProps>(({ onDone },
 		],
 	)
 
-	const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => ref.current?.scrollIntoView()
+	const scrollToSection = (ref: React.RefObject<HTMLDivElement | null>) => ref.current?.scrollIntoView()
 
 	return (
 		<Tab>

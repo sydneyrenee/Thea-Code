@@ -3,7 +3,7 @@ import { join } from "path"
 
 import { fileExistsAtPath } from "../../utils/fs"
 
-import { GIT_DISABLED_SUFFIX } from "./constants"
+import type { GIT_DISABLED_SUFFIX } from "./constants"
 
 const getBuildArtifactPatterns = () => [
 	".gradle/",

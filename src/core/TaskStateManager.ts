@@ -1,8 +1,6 @@
 import * as path from "path"
 import fs from "fs/promises"
 import getFolderSize from "get-folder-size"
-import { Anthropic } from "@anthropic-ai/sdk"
-import * as vscode from "vscode"
 
 // Use static import for easier mocking
 import { getTaskDirectoryPath } from "../shared/storagePathManager"
@@ -64,7 +62,7 @@ export class TaskStateManager {
 		// console.log(`[TaskStateManager:${this.taskId}] ${message}`) // Removed direct console log to reduce test noise
 		try {
 			await this.providerRef.deref()?.log(`[TaskStateManager:${this.taskId}] ${message}`) // Added await
-		} catch (err) {
+		} catch {
 			// NO-OP
 		}
 	}
@@ -93,13 +91,13 @@ export class TaskStateManager {
 		if (fileExists) {
 			try {
 				// Read the raw data (which is in the old Anthropic format)
-				const rawHistory = JSON.parse(await fs.readFile(filePath, "utf8"));
+				const rawHistory = JSON.parse(await fs.readFile(filePath, "utf8")) as unknown;
 				// Convert the raw data to the new Neutral format
 				this.apiConversationHistory = convertToNeutralHistory(rawHistory);
 				await this.log(`Loaded ${this.apiConversationHistory.length} items from API history.`);
 				this.onHistoryUpdate?.(this.apiConversationHistory);
 			} catch (error) {
-				await this.log(`Error loading API conversation history: ${error.message}`);
+				await this.log(`Error loading API conversation history: ${error instanceof Error ? error.message : String(error)}`);
 				// If loading or conversion fails, initialize with an empty neutral history
 				this.apiConversationHistory = [];
 				this.onHistoryUpdate?.(this.apiConversationHistory);
@@ -133,7 +131,7 @@ export class TaskStateManager {
 			await fs.writeFile(filePath, JSON.stringify(historyToSave));
 			await this.log(`Saved ${this.apiConversationHistory.length} items to API history.`);
 		} catch (error) {
-			await this.log(`Failed to save API conversation history: ${error.message}`);
+			await this.log(`Failed to save API conversation history: ${error instanceof Error ? error.message : String(error)}`);
 			console.error("Failed to save API conversation history:", error);
 		}
 	}
@@ -145,11 +143,11 @@ export class TaskStateManager {
 
 		if (await fileExistsAtPath(filePath)) {
 			try {
-				this.theaTaskMessages = JSON.parse(await fs.readFile(filePath, "utf8"))
+				this.theaTaskMessages = JSON.parse(await fs.readFile(filePath, "utf8")) as TheaMessage[]
 				await this.log(`Loaded ${this.theaTaskMessages.length} UI messages.`) // Added await
 				this.onMessagesUpdate?.(this.theaTaskMessages)
 			} catch (error) {
-				await this.log(`Error loading UI messages: ${error.message}`) // Added await
+				await this.log(`Error loading UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
 				this.theaTaskMessages = []
 				this.onMessagesUpdate?.(this.theaTaskMessages)
 			}
@@ -159,13 +157,13 @@ export class TaskStateManager {
 			if (await fileExistsAtPath(oldPath)) {
 				await this.log("Migrating UI messages from old location.") // Added await
 				try {
-					const data = JSON.parse(await fs.readFile(oldPath, "utf8"))
+					const data = JSON.parse(await fs.readFile(oldPath, "utf8")) as TheaMessage[]
 					await fs.unlink(oldPath) // remove old file
 					this.theaTaskMessages = data
 					this.onMessagesUpdate?.(this.theaTaskMessages)
 					await this.saveClineMessages() // Save to new location
 				} catch (error) {
-					await this.log(`Error migrating UI messages: ${error.message}`) // Added await
+					await this.log(`Error migrating UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
 					this.theaTaskMessages = []
 					this.onMessagesUpdate?.(this.theaTaskMessages)
 				}
@@ -207,10 +205,10 @@ export class TaskStateManager {
 			try {
 				await this.updateHistoryItem(taskDir)
 			} catch (err) {
-				await this.log(`Error updating history item: ${err.message}`) // Added await
+				await this.log(`Error updating history item: ${err instanceof Error ? err.message : String(err)}`) // Added await
 			}
 		} catch (error) {
-			await this.log(`Failed to save UI messages: ${error.message}`) // Added await
+			await this.log(`Failed to save UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
 			console.error("Failed to save UI messages:", error)
 		}
 	}

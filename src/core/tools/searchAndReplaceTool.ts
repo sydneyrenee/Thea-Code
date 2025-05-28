@@ -1,5 +1,5 @@
 import { TheaTask } from "../TheaTask" // Renamed from Cline
-import { ToolUse } from "../assistant-message"
+import type { ToolUse } from "../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "./types"
 import { formatResponse } from "../prompts/responses"
 import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import

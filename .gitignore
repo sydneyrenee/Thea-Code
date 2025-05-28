@@ -69,3 +69,4 @@ dist/
 /webview-ui/src/**/*.js.map
 # Ignore temp images
 /assets/images/temp_image_*.png
+.output.txt

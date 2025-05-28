@@ -1,6 +1,6 @@
 import { PostHog } from "posthog-node"
 import * as vscode from "vscode"
-import { ZodError } from "zod"
+import type { ZodError } from "zod"
 
 import { logger } from "../../utils/logging"
 

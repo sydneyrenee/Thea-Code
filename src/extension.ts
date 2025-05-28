@@ -17,7 +17,7 @@ import "./utils/path" // Necessary to have access to String.prototype.toPosix.
 import { initializeI18n } from "./i18n"
 import { TheaProvider } from "./core/webview/TheaProvider" // Renamed import
 import { CodeActionProvider } from "./core/CodeActionProvider"
-import { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
+import type { DIFF_VIEW_URI_SCHEME } from "./integrations/editor/DiffViewProvider"
 import { McpServerManager } from "./services/mcp/management/McpServerManager"
 import { telemetryService } from "./services/telemetry/TelemetryService"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"

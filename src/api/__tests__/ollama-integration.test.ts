@@ -275,8 +275,8 @@ describe('Ollama Integration', () => {
           id: 'chatcmpl-multi-turn-mock-2', created: 1678886410, model: 'llama2', object: 'chat.completion.chunk' as const,
           };
       })();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return Promise.resolve(stream as any); // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
+       
+      return Promise.resolve(stream as unknown as { type: string }); // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
     }) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     // Call createMessage
@@ -436,8 +436,8 @@ describe('Ollama Integration', () => {
           id: 'chatcmpl-json-reasoning-3', created: 1678886413, model: 'llama2', object: 'chat.completion.chunk' as const,
         };
       })();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return Promise.resolve(stream as any); // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
+       
+      return Promise.resolve(stream as unknown as { type: string }); // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
     }) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
     
     // Call createMessage

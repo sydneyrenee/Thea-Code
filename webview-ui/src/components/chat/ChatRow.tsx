@@ -1,5 +1,5 @@
 import { Button } from "vscrui"
-import { Badge } from "@radix-ui/react-badge"
+import { Badge } from "../ui/badge"
 import { Progress } from "@radix-ui/react-progress"
 import deepEqual from "fast-deep-equal"
 import React, { memo, useEffect, useMemo, useRef, useState } from "react"
@@ -139,9 +139,9 @@ export const ChatRowContent = ({
 					),
 					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
 				]
-			case "use_mcp_server":
-				const mcpServerUse = JSON.parse(message.text || "{}") as TheaAskUseMcpServer // Renamed type
-				return [
+		case "use_mcp_server": {
+			const mcpServerUse = JSON.parse(message.text || "{}") as TheaAskUseMcpServer // Renamed type
+			return [
 					isMcpServerResponding ? (
 						<ProgressIndicator />
 					) : (
@@ -155,7 +155,8 @@ export const ChatRowContent = ({
 							: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })}
 					</span>,
 				]
-			case "completion_result":
+		}
+		case "completion_result":
 				return [
 					<span
 						className="codicon codicon-check"
@@ -164,7 +165,7 @@ export const ChatRowContent = ({
 				]
 			case "api_req_retry_delayed":
 				return []
-			case "api_req_started":
+			case "api_req_started": {
 				const getIconSpan = (iconName: string, color: string) => (
 					<div
 						style={{
@@ -215,6 +216,7 @@ export const ChatRowContent = ({
 						<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:apiRequest.streaming")}</span>
 					),
 				]
+			}
 			case "followup":
 				return [
 					<span
@@ -695,8 +697,7 @@ export const ChatRowContent = ({
 										marginRight: "-6px",
 									}}
 									disabled={isStreaming}
-									onClick={(e) => {
-										e.stopPropagation()
+									onClick={() => {
 										vscode.postMessage({
 											type: "deleteMessage",
 											value: message.ts,
@@ -710,7 +711,7 @@ export const ChatRowContent = ({
 							)}
 						</div>
 					)
-				case "user_feedback_diff":
+				case "user_feedback_diff": {
 					const tool = JSON.parse(message.text || "{}") as TheaSayTool
 					return (
 						<div
@@ -726,6 +727,7 @@ export const ChatRowContent = ({
 							/>
 						</div>
 					)
+				}
 				case "error":
 					return (
 						<>
@@ -848,7 +850,7 @@ export const ChatRowContent = ({
 							<p style={{ ...pStyle, color: "var(--vscode-errorForeground)" }}>{message.text}</p>
 						</>
 					)
-				case "command":
+				case "command": {
 					const splitMessage = (text: string) => {
 						const outputIndex = text.indexOf(COMMAND_OUTPUT_STRING)
 						if (outputIndex === -1) {
@@ -920,7 +922,8 @@ export const ChatRowContent = ({
 							</div>
 						</>
 					)
-				case "use_mcp_server":
+				}
+				case "use_mcp_server": {
 					const useMcpServer = JSON.parse(message.text || "{}") as TheaAskUseMcpServer // Renamed type
 					const server = mcpServers.find((server) => server.name === useMcpServer.serverName)
 					return (
@@ -999,7 +1002,8 @@ export const ChatRowContent = ({
 							</div>
 						</>
 					)
-				case "completion_result":
+				}
+				case "completion_result": {
 					if (message.text) {
 						return (
 							<div>
@@ -1015,6 +1019,7 @@ export const ChatRowContent = ({
 					} else {
 						return null // Don't render anything when we get a completion_result ask without text
 					}
+				}
 				case "followup":
 					return (
 						<>

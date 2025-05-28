@@ -13,7 +13,7 @@ import {
 } from "../transform/neutral-vertex-format"
 import { BaseProvider } from "./base-provider"
 
-import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
+import type { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
 import { getModelParams, SingleCompletionHandler } from "../"
 import { GoogleAuth } from "google-auth-library"
 

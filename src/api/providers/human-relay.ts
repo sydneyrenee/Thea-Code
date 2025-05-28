@@ -1,5 +1,5 @@
 // import * as vscode from "vscode" // Unused
-// import { EXTENSION_NAME } from "../../../dist/thea-config" // Unused
+// import type { EXTENSION_NAME } from "../../../dist/thea-config" // Unused
 // import { NeutralConversationHistory } from "../../shared/neutral-history"; // Unused
 /**
  * Human Relay API processor

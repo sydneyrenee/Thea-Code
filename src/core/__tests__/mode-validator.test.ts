@@ -18,7 +18,7 @@ describe("mode-validator", () => {
 			})
 
 			it("disallows unknown tools", () => {
-				expect(isToolAllowedForMode("unknown_tool" as any, codeMode, [])).toBe(false)
+				expect(isToolAllowedForMode("unknown_tool" as unknown as { type: string }, codeMode, [])).toBe(false)
 			})
 		})
 
@@ -128,7 +128,7 @@ describe("mode-validator", () => {
 
 	describe("validateToolUse", () => {
 		it("throws error for disallowed tools in architect mode", () => {
-			expect(() => validateToolUse("unknown_tool" as any, "architect", [])).toThrow(
+			expect(() => validateToolUse("unknown_tool" as unknown as { type: string }, "architect", [])).toThrow(
 				'Tool "unknown_tool" is not allowed in architect mode.',
 			)
 		})

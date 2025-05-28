@@ -1,6 +1,6 @@
 // npx jest src/api/transform/__tests__/gemini-format.test.ts
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Anthropic } from "@anthropic-ai/sdk"
 
 import { convertAnthropicMessageToGemini } from "../gemini-format"
@@ -94,7 +94,7 @@ describe("convertAnthropicMessageToGemini", () => {
 						type: "url", // Not supported
 						url: "https://example.com/image.jpg",
 						 
-					} as any,
+					} as unknown as { type: string },
 				},
 			],
 		}
@@ -171,7 +171,7 @@ describe("convertAnthropicMessageToGemini", () => {
 				{
 					type: "tool_result",
 					tool_use_id: "calculator-123",
-					content: null as any, // Empty content
+					content: null as unknown as { type: string }, // Empty content
 				},
 			],
 		}

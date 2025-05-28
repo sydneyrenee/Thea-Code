@@ -128,8 +128,6 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 					</VSCodeTextField>
 					<VSCodeRadioGroup
 						style={{ display: "flex", flexWrap: "wrap" }}
-						value={sortOption}
-						role="radiogroup"
 						onChange={(e) => setSortOption((e.target as HTMLInputElement).value as SortOption)}>
 						<VSCodeRadio value="newest" data-testid="radio-newest">
 							{t("history:newest")}
@@ -157,7 +155,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 						<div className="flex items-center py-1 px-2 bg-vscode-editor-background rounded">
 							<VSCodeCheckbox
 								checked={tasks.length > 0 && selectedTaskIds.length === tasks.length}
-								onChange={(e) => toggleSelectAll((e.target as HTMLInputElement).checked)}
+								onChange={(checked) => toggleSelectAll(checked)}
 							/>
 							<span className="ml-2 text-vscode-foreground">
 								{selectedTaskIds.length === tasks.length
@@ -210,8 +208,8 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 										}}>
 										<VSCodeCheckbox
 											checked={selectedTaskIds.includes(item.id)}
-											onChange={(e) =>
-												toggleTaskSelection(item.id, (e.target as HTMLInputElement).checked)
+											onChange={(checked) =>
+												toggleTaskSelection(item.id, checked)
 											}
 										/>
 									</div>

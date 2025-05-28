@@ -58,7 +58,7 @@ export function convertToMistralMessages(
                                 return {
                                     type: "image_url",
                                     imageUrl: {
-                                        url: `data:${part.source.media_type};base64,${part.source.data}`,
+                                        url: `data:${part.source.media_type as string};base64,${part.source.data as string}`,
                                     },
                                 };
                             }
@@ -151,7 +151,7 @@ export function convertToMistralContent(
             return {
                 type: "image_url",
                 imageUrl: {
-                    url: `data:${block.source.media_type};base64,${block.source.data}`,
+                    url: `data:${block.source.media_type as string};base64,${block.source.data as string}`,
                 }
             };
         }

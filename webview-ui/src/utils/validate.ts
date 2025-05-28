@@ -132,7 +132,7 @@ export function validateModelId(
 	}
 
 	switch (apiConfiguration.apiProvider) {
-		case "openrouter":
+		case "openrouter": {
 			const modelId = apiConfiguration.openRouterModelId
 
 			if (!modelId) {
@@ -148,8 +148,9 @@ export function validateModelId(
 			}
 
 			break
+		}
 
-		case "glama":
+		case "glama": {
 			const glamaModelId = apiConfiguration.glamaModelId
 
 			if (!glamaModelId) {
@@ -165,8 +166,9 @@ export function validateModelId(
 			}
 
 			break
+		}
 
-		case "unbound":
+		case "unbound": {
 			const unboundModelId = apiConfiguration.unboundModelId
 
 			if (!unboundModelId) {
@@ -182,8 +184,9 @@ export function validateModelId(
 			}
 
 			break
+		}
 
-		case "requesty":
+		case "requesty": {
 			const requestyModelId = apiConfiguration.requestyModelId
 
 			if (!requestyModelId) {
@@ -199,6 +202,7 @@ export function validateModelId(
 			}
 
 			break
+		}
 	}
 
 	return undefined

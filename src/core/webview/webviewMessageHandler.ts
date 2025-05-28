@@ -261,7 +261,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			provider.isViewLaunched = true
 			break
 		}
-		
+
 		case "newTask": {
 			// Code that should run in response to the hello message command
 			//vscode.window.showInformationMessage(message.text!)
@@ -1331,7 +1331,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 
 			// Update diffStrategy in current Cline instance if it exists.
 			if (message.values[EXPERIMENT_IDS.DIFF_STRATEGY_UNIFIED] !== undefined && currentCline) {
-				await currentCline.updateDiffStrategy(updatedExperiments)
+				currentCline.updateDiffStrategy(updatedExperiments)
 			}
 
 			await provider.postStateToWebview()

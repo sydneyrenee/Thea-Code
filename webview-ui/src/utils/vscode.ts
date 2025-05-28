@@ -1,6 +1,9 @@
 import { WebviewMessage } from "../../../src/shared/WebviewMessage"
 import type { WebviewApi } from "vscode-webview"
 
+// Declare the acquireVsCodeApi function that's available in VS Code webviews
+declare function acquireVsCodeApi(): WebviewApi<unknown>;
+
 /**
  * A utility wrapper around the acquireVsCodeApi() function, which enables
  * message passing and state management between the webview and extension

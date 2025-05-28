@@ -463,6 +463,7 @@ describe("TheaProvider", () => {
 		// Mock the vscode.window.showInformationMessage to simulate user clicking "Yes"
 		// Fix: Use proper type for the mock function to match VS Code API
 		jest.mocked(vscode.window.showInformationMessage).mockImplementation(
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			(_message: string, _options: vscode.MessageOptions, ..._items: vscode.MessageItem[]) => {
 				// Return the "Yes" option to simulate user confirmation
 				return Promise.resolve("Yes" as unknown as vscode.MessageItem)

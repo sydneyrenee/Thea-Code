@@ -246,7 +246,7 @@ export class DiffViewProvider {
 		}
 
 		// edit is done
-		await this.reset()
+                this.reset()
 	}
 
 	private async closeAllDiffViews() {
@@ -352,7 +352,7 @@ export class DiffViewProvider {
 	}
 
 	// close editor if open?
-	async reset() {
+        reset() {
 		this.editType = undefined
 		this.isEditing = false
 		this.originalContent = undefined

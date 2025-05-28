@@ -58,9 +58,11 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			await provider.updateGlobalState("customModes", customModes)
 
 			await provider.postStateToWebview()
-			provider.workspaceTracker?.initializeFilePaths() // don't await
+                        void provider.workspaceTracker?.initializeFilePaths()
 
-			getTheme().then((theme) => provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) }))
+                        void getTheme().then((theme) =>
+                                provider.postMessageToWebview({ type: "theme", text: JSON.stringify(theme) })
+                        )
 
 			// If MCP Hub is already initialized, update the webview with current server list
 			if (provider.mcpHub) {
@@ -73,11 +75,16 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			const cacheDir = await provider.ensureCacheDirectoryExists()
 
 			// Post last cached models in case the call to endpoint fails.
-			provider.readModelsFromCache(GlobalFileNames.openRouterModels).then((openRouterModels) => {
-				if (openRouterModels) {
-					provider.postMessageToWebview({ type: "openRouterModels", openRouterModels })
-				}
-			})
+                        void provider
+                                .readModelsFromCache(GlobalFileNames.openRouterModels)
+                                .then((openRouterModels) => {
+                                        if (openRouterModels) {
+                                                void provider.postMessageToWebview({
+                                                        type: "openRouterModels",
+                                                        openRouterModels,
+                                                })
+                                        }
+                                })
 
 			// GUI relies on model info to be up-to-date to provide
 			// the most accurate pricing, so we need to fetch the
@@ -103,23 +110,25 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				// models there).
 				const { apiConfiguration } = await provider.getState()
 
-				if (apiConfiguration.openRouterModelId) {
-					await provider.updateGlobalState(
-						"openRouterModelInfo",
-						openRouterModelInfo[apiConfiguration.openRouterModelId],
-					)
-					await provider.postStateToWebview()
-				}
+                                if (apiConfiguration.openRouterModelId) {
+                                        await provider.updateGlobalState(
+                                                "openRouterModelInfo",
+                                                openRouterModelInfo[apiConfiguration.openRouterModelId] as unknown,
+                                        )
+                                        await provider.postStateToWebview()
+                                }
 			}
 
-			provider.readModelsFromCache(GlobalFileNames.glamaModels).then((glamaModels) => {
-				if (glamaModels) {
-					provider.postMessageToWebview({ type: "glamaModels", glamaModels })
-				}
-			})
+                        void provider
+                                .readModelsFromCache(GlobalFileNames.glamaModels)
+                                .then((glamaModels) => {
+                                        if (glamaModels) {
+                                                void provider.postMessageToWebview({ type: "glamaModels", glamaModels })
+                                        }
+                                })
 
-			getGlamaModels().then(async (glamaModels) => {
-				if (Object.keys(glamaModels).length > 0) {
+                        void getGlamaModels().then(async (glamaModels) => {
+                                if (Object.keys(glamaModels).length > 0) {
 					await fs.writeFile(path.join(cacheDir, GlobalFileNames.glamaModels), JSON.stringify(glamaModels))
 					await provider.postMessageToWebview({ type: "glamaModels", glamaModels })
 
@@ -132,14 +141,16 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				}
 			})
 
-			provider.readModelsFromCache(GlobalFileNames.unboundModels).then((unboundModels) => {
-				if (unboundModels) {
-					provider.postMessageToWebview({ type: "unboundModels", unboundModels })
-				}
-			})
+                        void provider
+                                .readModelsFromCache(GlobalFileNames.unboundModels)
+                                .then((unboundModels) => {
+                                        if (unboundModels) {
+                                                void provider.postMessageToWebview({ type: "unboundModels", unboundModels })
+                                        }
+                                })
 
-			getUnboundModels().then(async (unboundModels) => {
-				if (Object.keys(unboundModels).length > 0) {
+                        void getUnboundModels().then(async (unboundModels) => {
+                                if (Object.keys(unboundModels).length > 0) {
 					await fs.writeFile(
 						path.join(cacheDir, GlobalFileNames.unboundModels),
 						JSON.stringify(unboundModels),
@@ -158,14 +169,16 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				}
 			})
 
-			provider.readModelsFromCache(GlobalFileNames.requestyModels).then((requestyModels) => {
-				if (requestyModels) {
-					provider.postMessageToWebview({ type: "requestyModels", requestyModels })
-				}
-			})
+                        void provider
+                                .readModelsFromCache(GlobalFileNames.requestyModels)
+                                .then((requestyModels) => {
+                                        if (requestyModels) {
+                                                void provider.postMessageToWebview({ type: "requestyModels", requestyModels })
+                                        }
+                                })
 
-			getRequestyModels().then(async (requestyModels) => {
-				if (Object.keys(requestyModels).length > 0) {
+                        void getRequestyModels().then(async (requestyModels) => {
+                                if (Object.keys(requestyModels).length > 0) {
 					await fs.writeFile(
 						path.join(cacheDir, GlobalFileNames.requestyModels),
 						JSON.stringify(requestyModels),
@@ -184,9 +197,9 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				}
 			})
 
-			provider.providerSettingsManager
-				.listConfig()
-				.then(async (listApiConfig) => {
+                        void provider.providerSettingsManager
+                                .listConfig()
+                                .then(async (listApiConfig) => {
 					if (!listApiConfig) {
 						return
 					}
@@ -239,11 +252,11 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				)
 
 			// If user already opted in to telemetry, enable telemetry service
-			provider.getStateToPostToWebview().then((state) => {
-				const { telemetrySetting } = state
-				const isOptedIn = telemetrySetting === "enabled"
-				telemetryService.updateTelemetryState(isOptedIn)
-			})
+                        void provider.getStateToPostToWebview().then((state) => {
+                                const { telemetrySetting } = state
+                                const isOptedIn = telemetrySetting === "enabled"
+                                telemetryService.updateTelemetryState(isOptedIn)
+                        })
 
 			provider.isViewLaunched = true
 			break
@@ -572,9 +585,11 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 					await fs.writeFile(mcpPath, JSON.stringify({ mcpServers: {} }, null, 2))
 				}
 				await openFile(mcpPath)
-			} catch (error) {
-				vscode.window.showErrorMessage(t("common:errors.create_mcp_json", { error: `${error}` })) // Keep mcp.json filename for now, dir updated
-			}
+                        } catch (error: unknown) {
+                                vscode.window.showErrorMessage(
+                                        t("common:errors.create_mcp_json", { error: String(error) }),
+                                )
+                        }
 			break
 		}
 		case "openCustomModesSettings": {
@@ -593,21 +608,21 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				provider.outputChannel.appendLine(`Attempting to delete MCP server: ${message.serverName}`)
 				await provider.mcpHub?.deleteServer(message.serverName, message.source as "global" | "project")
 				provider.outputChannel.appendLine(`Successfully deleted MCP server: ${message.serverName}`)
-			} catch (error) {
-				const errorMessage = error instanceof Error ? error.message : String(error)
-				provider.outputChannel.appendLine(`Failed to delete MCP server: ${errorMessage}`)
-				// Error messages are already handled by McpHub.deleteServer
-			}
+                        } catch (error: unknown) {
+                                const errorMessage = error instanceof Error ? error.message : String(error)
+                                provider.outputChannel.appendLine(`Failed to delete MCP server: ${errorMessage}`)
+                                // Error messages are already handled by McpHub.deleteServer
+                        }
 			break
 		}
 		case "restartMcpServer": {
 			try {
 				await provider.mcpHub?.restartConnection(message.text!, message.source as "global" | "project")
-			} catch (error) {
-				provider.outputChannel.appendLine(
-					`Failed to retry connection for ${message.text}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-				)
-			}
+                        } catch (error: unknown) {
+                                provider.outputChannel.appendLine(
+                                        `Failed to retry connection for ${message.text}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+                                )
+                        }
 			break
 		}
 		case "toggleToolAlwaysAllow": {
@@ -620,11 +635,11 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 						Boolean(message.alwaysAllow),
 					)
 				}
-			} catch (error) {
-				provider.outputChannel.appendLine(
-					`Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-				)
-			}
+                        } catch (error: unknown) {
+                                provider.outputChannel.appendLine(
+                                        `Failed to toggle auto-approve for tool ${message.toolName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+                                )
+                        }
 			break
 		}
 		case "toggleMcpServer": {
@@ -634,11 +649,11 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 					message.disabled!,
 					message.source as "global" | "project",
 				)
-			} catch (error) {
-				provider.outputChannel.appendLine(
-					`Failed to toggle MCP server ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
-				)
-			}
+                        } catch (error: unknown) {
+                                provider.outputChannel.appendLine(
+                                        `Failed to toggle MCP server ${message.serverName}: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`,
+                                )
+                        }
 			break
 		}
 		case "mcpEnabled": {
@@ -686,12 +701,16 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			break
 		}
 		case "playTts":
-			if (message.text) {
-				await playTts(message.text, {
-					onStart: () => provider.postMessageToWebview({ type: "ttsStart", text: message.text }),
-					onStop: () => provider.postMessageToWebview({ type: "ttsStop", text: message.text }),
-				})
-			}
+                        if (message.text) {
+                                await playTts(message.text, {
+                                        onStart: () => {
+                                                void provider.postMessageToWebview({ type: "ttsStart", text: message.text })
+                                        },
+                                        onStop: () => {
+                                                void provider.postMessageToWebview({ type: "ttsStop", text: message.text })
+                                        },
+                                })
+                        }
 			break
 		case "stopTts":
 			stopTts()
@@ -970,7 +989,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			await provider.postStateToWebview()
 			break
 		case "language":
-			changeLanguage(message.text ?? "en")
+                    await changeLanguage(message.text ?? "en")
 			await provider.updateGlobalState("language", message.text as Language)
 			await provider.postStateToWebview()
 			break

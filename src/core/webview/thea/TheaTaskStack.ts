@@ -1,5 +1,5 @@
 import { TheaTask } from "../../TheaTask" // Updated import path and type
-import { t } from "../../../i18n" // Adjusted import path
+// i18n import removed - not used
 
 /**
  * Manages the stack of Cline instances representing ongoing tasks and subtasks.
@@ -12,13 +12,11 @@ export class TheaTaskStack {
 	 * Adds a new Cline instance to the stack.
 	 * @param task The TheaTask instance to add to the stack
 	 */
-	async addTheaTask(task: TheaTask): Promise<void> {
-		// Renamed parameter and type
-		console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`) // Use renamed parameter
-		// Add this task instance into the stack that represents the order of all the called tasks.
-		this.stack.push(task) // Use renamed parameter
-		// Note: Validation logic involving `getState` was removed as it belongs in the provider calling this method.
-	}
+       async addTheaTask(task: TheaTask): Promise<void> {
+               await Promise.resolve()
+               console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`)
+               this.stack.push(task)
+       }
 
 	/**
 	 * Removes and destroys the top Cline instance (the current finished task).
@@ -41,13 +39,11 @@ export class TheaTaskStack {
 				// Abort the running task and set isAbandoned to true so
 				// all running promises will exit as well.
 				await task.abortTask(true) // Use renamed variable
-			} catch (e) {
-				// Note: Logging removed, should be handled by the caller or a dedicated logger.
-				console.error(
-					// Keep error log for now
-					`[TheaTaskStack] encountered error while aborting task ${task.taskId}.${task.instanceId}: ${e.message}`, // Renamed class in log, use renamed variable
-				)
-			}
+                       } catch (e: unknown) {
+                               console.error(
+                                       `[TheaTaskStack] encountered error while aborting task ${task.taskId}.${task.instanceId}: ${e instanceof Error ? e.message : String(e)}`,
+                               )
+                       }
 		}
 		// Return the popped cline instance (it's already undefined if not found)
 		return task // Return renamed variable
@@ -85,11 +81,12 @@ export class TheaTaskStack {
 	 * Finishes a subtask and resumes its parent task
 	 * @param lastMessage Optional message to pass to the parent task
 	 */
-	async finishSubTask(lastMessage?: string): Promise<void> {
-		console.log(`[subtasks] finishing subtask ${lastMessage}`)
-		// remove the last cline instance from the stack (this is the finished sub task)
-		await this.removeCurrentTheaTask()
-		// resume the last cline instance in the stack (if it exists - this is the 'parent' calling task)
-		this.getCurrentTheaTask()?.resumePausedTask(lastMessage)
-	}
+       async finishSubTask(lastMessage?: string): Promise<void> {
+               console.log(`[subtasks] finishing subtask ${lastMessage}`)
+               await this.removeCurrentTheaTask()
+               const current = this.getCurrentTheaTask()
+               if (current) {
+                       await current.resumePausedTask(lastMessage)
+               }
+       }
 }

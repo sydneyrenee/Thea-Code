@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as os from "os"
 import fs from "fs/promises"
+import type { McpServer } from "../../../shared/mcp"
 
 import { McpHub } from "../../../services/mcp/management/McpHub" // Adjusted path
 // Assuming McpServerManager is not directly needed here, but constants are
@@ -50,13 +51,16 @@ export class TheaMcpManager {
 			mcpServersDir = path.join(os.homedir(), ".local", "share", EXTENSION_DISPLAY_NAME, "MCP")
 		}
 
-		try {
-			await fs.mkdir(mcpServersDir, { recursive: true })
-		} catch (error) {
-			console.error(`Failed to create MCP directory ${mcpServersDir}, falling back: ${error}`)
-			// Fallback logic copied from TheaProvider
-			return path.join(os.homedir(), EXTENSION_CONFIG_DIR, "mcp")
-		}
+                try {
+                        await fs.mkdir(mcpServersDir, { recursive: true })
+                } catch (error: unknown) {
+                        console.error(
+                                `Failed to create MCP directory ${mcpServersDir}, falling back:`,
+                                error,
+                        )
+                        // Fallback logic copied from TheaProvider
+                        return path.join(os.homedir(), EXTENSION_CONFIG_DIR, "mcp")
+                }
 		return mcpServersDir
 	}
 
@@ -148,10 +152,9 @@ export class TheaMcpManager {
 	/**
 	 * Gets a list of all configured MCP servers via McpHub.
 	 */
-	getAllServers(): any[] {
-		// Consider defining a proper type for ServerConfig if available
-		return this.mcpHub?.getAllServers() || []
-	}
+       getAllServers(): McpServer[] {
+               return this.mcpHub?.getAllServers() || []
+       }
 
 	/**
 	 * Registers a new server via McpHub.

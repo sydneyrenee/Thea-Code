@@ -43,7 +43,7 @@ let extensionContext: vscode.ExtensionContext
 // Your extension is activated the very first time the command is executed.
 export async function activate(context: vscode.ExtensionContext) {
 	extensionContext = context
-	outputChannel = vscode.window.createOutputChannel(EXTENSION_DISPLAY_NAME)
+        outputChannel = vscode.window.createOutputChannel(String(EXTENSION_DISPLAY_NAME))
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${EXTENSION_DISPLAY_NAME} extension activated`)
 
@@ -54,13 +54,16 @@ export async function activate(context: vscode.ExtensionContext) {
 	telemetryService.initialize()
 
 	// Initialize i18n for internationalization support
-	initializeI18n(context.globalState.get("language") ?? formatLanguage(vscode.env.language))
+        await initializeI18n(
+                context.globalState.get("language") ?? formatLanguage(vscode.env.language),
+        )
 
 	// Initialize terminal shell execution handlers.
 	TerminalRegistry.initialize()
 
 	// Get default commands from configuration.
-	const defaultCommands = vscode.workspace.getConfiguration(configSection()).get<string[]>("allowedCommands") || []
+        const defaultCommands =
+                vscode.workspace.getConfiguration((configSection as () => string)()).get<string[]>("allowedCommands") || []
 
 	// Initialize global state if not already set.
 	if (!context.globalState.get("allowedCommands")) {
@@ -70,12 +73,12 @@ export async function activate(context: vscode.ExtensionContext) {
 	const provider = new TheaProvider(context, outputChannel, "sidebar") // Renamed constructor
 	telemetryService.setProvider(provider)
 
-	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(TheaProvider.sideBarId, provider, {
-			// Renamed static property access
-			webviewOptions: { retainContextWhenHidden: true },
-		}),
-	)
+        context.subscriptions.push(
+                vscode.window.registerWebviewViewProvider(String(TheaProvider.sideBarId), provider, {
+                        // Renamed static property access
+                        webviewOptions: { retainContextWhenHidden: true },
+                }),
+        )
 
 	registerCommands({ context, outputChannel, provider })
 

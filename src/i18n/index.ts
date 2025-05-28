@@ -5,8 +5,8 @@ import i18next from "./setup"
  *
  * @param language The language code to use
  */
-export function initializeI18n(language: string): void {
-	i18next.changeLanguage(language)
+export async function initializeI18n(language: string): Promise<void> {
+        await i18next.changeLanguage(language)
 }
 
 /**
@@ -23,8 +23,8 @@ export function getCurrentLanguage(): string {
  *
  * @param language The language code to change to
  */
-export function changeLanguage(language: string): void {
-	i18next.changeLanguage(language)
+export async function changeLanguage(language: string): Promise<void> {
+        await i18next.changeLanguage(language)
 }
 
 /**
@@ -34,8 +34,8 @@ export function changeLanguage(language: string): void {
  * @param options Options for interpolation or pluralization
  * @returns The translated string
  */
-export function t(key: string, options?: Record<string, any>): string {
-	return i18next.t(key, options)
+export function t(key: string, options?: Record<string, unknown>): string {
+        return i18next.t(key, options)
 }
 
 export default i18next

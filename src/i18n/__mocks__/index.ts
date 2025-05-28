@@ -1,6 +1,7 @@
 // Mock implementation for i18n
 const i18nMock = {
-	t: jest.fn().mockImplementation((key: string, options?: Record<string, any>): string => {
+        t: jest.fn().mockImplementation((key: string, _options?: Record<string, unknown>): string => {
+                void _options
 		// Map specific keys to the exact strings expected in tests
 		const translationMap: Record<string, string> = {
 			"common:confirmation.reset_state": "Are you sure you want to reset all state?",
@@ -10,7 +11,7 @@ const i18nMock = {
 		// Return the mapped translation or the original key
 		return translationMap[key] || key
 	}),
-	changeLanguage: jest.fn(),
+        changeLanguage: jest.fn(),
 	getCurrentLanguage: jest.fn().mockReturnValue("en"),
 	initializeI18n: jest.fn(),
 }

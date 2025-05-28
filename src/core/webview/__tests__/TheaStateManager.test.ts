@@ -1,4 +1,5 @@
 // filepath: /Volumes/stuff/Projects/Thea-Code/src/core/webview/__tests__/ClineStateManager.test.ts
+/* eslint-disable @typescript-eslint/unbound-method */
 import * as vscode from "vscode"
 import * as os from "os"
 import { TheaStateManager } from "../thea/TheaStateManager" // Renamed import and path
@@ -235,12 +236,12 @@ describe("TheaStateManager", () => {
 		expect(mockContextProxy.setValue).toHaveBeenCalledWith("diffEnabled", false)
 	})
 
-	test("getGlobalState delegates to contextProxy.getValue", async () => {
-		// Setup
-		mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
+        test("getGlobalState delegates to contextProxy.getValue", () => {
+                // Setup
+                mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
 
-		// Execute
-		const result = await stateManager.getGlobalState("diffEnabled")
+                // Execute
+                const result = stateManager.getGlobalState("diffEnabled")
 
 		// Verify
 		expect(mockContextProxy.getValue).toHaveBeenCalledWith("diffEnabled")
@@ -255,12 +256,12 @@ describe("TheaStateManager", () => {
 		expect(mockContextProxy.setValue).toHaveBeenCalledWith("diffEnabled", false)
 	})
 
-	test("getValue delegates to contextProxy.getValue", async () => {
-		// Setup
-		mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
+        test("getValue delegates to contextProxy.getValue", () => {
+                // Setup
+                mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
 
-		// Execute
-		const result = await stateManager.getValue("diffEnabled")
+                // Execute
+                const result = stateManager.getValue("diffEnabled")
 
 		// Verify
 		expect(mockContextProxy.getValue).toHaveBeenCalledWith("diffEnabled")

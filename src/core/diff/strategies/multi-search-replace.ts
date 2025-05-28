@@ -220,12 +220,10 @@ Only use a single line of '=======' between search and replacement content, beca
 				}
 	}
 
-	async applyDiff(
+	applyDiff(
 		originalContent: string,
 		diffContent: string,
-		_paramStartLine?: number,
-		_paramEndLine?: number,
-	): Promise<DiffResult> {
+	): DiffResult {
 		const validseq = this.validateMarkerSequencing(diffContent)
 		if (!validseq.success) {
 			return {
@@ -461,7 +459,7 @@ Only use a single line of '=======' between search and replacement content, beca
 			})
 
 			// Apply the replacement while preserving exact indentation
-			const indentedReplaceLines = replaceLines.map((line, i) => {
+			const indentedReplaceLines = replaceLines.map((line) => {
 				// Get the matched line's exact indentation
 				const matchedIndent = originalIndents[0] || ""
 

@@ -71,7 +71,7 @@ Diff to modify the file:
 +++ src/utils/helper.ts
 @@ -1,9 +1,10 @@
  import type { Logger } from "../logger";
- 
+
  function calculateTotal(items: number[]): number {
 -  return items.reduce((sum, item) => {
 -    return sum + item;
@@ -80,7 +80,7 @@ Diff to modify the file:
    }, 0);
 +  return Math.round(total * 100) / 100;  // Round to 2 decimal places
  }
- 
+
  export { calculateTotal };
 \`\`\`
 
@@ -111,7 +111,7 @@ Your diff here
 </apply_diff>`
 	}
 
-        async applyDiff(originalContent: string, diffContent: string): Promise<DiffResult> {
+        applyDiff(originalContent: string, diffContent: string): DiffResult {
                 try {
                         let cleanDiff = diffContent.replace(/^\s+/gm, "")
                         cleanDiff = cleanDiff.replace(/^(?![+\-@])/gm, " $&")
@@ -133,10 +133,11 @@ Your diff here
 				success: true,
 				content: result,
 			}
-		} catch (error) {
+		} catch (error: unknown) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
 			return {
 				success: false,
-				error: `Error applying unified diff: ${error.message}`,
+				error: `Error applying unified diff: ${errorMessage}`,
 				details: {
 					searchContent: diffContent,
 				},

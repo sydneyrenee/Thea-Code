@@ -20,7 +20,7 @@ describe("UnifiedDiffStrategy", () => {
 	})
 
 	describe("applyDiff", () => {
-                it.skip("should successfully apply a function modification diff", async () => {
+                it.skip("should successfully apply a function modification diff", () => {
 			const originalContent = `import type { Logger } from "../logger";
 
 function calculateTotal(items: number[]): number {
@@ -58,14 +58,14 @@ function calculateTotal(items: number[]): number {
 
 export { calculateTotal };`
 
-			const result = await strategy.applyDiff(originalContent, diffContent)
+			const result = strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
 			}
 		})
 
-                it.skip("should successfully apply a diff adding a new method", async () => {
+                it.skip("should successfully apply a diff adding a new method", () => {
 			const originalContent = `class Calculator {
   add(a: number, b: number): number {
     return a + b;
@@ -95,14 +95,14 @@ export { calculateTotal };`
   }
 }`
 
-			const result = await strategy.applyDiff(originalContent, diffContent)
+			const result = strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
 			}
 		})
 
-                it.skip("should successfully apply a diff modifying imports", async () => {
+                it.skip("should successfully apply a diff modifying imports", () => {
 			const originalContent = `import { useState } from 'react';
 import { Button } from './components';
 
@@ -133,7 +133,7 @@ function App() {
   return <Button onClick={() => setCount(count + 1)}>{count}</Button>;
 }`
 
-			const result = await strategy.applyDiff(originalContent, diffContent)
+			const result = strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
@@ -198,14 +198,14 @@ async function processFile(path: string) {
 
 export { processFile };`
 
-			const result = await strategy.applyDiff(originalContent, diffContent)
+			const result = strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
 			}
 		})
 
-		it("should handle empty original content", async () => {
+		it("should handle empty original content", () => {
 			const originalContent = ""
 			const diffContent = `--- empty.ts
 +++ empty.ts
@@ -218,7 +218,7 @@ export { processFile };`
   return \`Hello, \${name}!\`;
 }\n`
 
-			const result = await strategy.applyDiff(originalContent, diffContent)
+			const result = strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)

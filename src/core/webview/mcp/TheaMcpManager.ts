@@ -43,13 +43,13 @@ export class TheaMcpManager {
 	async ensureMcpServersDirectoryExists(): Promise<string> {
 		// Logic copied from TheaProvider
 		let mcpServersDir: string
-		if (process.platform === "win32") {
-			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", EXTENSION_DISPLAY_NAME, "MCP")
-		} else if (process.platform === "darwin") {
-			mcpServersDir = path.join(os.homedir(), "Documents", EXTENSION_DISPLAY_NAME, "MCP")
-		} else {
-			mcpServersDir = path.join(os.homedir(), ".local", "share", EXTENSION_DISPLAY_NAME, "MCP")
-		}
+                if (process.platform === "win32") {
+                        mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", String(EXTENSION_DISPLAY_NAME), "MCP")
+                } else if (process.platform === "darwin") {
+                        mcpServersDir = path.join(os.homedir(), "Documents", String(EXTENSION_DISPLAY_NAME), "MCP")
+                } else {
+                        mcpServersDir = path.join(os.homedir(), ".local", "share", String(EXTENSION_DISPLAY_NAME), "MCP")
+                }
 
                 try {
                         await fs.mkdir(mcpServersDir, { recursive: true })
@@ -59,7 +59,7 @@ export class TheaMcpManager {
                                 error,
                         )
                         // Fallback logic copied from TheaProvider
-                        return path.join(os.homedir(), EXTENSION_CONFIG_DIR, "mcp")
+                        return path.join(os.homedir(), String(EXTENSION_CONFIG_DIR), "mcp")
                 }
 		return mcpServersDir
 	}

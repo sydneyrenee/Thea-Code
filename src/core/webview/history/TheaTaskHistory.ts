@@ -31,9 +31,9 @@ export class TheaTaskHistory {
 	/**
 	 * Gets the complete task history list from global state.
 	 */
-	private async getHistoryList(): Promise<HistoryItem[]> {
-		return (await this.contextProxy.getValue("taskHistory")) ?? []
-	}
+        private getHistoryList(): HistoryItem[] {
+                return this.contextProxy.getValue("taskHistory") ?? []
+        }
 
 	/**
 	 * Updates the task history list in global state.
@@ -46,7 +46,7 @@ export class TheaTaskHistory {
 	 * Updates the task history with a new or existing item.
 	 */
 	async updateTaskHistory(item: HistoryItem): Promise<HistoryItem[]> {
-		const history = await this.getHistoryList()
+                const history = this.getHistoryList()
 		const existingItemIndex = history.findIndex((h) => h.id === item.id)
 
 		if (existingItemIndex !== -1) {
@@ -70,7 +70,7 @@ export class TheaTaskHistory {
 		uiMessagesFilePath: string
 		apiConversationHistory: Anthropic.MessageParam[]
 	}> {
-		const history = await this.getHistoryList()
+                const history = this.getHistoryList()
 		const historyItem = history.find((item) => item.id === id)
 
 		if (historyItem) {
@@ -83,9 +83,11 @@ export class TheaTaskHistory {
 			let apiConversationHistory: Anthropic.MessageParam[] = []
 			try {
 				const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
-				if (fileExists) {
-					apiConversationHistory = JSON.parse(await fs.readFile(apiConversationHistoryFilePath, "utf8"))
-				}
+                                if (fileExists) {
+                                        apiConversationHistory = JSON.parse(
+                                                await fs.readFile(apiConversationHistoryFilePath, "utf8"),
+                                        ) as Anthropic.MessageParam[]
+                                }
 			} catch (readError) {
 				console.error(`Error reading conversation history for task ${id}:`, readError)
 				// Proceed with empty history, maybe log this more formally
@@ -206,7 +208,7 @@ export class TheaTaskHistory {
 	 * Does not post updates to the webview.
 	 */
 	async deleteTaskFromState(id: string): Promise<void> {
-		const taskHistory = await this.getHistoryList()
+                const taskHistory = this.getHistoryList()
 		const updatedTaskHistory = taskHistory.filter((task) => task.id !== id)
 		// Only update if the list actually changed
 		if (updatedTaskHistory.length !== taskHistory.length) {

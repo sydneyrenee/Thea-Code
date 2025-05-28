@@ -163,7 +163,7 @@ Only use a single line of '=======' between search and replacement content, beca
 		const SEP = "======="
 		const REPLACE = ">>>>>>> REPLACE"
 
-		const reportError = (found: string, expected: string) => ({
+		const reportError = (found: string) => ({
 			success: false,
 			error:
 				`ERROR: Special marker '${found}' found in your diff content at line ${state.line}:\n` +
@@ -193,20 +193,20 @@ Only use a single line of '=======' between search and replacement content, beca
 
 			switch (state.current) {
 				case State.START:
-					if (marker === SEP) return reportError(SEP, SEARCH)
-					if (marker === REPLACE) return reportError(REPLACE, SEARCH)
+					if (marker === SEP) return reportError(SEP)
+					if (marker === REPLACE) return reportError(REPLACE)
 					if (marker === SEARCH) state.current = State.AFTER_SEARCH
 					break
 
 				case State.AFTER_SEARCH:
-					if (marker === SEARCH) return reportError(SEARCH, SEP)
-					if (marker === REPLACE) return reportError(REPLACE, SEP)
+					if (marker === SEARCH) return reportError(SEARCH)
+					if (marker === REPLACE) return reportError(REPLACE)
 					if (marker === SEP) state.current = State.AFTER_SEPARATOR
 					break
 
 				case State.AFTER_SEPARATOR:
-					if (marker === SEARCH) return reportError(SEARCH, REPLACE)
-					if (marker === SEP) return reportError(SEP, REPLACE)
+					if (marker === SEARCH) return reportError(SEARCH)
+					if (marker === SEP) return reportError(SEP)
 					if (marker === REPLACE) state.current = State.START
 					break
 			}
@@ -236,7 +236,7 @@ Only use a single line of '=======' between search and replacement content, beca
 
 		/*
 			Regex parts:
-			
+
 			1. (?:^|\n)  
 			  Ensures the first marker starts at the beginning of the file or right after a newline.
 

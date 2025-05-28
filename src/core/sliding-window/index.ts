@@ -111,7 +111,7 @@ export async function truncateConversationIfNeeded({
 	const lastMessageContent = lastMessage.content;
 	const lastMessageTokens = Array.isArray(lastMessageContent)
 		? await estimateTokenCount(lastMessageContent, apiHandler)
-		: await estimateTokenCount([{ type: "text", text: lastMessageContent as string }], apiHandler); // Cast to string if not array
+		: await estimateTokenCount([{ type: "text", text: lastMessageContent }], apiHandler); // Cast to string if not array
 
 	// Calculate total effective tokens (totalTokens never includes the last message)
 	const effectiveTokens = totalTokens + lastMessageTokens

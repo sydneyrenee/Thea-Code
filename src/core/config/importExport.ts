@@ -56,7 +56,7 @@ export const importSettings = async ({ providerSettingsManager, contextProxy }: 
 		contextProxy.setValue("listApiConfigMeta", await providerSettingsManager.listConfig())
 
 		return { providerProfiles, globalSettings, success: true }
-	} catch (e) {
+	} catch {
 		return { success: false }
 	}
 }
@@ -78,5 +78,5 @@ export const exportSettings = async ({ providerSettingsManager, contextProxy }: 
 		const dirname = path.dirname(uri.fsPath)
 		await fs.mkdir(dirname, { recursive: true })
 		await fs.writeFile(uri.fsPath, JSON.stringify({ providerProfiles, globalSettings }, null, 2), "utf-8")
-	} catch (e) {}
+	} catch {}
 }

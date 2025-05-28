@@ -1919,10 +1919,6 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						osInfo: "unix",
 					} // Renamed getter
 
-					/* eslint-disable @typescript-eslint/no-unsafe-argument */
-					/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-					/* eslint-disable @typescript-eslint/no-unsafe-return */
-					/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 					/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 					const shouldProcessMentions = (text: string) =>
 						text.includes("<task>") || text.includes("<feedback>")

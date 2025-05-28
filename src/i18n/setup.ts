@@ -1,45 +1,33 @@
 import i18next from "i18next"
+import fs from "node:fs"
+import path from "node:path"
 
 // Build translations object
-const translations: Record<string, Record<string, any>> = {}
+const translations: Record<string, Record<string, unknown>> = {}
 
 // Determine if running in test environment (jest)
 const isTestEnv = process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID !== undefined
 
-// Detect environment - browser vs Node.js
-const isBrowser = typeof window !== "undefined" && typeof window.document !== "undefined"
-
-// Define interface for VSCode extension process
-interface VSCodeProcess extends NodeJS.Process {
-	resourcesPath?: string
-}
-
-// Type cast process to custom interface with resourcesPath
-const vscodeProcess = process as VSCodeProcess
-
 // Load translations based on environment
 if (!isTestEnv) {
-	try {
-		// Dynamic imports to avoid browser compatibility issues
-		const fs = require("fs")
-		const path = require("path")
+        try {
 
 		const localesDir = path.join(__dirname, "i18n", "locales")
 
-		try {
-			// Find all language directories
-			const languageDirs = fs.readdirSync(localesDir, { withFileTypes: true })
+                try {
+                        // Find all language directories
+                        const languageDirs = fs.readdirSync(localesDir, { withFileTypes: true })
 
-			const languages = languageDirs
-				.filter((dirent: { isDirectory: () => boolean }) => dirent.isDirectory())
-				.map((dirent: { name: string }) => dirent.name)
+                        const languages = languageDirs
+                                .filter((dirent: fs.Dirent) => dirent.isDirectory())
+                                .map((dirent: fs.Dirent) => dirent.name)
 
-			// Process each language
-			languages.forEach((language: string) => {
-				const langPath = path.join(localesDir, language)
+                        // Process each language
+                        languages.forEach((language: string) => {
+                                const langPath = path.join(localesDir, language)
 
 				// Find all JSON files in the language directory
-				const files = fs.readdirSync(langPath).filter((file: string) => file.endsWith(".json"))
+                                const files = fs.readdirSync(langPath).filter((file: string) => file.endsWith(".json"))
 
 				// Initialize language in translations object
 				if (!translations[language]) {
@@ -47,9 +35,9 @@ if (!isTestEnv) {
 				}
 
 				// Process each namespace file
-				files.forEach((file: string) => {
-					const namespace = path.basename(file, ".json")
-					const filePath = path.join(langPath, file)
+                                files.forEach((file: string) => {
+                                        const namespace = path.basename(file, ".json")
+                                        const filePath = path.join(langPath, file)
 
 					try {
 						// Read and parse the JSON file
@@ -71,7 +59,7 @@ if (!isTestEnv) {
 }
 
 // Initialize i18next with configuration
-i18next.init({
+void i18next.init({
 	lng: "en",
 	fallbackLng: "en",
 	debug: false,

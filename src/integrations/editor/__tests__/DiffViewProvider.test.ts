@@ -45,8 +45,8 @@ describe("DiffViewProvider", () => {
 
 		diffViewProvider = new DiffViewProvider(mockCwd)
 		// Mock the necessary properties and methods
-		;(diffViewProvider as any).relPath = "test.txt"
-		;(diffViewProvider as any).activeDiffEditor = {
+                ;(diffViewProvider as unknown as { relPath: string }).relPath = "test.txt"
+                ;(diffViewProvider as unknown as { activeDiffEditor: vscode.TextEditor }).activeDiffEditor = {
 			document: {
 				uri: { fsPath: `${mockCwd}/test.txt` },
 				getText: jest.fn(),
@@ -59,13 +59,13 @@ describe("DiffViewProvider", () => {
 			edit: jest.fn().mockResolvedValue(true),
 			revealRange: jest.fn(),
 		}
-		;(diffViewProvider as any).activeLineController = { setActiveLine: jest.fn(), clear: jest.fn() }
-		;(diffViewProvider as any).fadedOverlayController = { updateOverlayAfterLine: jest.fn(), clear: jest.fn() }
+                ;(diffViewProvider as unknown as { activeLineController: { setActiveLine: jest.Mock; clear: jest.Mock } }).activeLineController = { setActiveLine: jest.fn(), clear: jest.fn() }
+                ;(diffViewProvider as unknown as { fadedOverlayController: { updateOverlayAfterLine: jest.Mock; clear: jest.Mock } }).fadedOverlayController = { updateOverlayAfterLine: jest.fn(), clear: jest.fn() }
 	})
 
 	describe("update method", () => {
 		it("should preserve empty last line when original content has one", async () => {
-			;(diffViewProvider as any).originalContent = "Original content\n"
+                        ;(diffViewProvider as unknown as { originalContent: string }).originalContent = "Original content\n"
 			await diffViewProvider.update("New content", true)
 
 			expect(mockWorkspaceEdit.replace).toHaveBeenCalledWith(
@@ -76,7 +76,7 @@ describe("DiffViewProvider", () => {
 		})
 
 		it("should not add extra newline when accumulated content already ends with one", async () => {
-			;(diffViewProvider as any).originalContent = "Original content\n"
+                        ;(diffViewProvider as unknown as { originalContent: string }).originalContent = "Original content\n"
 			await diffViewProvider.update("New content\n", true)
 
 			expect(mockWorkspaceEdit.replace).toHaveBeenCalledWith(
@@ -87,7 +87,7 @@ describe("DiffViewProvider", () => {
 		})
 
 		it("should not add newline when original content does not end with one", async () => {
-			;(diffViewProvider as any).originalContent = "Original content"
+                        ;(diffViewProvider as unknown as { originalContent: string }).originalContent = "Original content"
 			await diffViewProvider.update("New content", true)
 
 			expect(mockWorkspaceEdit.replace).toHaveBeenCalledWith(expect.anything(), expect.anything(), "New content")

@@ -11,11 +11,8 @@ import { GlobalFileNames } from "../shared/globalFileNames"
 import { fileExistsAtPath } from "../utils/fs"
 import { findLastIndex } from "../shared/array"
 import { getApiMetrics } from "../shared/getApiMetrics"
-import { combineApiRequests } from "../shared/combineApiRequests"
-import { combineCommandSequences } from "../shared/combineCommandSequences"
 import { TokenUsage } from "../schemas"
 import type { NeutralMessage, NeutralConversationHistory } from "../shared/neutral-history"; // Import neutral history types
-import { convertToNeutralHistory, convertToAnthropicHistory } from "../api/transform/neutral-anthropic-format"; // Import conversion functions
 
 // TODO: Rename types if necessary
 
@@ -57,11 +54,10 @@ export class TaskStateManager {
 		this.onTokenUsageUpdate = onTokenUsageUpdate
 	}
 
-	private async log(message: string) {
-		// Added async
+	private log(message: string) {
 		// console.log(`[TaskStateManager:${this.taskId}] ${message}`) // Removed direct console log to reduce test noise
 		try {
-			await this.providerRef.deref()?.log(`[TaskStateManager:${this.taskId}] ${message}`) // Added await
+			this.providerRef.deref()?.log(`[TaskStateManager:${this.taskId}] ${message}`)
 		} catch {
 			// NO-OP
 		}
@@ -90,20 +86,19 @@ export class TaskStateManager {
 		const fileExists = await fileExistsAtPath(filePath)
 		if (fileExists) {
 			try {
-				// Read the raw data (which is in the old Anthropic format)
-				const rawHistory = JSON.parse(await fs.readFile(filePath, "utf8")) as unknown;
-				// Convert the raw data to the new Neutral format
-				this.apiConversationHistory = convertToNeutralHistory(rawHistory);
-				await this.log(`Loaded ${this.apiConversationHistory.length} items from API history.`);
+				// Read the raw data (which should now be in Neutral format)
+				const rawHistory = JSON.parse(await fs.readFile(filePath, "utf8")) as NeutralConversationHistory;
+				this.apiConversationHistory = rawHistory;
+				this.log(`Loaded ${this.apiConversationHistory.length} items from API history.`);
 				this.onHistoryUpdate?.(this.apiConversationHistory);
 			} catch (error) {
-				await this.log(`Error loading API conversation history: ${error instanceof Error ? error.message : String(error)}`);
+				this.log(`Error loading API conversation history: ${error instanceof Error ? error.message : String(error)}`);
 				// If loading or conversion fails, initialize with an empty neutral history
 				this.apiConversationHistory = [];
 				this.onHistoryUpdate?.(this.apiConversationHistory);
 			}
 		} else {
-			await this.log("No saved API conversation history found.");
+			this.log("No saved API conversation history found.");
 			// If no file exists, initialize with an empty neutral history
 			this.apiConversationHistory = [];
 			this.onHistoryUpdate?.(this.apiConversationHistory);
@@ -126,12 +121,11 @@ export class TaskStateManager {
 	private async saveApiConversationHistory() {
 		try {
 			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory);
-			// Convert the neutral history to the Anthropic format before saving
-			const historyToSave = convertToAnthropicHistory(this.apiConversationHistory);
-			await fs.writeFile(filePath, JSON.stringify(historyToSave));
-			await this.log(`Saved ${this.apiConversationHistory.length} items to API history.`);
+			// Save the neutral history directly
+			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory));
+			this.log(`Saved ${this.apiConversationHistory.length} items to API history.`);
 		} catch (error) {
-			await this.log(`Failed to save API conversation history: ${error instanceof Error ? error.message : String(error)}`);
+			this.log(`Failed to save API conversation history: ${error instanceof Error ? error.message : String(error)}`);
 			console.error("Failed to save API conversation history:", error);
 		}
 	}
@@ -144,10 +138,10 @@ export class TaskStateManager {
 		if (await fileExistsAtPath(filePath)) {
 			try {
 				this.theaTaskMessages = JSON.parse(await fs.readFile(filePath, "utf8")) as TheaMessage[]
-				await this.log(`Loaded ${this.theaTaskMessages.length} UI messages.`) // Added await
+				this.log(`Loaded ${this.theaTaskMessages.length} UI messages.`) // Added await
 				this.onMessagesUpdate?.(this.theaTaskMessages)
 			} catch (error) {
-				await this.log(`Error loading UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
+				this.log(`Error loading UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
 				this.theaTaskMessages = []
 				this.onMessagesUpdate?.(this.theaTaskMessages)
 			}
@@ -155,7 +149,7 @@ export class TaskStateManager {
 			// Check old location (migration)
 			const oldPath = path.join(await this.ensureTaskDirectoryExists(), "claude_messages.json")
 			if (await fileExistsAtPath(oldPath)) {
-				await this.log("Migrating UI messages from old location.") // Added await
+				this.log("Migrating UI messages from old location.") // Added await
 				try {
 					const data = JSON.parse(await fs.readFile(oldPath, "utf8")) as TheaMessage[]
 					await fs.unlink(oldPath) // remove old file
@@ -163,12 +157,12 @@ export class TaskStateManager {
 					this.onMessagesUpdate?.(this.theaTaskMessages)
 					await this.saveClineMessages() // Save to new location
 				} catch (error) {
-					await this.log(`Error migrating UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
+					this.log(`Error migrating UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
 					this.theaTaskMessages = []
 					this.onMessagesUpdate?.(this.theaTaskMessages)
 				}
 			} else {
-				await this.log("No saved UI messages found.") // Added await
+				this.log("No saved UI messages found.") // Added await
 				this.theaTaskMessages = []
 				this.onMessagesUpdate?.(this.theaTaskMessages)
 			}
@@ -176,22 +170,22 @@ export class TaskStateManager {
 	}
 
 	public async addToClineMessages(message: TheaMessage) {
-		// Renamed type
+		// Add message to array
 		this.theaTaskMessages.push(message)
-		this.onMessagesUpdate?.(this.theaTaskMessages) // Notify TheaTask
-		// TheaTask is responsible for emitting 'message' event and posting state
-		await this.saveClineMessages() // Added await
+		// Notify listeners
+		this.onMessagesUpdate?.(this.theaTaskMessages)
+		// Save to disk
+		await this.saveClineMessages()
 	}
 
 	public async overwriteClineMessages(newMessages: TheaMessage[]) {
-		// Renamed type
+		// Replace entire array
 		this.theaTaskMessages = newMessages
+		// Notify listeners
 		this.onMessagesUpdate?.(this.theaTaskMessages)
-		await this.saveClineMessages() // Added await
+		// Save to disk
+		await this.saveClineMessages()
 	}
-
-	// Note: updateClineMessage is handled differently, involving posting partial updates.
-	// TheaTask will likely retain this method and call saveClineMessages if needed.
 
 	public async saveClineMessages() {
 		// Removed debouncing logic
@@ -199,16 +193,16 @@ export class TaskStateManager {
 			const taskDir = await this.ensureTaskDirectoryExists()
 			const filePath = path.join(taskDir, GlobalFileNames.uiMessages)
 			await fs.writeFile(filePath, JSON.stringify(this.theaTaskMessages))
-			await this.log(`Saved ${this.theaTaskMessages.length} UI messages.`) // Added await
+			this.log(`Saved ${this.theaTaskMessages.length} UI messages.`) // Added await
 
 			// Update history item and wait for it to complete
 			try {
 				await this.updateHistoryItem(taskDir)
 			} catch (err) {
-				await this.log(`Error updating history item: ${err instanceof Error ? err.message : String(err)}`) // Added await
+				this.log(`Error updating history item: ${err instanceof Error ? err.message : String(err)}`) // Added await
 			}
 		} catch (error) {
-			await this.log(`Failed to save UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
+			this.log(`Failed to save UI messages: ${error instanceof Error ? error.message : String(error)}`) // Added await
 			console.error("Failed to save UI messages:", error)
 		}
 	}
@@ -229,7 +223,7 @@ export class TaskStateManager {
 			]
 
 		if (!taskMessage || !lastRelevantMessage) {
-			await this.log("Cannot update history item: Missing task or last relevant message.") // Added await
+			this.log("Cannot update history item: Missing task or last relevant message.") // Added await
 			return
 		}
 
@@ -237,7 +231,7 @@ export class TaskStateManager {
 		try {
 			taskDirSize = await getFolderSize.loose(taskDir)
 		} catch (err) {
-			await this.log(
+			this.log(
 				`Failed to get task directory size (${taskDir}): ${err instanceof Error ? err.message : String(err)}`,
 			) // Added await
 		}
@@ -259,19 +253,16 @@ export class TaskStateManager {
 				totalCost: apiMetrics.totalCost,
 				size: taskDirSize,
 			})
-			await this.log(`Updated history item for task ${this.taskId}.`) // Added await
+			this.log(`Updated history item for task ${this.taskId}.`) // Added await
 		} else {
-			await this.log("Cannot update history item: Provider or history manager not available.") // Added await
+			this.log("Cannot update history item: Provider or history manager not available.") // Added await
 		}
 	}
 
-	// --- Token Usage Calculation ---
+	// --- Token Usage Tracking ---
 
 	public getTokenUsage(): TokenUsage {
-		// Ensure messages are sliced correctly (excluding potential initial system message if applicable)
-		const messagesForMetrics = this.theaTaskMessages.slice(1) // Assuming first message is user task, not system prompt
-		const usage = getApiMetrics(combineApiRequests(combineCommandSequences(messagesForMetrics)))
-		this.onTokenUsageUpdate?.(usage) // Notify TheaTask
-		return usage
+		// Calculate metrics based on current messages
+		return getApiMetrics(this.apiConversationHistory)
 	}
 }

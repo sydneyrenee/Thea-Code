@@ -7,7 +7,7 @@ import * as vscode from "vscode"
 import { Anthropic } from "@anthropic-ai/sdk";
 
 import { GlobalState } from "../../schemas"
-import { NeutralMessage, NeutralConversationHistory } from "../../shared/neutral-history";
+import { NeutralMessage, NeutralConversationHistory, NeutralMessageContent, NeutralTextContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history";
 import { convertToNeutralHistory } from "../../api/transform/neutral-anthropic-format";
 import { TheaTask } from "../TheaTask" // Renamed import
 import { TheaProvider } from "../webview/TheaProvider" // Renamed import and path
@@ -458,7 +458,7 @@ describe("TheaTask", () => {
 
 				// Mock loadContext to return unmodified content.
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				jest.spyOn(theaTask, "loadContext").mockImplementation(async (_userContent: Anthropic.Messages.ContentBlockParam[], _includeFileDetails?: boolean): Promise<[Anthropic.TextBlockParam[], string]> => { return Promise.resolve([[{ type: "text", text: "mocked" } as Anthropic.TextBlockParam], ""]); })
+				jest.spyOn(theaTask, "loadContext").mockImplementation(async (_userContent: NeutralMessageContent, _includeFileDetails?: boolean): Promise<[NeutralMessageContent, string]> => { return Promise.resolve([[{ type: "text", text: "mocked" }], ""]); })
 
 				// Add test message to conversation history.
 				theaTask.taskStateManager.apiConversationHistory = [
@@ -615,12 +615,12 @@ describe("TheaTask", () => {
 				jest.spyOn(theaTaskWithImages, "getEnvironmentDetails").mockResolvedValue("")
 				jest.spyOn(theaTaskWithoutImages, "getEnvironmentDetails").mockResolvedValue("") // Use correct variable
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				jest.spyOn(theaTaskWithImages, "loadContext").mockImplementation(async (_userContent: Anthropic.Messages.ContentBlockParam[], _includeFileDetails?: boolean): Promise<[Anthropic.TextBlockParam[], string]> => {
-					return Promise.resolve([[{ type: "text", text: "mocked" } as Anthropic.TextBlockParam], ""]);
+				jest.spyOn(theaTaskWithImages, "loadContext").mockImplementation(async (_userContent: NeutralMessageContent, _includeFileDetails?: boolean): Promise<[NeutralMessageContent, string]> => {
+					return Promise.resolve([[{ type: "text", text: "mocked" }], ""]);
 				})
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				jest.spyOn(theaTaskWithoutImages, "loadContext").mockImplementation(async (_userContent: Anthropic.Messages.ContentBlockParam[], _includeFileDetails?: boolean): Promise<[Anthropic.TextBlockParam[], string]> => {
-					return Promise.resolve([[{ type: "text", text: "mocked" } as Anthropic.TextBlockParam], ""]);
+				jest.spyOn(theaTaskWithoutImages, "loadContext").mockImplementation(async (_userContent: NeutralMessageContent, _includeFileDetails?: boolean): Promise<[NeutralMessageContent, string]> => {
+					return Promise.resolve([[{ type: "text", text: "mocked" }], ""]);
 				})
 
 				// Mock token counting to avoid Anthropic API calls
@@ -674,9 +674,10 @@ describe("TheaTask", () => {
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				jest.spyOn(theaTaskWithoutImages.taskStateManager as any, "log").mockImplementation(async () => {})
 
-				// Mock saveClineMessages and saveApiConversationHistory to be no-ops
-				jest.spyOn(theaTaskWithImages.taskStateManager, "saveClineMessages").mockImplementation(async () => {})
-				jest.spyOn(theaTaskWithoutImages.taskStateManager, "saveClineMessages").mockImplementation(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				jest.spyOn(theaTaskWithImages.taskStateManager as any, "saveClineMessages").mockImplementation( async () => {} )
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				jest.spyOn(theaTaskWithoutImages.taskStateManager as any, "saveClineMessages").mockImplementation(
 					async () => {},
 				)
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -684,7 +685,7 @@ describe("TheaTask", () => {
 					async () => {},
 				)
 				jest.spyOn(
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					theaTaskWithoutImages.taskStateManager as any,
 					"saveApiConversationHistory",
 				).mockImplementation(async () => {})
@@ -1005,7 +1006,7 @@ describe("TheaTask", () => {
 					const mockParseMentions = jest.fn().mockImplementation((text) => `processed: ${text}`)
 					jest.spyOn({ parseMentions: parseMentionsActual }, "parseMentions").mockImplementation(mockParseMentions)
 
-					const userContent = [
+					const userContent: NeutralMessageContent = [
 						{
 							type: "text",
 							text: "Regular text with @/some/path",
@@ -1017,33 +1018,35 @@ describe("TheaTask", () => {
 						{
 							type: "tool_result",
 							tool_use_id: "test-id",
+status: "success",
 							content: [
 								{
 									type: "text",
 									text: "<feedback>Check @/some/path</feedback>",
-								},
+								} as NeutralTextContentBlock,
 							],
-						} as Anthropic.ToolResultBlockParam,
+						} as NeutralToolResultContentBlock,
 						{
 							type: "tool_result",
 							tool_use_id: "test-id-2",
+							status: "success",
 							content: [
 								{
 									type: "text",
 									text: "Regular tool result with @/path",
-								},
+								} as NeutralTextContentBlock,
 							],
-						} as Anthropic.ToolResultBlockParam,
+						} as NeutralToolResultContentBlock,
 					]
 
 					// Process the content
 					const [processedContent] = await theaTask["loadContext"](userContent)
 
 					// Regular text should not be processed
-					expect((processedContent[0] as Anthropic.TextBlockParam).text).toBe("Regular text with @/some/path")
+					expect((processedContent[0] as NeutralTextContentBlock).text).toBe("Regular text with @/some/path")
 
 					// Text within task tags should be processed
-					expect((processedContent[1] as Anthropic.TextBlockParam).text).toContain("processed:")
+					expect((processedContent[1] as NeutralTextContentBlock).text).toContain("processed:")
 					expect(mockParseMentions).toHaveBeenCalledWith(
 						"<task>Text with @/some/path in task tags</task>",
 						expect.any(String),
@@ -1052,9 +1055,9 @@ describe("TheaTask", () => {
 					)
 
 					// Feedback tag content should be processed
-					const toolResult1 = processedContent[2] as Anthropic.ToolResultBlockParam
+					const toolResult1 = processedContent[2] as NeutralToolResultContentBlock
 					const content1 = Array.isArray(toolResult1.content) ? toolResult1.content[0] : toolResult1.content
-					expect((content1 as Anthropic.TextBlockParam).text).toContain("processed:")
+					expect((content1 as NeutralTextContentBlock).text).toContain("processed:")
 					expect(mockParseMentions).toHaveBeenCalledWith(
 						"<feedback>Check @/some/path</feedback>",
 						expect.any(String),
@@ -1063,9 +1066,9 @@ describe("TheaTask", () => {
 					)
 
 					// Regular tool result should not be processed
-					const toolResult2 = processedContent[3] as Anthropic.ToolResultBlockParam
+					const toolResult2 = processedContent[3] as NeutralToolResultContentBlock
 					const content2 = Array.isArray(toolResult2.content) ? toolResult2.content[0] : toolResult2.content
-					expect((content2 as Anthropic.TextBlockParam).text).toBe("Regular tool result with @/path")
+					expect((content2 as NeutralTextContentBlock).text).toBe("Regular tool result with @/path")
 
 					await theaTask.abortTask(true)
 					await task.catch(() => {})

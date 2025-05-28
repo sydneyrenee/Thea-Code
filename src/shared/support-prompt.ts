@@ -2,7 +2,7 @@
 import * as vscode from "vscode" // Import vscode for Diagnostic type
 
 // Support prompts
-type PromptParams = {
+export type PromptParams = {
 	userInput?: string;
 	filePath?: string;
 	startLine?: string;

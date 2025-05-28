@@ -4,7 +4,6 @@ import os from "os"
 import crypto from "crypto"
 import EventEmitter from "events"
 
-import { Anthropic } from "@anthropic-ai/sdk"
 import cloneDeep from "clone-deep"
 import delay from "delay"
 import pWaitFor from "p-wait-for"
@@ -75,56 +74,47 @@ import { TaskCheckpointManager } from "./TaskCheckpointManager" // Import the ne
 import { TaskStateManager } from "./TaskStateManager" // Import the new state manager
 import { TaskWebviewCommunicator } from "./TaskWebviewCommunicator" // Import the new communicator
 
-// Helper function to convert Anthropic content to NeutralMessageContent
-function anthropicContentToNeutralContent(
-	anthropicContent: string | (Anthropic.ImageBlockParam | Anthropic.TextBlockParam)[] | undefined
-): Array<NeutralTextContentBlock | NeutralImageContentBlock> {
-	if (typeof anthropicContent === 'string') {
-		return [{ type: 'text', text: anthropicContent }];
-	}
-	if (Array.isArray(anthropicContent)) {
-		return anthropicContent.map(block => {
-			if (block.type === 'text') {
-				return { type: 'text', text: block.text };
-			} else if (block.type === 'image') {
-				// Assuming Anthropic.ImageBlockParam only has base64 source as per current SDK types
-				if (block.source.type === 'base64') {
-					return {
-						type: 'image',
-						source: {
-							type: 'base64',
-							media_type: block.source.media_type,
-							data: block.source.data,
-						},
-					} as NeutralImageContentBlock; // Cast to ensure type correctness
-				}
-			}
-			return null; // Or handle other types if they exist
-		}).filter(Boolean) as Array<NeutralTextContentBlock | NeutralImageContentBlock>;
-	}
-	return [];
+interface TheaMessageMetricsPayload {
+    tokensIn?: number;
+    tokensOut?: number;
+    cacheWrites?: number;
+    cacheReads?: number;
+    cost?: number;
 }
 
-// Helper function to convert Anthropic.ToolResultBlockParam to NeutralToolResultContentBlock
-function anthropicToolResultToNeutral(
-	anthropicBlock: Anthropic.ToolResultBlockParam
-): NeutralToolResultContentBlock {
-	const neutralContent = anthropicContentToNeutralContent(anthropicBlock.content);
-	const result: NeutralToolResultContentBlock = {
-		type: 'tool_result',
-		tool_use_id: anthropicBlock.tool_use_id,
-		content: neutralContent,
-		status: anthropicBlock.is_error ? 'error' : 'success',
-	};
-	if (anthropicBlock.is_error) {
-		// Attempt to extract error message if content is simple text
-		if (neutralContent.length === 1 && neutralContent[0].type === 'text') {
-			result.error = { message: neutralContent[0].text };
-		} else if (typeof anthropicBlock.content === 'string') { // Fallback if original content was string
-			result.error = { message: anthropicBlock.content };
-		}
-	}
-	return result;
+function convertTheaMessagesToNeutralForMetrics(theaMessages: TheaMessage[]): NeutralConversationHistory {
+    const neutralHistory: NeutralConversationHistory = [];
+    for (const tm of theaMessages) {
+        // We are interested in 'api_req_started' messages as they historically contained metrics in tm.text
+        if (tm.type === "say" && tm.say === "api_req_started" && tm.text) {
+            try {
+                const metricsPayload = JSON.parse(tm.text) as TheaMessageMetricsPayload;
+                // Ensure metricsPayload is an object and not null before accessing properties
+                if (metricsPayload && typeof metricsPayload === 'object') {
+                    neutralHistory.push({
+                        role: 'assistant', // Assigning a role; 'assistant' or 'system' could be context-dependent
+                        content: '',    // Content is not the primary concern for this metrics conversion
+                        ts: tm.ts,      // Preserve timestamp
+                        metadata: {
+                            apiMetrics: { // Store extracted metrics here
+                                tokensIn: typeof metricsPayload.tokensIn === 'number' ? metricsPayload.tokensIn : undefined,
+                                tokensOut: typeof metricsPayload.tokensOut === 'number' ? metricsPayload.tokensOut : undefined,
+                                cacheWrites: typeof metricsPayload.cacheWrites === 'number' ? metricsPayload.cacheWrites : undefined,
+                                cacheReads: typeof metricsPayload.cacheReads === 'number' ? metricsPayload.cacheReads : undefined,
+                                cost: typeof metricsPayload.cost === 'number' ? metricsPayload.cost : undefined,
+                            }
+                        }
+                    });
+                }
+            } catch (e) {
+                // Log parsing errors, but continue processing other messages
+                console.error(`[convertTheaMessagesToNeutralForMetrics] Error parsing metrics from TheaMessage text: ${tm.text}, Error: ${e}`);
+            }
+        }
+        // Other TheaMessage types are currently ignored by this specific conversion utility,
+        // as it's focused on extracting metrics for getApiMetrics.
+    }
+    return neutralHistory;
 }
 
 export type ToolResponse = string | NeutralMessageContent
@@ -555,14 +545,13 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					const toolUseBlocks = content.filter(
 						(block): block is NeutralToolUseContentBlock => block.type === "tool_use"
 					);
-					const toolResponses: NeutralToolResultContentBlock[] = toolUseBlocks.map((block: NeutralToolUseContentBlock) =>
-						anthropicToolResultToNeutral({
-							type: "tool_result",
-							tool_use_id: block.id,
-							content: `Tool use for ${block.name} was interrupted. Please try again.`,
-							is_error: true,
-						})
-					);
+					const toolResponses: NeutralToolResultContentBlock[] = toolUseBlocks.map((block: NeutralToolUseContentBlock) => ({
+						type: 'tool_result',
+						tool_use_id: block.id,
+						content: [{ type: 'text', text: `Tool use for ${block.name} was interrupted. Please try again.` }],
+						status: 'error', // Using the 'status' field from NeutralToolResultContentBlock
+						error: { message: `Tool use for ${block.name} was interrupted. Please try again.` } // Optional error details
+					} as NeutralToolResultContentBlock));
 					modifiedApiConversationHistory = [...existingApiConversationHistory]; // no changes
 					modifiedOldUserContent = [...toolResponses];
 				} else {
@@ -594,14 +583,13 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 							.filter(
 								(toolUse) => !existingToolResults.some((result) => result.tool_use_id === toolUse.id),
 							)
-							.map((toolUse: NeutralToolUseContentBlock) =>
-								anthropicToolResultToNeutral({
-									type: "tool_result",
-									tool_use_id: toolUse.id,
-									content: `Tool use for ${toolUse.name} was interrupted. Please try again.`,
-									is_error: true,
-								})
-							);
+							.map((toolUse: NeutralToolUseContentBlock) => ({
+								type: 'tool_result',
+								tool_use_id: toolUse.id,
+								content: [{ type: 'text', text: `Tool use for ${toolUse.name} was interrupted. Please try again.` }],
+								status: 'error',
+								error: { message: `Tool use for ${toolUse.name} was interrupted. Please try again.` }
+							} as NeutralToolResultContentBlock));
 
 						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1); // removes the last user message
 						modifiedOldUserContent = [...existingUserContent, ...missingToolResponses];
@@ -1537,31 +1525,6 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		})
 	}
 
-	// Helper to convert Anthropic messages to Neutral format for Ollama/OpenAI-compatible APIs
-	private anthropicToNeutral(anthropicMessages: Anthropic.Messages.MessageParam[]): NeutralMessage[] {
-		const neutralMessages: NeutralMessage[] = []
-		for (const msg of anthropicMessages) {
-			if (msg.role === "user" || msg.role === "assistant") {
-				let combinedText = ""
-				if (typeof msg.content === "string") {
-					combinedText = msg.content
-				} else if (Array.isArray(msg.content)) {
-					// Combine text blocks, ignore images/tool results/uses for neutral format
-					combinedText = msg.content
-						.filter((block): block is Anthropic.TextBlockParam => block.type === "text")
-						.map((block) => block.text)
-						.join("\n\n") // Join multiple text blocks if they exist
-				}
-				// Only add if there's actual text content
-				if (combinedText.trim()) {
-					neutralMessages.push({ role: msg.role, content: combinedText })
-				}
-			}
-			// Ignore system messages here, they are handled separately
-			// Ignore tool messages for this simplified neutral format
-		}
-		return neutralMessages
-	}
 
 	// Renamed from recursivelyMakeClineRequests
 	async recursivelyMakeTheaRequests(userContent: UserContent, includeFileDetails: boolean = false): Promise<boolean> {
@@ -1583,7 +1546,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						{
 							type: "text",
 							text: formatResponse.tooManyMistakes(text),
-						} as Anthropic.Messages.TextBlockParam,
+						} as NeutralTextContentBlock,
 						...formatResponse.imageBlocks(images),
 					],
 				)
@@ -1603,9 +1566,9 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		const provider = this.providerRef.deref()
 
 		if (this.isPaused && provider) {
-			await provider.log(`[subtasks] paused ${this.taskId}.${this.instanceId}`)
+			provider.log(`[subtasks] paused ${this.taskId}.${this.instanceId}`)
 			await this.waitForResume()
-			await provider.log(`[subtasks] resumed ${this.taskId}.${this.instanceId}`)
+			provider.log(`[subtasks] resumed ${this.taskId}.${this.instanceId}`)
 			const currentMode = (await provider.theaStateManagerInstance.getState())?.mode ?? defaultModeSlug // Renamed getter
 
 			if (currentMode !== this.pausedModeSlug) {
@@ -1615,7 +1578,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				// Delay to allow mode change to take effect before next tool is executed.
 				await delay(500)
 
-				await provider.log(
+				provider.log(
 					`[subtasks] task ${this.taskId}.${this.instanceId} has switched back to '${this.pausedModeSlug}' from '${currentMode}'`,
 				)
 			}
@@ -2140,7 +2103,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		details += `\n\n# Current Time\n${formatter.format(now)} (${timeZone}, UTC${timeZoneOffsetStr})`
 
 		// Add context tokens information
-		const { contextTokens, totalCost } = getApiMetrics(this.taskStateManager.theaTaskMessages)
+		const { contextTokens, totalCost } = getApiMetrics(this.taskStateManager.apiConversationHistory)
 		const modelInfo = this.api.getModel().info
 		const contextWindow = modelInfo.contextWindow
 		const contextPercentage =
@@ -2241,7 +2204,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 
 			const deletedMessages = this.taskStateManager.theaTaskMessages.slice(index + 1)
 			const { totalTokensIn, totalTokensOut, totalCacheWrites, totalCacheReads, totalCost } = getApiMetrics(
-				combineApiRequests(combineCommandSequences(deletedMessages)),
+				convertTheaMessagesToNeutralForMetrics(combineApiRequests(combineCommandSequences(deletedMessages))),
 			)
 
 			await this.taskStateManager.overwriteClineMessages(

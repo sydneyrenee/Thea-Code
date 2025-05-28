@@ -1,20 +1,17 @@
 import os from "os"
-import * as path from "path"
-import fs from "fs/promises"
 import EventEmitter from "events"
 
-import type { Anthropic } from "@anthropic-ai/sdk"
 import delay from "delay"
 import axios from "axios"
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { GlobalState, ProviderSettings, TheaCodeSettings, TokenUsage } from "../../schemas" // Added TokenUsage import
+import { GlobalState, TheaCodeSettings, TokenUsage } from "../../schemas" // Added TokenUsage import
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import { ApiConfiguration, ModelInfo } from "../../shared/api"
 import { findLast } from "../../shared/array"
-import { supportPrompt } from "../../shared/support-prompt"
+import { supportPrompt, type PromptParams } from "../../shared/support-prompt"
 import { HistoryItem } from "../../shared/HistoryItem"
 import { ExtensionMessage, TheaMessage } from "../../shared/ExtensionMessage" // Added TheaMessage import
 import { Mode, PromptComponent, defaultModeSlug } from "../../shared/modes"
@@ -178,10 +175,10 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 
 		this.workspaceTracker?.dispose()
 		this.workspaceTracker = undefined
-		this.mcpHub?.dispose()
+		void this.mcpHub?.dispose()
 		this.mcpHub = undefined
 		this.customModesManager?.dispose()
-		this.theaMcpManager?.dispose() // Renamed property
+		void this.theaMcpManager?.dispose() // Renamed property
 		this.outputChannel.appendLine("Disposed all disposables")
 		TheaProvider.activeInstances.delete(this) // TODO: Rename
 
@@ -232,7 +229,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	public static async handleCodeAction(
 		command: string,
 		promptType: keyof typeof ACTION_NAMES,
-		params: Record<string, string | any[]>,
+		params: Partial<PromptParams>,
 	): Promise<void> {
 		const visibleProvider = await TheaProvider.getInstance() // TODO: Rename
 
@@ -266,7 +263,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	public static async handleTerminalAction(
 		command: string,
 		promptType: "TERMINAL_ADD_TO_CONTEXT" | "TERMINAL_FIX" | "TERMINAL_EXPLAIN",
-		params: Record<string, string | any[]>,
+		params: Partial<PromptParams>,
 	): Promise<void> {
 		const visibleProvider = await TheaProvider.getInstance() // TODO: Rename
 		if (!visibleProvider) {
@@ -321,20 +318,20 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		this.messageHandler = webviewMessageHandler
 
 		// Initialize out-of-scope variables that need to recieve persistent global state values
-		this.theaStateManager.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
+		void this.theaStateManager.getState().then(({ soundEnabled, terminalShellIntegrationTimeout }) => {
 			// Renamed property
 			setSoundEnabled(soundEnabled ?? false)
 			Terminal.setShellIntegrationTimeout(terminalShellIntegrationTimeout ?? TERMINAL_SHELL_INTEGRATION_TIMEOUT)
 		})
 
 		// Initialize tts enabled state
-		this.theaStateManager.getState().then(({ ttsEnabled }) => {
+		void this.theaStateManager.getState().then(({ ttsEnabled }) => {
 			// Renamed property
 			setTtsEnabled(ttsEnabled ?? false)
 		})
 
 		// Initialize tts speed state
-		this.theaStateManager.getState().then(({ ttsSpeed }) => {
+		void this.theaStateManager.getState().then(({ ttsSpeed }) => {
 			// Renamed property
 			setTtsSpeed(ttsSpeed ?? 1)
 		})
@@ -365,7 +362,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			webviewView.onDidChangeViewState(
 				() => {
 					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+						void this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 					}
 				},
 				null,
@@ -376,7 +373,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			webviewView.onDidChangeVisibility(
 				() => {
 					if (this.view?.visible) {
-						this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
+						void this.postMessageToWebview({ type: "action", action: "didBecomeVisible" })
 					}
 				},
 				null,
@@ -461,8 +458,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			throw new Error(t("common:errors.retrieve_current_mode"))
 		}
 		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
-		await this.log(
-			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
+		this.log(
+			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated` // Use renamed variable
 		)
 		return theaTask // Return renamed variable
 	}
@@ -504,12 +501,12 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 					workspaceDir,
 				})
 
-				await this.log(
-					`[TheaProvider#initWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`, // TODO: Rename
+				this.log(
+					`[TheaProvider#initWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}` // TODO: Rename
 				)
 			} catch (error) {
 				checkpoints.enableCheckpoints = false
-				await this.log(`[TheaProvider#initWithHistoryItem] Error getting task storage: ${error.message}`) // TODO: Rename
+				this.log(`[TheaProvider#initWithHistoryItem] Error getting task storage: ${error instanceof Error ? error.message : String(error)}`) // TODO: Rename
 			}
 		}
 
@@ -534,8 +531,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			throw new Error(t("common:errors.retrieve_current_mode"))
 		}
 		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
-		await this.log(
-			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
+		this.log(
+			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated` // Use renamed variable
 		)
 		return theaTask // Return renamed variable
 	}
@@ -551,7 +548,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		// Check if local dev server is running.
 		try {
 			await axios.get(`http://${localServerUrl}`)
-		} catch (error) {
+		} catch {
 			vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
 
 			return this.getHtmlContent(webview)
@@ -605,10 +602,10 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 					<meta charset="utf-8">
 					<meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
 					<meta http-equiv="Content-Security-Policy" content="${csp.join("; ")}">
-					<link rel="stylesheet" type="text/css" href="${stylesUri}">
-					<link href="${codiconsUri}" rel="stylesheet" />
+					<link rel="stylesheet" type="text/css" href="${stylesUri.toString()}">
+					<link href="${codiconsUri.toString()}" rel="stylesheet" />
 					<script nonce="${nonce}">
-						window.IMAGES_BASE_URI = "${imagesUri}"
+						window.IMAGES_BASE_URI = "${imagesUri.toString()}"
 					</script>
 					<title>${EXTENSION_DISPLAY_NAME}</title> 
 				</head>
@@ -690,17 +687,17 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
             <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
             <meta name="theme-color" content="#000000">
             <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; img-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' https://us-assets.i.posthog.com; connect-src https://openrouter.ai https://us.i.posthog.com https://us-assets.i.posthog.com;">
-            <link rel="stylesheet" type="text/css" href="${stylesUri}">
-			<link href="${codiconsUri}" rel="stylesheet" />
+            <link rel="stylesheet" type="text/css" href="${stylesUri.toString()}">
+			<link href="${codiconsUri.toString()}" rel="stylesheet" />
 			<script nonce="${nonce}">
-				window.IMAGES_BASE_URI = "${imagesUri}"
+				window.IMAGES_BASE_URI = "${imagesUri.toString()}"
 			</script>
             <title>${EXTENSION_DISPLAY_NAME}</title> 
           </head>
           <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
             <div id="root"></div>
-            <script nonce="${nonce}" type="module" src="${scriptUri}"></script>
+            <script nonce="${nonce}" type="module" src="${scriptUri.toString()}"></script>
           </body>
         </html>
       `
@@ -830,8 +827,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			// Pass provider method - Type 'Promise<TheaTask>' is assignable to 'Promise<void>'? Let's assume type compatibility for now or history manager adjusts.
 			(historyItem) =>
 				this.initWithHistoryItem(historyItem as HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }),
-			// Pass provider method - Ensure type compatibility for 'action'
-			(action: string) => this.postMessageToWebview({ type: "action", action: action as any }), // Use type assertion as temporary fix if needed
+			// Pass provider method with proper typing
+			(action: string) => this.postMessageToWebview({ type: "action", action: action as ExtensionMessage['action'] }), // Fixed type safety issue
 		)
 		// Note: postStateToWebview might be needed here or is handled by initWithHistoryItem implicitly
 	}
@@ -924,8 +921,10 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		const allowedCommands = vscode.workspace.getConfiguration(CONFIG.SECTION).get<string[]>("allowedCommands") || []
 		const cwd = this.cwd
 
+		// Safely access packageJSON version with proper type checking
+		const packageJSON = this.context.extension?.packageJSON as { version?: string } | undefined;
 		return {
-			version: this.context.extension?.packageJSON?.version ?? "",
+			version: packageJSON?.version ?? "",
 			osInfo: os.platform() === "win32" ? "win32" : "unix",
 			apiConfiguration,
 			customInstructions,
@@ -1044,8 +1043,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 
 	// logging
 
-	public async log(message: string) {
-		// Added async
+	public log(message: string) {
 		this.outputChannel.appendLine(message)
 		console.log(message)
 	}
@@ -1067,13 +1065,15 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	 * This method is called by the telemetry service to get context information
 	 * like the current mode, API provider, etc.
 	 */
-	public async getTelemetryProperties(): Promise<Record<string, any>> {
+	public async getTelemetryProperties(): Promise<Record<string, string | number | boolean | undefined>> {
 		const { mode, apiConfiguration, language } = await this.theaStateManager.getState() // Use manager
-		const appVersion = this.context.extension?.packageJSON?.version
+		// Safely access packageJSON version with proper type checking
+		const packageJSON = this.context.extension?.packageJSON as { version?: string } | undefined;
+		const appVersion = packageJSON?.version;
 		const vscodeVersion = vscode.version
 		const platform = process.platform
 
-		const properties: Record<string, any> = {
+		const properties: Record<string, string | number | boolean | undefined> = {
 			vscodeVersion,
 			platform,
 		}

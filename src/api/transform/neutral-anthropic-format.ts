@@ -1,5 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk";
-import type { MessageParam } from "@anthropic-ai/sdk/resources/messages"; // Import Anthropic types
 
 import type {
     NeutralConversationHistory,
@@ -11,12 +9,66 @@ import type {
     NeutralToolUseContentBlock,
     NeutralToolResultContentBlock
 } from "../../shared/neutral-history"; // Import neutral history types
+// Local interfaces mirroring Anthropic structures for conversion input
+interface LocalContentBlockBase {
+    type: string; // 'text', 'image', 'tool_use', 'tool_result'
+}
+
+interface LocalTextBlockParam extends LocalContentBlockBase {
+    type: 'text';
+    text: string;
+}
+
+interface LocalImageSourceBase64 {
+    type: 'base64';
+    media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+    data: string;
+}
+
+interface LocalImageSourceUrl { // Anthropic SDK also supports URL sources
+    type: 'url';
+    url: string;
+}
+
+interface LocalImageBlockParam extends LocalContentBlockBase {
+    type: 'image';
+    source: LocalImageSourceBase64 | LocalImageSourceUrl;
+}
+
+interface LocalToolUseBlockParam extends LocalContentBlockBase {
+    type: 'tool_use';
+    id: string;
+    name: string;
+    input: Record<string, unknown>;
+}
+
+// Content for a tool result can be a string or an array of text/image blocks
+type LocalToolResultInputContent = string | Array<LocalTextBlockParam | LocalImageBlockParam>;
+
+interface LocalToolResultBlockParam extends LocalContentBlockBase {
+    type: 'tool_result';
+    tool_use_id: string;
+    content: LocalToolResultInputContent;
+    is_error?: boolean; // Optional, as per Anthropic SDK structure
+}
+
+type LocalMessageContentParam = string | Array<
+    LocalTextBlockParam |
+    LocalImageBlockParam |
+    LocalToolUseBlockParam |
+    LocalToolResultBlockParam
+>;
+
+interface LocalMessageParam {
+    role: 'user' | 'assistant'; // Anthropic SDK roles for MessageParam
+    content: LocalMessageContentParam;
+}
 
 /**
  * Converts a history from the Anthropic format to the Neutral format.
  */
 export function convertToNeutralHistory(
-    anthropicHistory: (MessageParam & { ts?: number })[] // Input type includes optional timestamp
+    anthropicHistory: (LocalMessageParam & { ts?: number })[] // Input type includes optional timestamp
 ): NeutralConversationHistory {
     return anthropicHistory.map(anthropicMessage => {
         const neutralMessage: NeutralMessage = {
@@ -61,7 +113,7 @@ export function convertToNeutralHistory(
                         type: 'tool_use',
                         id: block.id,
                         name: block.name,
-                        input: block.input as Record<string, unknown> // Assuming input is compatible
+                        input: block.input // Assuming input is compatible
                     } as NeutralToolUseContentBlock;
                 } else if (block.type === 'tool_result') {
                     // Convert Anthropic tool result content to Neutral content
@@ -73,14 +125,24 @@ export function convertToNeutralHistory(
                              if (part.type === 'text') {
                                  toolResultContent.push({ type: 'text', text: part.text });
                              } else if (part.type === 'image') {
-                                  toolResultContent.push({
-                                     type: 'image_base64',
-                                     source: {
-                                         type: 'base64',
-                                         media_type: part.source.media_type as string,
-                                         data: part.source.data as string
-                                     }
-                                  });
+                                  if (part.source.type === 'base64') {
+                                      toolResultContent.push({
+                                          type: 'image_base64',
+                                          source: {
+                                              type: 'base64',
+                                              media_type: part.source.media_type,
+                                              data: part.source.data
+                                          }
+                                      });
+                                  } else if (part.source.type === 'url') {
+                                      toolResultContent.push({
+                                          type: 'image_url',
+                                          source: {
+                                              type: 'image_url',
+                                              url: part.source.url
+                                          }
+                                      });
+                                  }
                              }
                          });
                     }
@@ -113,8 +175,8 @@ export function convertToNeutralHistory(
  */
 export function convertToAnthropicContentBlocks(
     neutralContent: NeutralMessageContent
-): Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam | Anthropic.ToolUseBlockParam | Anthropic.ToolResultBlockParam> {
-    const anthropicBlocks: Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam | Anthropic.ToolUseBlockParam | Anthropic.ToolResultBlockParam> = [];
+): Array<LocalTextBlockParam | LocalImageBlockParam | LocalToolUseBlockParam | LocalToolResultBlockParam> {
+    const anthropicBlocks: Array<LocalTextBlockParam | LocalImageBlockParam | LocalToolUseBlockParam | LocalToolResultBlockParam> = [];
 
     if (typeof neutralContent === 'string') {
         // If content is a string, convert to a single text block
@@ -153,7 +215,7 @@ export function convertToAnthropicContentBlocks(
                 });
             } else if (block.type === 'tool_result') {
                 // Convert Neutral tool result content to Anthropic content
-                const toolResultContent: Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam> = [];
+                const toolResultContent: Array<LocalTextBlockParam | LocalImageBlockParam> = [];
                  if (Array.isArray(block.content)) { // Neutral tool_result content is always an array
                      block.content.forEach(part => {
                          if (part.type === 'text') {
@@ -206,10 +268,10 @@ export function convertToAnthropicContentBlocks(
  */
 export function convertToAnthropicHistory(
     neutralHistory: NeutralConversationHistory
-): (MessageParam & { ts?: number })[] { // Return type includes optional timestamp
+): (LocalMessageParam & { ts?: number })[] { // Return type includes optional timestamp
     return neutralHistory.map(neutralMessage => {
-        const anthropicMessage: MessageParam & { ts?: number } = {
-            role: neutralMessage.role as MessageParam['role'],
+        const anthropicMessage: LocalMessageParam & { ts?: number } = {
+            role: neutralMessage.role as LocalMessageParam['role'],
             content: [], // Initialize content as an array of blocks
             ts: neutralMessage.ts,
             // Anthropic MessageParam does not have a metadata property, so we omit it

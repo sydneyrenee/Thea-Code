@@ -1,26 +1,19 @@
 import { TokenUsage } from "../schemas"
 
-import { TheaMessage } from "./ExtensionMessage" // Renamed import
+import type { NeutralConversationHistory, NeutralMessage } from "./neutral-history"; // Import neutral types
 
 /**
- * Calculates API metrics from an array of TheaMessages. // Renamed type
+ * Calculates API metrics from a NeutralConversationHistory.
  *
- * This function processes 'api_req_started' messages that have been combined with their
- * corresponding 'api_req_finished' messages by the combineApiRequests function.
- * It extracts and sums up the tokensIn, tokensOut, cacheWrites, cacheReads, and cost from these messages.
+ * This function processes NeutralMessages, looking for API metrics stored
+ * in their metadata (under `metadata.apiMetrics`).
+ * It sums up tokensIn, tokensOut, cacheWrites, cacheReads, and cost.
+ * Context tokens are calculated from the last message found containing API metrics.
  *
- * @param messages - An array of TheaMessage objects to process.
- * @returns An ApiMetrics object containing totalTokensIn, totalTokensOut, totalCacheWrites, totalCacheReads, totalCost, and contextTokens.
- *
- * @example
- * const messages = [
- *   { type: "say", say: "api_req_started", text: '{"request":"GET /api/data","tokensIn":10,"tokensOut":20,"cost":0.005}', ts: 1000 }
- * ];
- * const { totalTokensIn, totalTokensOut, totalCost } = getApiMetrics(messages);
- * // Result: { totalTokensIn: 10, totalTokensOut: 20, totalCost: 0.005 }
+ * @param messages - A NeutralConversationHistory (array of NeutralMessage objects) to process.
+ * @returns A TokenUsage object.
  */
-export function getApiMetrics(messages: TheaMessage[]) {
-	// Renamed type
+export function getApiMetrics(messages: NeutralConversationHistory): TokenUsage {
 	const result: TokenUsage = {
 		totalTokensIn: 0,
 		totalTokensOut: 0,
@@ -28,70 +21,57 @@ export function getApiMetrics(messages: TheaMessage[]) {
 		totalCacheReads: undefined,
 		totalCost: 0,
 		contextTokens: 0,
-	}
+	};
 
-	// Helper function to get total tokens from a message
-	const getTotalTokensFromMessage = (message: TheaMessage): number => {
-		// Renamed type
-		if (!message.text) return 0
-                try {
-                        const { tokensIn, tokensOut, cacheWrites, cacheReads } = JSON.parse(message.text) as {
-                                tokensIn?: number
-                                tokensOut?: number
-                                cacheWrites?: number
-                                cacheReads?: number
-                        }
-			return (tokensIn || 0) + (tokensOut || 0) + (cacheWrites || 0) + (cacheReads || 0)
-		} catch {
-			return 0
-		}
-	}
+	let lastMessageWithMetrics: NeutralMessage | undefined = undefined;
 
-	// Find the last api_req_started message that has any tokens
-	const lastApiReq = [...messages].reverse().find((message) => {
-		if (message.type === "say" && message.say === "api_req_started") {
-			return getTotalTokensFromMessage(message) > 0
-		}
-		return false
-	})
+	for (const message of messages) {
+		// Check if metadata and apiMetrics exist and apiMetrics is an object
+		if (message.metadata && typeof message.metadata.apiMetrics === 'object' && message.metadata.apiMetrics !== null) {
+			const metrics = message.metadata.apiMetrics as {
+				tokensIn?: number;
+				tokensOut?: number;
+				cacheWrites?: number;
+				cacheReads?: number;
+				cost?: number;
+			};
 
-	// Calculate running totals
-	messages.forEach((message) => {
-		if (message.type === "say" && message.say === "api_req_started" && message.text) {
-			try {
-                                const { tokensIn, tokensOut, cacheWrites, cacheReads, cost } = JSON.parse(message.text) as {
-                                        tokensIn?: number
-                                        tokensOut?: number
-                                        cacheWrites?: number
-                                        cacheReads?: number
-                                        cost?: number
-                                }
-
-				if (typeof tokensIn === "number") {
-					result.totalTokensIn += tokensIn
-				}
-				if (typeof tokensOut === "number") {
-					result.totalTokensOut += tokensOut
-				}
-				if (typeof cacheWrites === "number") {
-					result.totalCacheWrites = (result.totalCacheWrites ?? 0) + cacheWrites
-				}
-				if (typeof cacheReads === "number") {
-					result.totalCacheReads = (result.totalCacheReads ?? 0) + cacheReads
-				}
-				if (typeof cost === "number") {
-					result.totalCost += cost
-				}
-
-				// If this is the last api request with tokens, use its total for context size
-				if (message === lastApiReq) {
-					result.contextTokens = getTotalTokensFromMessage(message)
-				}
-			} catch (error) {
-				console.error("Error parsing JSON:", error)
+			if (typeof metrics.tokensIn === "number") {
+				result.totalTokensIn += metrics.tokensIn;
 			}
+			if (typeof metrics.tokensOut === "number") {
+				result.totalTokensOut += metrics.tokensOut;
+			}
+			if (typeof metrics.cacheWrites === "number") {
+				result.totalCacheWrites = (result.totalCacheWrites ?? 0) + metrics.cacheWrites;
+			}
+			if (typeof metrics.cacheReads === "number") {
+				result.totalCacheReads = (result.totalCacheReads ?? 0) + metrics.cacheReads;
+			}
+			if (typeof metrics.cost === "number") {
+				result.totalCost += metrics.cost;
+			}
+			// Update lastMessageWithMetrics if the current message has apiMetrics
+			lastMessageWithMetrics = message;
 		}
-	})
+	}
 
-	return result
+	// Calculate contextTokens from the last message that had API metrics
+	if (lastMessageWithMetrics?.metadata?.apiMetrics) {
+		const metrics = lastMessageWithMetrics.metadata.apiMetrics as {
+			tokensIn?: number;
+			tokensOut?: number;
+			cacheWrites?: number;
+			cacheReads?: number;
+		};
+		let currentContextTokens = 0;
+		if (typeof metrics.tokensIn === "number") currentContextTokens += metrics.tokensIn;
+		if (typeof metrics.tokensOut === "number") currentContextTokens += metrics.tokensOut;
+		// Per original logic, context tokens seemed to include cache R/W as well.
+		if (typeof metrics.cacheWrites === "number") currentContextTokens += metrics.cacheWrites;
+		if (typeof metrics.cacheReads === "number") currentContextTokens += metrics.cacheReads;
+		result.contextTokens = currentContextTokens;
+	}
+
+	return result;
 }

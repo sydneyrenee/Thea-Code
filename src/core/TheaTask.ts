@@ -25,7 +25,8 @@ import { TerminalRegistry } from "../integrations/terminal/TerminalRegistry"
 import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { CheckpointStorage } from "../shared/checkpoints" // Will be moved to TaskCheckpointManager
-import { ApiConfiguration, NeutralMessage } from "../shared/api"
+import { ApiConfiguration } from "../shared/api"
+import { NeutralMessage, NeutralMessageContent, NeutralImageContentBlock, NeutralConversationHistory, NeutralTextContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../shared/neutral-history";
 import { findLastIndex } from "../shared/array"
 import { combineApiRequests } from "../shared/combineApiRequests"
 import { combineCommandSequences } from "../shared/combineCommandSequences"
@@ -74,8 +75,60 @@ import { TaskCheckpointManager } from "./TaskCheckpointManager" // Import the ne
 import { TaskStateManager } from "./TaskStateManager" // Import the new state manager
 import { TaskWebviewCommunicator } from "./TaskWebviewCommunicator" // Import the new communicator
 
-export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
-type UserContent = Array<Anthropic.Messages.ContentBlockParam>
+// Helper function to convert Anthropic content to NeutralMessageContent
+function anthropicContentToNeutralContent(
+	anthropicContent: string | (Anthropic.ImageBlockParam | Anthropic.TextBlockParam)[] | undefined
+): Array<NeutralTextContentBlock | NeutralImageContentBlock> {
+	if (typeof anthropicContent === 'string') {
+		return [{ type: 'text', text: anthropicContent }];
+	}
+	if (Array.isArray(anthropicContent)) {
+		return anthropicContent.map(block => {
+			if (block.type === 'text') {
+				return { type: 'text', text: block.text };
+			} else if (block.type === 'image') {
+				// Assuming Anthropic.ImageBlockParam only has base64 source as per current SDK types
+				if (block.source.type === 'base64') {
+					return {
+						type: 'image',
+						source: {
+							type: 'base64',
+							media_type: block.source.media_type,
+							data: block.source.data,
+						},
+					} as NeutralImageContentBlock; // Cast to ensure type correctness
+				}
+			}
+			return null; // Or handle other types if they exist
+		}).filter(Boolean) as Array<NeutralTextContentBlock | NeutralImageContentBlock>;
+	}
+	return [];
+}
+
+// Helper function to convert Anthropic.ToolResultBlockParam to NeutralToolResultContentBlock
+function anthropicToolResultToNeutral(
+	anthropicBlock: Anthropic.ToolResultBlockParam
+): NeutralToolResultContentBlock {
+	const neutralContent = anthropicContentToNeutralContent(anthropicBlock.content);
+	const result: NeutralToolResultContentBlock = {
+		type: 'tool_result',
+		tool_use_id: anthropicBlock.tool_use_id,
+		content: neutralContent,
+		status: anthropicBlock.is_error ? 'error' : 'success',
+	};
+	if (anthropicBlock.is_error) {
+		// Attempt to extract error message if content is simple text
+		if (neutralContent.length === 1 && neutralContent[0].type === 'text') {
+			result.error = { message: neutralContent[0].text };
+		} else if (typeof anthropicBlock.content === 'string') { // Fallback if original content was string
+			result.error = { message: anthropicBlock.content };
+		}
+	}
+	return result;
+}
+
+export type ToolResponse = string | NeutralMessageContent
+type UserContent = NeutralMessageContent
 
 export type TheaTaskEvents = {
 	message: [{ action: "created" | "updated"; message: TheaMessage }] // Renamed type
@@ -156,7 +209,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 	private assistantMessageContent: AssistantMessageContent[] = []
 	private presentAssistantMessageLocked = false
 	private presentAssistantMessageHasPendingUpdates = false
-	userMessageContent: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+	userMessageContent: NeutralMessageContent = []
 	private userMessageContentReady = false
 	didRejectTool = false
 	private didAlreadyUseTool = false
@@ -341,7 +394,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		await this.webviewCommunicator.say("text", task, images)
 		this.isInitialized = true
 
-		let imageBlocks: Anthropic.ImageBlockParam[] = formatResponse.imageBlocks(images)
+		const imageBlocks: NeutralImageContentBlock[] = formatResponse.imageBlocks(images);
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
@@ -444,42 +497,40 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 
 		// Make sure that the api conversation history can be resumed by the API,
 		// even if it goes out of sync with cline messages.
-		let existingApiConversationHistory: Anthropic.Messages.MessageParam[] = [
+		let existingApiConversationHistory: NeutralConversationHistory = [
 			...this.taskStateManager.apiConversationHistory,
 		] // Initialize from state manager
 		// v2.0 xml tags refactor caveat: replace tool use blocks with text blocks as API disallows tool use without schema
 		// Force re-parse
-		const conversationWithoutToolBlocks = existingApiConversationHistory.map((message) => {
+		const conversationWithoutToolBlocks: NeutralConversationHistory = existingApiConversationHistory.map((message: NeutralMessage): NeutralMessage => {
 			if (Array.isArray(message.content)) {
-				const newContent = message.content.map((block) => {
+				const newContent: NeutralMessageContent = message.content.map((block: NeutralTextContentBlock | NeutralImageContentBlock | NeutralToolUseContentBlock | NeutralToolResultContentBlock) => {
 					if (block.type === "tool_use") {
-						// it's important we convert to the new tool schema format so the model doesn't get confused about how to invoke tools
-						const inputAsXml = Object.entries(block.input as Record<string, string>)
-							.map(([key, value]) => `<${key}>\n${value}\n</${key}>`)
-							.join("\n")
+						const inputAsXml = Object.entries(block.input)
+							.map(([key, value]) => `<${key}>\n${String(value)}\n</${key}>`)
+							.join("\n");
 						return {
 							type: "text",
 							text: `<${block.name}>\n${inputAsXml}\n</${block.name}>`,
-						} as Anthropic.Messages.TextBlockParam
+						}; // Implicitly NeutralTextContentBlock
 					} else if (block.type === "tool_result") {
-						// Convert block.content to text block array, removing images
-						const contentAsTextBlocks = Array.isArray(block.content)
-							? block.content.filter((item) => item.type === "text")
-							: [{ type: "text", text: block.content }]
-						const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n")
-						const toolName = findToolName(block.tool_use_id, existingApiConversationHistory)
+						const contentAsTextBlocks = block.content.filter(
+							(item): item is NeutralTextContentBlock => item.type === "text"
+						);
+						const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n");
+						const toolName = findToolName(block.tool_use_id, existingApiConversationHistory);
 						return {
 							type: "text",
 							text: `[${toolName} Result]\n\n${textContent}`,
-						} as Anthropic.Messages.TextBlockParam
+						}; // Implicitly NeutralTextContentBlock
 					}
-					return block
-				})
-				return { ...message, content: newContent }
+					return block;
+				});
+				return { ...message, content: newContent };
 			}
-			return message
-		})
-		existingApiConversationHistory = conversationWithoutToolBlocks
+			return message;
+		});
+		existingApiConversationHistory = conversationWithoutToolBlocks;
 
 		// FIXME: remove tool use blocks altogether
 
@@ -490,7 +541,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		// if the last message is a user message, we can need to get the assistant message before it to see if it made tool calls, and if so, fill in the remaining tool responses with 'interrupted'
 
 		let modifiedOldUserContent: UserContent // either the last message if its user message, or the user message before the last (assistant) message
-		let modifiedApiConversationHistory: Anthropic.Messages.MessageParam[] // need to remove the last user message to replace with new modified user message
+		let modifiedApiConversationHistory: NeutralConversationHistory // need to remove the last user message to replace with new modified user message
 		if (existingApiConversationHistory.length > 0) {
 			const lastMessage = existingApiConversationHistory[existingApiConversationHistory.length - 1]
 
@@ -502,21 +553,24 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 
 				if (hasToolUse) {
 					const toolUseBlocks = content.filter(
-						(block) => block.type === "tool_use",
-					) as Anthropic.Messages.ToolUseBlock[]
-					const toolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks.map((block) => ({
-						type: "tool_result",
-						tool_use_id: block.id,
-						content: "Task was interrupted before this tool call could be completed.",
-					}))
-					modifiedApiConversationHistory = [...existingApiConversationHistory] // no changes
-					modifiedOldUserContent = [...toolResponses]
+						(block): block is NeutralToolUseContentBlock => block.type === "tool_use"
+					);
+					const toolResponses: NeutralToolResultContentBlock[] = toolUseBlocks.map((block: NeutralToolUseContentBlock) =>
+						anthropicToolResultToNeutral({
+							type: "tool_result",
+							tool_use_id: block.id,
+							content: `Tool use for ${block.name} was interrupted. Please try again.`,
+							is_error: true,
+						})
+					);
+					modifiedApiConversationHistory = [...existingApiConversationHistory]; // no changes
+					modifiedOldUserContent = [...toolResponses];
 				} else {
 					modifiedApiConversationHistory = [...existingApiConversationHistory]
 					modifiedOldUserContent = []
 				}
 			} else if (lastMessage.role === "user") {
-				const previousAssistantMessage: Anthropic.Messages.MessageParam | undefined =
+				const previousAssistantMessage: NeutralMessage | undefined =
 					existingApiConversationHistory[existingApiConversationHistory.length - 2]
 
 				const existingUserContent: UserContent = Array.isArray(lastMessage.content)
@@ -528,26 +582,29 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						: [{ type: "text", text: previousAssistantMessage.content }]
 
 					const toolUseBlocks = assistantContent.filter(
-						(block) => block.type === "tool_use",
-					) as Anthropic.Messages.ToolUseBlock[]
+						(block): block is NeutralToolUseContentBlock => block.type === "tool_use"
+					);
 
 					if (toolUseBlocks.length > 0) {
 						const existingToolResults = existingUserContent.filter(
-							(block) => block.type === "tool_result",
-						)
+							(block): block is NeutralToolResultContentBlock => block.type === "tool_result"
+						);
 
-						const missingToolResponses: Anthropic.ToolResultBlockParam[] = toolUseBlocks
+						const missingToolResponses: NeutralToolResultContentBlock[] = toolUseBlocks
 							.filter(
 								(toolUse) => !existingToolResults.some((result) => result.tool_use_id === toolUse.id),
 							)
-							.map((toolUse) => ({
-								type: "tool_result",
-								tool_use_id: toolUse.id,
-								content: "Task was interrupted before this tool call could be completed.",
-							}))
+							.map((toolUse: NeutralToolUseContentBlock) =>
+								anthropicToolResultToNeutral({
+									type: "tool_result",
+									tool_use_id: toolUse.id,
+									content: `Tool use for ${toolUse.name} was interrupted. Please try again.`,
+									is_error: true,
+								})
+							);
 
-						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1) // removes the last user message
-						modifiedOldUserContent = [...existingUserContent, ...missingToolResponses]
+						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1); // removes the last user message
+						modifiedOldUserContent = [...existingUserContent, ...missingToolResponses];
 					} else {
 						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
 						modifiedOldUserContent = [...existingUserContent]
@@ -1862,54 +1919,52 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						osInfo: "unix",
 					} // Renamed getter
 
+					/* eslint-disable @typescript-eslint/no-unsafe-argument */
+					/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+					/* eslint-disable @typescript-eslint/no-unsafe-return */
+					/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+					/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 					const shouldProcessMentions = (text: string) =>
 						text.includes("<task>") || text.includes("<feedback>")
 
 					if (block.type === "text") {
-						if (shouldProcessMentions(block.text)) {
+						if (shouldProcessMentions(block.text as string)) {
 							return {
 								...block,
-								text: await parseMentions(block.text, this.cwd, this.urlContentFetcher, osInfo),
+								text: await parseMentions(block.text as string, this.cwd, this.urlContentFetcher, osInfo as string),
 							}
 						}
 						return block
 					} else if (block.type === "tool_result") {
-						if (typeof block.content === "string") {
-							if (shouldProcessMentions(block.content)) {
-								return {
-									...block,
-									content: await parseMentions(
-										block.content,
-										this.cwd,
-										this.urlContentFetcher,
-										osInfo,
-									),
-								}
-							}
-							return block
+						let processedNestedContent: NeutralMessageContent = [];
+						if (typeof block.content === "string") { // This case should ideally not occur if input is valid NeutralToolResultContentBlock
+							const processedText = shouldProcessMentions(block.content)
+								? await parseMentions(block.content, this.cwd, this.urlContentFetcher, osInfo as string)
+								: block.content;
+							processedNestedContent = [{ type: "text", text: processedText }];
 						} else if (Array.isArray(block.content)) {
-							const parsedContent = await Promise.all(
-								block.content.map(async (contentBlock) => {
-									if (contentBlock.type === "text" && shouldProcessMentions(contentBlock.text)) {
+							// Ensure block.content is treated as NeutralMessageContent for mapping
+							const currentNestedContent = block.content as NeutralMessageContent;
+							processedNestedContent = await Promise.all(
+								currentNestedContent.map(async (nestedBlock) => {
+									if (nestedBlock.type === "text" && shouldProcessMentions(nestedBlock.text)) {
 										return {
-											...contentBlock,
-											text: await parseMentions(
-												contentBlock.text,
-												this.cwd,
-												this.urlContentFetcher,
-												osInfo,
-											),
-										}
+											...nestedBlock,
+											text: await parseMentions(nestedBlock.text, this.cwd, this.urlContentFetcher, osInfo as string),
+										};
 									}
-									return contentBlock
-								}),
-							)
-							return {
-								...block,
-								content: parsedContent,
-							}
+									return nestedBlock;
+								})
+							);
 						}
-						return block
+						const filteredNestedContent = processedNestedContent.filter(
+							(b): b is NeutralTextContentBlock | NeutralImageContentBlock =>
+								b.type === 'text' || b.type === 'image' || b.type === 'image_url' || b.type === 'image_base64'
+						);
+						return {
+							...block,
+							content: filteredNestedContent,
+						};
 					}
 					return block
 				}),

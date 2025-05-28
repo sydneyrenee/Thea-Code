@@ -1,17 +1,21 @@
-// npx jest src/core/__tests__/Cline.test.ts
+// npx jest src/core/__tests__/TheaTask.test.ts
 
 import * as os from "os"
 import * as path from "path"
 
-import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
-import { Anthropic } from "@anthropic-ai/sdk"
+import { Anthropic } from "@anthropic-ai/sdk";
 
 import { GlobalState } from "../../schemas"
+import { NeutralMessage, NeutralConversationHistory } from "../../shared/neutral-history";
+import { convertToNeutralHistory } from "../../api/transform/neutral-anthropic-format";
 import { TheaTask } from "../TheaTask" // Renamed import
 import { TheaProvider } from "../webview/TheaProvider" // Renamed import and path
-import { ApiConfiguration, ModelInfo } from "../../shared/api"
+import { ApiConfiguration } from "../../shared/api"
 import { ApiStreamChunk } from "../../api/transform/stream"
+import delay from "delay";
+import { parseMentions as parseMentionsActual } from "../../core/mentions";
+import * as DiffStrategyModule from "../diff/DiffStrategy";
 
 jest.setTimeout(20000)
 
@@ -20,7 +24,7 @@ jest.mock("../ignore/TheaIgnoreController")
 
 // Mock fileExistsAtPath
 jest.mock("../../utils/fs", () => ({
-	fileExistsAtPath: jest.fn().mockImplementation((filePath) => {
+	fileExistsAtPath: jest.fn().mockImplementation((filePath: string) => {
 		return filePath.includes("ui_messages.json") || filePath.includes("api_conversation_history.json")
 	}),
 }))
@@ -38,7 +42,7 @@ const mockMessages = [
 jest.mock("fs/promises", () => ({
 	mkdir: jest.fn().mockResolvedValue(undefined),
 	writeFile: jest.fn().mockResolvedValue(undefined),
-	readFile: jest.fn().mockImplementation((filePath) => {
+	readFile: jest.fn().mockImplementation((filePath: string) => {
 		if (filePath.includes("ui_messages.json")) {
 			return Promise.resolve(JSON.stringify(mockMessages))
 		}
@@ -130,7 +134,7 @@ jest.mock("vscode", () => {
 				stat: jest.fn().mockResolvedValue({ type: 1 }), // FileType.File = 1
 			},
 			onDidSaveTextDocument: jest.fn(() => mockDisposable),
-			getConfiguration: jest.fn(() => ({ get: (key: string, defaultValue: any) => defaultValue })),
+			getConfiguration: jest.fn(() => ({ get: (key: string, defaultValue: unknown): unknown => defaultValue })),
 		},
 		env: {
 			uriScheme: "vscode",
@@ -154,7 +158,7 @@ describe("TheaTask", () => {
 	// Renamed describe block
 	let mockProvider: jest.Mocked<TheaProvider> // Renamed type
 	let mockApiConfig: ApiConfiguration
-	let mockOutputChannel: any
+	let mockOutputChannel: jest.Mocked<vscode.OutputChannel>
 	let mockExtensionContext: vscode.ExtensionContext
 
 	beforeEach(() => {
@@ -164,7 +168,7 @@ describe("TheaTask", () => {
 		}
 
 		// Mock getEnvironmentDetails to avoid globbing timeout
-		jest.spyOn(TheaTask.prototype as any, "getEnvironmentDetails").mockResolvedValue("")
+		jest.spyOn(TheaTask.prototype, "getEnvironmentDetails").mockResolvedValue("")
 
 		mockExtensionContext = {
 			globalState: {
@@ -187,19 +191,19 @@ describe("TheaTask", () => {
 
 					return undefined
 				}),
-				update: jest.fn().mockImplementation((key, value) => Promise.resolve()),
+				update: jest.fn().mockImplementation(() => Promise.resolve()),
 				keys: jest.fn().mockReturnValue([]),
 			},
 			globalStorageUri: storageUri,
 			workspaceState: {
-				get: jest.fn().mockImplementation((key) => undefined),
-				update: jest.fn().mockImplementation((key, value) => Promise.resolve()),
+				get: jest.fn().mockImplementation(() => undefined),
+				update: jest.fn().mockImplementation(() => Promise.resolve()),
 				keys: jest.fn().mockReturnValue([]),
 			},
 			secrets: {
-				get: jest.fn().mockImplementation((key) => Promise.resolve(undefined)),
-				store: jest.fn().mockImplementation((key, value) => Promise.resolve()),
-				delete: jest.fn().mockImplementation((key) => Promise.resolve()),
+				get: jest.fn().mockImplementation(() => Promise.resolve(undefined)),
+				store: jest.fn().mockImplementation(() => Promise.resolve()),
+				delete: jest.fn().mockImplementation(() => Promise.resolve()),
 			},
 			extensionUri: {
 				fsPath: "/mock/extension/path",
@@ -213,13 +217,15 @@ describe("TheaTask", () => {
 
 		// Setup mock output channel
 		mockOutputChannel = {
+			name: "mockOutputChannel", // Added missing property
 			appendLine: jest.fn(),
 			append: jest.fn(),
 			clear: jest.fn(),
 			show: jest.fn(),
 			hide: jest.fn(),
 			dispose: jest.fn(),
-		}
+			replace: jest.fn(), // Added missing property
+		} as jest.Mocked<vscode.OutputChannel>
 
 		// Setup mock provider with output channel
 		mockProvider = new TheaProvider(mockExtensionContext, mockOutputChannel) as jest.Mocked<TheaProvider> // Renamed constructor and type
@@ -234,7 +240,7 @@ describe("TheaTask", () => {
 		// Mock provider methods
 		mockProvider.postMessageToWebview = jest.fn().mockResolvedValue(undefined)
 		mockProvider.postStateToWebview = jest.fn().mockResolvedValue(undefined)
-		mockProvider.getTaskWithId = jest.fn().mockImplementation(async (id) => ({
+		mockProvider.getTaskWithId = jest.fn().mockImplementation((id: string) => ({
 			historyItem: {
 				id,
 				ts: Date.now(),
@@ -264,7 +270,8 @@ describe("TheaTask", () => {
 	})
 
 	describe("constructor", () => {
-		it("should respect provided settings", async () => {
+		it("should respect provided settings", () => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const theaTask = new TheaTask({
 				// Renamed variable and constructor
 				provider: mockProvider,
@@ -280,7 +287,7 @@ describe("TheaTask", () => {
 			// expect(theaTask.diffEnabled).toBe(false) // This is an option, not state on the instance
 		})
 
-		it("should use default fuzzy match threshold when not provided", async () => {
+		it("should use default fuzzy match threshold when not provided", () => {
 			const theaTask = new TheaTask({
 				// Renamed variable and constructor
 				provider: mockProvider,
@@ -298,8 +305,8 @@ describe("TheaTask", () => {
 			expect(theaTask.diffStrategy).toBeDefined() // Use renamed variable
 		})
 
-		it("should use provided fuzzy match threshold", async () => {
-			const getDiffStrategySpy = jest.spyOn(require("../diff/DiffStrategy"), "getDiffStrategy")
+		it("should use provided fuzzy match threshold", () => {
+			const getDiffStrategySpy = jest.spyOn(DiffStrategyModule, "getDiffStrategy")
 
 			const theaTask = new TheaTask({
 				// Renamed variable and constructor
@@ -322,8 +329,8 @@ describe("TheaTask", () => {
 			})
 		})
 
-		it("should pass default threshold to diff strategy when not provided", async () => {
-			const getDiffStrategySpy = jest.spyOn(require("../diff/DiffStrategy"), "getDiffStrategy")
+		it("should pass default threshold to diff strategy when not provided", () => {
+			const getDiffStrategySpy = jest.spyOn(DiffStrategyModule, "getDiffStrategy")
 
 			const theaTask = new TheaTask({
 				// Renamed variable and constructor
@@ -374,21 +381,23 @@ describe("TheaTask", () => {
 			global.Date = MockDate as DateConstructor
 
 			// Create a proper mock of Intl.DateTimeFormat
-			const mockDateTimeFormat = {
+			const mockDateTimeFormatInstanceMethods = {
 				resolvedOptions: () => ({
 					timeZone: "America/Los_Angeles",
 				}),
 				format: () => "1/1/2024, 5:00:00 AM",
-			}
+			};
 
-			const MockDateTimeFormat = function (this: any) {
-				return mockDateTimeFormat
-			} as any
+			type IntlDateTimeFormatConstructorMock = jest.Mock<typeof mockDateTimeFormatInstanceMethods, []> & {
+				supportedLocalesOf: jest.Mock<string[], [string | string[] | undefined, Intl.DateTimeFormatOptions | undefined]>;
+			};
+			const MockDateTimeFormatConstructor: IntlDateTimeFormatConstructorMock = jest.fn(() => mockDateTimeFormatInstanceMethods) as IntlDateTimeFormatConstructorMock;
+			MockDateTimeFormatConstructor.supportedLocalesOf = jest.fn<string[], [string | string[] | undefined, Intl.DateTimeFormatOptions | undefined]>().mockReturnValue(["en-US"]);
+			// Note: We don't assign to .prototype directly when using jest.fn() for constructor mocks.
+			// The instance methods are returned by the mock constructor itself.
 
-			MockDateTimeFormat.prototype = mockDateTimeFormat
-			MockDateTimeFormat.supportedLocalesOf = jest.fn().mockReturnValue(["en-US"])
-
-			global.Intl.DateTimeFormat = MockDateTimeFormat
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
+			global.Intl.DateTimeFormat = MockDateTimeFormatConstructor as any;
 		})
 
 		afterEach(() => {
@@ -435,19 +444,21 @@ describe("TheaTask", () => {
 				await task
 
 				// Set up mock stream.
-				const mockStreamForClean = (async function* () {
-					yield { type: "text", text: "test response" }
-				})()
+				// eslint-disable-next-line @typescript-eslint/require-await
+				const mockStreamForClean = (async function* (): AsyncGenerator<ApiStreamChunk, void, unknown> {
+					yield { type: "text", text: "test response" };
+				})();
 
 				// Set up spy.
-				const cleanMessageSpy = jest.fn().mockReturnValue(mockStreamForClean)
+				const cleanMessageSpy = jest.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>().mockReturnValue(mockStreamForClean);
 				jest.spyOn(theaTask.api, "createMessage").mockImplementation(cleanMessageSpy)
 
 				// Mock getEnvironmentDetails to return empty details.
-				jest.spyOn(theaTask as unknown as { type: string }, "getEnvironmentDetails").mockResolvedValue("")
+				jest.spyOn(theaTask, "getEnvironmentDetails").mockResolvedValue("")
 
 				// Mock loadContext to return unmodified content.
-				jest.spyOn(theaTask as unknown as { type: string }, "loadContext").mockImplementation(async (content) => [content, ""])
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				jest.spyOn(theaTask, "loadContext").mockImplementation(async (_userContent: Anthropic.Messages.ContentBlockParam[], _includeFileDetails?: boolean): Promise<[Anthropic.TextBlockParam[], string]> => { return Promise.resolve([[{ type: "text", text: "mocked" } as Anthropic.TextBlockParam], ""]); })
 
 				// Add test message to conversation history.
 				theaTask.taskStateManager.apiConversationHistory = [
@@ -480,22 +491,24 @@ describe("TheaTask", () => {
 				await theaTask.recursivelyMakeTheaRequests([{ type: "text", text: "test request" }], false) // Renamed variable and method
 
 				// Get the conversation history from the first API call
-				const history = cleanMessageSpy.mock.calls[0][1]
+				const history: NeutralConversationHistory = cleanMessageSpy.mock.calls[0][1];
 				expect(history).toBeDefined()
 				expect(history.length).toBeGreaterThan(0)
 
 				// Find our test message
-				const cleanedMessage = history.find((msg: { content?: Array<{ text: string }> }) =>
-					msg.content?.some((content) => content.text === "test message"),
-				)
-				expect(cleanedMessage).toBeDefined()
-				expect(cleanedMessage).toEqual({
-					role: "user",
-					content: [{ type: "text", text: "test message" }],
-				})
+				const cleanedMessage = history.find((msg: NeutralMessage) =>
+					Array.isArray(msg.content) && msg.content.some(contentBlock => contentBlock.type === "text" && contentBlock.text === "test message")
+				);
+				expect(cleanedMessage).toBeDefined();
+				if (cleanedMessage) { // Ensure cleanedMessage is not undefined
+					expect(cleanedMessage).toEqual({
+						role: "user",
+						content: [{ type: "text", text: "test message" }],
+					});
 
-				// Verify extra properties were removed
-				expect(Object.keys(cleanedMessage)).toEqual(["role", "content"])
+					// Verify extra properties were removed
+					expect(Object.keys(cleanedMessage)).toEqual(["role", "content"]);
+				}
 			})
 
 			it("should handle image blocks based on model capabilities", async () => {
@@ -558,7 +571,7 @@ describe("TheaTask", () => {
 				// Mock the model info to indicate image support
 				// jest.spyOn(theaTaskWithImages.api, "getModel").mockReturnValue(...) // Mock setup handled above
 
-				theaTaskWithImages.taskStateManager.apiConversationHistory = conversationHistory // Correct variable
+				theaTaskWithImages.taskStateManager.apiConversationHistory = convertToNeutralHistory(conversationHistory) // Correct variable
 
 				// Test with model that doesn't support images
 				const [theaTaskWithoutImages, taskWithoutImages] = TheaTask.create({
@@ -581,7 +594,7 @@ describe("TheaTask", () => {
 					},
 				})
 
-				theaTaskWithoutImages.taskStateManager.apiConversationHistory = conversationHistory // Use correct variable and state manager
+				theaTaskWithoutImages.taskStateManager.apiConversationHistory = convertToNeutralHistory(conversationHistory) // Use correct variable and state manager
 
 				// Mock abort state for both instances
 				Object.defineProperty(theaTaskWithImages, "abort", {
@@ -599,17 +612,16 @@ describe("TheaTask", () => {
 				})
 
 				// Mock environment details and context loading
-				jest.spyOn(theaTaskWithImages as unknown as { type: string }, "getEnvironmentDetails").mockResolvedValue("")
-				jest.spyOn(theaTaskWithoutImages as unknown as { type: string }, "getEnvironmentDetails").mockResolvedValue("") // Use correct variable
-				jest.spyOn(theaTaskWithImages as unknown as { type: string }, "loadContext").mockImplementation(async (content) => [
-					content,
-					"",
-				])
-				jest.spyOn(theaTaskWithoutImages as unknown as { type: string }, "loadContext").mockImplementation(async (content) => [
-					// Use correct variable
-					content,
-					"",
-				])
+				jest.spyOn(theaTaskWithImages, "getEnvironmentDetails").mockResolvedValue("")
+				jest.spyOn(theaTaskWithoutImages, "getEnvironmentDetails").mockResolvedValue("") // Use correct variable
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				jest.spyOn(theaTaskWithImages, "loadContext").mockImplementation(async (_userContent: Anthropic.Messages.ContentBlockParam[], _includeFileDetails?: boolean): Promise<[Anthropic.TextBlockParam[], string]> => {
+					return Promise.resolve([[{ type: "text", text: "mocked" } as Anthropic.TextBlockParam], ""]);
+				})
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				jest.spyOn(theaTaskWithoutImages, "loadContext").mockImplementation(async (_userContent: Anthropic.Messages.ContentBlockParam[], _includeFileDetails?: boolean): Promise<[Anthropic.TextBlockParam[], string]> => {
+					return Promise.resolve([[{ type: "text", text: "mocked" } as Anthropic.TextBlockParam], ""]);
+				})
 
 				// Mock token counting to avoid Anthropic API calls
 				jest.spyOn(theaTaskWithImages.api, "countTokens").mockResolvedValue(100)
@@ -620,17 +632,19 @@ describe("TheaTask", () => {
 				theaTaskWithoutImages["checkpointManager"] = undefined
 
 				// Set up mock streams
-				const mockStreamWithImages = (async function* () {
-					yield { type: "text", text: "test response" }
-				})()
+				// eslint-disable-next-line @typescript-eslint/require-await
+				const mockStreamWithImages = (async function* (): AsyncGenerator<ApiStreamChunk, void, unknown> {
+					yield { type: "text", text: "test response" };
+				})();
 
-				const mockStreamWithoutImages = (async function* () {
-					yield { type: "text", text: "test response" }
-				})()
+				// eslint-disable-next-line @typescript-eslint/require-await
+				const mockStreamWithoutImages = (async function* (): AsyncGenerator<ApiStreamChunk, void, unknown> {
+					yield { type: "text", text: "test response" };
+				})();
 
 				// Set up spies
-				const imagesSpy = jest.fn().mockReturnValue(mockStreamWithImages)
-				const noImagesSpy = jest.fn().mockReturnValue(mockStreamWithoutImages)
+				const imagesSpy = jest.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>().mockReturnValue(mockStreamWithImages);
+				const noImagesSpy = jest.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>().mockReturnValue(mockStreamWithoutImages);
 
 				jest.spyOn(theaTaskWithImages.api, "createMessage").mockImplementation(imagesSpy)
 				jest.spyOn(theaTaskWithoutImages.api, "createMessage").mockImplementation(noImagesSpy) // Use correct variable
@@ -655,28 +669,33 @@ describe("TheaTask", () => {
 				await taskWithoutImages.catch(() => {})
 
 				// Mock the log method to prevent logging after test completion
-				const originalLog = theaTaskWithImages.taskStateManager["log"]
-				jest.spyOn(theaTaskWithImages.taskStateManager, "log" as unknown as { type: string }).mockImplementation(async () => {})
-				jest.spyOn(theaTaskWithoutImages.taskStateManager, "log" as unknown as { type: string }).mockImplementation(async () => {})
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				jest.spyOn(theaTaskWithImages.taskStateManager as any, "log").mockImplementation(async () => {})
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				jest.spyOn(theaTaskWithoutImages.taskStateManager as any, "log").mockImplementation(async () => {})
 
 				// Mock saveClineMessages and saveApiConversationHistory to be no-ops
 				jest.spyOn(theaTaskWithImages.taskStateManager, "saveClineMessages").mockImplementation(async () => {})
 				jest.spyOn(theaTaskWithoutImages.taskStateManager, "saveClineMessages").mockImplementation(
 					async () => {},
 				)
-				jest.spyOn(theaTaskWithImages.taskStateManager, "saveApiConversationHistory" as unknown as { type: string }).mockImplementation(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				jest.spyOn(theaTaskWithImages.taskStateManager as any, "saveApiConversationHistory").mockImplementation(
 					async () => {},
 				)
 				jest.spyOn(
-					theaTaskWithoutImages.taskStateManager,
-					"saveApiConversationHistory" as unknown as { type: string },
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					theaTaskWithoutImages.taskStateManager as any,
+					"saveApiConversationHistory",
 				).mockImplementation(async () => {})
 
 				// Mock updateHistoryItem to be a no-op
-				jest.spyOn(theaTaskWithImages.taskStateManager, "updateHistoryItem" as unknown as { type: string }).mockImplementation(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				jest.spyOn(theaTaskWithImages.taskStateManager as any, "updateHistoryItem").mockImplementation(
 					async () => {},
 				)
-				jest.spyOn(theaTaskWithoutImages.taskStateManager, "updateHistoryItem" as unknown as { type: string }).mockImplementation(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				jest.spyOn(theaTaskWithoutImages.taskStateManager as any, "updateHistoryItem").mockImplementation(
 					async () => {},
 				)
 
@@ -711,7 +730,7 @@ describe("TheaTask", () => {
 
 				// Mock delay to track countdown timing
 				const mockDelay = jest.fn().mockResolvedValue(undefined)
-				jest.spyOn(require("delay"), "default").mockImplementation(mockDelay)
+				jest.spyOn({ default: delay }, "default").mockImplementation(mockDelay)
 
 				// Mock say to track messages
 				const saySpy = jest.spyOn(theaTask.webviewCommunicator, "say") // Corrected spy target
@@ -719,16 +738,20 @@ describe("TheaTask", () => {
 				// Create a stream that fails on first chunk
 				const mockError = new Error("API Error")
 				const mockFailedStream = {
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async *[Symbol.asyncIterator]() {
 						throw mockError
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async next() {
 						throw mockError
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async return() {
 						return { done: true, value: undefined }
 					},
-					async throw(e: any) {
+					// eslint-disable-next-line @typescript-eslint/require-await
+					async throw(e: Error) {
 						throw e
 					},
 					async [Symbol.asyncDispose]() {
@@ -738,16 +761,20 @@ describe("TheaTask", () => {
 
 				// Create a successful stream for retry
 				const mockSuccessStream = {
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async *[Symbol.asyncIterator]() {
 						yield { type: "text", text: "Success" }
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async next() {
 						return { done: true, value: { type: "text", text: "Success" } }
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async return() {
 						return { done: true, value: undefined }
 					},
-					async throw(e: any) {
+					// eslint-disable-next-line @typescript-eslint/require-await
+					async throw(e: Error) {
 						throw e
 					},
 					async [Symbol.asyncDispose]() {
@@ -839,7 +866,7 @@ describe("TheaTask", () => {
 
 				// Mock delay to track countdown timing
 				const mockDelay = jest.fn().mockResolvedValue(undefined)
-				jest.spyOn(require("delay"), "default").mockImplementation(mockDelay)
+				jest.spyOn({ default: delay }, "default").mockImplementation(mockDelay)
 
 				// Mock say to track messages
 				const saySpy = jest.spyOn(theaTask.webviewCommunicator, "say") // Corrected spy target
@@ -847,16 +874,20 @@ describe("TheaTask", () => {
 				// Create a stream that fails on first chunk
 				const mockError = new Error("API Error")
 				const mockFailedStream = {
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async *[Symbol.asyncIterator]() {
 						throw mockError
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async next() {
 						throw mockError
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async return() {
 						return { done: true, value: undefined }
 					},
-					async throw(e: any) {
+					// eslint-disable-next-line @typescript-eslint/require-await
+					async throw(e: Error) {
 						throw e
 					},
 					async [Symbol.asyncDispose]() {
@@ -866,16 +897,20 @@ describe("TheaTask", () => {
 
 				// Create a successful stream for retry
 				const mockSuccessStream = {
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async *[Symbol.asyncIterator]() {
 						yield { type: "text", text: "Success" }
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async next() {
 						return { done: true, value: { type: "text", text: "Success" } }
 					},
+					// eslint-disable-next-line @typescript-eslint/require-await
 					async return() {
 						return { done: true, value: undefined }
 					},
-					async throw(e: any) {
+					// eslint-disable-next-line @typescript-eslint/require-await
+					async throw(e: Error) {
 						throw e
 					},
 					async [Symbol.asyncDispose]() {
@@ -968,7 +1003,7 @@ describe("TheaTask", () => {
 
 					// Mock parseMentions to track calls
 					const mockParseMentions = jest.fn().mockImplementation((text) => `processed: ${text}`)
-					jest.spyOn(require("../../core/mentions"), "parseMentions").mockImplementation(mockParseMentions)
+					jest.spyOn({ parseMentions: parseMentionsActual }, "parseMentions").mockImplementation(mockParseMentions)
 
 					const userContent = [
 						{

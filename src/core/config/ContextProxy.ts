@@ -226,9 +226,11 @@ export class ContextProxy {
 	 * Import / Export
 	 */
 
-	public async export(): Promise<GlobalSettings | undefined> {
+	public export(): Promise<GlobalSettings | undefined> {
 		try {
 			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
+			// Use array destructuring with _ to explicitly ignore the first parameter
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			return Object.fromEntries(Object.entries(globalSettings).filter(([_, value]) => value !== undefined))
 		} catch (error) {
 			if (error instanceof ZodError) {

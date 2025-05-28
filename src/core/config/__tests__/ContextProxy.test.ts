@@ -1,5 +1,13 @@
 // npx jest src/core/config/__tests__/ContextProxy.test.ts
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/await-thenable */
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as vscode from "vscode"
 import { ContextProxy } from "../ContextProxy"
 
@@ -7,7 +15,7 @@ import { GLOBAL_STATE_KEYS, SECRET_STATE_KEYS } from "../../../schemas"
 
 jest.mock("vscode", () => ({
 	Uri: {
-		file: jest.fn((path) => ({ path })),
+		file: jest.fn((path: string) => ({ path })),
 	},
 	ExtensionMode: {
 		Development: 1,

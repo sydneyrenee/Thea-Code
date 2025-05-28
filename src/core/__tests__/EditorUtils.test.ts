@@ -32,15 +32,45 @@ jest.mock("vscode", () => {
 })
 
 describe("EditorUtils", () => {
-	let mockDocument: any
+	let mockDocument: jest.Mocked<vscode.TextDocument>
 
 	beforeEach(() => {
 		mockDocument = {
-			getText: jest.fn(),
-			lineAt: jest.fn(),
+			uri: { fsPath: "/test/file.ts" } satisfies Partial<vscode.Uri>,
+			fileName: "/test/file.ts",
+			isUntitled: false,
+			languageId: "typescript",
+			encoding: "utf8", // Added missing property
+			version: 1,
+			isDirty: false,
+			isClosed: false,
+			eol: vscode.EndOfLine.LF,
 			lineCount: 10,
-			uri: { fsPath: "/test/file.ts" },
-		}
+			getText: jest.fn((range?: vscode.Range) => {
+				if (range?.isEmpty) {
+					return ""
+				}
+				return "selected text"
+			}),
+			lineAt: jest.fn((line: number | vscode.Position) => {
+				const lineNumber = typeof line === "number" ? line : line.line
+				const text = `Line ${lineNumber} text`
+				return {
+					text: text,
+					lineNumber: lineNumber,
+					range: new vscode.Range(lineNumber, 0, lineNumber, text.length),
+					rangeIncludingLineBreak: new vscode.Range(lineNumber, 0, lineNumber, text.length + 1),
+					firstNonWhitespaceCharacterIndex: 0,
+					isEmptyOrWhitespace: false,
+				} as vscode.TextLine
+			}),
+			offsetAt: jest.fn(),
+			positionAt: jest.fn(),
+			getWordRangeAtPosition: jest.fn(),
+			validateRange: jest.fn(),
+			validatePosition: jest.fn(),
+			save: jest.fn(),
+		} satisfies Partial<vscode.TextDocument> as jest.Mocked<vscode.TextDocument>
 	})
 
 	describe("getEffectiveRange", () => {
@@ -59,7 +89,14 @@ describe("EditorUtils", () => {
 		it("should return null for empty line", () => {
 			const mockRange = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 10))
 			mockDocument.getText.mockReturnValue("")
-			mockDocument.lineAt.mockReturnValue({ text: "", lineNumber: 0 })
+			mockDocument.lineAt.mockReturnValue({
+				text: "",
+				lineNumber: 0,
+				range: new vscode.Range(0, 0, 0, 0),
+				rangeIncludingLineBreak: new vscode.Range(0, 0, 0, 1),
+				firstNonWhitespaceCharacterIndex: 0,
+				isEmptyOrWhitespace: true,
+			} as vscode.TextLine)
 
 			const result = EditorUtils.getEffectiveRange(mockDocument, mockRange)
 
@@ -70,16 +107,25 @@ describe("EditorUtils", () => {
 			// Simulate a caret (empty selection) on line 2 at character 5.
 			const initialRange = new vscode.Range(new vscode.Position(2, 5), new vscode.Position(2, 5))
 			// Return non-empty text for any line with text (lines 1, 2, and 3).
-			mockDocument.lineAt.mockImplementation((line: number) => {
-				return { text: `Line ${line} text`, lineNumber: line }
+			mockDocument.lineAt.mockImplementation((line: number | vscode.Position) => {
+				const lineNumber = typeof line === "number" ? line : line.line
+				const text = `Line ${lineNumber} text`
+				return {
+					text: text,
+					lineNumber: lineNumber,
+					range: new vscode.Range(lineNumber, 0, lineNumber, text.length),
+					rangeIncludingLineBreak: new vscode.Range(lineNumber, 0, lineNumber, text.length + 1),
+					firstNonWhitespaceCharacterIndex: 0,
+					isEmptyOrWhitespace: false,
+				} as vscode.TextLine
 			})
-			mockDocument.getText.mockImplementation((range: any) => {
+			mockDocument.getText.mockImplementation((range?: vscode.Range) => {
 				// If the range is exactly the empty initial selection, return an empty string.
 				if (
-					range.start.line === initialRange.start.line &&
-					range.start.character === initialRange.start.character &&
-					range.end.line === initialRange.end.line &&
-					range.end.character === initialRange.end.character
+					range?.start.line === initialRange.start.line &&
+					range?.start.character === initialRange.start.character &&
+					range?.end.line === initialRange.end.line &&
+					range?.end.character === initialRange.end.character
 				) {
 					return ""
 				}

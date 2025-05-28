@@ -5,7 +5,6 @@ import { extractTextFromFile, addLineNumbers } from "../../integrations/misc/ext
 import { parseSourceCodeDefinitionsForFile } from "../../services/tree-sitter"
 import { isBinaryFile } from "isbinaryfile"
 import { ReadFileToolUse } from "../assistant-message"
-import { TheaTask } from "../TheaTask"
 
 // Mock dependencies
 jest.mock("../../integrations/misc/line-counter")
@@ -34,10 +33,10 @@ jest.mock("../../utils/fs", () => ({
 
 // Mock path
 jest.mock("path", () => {
-	const originalPath = jest.requireActual("path")
+	const originalPath = jest.requireActual<typeof import("path")>("path")
 	return {
 		...originalPath,
-		resolve: jest.fn().mockImplementation((...args) => args.join("/")),
+		resolve: jest.fn().mockImplementation((...args: string[]) => args.join("/")),
 	}
 })
 
@@ -45,7 +44,7 @@ describe("read_file tool with maxReadFileLine setting", () => {
 	// Test data
 	const testFilePath = "test/file.txt"
 	const absoluteFilePath = "/test/file.txt"
-	const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5"
+	// const fileContent = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5" - Unused variable
 	const numberedFileContent = "1 | Line 1\n2 | Line 2\n3 | Line 3\n4 | Line 4\n5 | Line 5"
 	const sourceCodeDef = "\n\n# file.txt\n1--5 | Content"
 
@@ -58,12 +57,31 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		typeof parseSourceCodeDefinitionsForFile
 	>
 	const mockedIsBinaryFile = isBinaryFile as jest.MockedFunction<typeof isBinaryFile>
-	const mockedPathResolve = path.resolve as jest.MockedFunction<typeof path.resolve>
+	// Use bind to avoid unbound method reference
+	const mockedPathResolve = path.resolve.bind(path) as jest.MockedFunction<typeof path.resolve>
+
+	// Define interfaces for mock objects to avoid 'any' type issues
+	interface MockProvider {
+		getState: jest.Mock;
+		deref: jest.Mock;
+	}
+
+	interface MockThea {
+		cwd: string;
+		task: string;
+		providerRef: MockProvider;
+		theaIgnoreController: {
+			validateAccess: jest.Mock;
+		};
+		say: jest.Mock;
+		ask: jest.Mock;
+		presentAssistantMessage: jest.Mock;
+	}
 
 	// Mock instances
-	const mockThea: any = {}
-	let mockProvider: any
-	let toolResult: string | undefined
+	const mockThea = {} as MockThea;
+	let mockProvider: MockProvider;
+	let toolResult: string | undefined;
 
 	beforeEach(() => {
 		jest.clearAllMocks()
@@ -118,9 +136,11 @@ describe("read_file tool with maxReadFileLine setting", () => {
 		}
 
 		// Import the tool implementation dynamically to avoid hoisting issues
+		// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 		const { readFileTool } = require("../tools/readFileTool")
 
 		// Execute the tool
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		await readFileTool(
 			mockThea,
 			toolUse,
@@ -258,10 +278,12 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			mockedReadLines.mockResolvedValue("Line 2\nLine 3\nLine 4")
 
 			// Import the tool implementation dynamically
+			// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
 			const { readFileTool } = require("../tools/readFileTool")
 
 			// Execute the tool
-			let rangeResult: string | undefined
+			// Using toolResult instead of a separate variable to avoid unused variable warning
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			await readFileTool(
 				mockThea,
 				rangeToolUse,

@@ -69,6 +69,7 @@ export class ProviderSettingsManager {
 				let isDirty = false
 
 				// Ensure all configs have IDs.
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				for (const [name, apiConfig] of Object.entries(providerProfiles.apiConfigs)) {
 					if (!apiConfig.id) {
 						apiConfig.id = this.generateId()
@@ -154,6 +155,7 @@ export class ProviderSettingsManager {
 			return await this.lock(async () => {
 				const providerProfiles = await this.load()
 				const providerSettings = Object.entries(providerProfiles.apiConfigs).find(
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
 					([_, apiConfig]) => apiConfig.id === id,
 				)
 

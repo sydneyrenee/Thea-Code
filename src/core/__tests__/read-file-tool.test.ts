@@ -10,10 +10,10 @@ jest.mock("../../integrations/misc/extract-text")
 
 describe("read_file tool with maxReadFileLine setting", () => {
 	// Mock original implementation first to use in tests
-	const originalCountFileLines = jest.requireActual("../../integrations/misc/line-counter").countFileLines
-	const originalReadLines = jest.requireActual("../../integrations/misc/read-lines").readLines
-	const originalExtractTextFromFile = jest.requireActual("../../integrations/misc/extract-text").extractTextFromFile
-	const originalAddLineNumbers = jest.requireActual("../../integrations/misc/extract-text").addLineNumbers
+	const originalCountFileLines = jest.requireActual<typeof import("../../integrations/misc/line-counter")>("../../integrations/misc/line-counter").countFileLines
+	const originalReadLines = jest.requireActual<typeof import("../../integrations/misc/read-lines")>("../../integrations/misc/read-lines").readLines
+	const originalExtractTextFromFile = jest.requireActual<typeof import("../../integrations/misc/extract-text")>("../../integrations/misc/extract-text").extractTextFromFile
+	const originalAddLineNumbers = jest.requireActual<typeof import("../../integrations/misc/extract-text")>("../../integrations/misc/extract-text").addLineNumbers
 
 	beforeEach(() => {
 		jest.resetAllMocks()

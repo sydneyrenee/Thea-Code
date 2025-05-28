@@ -1,6 +1,6 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-import * as path from "path"
-import * as diff from "diff"
+import * as path from "path";
+import type { NeutralTextContentBlock, NeutralImageContentBlock } from "../../shared/neutral-history";
+import * as diff from "diff";
 import { TheaIgnoreController, LOCK_TEXT_SYMBOL } from "../ignore/TheaIgnoreController"
 import { GLOBAL_FILENAMES } from "../../../dist/thea-config"
 
@@ -46,19 +46,19 @@ export const formatResponse = {
 	toolResult: (
 		text: string,
 		images?: string[],
-	): string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam> => {
+	): string | (NeutralTextContentBlock | NeutralImageContentBlock)[] => {
 		if (images && images.length > 0) {
-			const textBlock: Anthropic.TextBlockParam = { type: "text", text }
-			const imageBlocks: Anthropic.ImageBlockParam[] = formatImagesIntoBlocks(images)
+			const textBlock: NeutralTextContentBlock = { type: "text", text };
+			const imageBlocks: NeutralImageContentBlock[] = formatImagesIntoBlocks(images);
 			// Placing images after text leads to better results
-			return [textBlock, ...imageBlocks]
+			return [textBlock, ...imageBlocks] as (NeutralTextContentBlock | NeutralImageContentBlock)[]; // Explicitly cast to union array
 		} else {
-			return text
+			return text;
 		}
 	},
 
-	imageBlocks: (images?: string[]): Anthropic.ImageBlockParam[] => {
-		return formatImagesIntoBlocks(images)
+	imageBlocks: (images?: string[]): NeutralImageContentBlock[] => {
+		return formatImagesIntoBlocks(images);
 	},
 
 	formatFilesList: (
@@ -140,19 +140,19 @@ export const formatResponse = {
 }
 
 // to avoid circular dependency
-const formatImagesIntoBlocks = (images?: string[]): Anthropic.ImageBlockParam[] => {
+const formatImagesIntoBlocks = (images?: string[]): NeutralImageContentBlock[] => {
 	return images
 		? images.map((dataUrl) => {
 				// data:image/png;base64,base64string
-				const [rest, base64] = dataUrl.split(",")
-				const mimeType = rest.split(":")[1].split(";")[0]
+				const [rest, base64] = dataUrl.split(",");
+				const mimeType = rest.split(":")[1].split(";")[0] as "image/jpeg" | "image/png" | "image/gif" | "image/webp"; // Ensure it's a valid media type
 				return {
-					type: "image",
+					type: "image", // This is the discriminator for NeutralMessageContent
 					source: { type: "base64", media_type: mimeType, data: base64 },
-				} as Anthropic.ImageBlockParam
+				} as NeutralImageContentBlock;
 			})
-		: []
-}
+		: [];
+};
 
 const toolUseInstructionsReminder = `# Reminder: Instructions for Tool Use
 

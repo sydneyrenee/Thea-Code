@@ -1,9 +1,9 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import os from "os"
+import type { NeutralMessage, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history";
 import * as path from "path"
 import * as vscode from "vscode"
 
-export async function downloadTask(dateTs: number, conversationHistory: Anthropic.MessageParam[]) {
+export async function downloadTask(dateTs: number, conversationHistory: NeutralMessage[]) {
 	// File name
 	const date = new Date(dateTs)
 	const month = date.toLocaleString("en-US", { month: "short" }).toLowerCase()
@@ -22,7 +22,7 @@ export async function downloadTask(dateTs: number, conversationHistory: Anthropi
 		.map((message) => {
 			const role = message.role === "user" ? "**User:**" : "**Assistant:**"
 			const content = Array.isArray(message.content)
-				? message.content.map((block) => formatContentBlockToMarkdown(block)).join("\n")
+				? message.content.map((block: NeutralTextContentBlock | NeutralImageContentBlock | NeutralToolUseContentBlock | NeutralToolResultContentBlock) => formatContentBlockToMarkdown(block)).join("\n")
 				: message.content
 			return `${role}\n\n${content}\n\n`
 		})
@@ -41,7 +41,7 @@ export async function downloadTask(dateTs: number, conversationHistory: Anthropi
 	}
 }
 
-export function formatContentBlockToMarkdown(block: Anthropic.Messages.ContentBlockParam): string {
+export function formatContentBlockToMarkdown(block: NeutralTextContentBlock | NeutralImageContentBlock | NeutralToolUseContentBlock | NeutralToolResultContentBlock): string {
 	switch (block.type) {
 		case "text":
 			return block.text
@@ -51,7 +51,7 @@ export function formatContentBlockToMarkdown(block: Anthropic.Messages.ContentBl
 			let input: string
 			if (typeof block.input === "object" && block.input !== null) {
 				input = Object.entries(block.input)
-					.map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
+					.map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${String(value)}`) // Ensure value is string
 					.join("\n")
 			} else {
 				input = String(block.input)
@@ -61,29 +61,26 @@ export function formatContentBlockToMarkdown(block: Anthropic.Messages.ContentBl
 			// For now we're not doing tool name lookup since we don't use tools anymore
 			// const toolName = findToolName(block.tool_use_id, messages)
 			const toolName = "Tool"
-			if (typeof block.content === "string") {
-				return `[${toolName}${block.is_error ? " (Error)" : ""}]\n${block.content}`
-			} else if (Array.isArray(block.content)) {
-				return `[${toolName}${block.is_error ? " (Error)" : ""}]\n${block.content
-					.map((contentBlock) => formatContentBlockToMarkdown(contentBlock))
-					.join("\n")}`
-			} else {
-				return `[${toolName}${block.is_error ? " (Error)" : ""}]`
-			}
+			const errorSuffix = block.status === 'error' ? " (Error)" : "";
+			const errorMessage = block.status === 'error' && block.error ? `\nError: ${block.error.message}` : "";
+			// For NeutralToolResultContentBlock, block.content is always Array<NeutralTextContentBlock | NeutralImageContentBlock>
+			return `[${toolName}${errorSuffix}]\n${block.content
+				.map((contentBlock) => formatContentBlockToMarkdown(contentBlock))
+				.join("\n")}${errorMessage}`;
 		default:
 			return "[Unexpected content type]"
 	}
 }
 
-export function findToolName(toolCallId: string, messages: Anthropic.MessageParam[]): string {
+export function findToolName(toolCallId: string, messages: NeutralMessage[]): string {
 	for (const message of messages) {
 		if (Array.isArray(message.content)) {
 			for (const block of message.content) {
 				if (block.type === "tool_use" && block.id === toolCallId) {
-					return block.name
+					return block.name;
 				}
 			}
 		}
 	}
-	return "Unknown Tool"
+	return "Unknown Tool";
 }

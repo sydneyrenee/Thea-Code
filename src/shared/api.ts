@@ -1,16 +1,12 @@
-import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
+import { ModelInfo, ProviderName, ProviderSettings } from "../schemas";
+import type { NeutralMessage, NeutralConversationHistory } from "./neutral-history"; // Import the comprehensive types
 
-export type { ModelInfo, ProviderName as ApiProvider }
+export type { ModelInfo, ProviderName as ApiProvider, NeutralMessage, NeutralConversationHistory }; // Re-export
 
-export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">;
 
-export type ApiConfiguration = ProviderSettings
+export type ApiConfiguration = ProviderSettings;
 
-// Neutral message type for providers expecting OpenAI format directly
-export type NeutralMessage = {
-	role: "user" | "assistant"
-	content: string // Assuming text content for simplicity, matching OllamaHandler's current capability
-}
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
 export type AnthropicModelId = keyof typeof anthropicModels

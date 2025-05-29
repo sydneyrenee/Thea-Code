@@ -74,7 +74,9 @@ describe("ProviderSettingsManager", () => {
 
 			// Should have written the config with new IDs
 			expect(mockSecrets.store).toHaveBeenCalled()
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
+                        const storedConfig = JSON.parse(
+                                mockSecrets.store.mock.calls[0][1] as string,
+                        ) as ProviderProfiles
 			expect(storedConfig.apiConfigs.default.id).toBeTruthy()
 			expect(storedConfig.apiConfigs.test.id).toBeTruthy()
 		})
@@ -167,7 +169,9 @@ describe("ProviderSettingsManager", () => {
 			await providerSettingsManager.saveConfig("test", newConfig)
 
 			// Get the actual stored config to check the generated ID
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
+                        const storedConfig = JSON.parse(
+                                mockSecrets.store.mock.calls[0][1] as string,
+                        ) as ProviderProfiles
 			const testConfigId = storedConfig.apiConfigs.test.id
 
 			const expectedConfig = {

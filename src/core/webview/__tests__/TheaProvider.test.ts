@@ -1,5 +1,4 @@
 import * as vscode from "vscode"
-import EventEmitter from "events"
 import { TheaProvider } from "../TheaProvider" // Renamed import
 import { TheaTaskStack } from "../thea/TheaTaskStack" // Renamed import and path
 import { TheaStateManager } from "../thea/TheaStateManager" // Renamed import and path

@@ -68,9 +68,13 @@ The following source files still import the Anthropic SDK (`@anthropic-ai/sdk`) 
 
 ## Migration Plan
 
-1.  **Introduce a Neutral Client Wrapper**
-    - Create a lightweight HTTP client or adapter that communicates with Anthropic’s API without relying on the official SDK. This client should conform to the MCP friendly structures and use the generic streaming utilities defined in `src/services/mcp/transport`.
-    - Ensure it returns neutral content blocks so that provider handlers only deal with `NeutralConversationHistory`.
+The core of this migration is to *completely replace* all Anthropic SDK dependencies, particularly for message and history management, with an SDK-independent client. This ensures that all provider interactions (including Anthropic's) occur through the neutral tools layers, making other provider integrations fully independent of the Anthropic SDK's presence or removal.
+1.  **Implement an SDK-Independent Anthropic Client**
+    - Develop a dedicated client to interact directly with Anthropic’s API, *entirely replacing* any functionality previously reliant on the official `@anthropic-ai/sdk`. This client will be built without using the Anthropic SDK.
+    - This new client must:
+      - Adhere to MCP-friendly structures.
+      - Utilize generic streaming utilities from `src/services/mcp/transport`.
+      - Exclusively return neutral content blocks (e.g., `NeutralConversationHistory`), ensuring provider handlers operate solely on these neutral types.
 
 2.  **Refactor Provider Handlers**
     - Update `AnthropicHandler` and related handlers to use the new client wrapper.

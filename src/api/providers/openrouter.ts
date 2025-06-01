@@ -1,5 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-import type { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta"
 import axios from "axios"
 import OpenAI from "openai"
 
@@ -24,9 +22,9 @@ const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
 // Add custom interface for OpenRouter params.
 type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
-	transforms?: string[]
-	include_reasoning?: boolean
-	thinking?: BetaThinkingConfigParam
+        transforms?: string[]
+        include_reasoning?: boolean
+        thinking?: unknown
 }
 
 export class OpenRouterHandler extends BaseProvider implements ApiHandler, SingleCompletionHandler {
@@ -65,67 +63,27 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 	): AsyncGenerator<ApiStreamChunk> {
 		let { id: modelId, maxTokens, thinking, temperature, topP } = this.getModel()
 
-		// Convert NeutralConversationHistory to Anthropic messages.
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = messages.map((neutralMessage) => {
-			let content: string | Anthropic.Messages.ContentBlockParam[]
+                const history: NeutralConversationHistory = [...messages]
 
-			if (typeof neutralMessage.content === "string") {
-				content = neutralMessage.content
-			} else if (Array.isArray(neutralMessage.content)) {
-				content = neutralMessage.content.map((block) => {
-					if (block.type === "text") {
-						return { type: "text", text: block.text } as Anthropic.Messages.TextBlockParam
-					} else if (block.type === "image_url" || block.type === "image_base64") {
-						return {
-							type: "image",
-							source: (block).source,
-						} as Anthropic.Messages.ImageBlockParam
-					} else if (block.type === "tool_use") {
-						return {
-							type: "tool_use",
-							id: (block).id,
-							name: (block).name,
-							input: (block).input,
-						} as Anthropic.Messages.ToolUseBlockParam
-					} else if (block.type === "tool_result") {
-						return {
-							type: "tool_result",
-							tool_use_id: (block).tool_use_id,
-							content: (block).content,
-						} as Anthropic.Messages.ToolResultBlockParam
-					}
-					return { type: "text", text: `[Unknown block type: ${block.type}]` } as Anthropic.Messages.TextBlockParam
-				})
-			} else {
-				content = ""
-			}
+                if (systemPrompt) {
+                        const firstUser = history.find((m) => m.role === "user")
+                        if (firstUser) {
+                                if (typeof firstUser.content === "string") {
+                                        firstUser.content = `${systemPrompt}\n${firstUser.content}`
+                                } else if (Array.isArray(firstUser.content)) {
+                                        firstUser.content.unshift({ type: "text", text: systemPrompt })
+                                }
+                        } else {
+                                history.unshift({ role: "user", content: systemPrompt })
+                        }
+                }
 
-			return {
-				role: neutralMessage.role,
-				content: content,
-			} as Anthropic.Messages.MessageParam
-		})
-
-		// Prepend system prompt to the first user message if it exists
-		if (systemPrompt) {
-			const firstUserMessage = anthropicMessages.find((msg) => msg.role === "user")
-			if (firstUserMessage) {
-				if (typeof firstUserMessage.content === "string") {
-					firstUserMessage.content = systemPrompt + "\n" + firstUserMessage.content
-				} else {
-					firstUserMessage.content.unshift({ type: "text", text: systemPrompt })
-				}
-			} else {
-				anthropicMessages.unshift({ role: "user", content: systemPrompt })
-			}
-		}
-
-		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiMessages(anthropicMessages)
+                let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiMessages(history)
 
 		// DeepSeek highly recommends using user instead of system role.
-		if (modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning") {
-			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...anthropicMessages])
-		}
+                if (modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning") {
+                        openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...history])
+                }
 
 		// prompt caching: https://openrouter.ai/docs/prompt-caching
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)

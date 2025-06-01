@@ -1,6 +1,4 @@
-import { Anthropic } from "@anthropic-ai/sdk"
-import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
-import { CacheControlEphemeral } from "@anthropic-ai/sdk/resources"
+import { NeutralAnthropicClient } from "../../services/anthropic"
 import {
 	anthropicDefaultModelId,
 	AnthropicModelId,
@@ -9,7 +7,7 @@ import {
 	ModelInfo,
 } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types
-import { convertToAnthropicHistory, convertToAnthropicContentBlocks } from "../transform/neutral-anthropic-format"; // Import conversion functions
+import { convertToAnthropicContentBlocks } from "../transform/neutral-anthropic-format"; // Import conversion functions
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
@@ -17,137 +15,32 @@ import { SingleCompletionHandler, getModelParams } from "../index"
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
-	private client: Anthropic
+       private client: NeutralAnthropicClient
 
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
-		this.client = new Anthropic({
-			apiKey: this.options.apiKey,
-			baseURL: this.options.anthropicBaseUrl || undefined,
-		})
+               this.client = new NeutralAnthropicClient(
+                       this.options.apiKey,
+                       this.options.anthropicBaseUrl || undefined,
+               )
 	}
 
 	// Updated to accept NeutralConversationHistory
-	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-		// Convert neutral history to Anthropic format
-		const anthropicMessages = convertToAnthropicHistory(messages);
+       override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+               const { id: modelId, maxTokens, temperature, thinking } = this.getModel()
 
-		let stream: AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
-		const cacheControl: CacheControlEphemeral = { type: "ephemeral" }
-		let { id: modelId, maxTokens, thinking, temperature, virtualId } = this.getModel()
+               const stream = this.client.createMessage({
+                       model: modelId,
+                       systemPrompt,
+                       messages,
+                       maxTokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
+                       temperature,
+                       thinking,
+               })
 
-		switch (modelId) {
-			case "claude-3-7-sonnet-20250219":
-			case "claude-3-5-sonnet-20241022":
-			case "claude-3-5-haiku-20241022":
-			case "claude-3-opus-20240229":
-			case "claude-3-haiku-20240307": {
-				/**
-				 * The latest message will be the new user message, one before will
-				 * be the assistant message from a previous request, and the user message before that will be a previously cached user message. So we need to mark the latest user message as ephemeral to cache it for the next request, and mark the second to last user message as ephemeral to let the server know the last message to retrieve from the cache for the current request..
-				 */
-				// Use the converted Anthropic messages
-				const userMsgIndices = anthropicMessages.reduce(
-					(acc, msg, index) => (msg.role === "user" ? [...acc, index] : acc),
-					[] as number[],
-				)
-
-				const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
-				const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
-
-				try {
-					stream = await this.client.messages.create(
-						{
-							model: modelId,
-							max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
-							temperature,
-							thinking,
-							// Setting cache breakpoint for system prompt so new tasks can reuse it.
-							system: [{ text: systemPrompt, type: "text", cache_control: cacheControl }],
-							// Use the converted Anthropic messages
-							messages: anthropicMessages.map((message, index) => {
-								if (index === lastUserMsgIndex || index === secondLastMsgUserIndex) {
-									return {
-										...message,
-										content:
-											typeof message.content === "string"
-												? [{ type: "text", text: message.content, cache_control: cacheControl }]
-												: message.content.map((content, contentIndex) =>
-														contentIndex === message.content.length - 1
-															? { ...content, cache_control: cacheControl }
-															: content,
-													),
-									}
-								}
-								return message
-							}),
-							// tools, // cache breakpoints go from tools > system > messages, and since tools dont change, we can just set the breakpoint at the end of system (this avoids having to set a breakpoint at the end of tools which by itself does not meet min requirements for haiku caching)
-							// tool_choice: { type: "auto" },
-							// tools: tools,
-							stream: true,
-						},
-						(() => {
-							// prompt caching: https://x.com/alexalbert__/status/1823751995901272068
-							// https://github.com/anthropics/anthropic-sdk-typescript?tab=readme-ov-file#default-headers
-							// https://github.com/anthropics/anthropic-sdk-typescript/commit/c920b77fc67bd839bfeb6716ceab9d7c9bbe7393
-
-							const betas = []
-
-							// Check for the thinking-128k variant first
-							if (virtualId === "claude-3-7-sonnet-20250219:thinking") {
-								betas.push("output-128k-2025-02-19")
-							}
-
-							// Then check for models that support prompt caching
-							switch (modelId) {
-								case "claude-3-7-sonnet-20250219":
-								case "claude-3-5-sonnet-20241022":
-								case "claude-3-5-haiku-20241022":
-								case "claude-3-opus-20240229":
-								case "claude-3-haiku-20240307":
-									betas.push("prompt-caching-2024-07-31")
-									return {
-										headers: { "anthropic-beta": betas.join(",") },
-									}
-								default:
-									return undefined
-							}
-						})(),
-					)
-				} catch (error) {
-					console.error("Error creating Anthropic message stream:", error);
-					// Depending on your error handling strategy, you might want to:
-					// - Rethrow the error: throw error;
-					// - Yield an error chunk: yield { type: "error", message: error.message };
-					// - Log and return/break
-					throw error; // Or handle gracefully
-				}
-				break
-			}
-			default: {
-				try {
-					stream = (await this.client.messages.create({
-						model: modelId,
-						max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
-						temperature,
-						system: [{ text: systemPrompt, type: "text" }],
-						// Use the converted Anthropic messages
-						messages: anthropicMessages,
-						// tools,
-						// tool_choice: { type: "auto" },
-						stream: true,
-					})) as AnthropicStream<Anthropic.Messages.RawMessageStreamEvent>
-				} catch (error) {
-					console.error("Error creating Anthropic message stream for default model:", error);
-					throw error; // Consistent error handling with the above case
-				}
-				break
-			}
-		}
-
-		for await (const chunk of stream) {
-			switch (chunk.type) {
+               for await (const chunk of stream) {
+                       switch (chunk.type) {
 				case "message_start": {
 					// Tells us cache reads/writes/input/output.
 					const usage = chunk.message.usage
@@ -298,18 +191,23 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	async completePrompt(prompt: string) {
 		let { id: modelId, temperature } = this.getModel()
 
-		const message = await this.client.messages.create({
-			model: modelId,
-			max_tokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
-			thinking: undefined,
-			temperature,
-			messages: [{ role: "user", content: prompt }],
-			stream: false,
-		})
+               let text = ""
+               const stream = this.client.createMessage({
+                       model: modelId,
+                       systemPrompt: "",
+                       messages: [{ role: "user", content: prompt }],
+                       maxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+                       temperature,
+               })
 
-		const content = message.content.find(({ type }) => type === "text")
-		return content?.type === "text" ? content.text : ""
-	}
+               for await (const chunk of stream) {
+                       if (chunk.type === "text") {
+                               text += chunk.text
+                       }
+               }
+
+               return text
+        }
 
 	/**
 	 * Counts tokens for the given content using Anthropic's API
@@ -318,25 +216,10 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	 * @returns A promise resolving to the token count
 	 */
 	override async countTokens(content: NeutralMessageContent): Promise<number> {
-		try {
-			// Convert neutral content to Anthropic content blocks for API call
-			const anthropicContentBlocks = convertToAnthropicContentBlocks(content);
-
-			// Use the current model
-			const actualModelId = this.getModel().id
-
-			const response = await this.client.messages.countTokens({
-				model: actualModelId,
-				messages: [
-					{
-						role: "user",
-						content: anthropicContentBlocks, // Use the converted content blocks
-					},
-				],
-			})
-
-			return response.input_tokens
-		} catch (error) {
+               try {
+                       const actualModelId = this.getModel().id
+                       return await this.client.countTokens(actualModelId, content)
+                } catch (error) {
 			// Log error but fallback to tiktoken estimation
 			console.warn("Anthropic token counting failed, using fallback", error)
 

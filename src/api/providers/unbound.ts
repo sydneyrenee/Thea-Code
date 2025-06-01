@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import axios from "axios"
 import OpenAI from "openai"
 
@@ -30,12 +29,11 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 		return !this.getModel().id.startsWith("openai/o3-mini")
 	}
 
-	override async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[]): ApiStream {
-		// Convert Anthropic messages to OpenAI format
-		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-			{ role: "system", content: systemPrompt },
-			...convertToOpenAiMessages(messages),
-		]
+       override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+               const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+                       { role: "system", content: systemPrompt },
+                       ...convertToOpenAiMessages(messages),
+               ]
 
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
 		if (this.getModel().id.startsWith("anthropic/claude-3")) {

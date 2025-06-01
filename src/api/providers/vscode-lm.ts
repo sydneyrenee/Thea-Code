@@ -1,9 +1,9 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
 import { SingleCompletionHandler } from "../"
 import { calculateApiCostAnthropic } from "../../utils/cost"
 import { ApiStream } from "../transform/stream"
 import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
+import { convertToAnthropicHistory } from "../transform/neutral-anthropic-format"
 import { SELECTOR_SEPARATOR, stringifyVsCodeLmModelSelector } from "../../shared/vsCodeSelectorUtils"
 import { BaseProvider } from "./base-provider"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
@@ -376,60 +376,9 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		// Clean system prompt and messages
 		const cleanedSystemPrompt = this.cleanTerminalOutput(systemPrompt)
 
-		// Convert NeutralConversationHistory to Anthropic format - only keeping user and assistant roles
-		// as Anthropic only supports these roles
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = messages
-			.filter((msg) => msg.role === "user" || msg.role === "assistant")
-			.map((neutralMessage) => {
-				let content: string | Anthropic.Messages.ContentBlockParam[]
-
-				if (typeof neutralMessage.content === "string") {
-					content = neutralMessage.content
-				} else if (Array.isArray(neutralMessage.content)) {
-					// Convert each content block to Anthropic format
-					content = neutralMessage.content.map((block) => {
-						if (block.type === "text") {
-							return { type: "text", text: block.text } as Anthropic.Messages.TextBlockParam
-						} else if (block.type === "image_url" || block.type === "image_base64") {
-							// Convert image blocks
-							// Type assertion to access properties safely
-							const imageBlock = block as { source?: string };
-							return {
-								type: "image",
-								source: imageBlock.source || "",
-							} as Anthropic.Messages.ImageBlockParam
-						} else if (block.type === "tool_use") {
-							// Convert tool use blocks
-							// Type assertion to access properties safely
-							const toolUseBlock = block as { id?: string; name?: string; input?: unknown };
-							return {
-								type: "tool_use",
-								id: toolUseBlock.id || "",
-								name: toolUseBlock.name || "",
-								input: toolUseBlock.input || {},
-							} as Anthropic.Messages.ToolUseBlockParam
-						} else if (block.type === "tool_result") {
-							// Convert tool result blocks
-							// Type assertion to access properties safely
-							const toolResultBlock = block as { tool_use_id?: string; content?: unknown };
-							return {
-								type: "tool_result",
-								tool_use_id: toolResultBlock.tool_use_id || "",
-								content: toolResultBlock.content || "",
-							} as Anthropic.Messages.ToolResultBlockParam
-						}
-						// Fallback for unknown types
-						return { type: "text", text: `[Unknown block type: ${block.type || "unknown"}]` } as Anthropic.Messages.TextBlockParam
-					})
-				} else {
-					content = ""
-				}
-
-				return {
-					role: neutralMessage.role,
-					content: content,
-				} as Anthropic.Messages.MessageParam // Explicitly cast to MessageParam
-			})
+                const anthropicMessages = convertToAnthropicHistory(
+                        messages.filter((msg) => msg.role === "user" || msg.role === "assistant"),
+                )
 
 		// Prepend system prompt to the first user message if it exists
 		if (cleanedSystemPrompt) {

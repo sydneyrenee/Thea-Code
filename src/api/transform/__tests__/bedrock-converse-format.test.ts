@@ -1,12 +1,12 @@
 // npx jest src/api/transform/__tests__/bedrock-converse-format.test.ts
 
 import { convertToBedrockConverseMessages } from "../bedrock-converse-format"
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 import { ToolResultContentBlock } from "@aws-sdk/client-bedrock-runtime"
 
 describe("convertToBedrockConverseMessages", () => {
 	test("converts simple text messages correctly", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{ role: "user", content: "Hello" },
 			{ role: "assistant", content: "Hi there" },
 		]
@@ -26,7 +26,7 @@ describe("convertToBedrockConverseMessages", () => {
 	})
 
 	test("converts messages with images correctly", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -68,7 +68,7 @@ describe("convertToBedrockConverseMessages", () => {
 	})
 
 	test("converts tool use messages correctly", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [
@@ -105,7 +105,7 @@ describe("convertToBedrockConverseMessages", () => {
 	})
 
 	test("converts tool result messages correctly", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [
@@ -140,7 +140,7 @@ describe("convertToBedrockConverseMessages", () => {
 	})
 
 	test("handles text content correctly", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [

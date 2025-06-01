@@ -1,22 +1,23 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
+import type { NeutralConversationHistory } from "../shared/neutral-history"
+import { convertToOpenAiMessages } from "./openai-format"
 
 type ContentPartText = OpenAI.Chat.ChatCompletionContentPartText
 type ContentPartImage = OpenAI.Chat.ChatCompletionContentPartImage
 type UserMessage = OpenAI.Chat.ChatCompletionUserMessageParam
 type AssistantMessage = OpenAI.Chat.ChatCompletionAssistantMessageParam
 type Message = OpenAI.Chat.ChatCompletionMessageParam
-type AnthropicMessage = Anthropic.Messages.MessageParam
 
 /**
- * Converts Anthropic messages to OpenAI format while merging consecutive messages with the same role.
+ * Converts neutral messages to OpenAI format while merging consecutive messages with the same role.
  * This is required for DeepSeek Reasoner which does not support successive messages with the same role.
  *
- * @param messages Array of Anthropic messages
+ * @param neutralHistory Array of neutral messages
  * @returns Array of OpenAI messages where consecutive messages with the same role are combined
  */
-export function convertToR1Format(messages: AnthropicMessage[]): Message[] {
-	return messages.reduce<Message[]>((merged, message) => {
+export function convertToR1Format(neutralHistory: NeutralConversationHistory): Message[] {
+        const messages = convertToOpenAiMessages(neutralHistory)
+        return messages.reduce<Message[]>((merged, message) => {
 		const lastMessage = merged[merged.length - 1]
 		let messageContent: string | (ContentPartText | ContentPartImage)[] = ""
 		let hasImages = false

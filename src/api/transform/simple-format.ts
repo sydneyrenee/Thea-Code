@@ -1,9 +1,9 @@
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralMessage, NeutralConversationHistory } from "../shared/neutral-history"
 
 /**
  * Convert complex content blocks to simple string content
  */
-export function convertToSimpleContent(content: Anthropic.Messages.MessageParam["content"]): string {
+export function convertToSimpleContent(content: NeutralMessage["content"]): string {
 	if (typeof content === "string") {
 		return content
 	}
@@ -49,10 +49,10 @@ export function convertToSimpleContent(content: Anthropic.Messages.MessageParam[
  * Convert Anthropic messages to simple format with string content
  */
 export function convertToSimpleMessages(
-	messages: Anthropic.Messages.MessageParam[],
+        messages: NeutralConversationHistory,
 ): Array<{ role: "user" | "assistant"; content: string }> {
-	return messages.map((message) => ({
-		role: message.role,
-		content: convertToSimpleContent(message.content),
-	}))
+        return messages.map((message) => ({
+                role: message.role,
+                content: convertToSimpleContent(message.content),
+        }))
 }

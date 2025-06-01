@@ -90,7 +90,7 @@ The core of this migration is to *completely replace* all Anthropic SDK dependen
     - Update tests to mock the neutral client rather than the Anthropic SDK.
 
 5.  **Verify Against Project Plans**
-    - Use `mcp_audit_checklist.md` to track progress. Phases 4–6 outline remaining handler updates, testing, and documentation tasks that must be completed once the SDK is removed.
+    - Use `neutral_anthropic_migration_checklist.md` to track progress. Phases 4–6 outline remaining handler updates, testing, and documentation tasks that must be completed once the SDK is removed.
 
 6.  **Cleanup Dependencies**
     - After refactoring, remove `@anthropic-ai/sdk`, `@anthropic-ai/bedrock-sdk`, and `@anthropic-ai/vertex-sdk` from `package.json` and lock files.

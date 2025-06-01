@@ -24,6 +24,7 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 	}
 
        override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+
                const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
                        { role: "system", content: systemPrompt },
                        ...convertToOpenAiMessages(messages),

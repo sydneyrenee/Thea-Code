@@ -19,7 +19,7 @@ Current active plan files:
 1.  [04_handler_updates_features.md](./04_handler_updates_features.md): Updating specific API handlers and integrating features like OpenAI function format (partially implemented).
 2.  [05_testing_validation.md](./05_testing_validation.md): Comprehensive testing strategy and tasks.
 3.  [06_documentation.md](./06_documentation.md): Documentation update tasks.
-4.  [mcp_audit_checklist.md](./mcp_audit_checklist.md): Tracks the overall implementation progress.
+4.  [neutral_anthropic_migration_checklist.md](./neutral_anthropic_migration_checklist.md): Tracks removal of the Anthropic SDK and adoption of the neutral client.
 
 ### Archive
 

@@ -1,4 +1,4 @@
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history"
 import { convertToSimpleContent, convertToSimpleMessages } from "../simple-format"
 
 describe("simple-format", () => {
@@ -12,7 +12,7 @@ describe("simple-format", () => {
 			const content = [
 				{ type: "text", text: "Hello" },
 				{ type: "text", text: "world" },
-			] as Anthropic.Messages.TextBlockParam[]
+			] as NeutralTextContentBlock[]
 			expect(convertToSimpleContent(content)).toBe("Hello\nworld")
 		})
 
@@ -27,7 +27,7 @@ describe("simple-format", () => {
 						data: "base64data",
 					},
 				},
-			] as Array<Anthropic.Messages.TextBlockParam | Anthropic.Messages.ImageBlockParam>
+			] as Array<NeutralTextContentBlock | NeutralImageContentBlock>
 			expect(convertToSimpleContent(content)).toBe("Here's an image:\n[Image: image/png]")
 		})
 
@@ -40,7 +40,7 @@ describe("simple-format", () => {
 					name: "read_file",
 					input: { path: "test.txt" },
 				},
-			] as Array<Anthropic.Messages.TextBlockParam | Anthropic.Messages.ToolUseBlockParam>
+			] as Array<NeutralTextContentBlock | NeutralToolUseContentBlock>
 			expect(convertToSimpleContent(content)).toBe("Using a tool:\n[Tool Use: read_file]")
 		})
 
@@ -52,7 +52,7 @@ describe("simple-format", () => {
 					tool_use_id: "tool-1",
 					content: "Result text",
 				},
-			] as Array<Anthropic.Messages.TextBlockParam | Anthropic.Messages.ToolResultBlockParam>
+			] as Array<NeutralTextContentBlock | NeutralToolResultContentBlock>
 			expect(convertToSimpleContent(content)).toBe("Tool result:\nResult text")
 		})
 
@@ -74,7 +74,7 @@ describe("simple-format", () => {
 						{ type: "text", text: "Result 2" },
 					],
 				},
-			] as Anthropic.Messages.ToolResultBlockParam[]
+			] as NeutralToolResultContentBlock[]
 			expect(convertToSimpleContent(content)).toBe("Result 1\n[Image: image/jpeg]\nResult 2")
 		})
 
@@ -83,7 +83,7 @@ describe("simple-format", () => {
 				{ type: "text", text: "Hello" },
 				{ type: "text", text: "" },
 				{ type: "text", text: "world" },
-			] as Anthropic.Messages.TextBlockParam[]
+			] as NeutralTextContentBlock[]
 			expect(convertToSimpleContent(content)).toBe("Hello\nworld")
 		})
 	})
@@ -93,7 +93,7 @@ describe("simple-format", () => {
 			const messages = [
 				{ role: "user", content: "Hello" },
 				{ role: "assistant", content: "Hi there" },
-			] as Anthropic.Messages.MessageParam[]
+			] as NeutralConversationHistory
 			expect(convertToSimpleMessages(messages)).toEqual([
 				{ role: "user", content: "Hello" },
 				{ role: "assistant", content: "Hi there" },
@@ -128,7 +128,7 @@ describe("simple-format", () => {
 						},
 					],
 				},
-			] as Anthropic.Messages.MessageParam[]
+			] as NeutralConversationHistory
 			expect(convertToSimpleMessages(messages)).toEqual([
 				{ role: "user", content: "Look at this:\n[Image: image/png]" },
 				{ role: "assistant", content: "I see the image\n[Tool Use: analyze_image]" },

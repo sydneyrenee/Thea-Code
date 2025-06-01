@@ -1,5 +1,5 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
+import type { NeutralConversationHistory, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../shared/neutral-history"
 
 /**
  * Safely converts a value into a plain object.
@@ -29,11 +29,11 @@ function asObjectSafe(value: unknown): object {
 }
 
 export function convertToVsCodeLmMessages(
-	anthropicMessages: Anthropic.Messages.MessageParam[],
+        neutralHistory: NeutralConversationHistory,
 ): vscode.LanguageModelChatMessage[] {
-	const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = []
+        const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = []
 
-	for (const anthropicMessage of anthropicMessages) {
+        for (const anthropicMessage of neutralHistory) {
 		// Handle simple string messages
 		if (typeof anthropicMessage.content === "string") {
 			vsCodeLmMessages.push(
@@ -47,10 +47,10 @@ export function convertToVsCodeLmMessages(
 		// Handle complex message structures
 		switch (anthropicMessage.role) {
 			case "user": {
-				const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
-					nonToolMessages: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[]
-					toolMessages: Anthropic.ToolResultBlockParam[]
-				}>(
+                                const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
+                                        nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
+                                        toolMessages: NeutralToolResultContentBlock[]
+                                }>(
 					(acc, part) => {
 						if (part.type === "tool_result") {
 							acc.toolMessages.push(part)
@@ -99,10 +99,10 @@ export function convertToVsCodeLmMessages(
 			}
 
 			case "assistant": {
-				const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
-					nonToolMessages: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[]
-					toolMessages: Anthropic.ToolUseBlockParam[]
-				}>(
+                                const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
+                                        nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
+                                        toolMessages: NeutralToolUseContentBlock[]
+                                }>(
 					(acc, part) => {
 						if (part.type === "tool_use") {
 							acc.toolMessages.push(part)

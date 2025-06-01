@@ -1,13 +1,13 @@
 // npx jest src/api/transform/__tests__/gemini-format.test.ts
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralMessage } from "../../shared/neutral-history"
 
 import { convertAnthropicMessageToGemini } from "../gemini-format"
 
 describe("convertAnthropicMessageToGemini", () => {
 	it("should convert a simple text message", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: "Hello, world!",
 		}
@@ -21,7 +21,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert assistant role to model role", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "assistant",
 			content: "I'm an assistant",
 		}
@@ -35,7 +35,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert a message with text blocks", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{ type: "text", text: "First paragraph" },
@@ -52,7 +52,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert a message with an image", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{ type: "text", text: "Check out this image:" },
@@ -84,7 +84,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should throw an error for unsupported image source type", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				 
@@ -103,7 +103,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert a message with tool use", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "assistant",
 			content: [
 				{ type: "text", text: "Let me calculate that for you." },
@@ -133,7 +133,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert a message with tool result as string", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{ type: "text", text: "Here's the result:" },
@@ -165,7 +165,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should handle empty tool result content", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{
@@ -186,7 +186,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert a message with tool result as array with text only", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{
@@ -219,7 +219,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert a message with tool result as array with text and images", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{
@@ -279,7 +279,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should convert a message with tool result containing only images", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{
@@ -324,7 +324,7 @@ describe("convertAnthropicMessageToGemini", () => {
 	})
 
 	it("should throw an error for unsupported content block type", () => {
-		const anthropicMessage: Anthropic.Messages.MessageParam = {
+		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{

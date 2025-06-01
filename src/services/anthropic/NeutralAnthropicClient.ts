@@ -95,6 +95,7 @@ export class NeutralAnthropicClient {
                     }
                     break;
                 default:
+                    console.warn(`Unexpected chunk type encountered: ${chunk.type}`);
                     break;
             }
         }

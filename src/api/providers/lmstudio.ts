@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import OpenAI from "openai"
 import axios from "axios"
 
@@ -24,14 +23,11 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 		})
 	}
 
-	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-		// TODO: convertToOpenAiMessages expects Anthropic.Messages.MessageParam[], but receives NeutralConversationHistory.
-		// This needs a proper conversion step or adjustment in convertToOpenAiMessages.
-		// For now, casting to satisfy the immediate type error, but this is not a complete fix.
-		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-			{ role: "system", content: systemPrompt },
-			...convertToOpenAiMessages(messages as unknown as Anthropic.Messages.MessageParam[]),
-		]
+       override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+               const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+                       { role: "system", content: systemPrompt },
+                       ...convertToOpenAiMessages(messages),
+               ]
 
 		try {
 			// Create params object with optional draft model

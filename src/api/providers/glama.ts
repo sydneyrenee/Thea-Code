@@ -1,4 +1,3 @@
-import { Anthropic } from "@anthropic-ai/sdk"
 import axios from "axios"
 import OpenAI from "openai"
 
@@ -41,10 +40,10 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 
 	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		// Convert Anthropic messages to OpenAI format
-		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-			{ role: "system", content: systemPrompt },
-			...convertToOpenAiMessages(messages as unknown as Anthropic.Messages.MessageParam[]),
-		]
+               const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+                       { role: "system", content: systemPrompt },
+                       ...convertToOpenAiMessages(messages),
+               ]
 
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
 		if (this.getModel().id.startsWith("anthropic/claude-3")) {

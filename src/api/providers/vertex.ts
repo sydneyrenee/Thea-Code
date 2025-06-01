@@ -1,5 +1,4 @@
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
-import { Stream as AnthropicStream } from "@anthropic-ai/sdk/streaming"
 
 import { VertexAI } from "@google-cloud/vertexai"
 
@@ -304,9 +303,9 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			stream: true,
 		}
 
-		const stream = (await this.anthropicClient.messages.create(
-			params as MessageCreateParamsNonStreaming
-		)) as unknown as AnthropicStream<VertexMessageStreamEvent>
+                const stream = (await this.anthropicClient.messages.create(
+                        params as MessageCreateParamsNonStreaming
+                )) as unknown as AsyncIterable<VertexMessageStreamEvent>
 
 		// Process the stream chunks
 		for await (const chunk of stream) {

@@ -23,10 +23,8 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 		})
 	}
 
-	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-		// TODO: convertToOpenAiMessages expects Anthropic.Messages.MessageParam[], but receives NeutralConversationHistory.
-		// This needs a proper conversion step or adjustment in convertToOpenAiMessages.
-		// For now, casting to satisfy the immediate type error, but this is not a complete fix.
+       override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+
                const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
                        { role: "system", content: systemPrompt },
                        ...convertToOpenAiMessages(messages),

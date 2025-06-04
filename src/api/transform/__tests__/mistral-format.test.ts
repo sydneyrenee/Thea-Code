@@ -1,12 +1,12 @@
 // npx jest src/api/transform/__tests__/mistral-format.test.ts
 
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 
 import { convertToMistralMessages } from "../mistral-format"
 
 describe("convertToMistralMessages", () => {
 	it("should convert simple text messages for user and assistant roles", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: "Hello",
@@ -30,7 +30,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle user messages with image content", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -70,7 +70,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle user messages with only tool results", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -90,7 +90,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle user messages with mixed content (text, image, and tool results)", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -137,7 +137,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle assistant messages with text content", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [
@@ -156,7 +156,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle assistant messages with tool use", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [
@@ -181,7 +181,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle multiple text blocks in assistant messages", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [
@@ -204,7 +204,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle a conversation with mixed message types", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -279,7 +279,7 @@ describe("convertToMistralMessages", () => {
 	})
 
 	it("should handle empty content in assistant messages", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [

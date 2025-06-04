@@ -1,6 +1,6 @@
 // npx jest src/api/transform/__tests__/vscode-lm-format.test.ts
 
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 
 import { convertToVsCodeLmMessages, convertToAnthropicRole } from "../vscode-lm-format"
 
@@ -83,7 +83,7 @@ jest.mock("vscode", () => {
 
 describe("convertToVsCodeLmMessages", () => {
 	it("should convert simple string messages", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{ role: "user", content: "Hello" },
 			{ role: "assistant", content: "Hi there" },
 		]
@@ -98,7 +98,7 @@ describe("convertToVsCodeLmMessages", () => {
 	})
 
 	it("should handle complex user messages with tool results", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -126,7 +126,7 @@ describe("convertToVsCodeLmMessages", () => {
 	})
 
 	it("should handle complex assistant messages with tool calls", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [
@@ -152,7 +152,7 @@ describe("convertToVsCodeLmMessages", () => {
 	})
 
 	it("should handle image blocks with appropriate placeholders", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [

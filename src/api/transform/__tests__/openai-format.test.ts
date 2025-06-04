@@ -1,13 +1,13 @@
 // npx jest src/api/transform/__tests__/openai-format.test.ts
 
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 import OpenAI from "openai"
 
 import { convertToOpenAiMessages } from "../openai-format"
 
 describe("convertToOpenAiMessages", () => {
 	it("should convert simple text messages", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: "Hello",
@@ -31,7 +31,7 @@ describe("convertToOpenAiMessages", () => {
 	})
 
 	it("should handle messages with image content", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -71,7 +71,7 @@ describe("convertToOpenAiMessages", () => {
 	})
 
 	it("should handle assistant messages with tool use", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "assistant",
 				content: [
@@ -107,7 +107,7 @@ describe("convertToOpenAiMessages", () => {
 	})
 
 	it("should handle user messages with tool results", () => {
-		const anthropicMessages: Anthropic.Messages.MessageParam[] = [
+		const anthropicMessages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [

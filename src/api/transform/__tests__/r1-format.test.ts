@@ -1,10 +1,10 @@
 import { convertToR1Format } from "../r1-format"
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 import OpenAI from "openai"
 
 describe("convertToR1Format", () => {
 	it("should convert basic text messages", () => {
-		const input: Anthropic.Messages.MessageParam[] = [
+		const input: NeutralConversationHistory = [
 			{ role: "user", content: "Hello" },
 			{ role: "assistant", content: "Hi there" },
 		]
@@ -18,7 +18,7 @@ describe("convertToR1Format", () => {
 	})
 
 	it("should merge consecutive messages with same role", () => {
-		const input: Anthropic.Messages.MessageParam[] = [
+		const input: NeutralConversationHistory = [
 			{ role: "user", content: "Hello" },
 			{ role: "user", content: "How are you?" },
 			{ role: "assistant", content: "Hi!" },
@@ -34,7 +34,7 @@ describe("convertToR1Format", () => {
 	})
 
 	it("should handle image content", () => {
-		const input: Anthropic.Messages.MessageParam[] = [
+		const input: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -68,7 +68,7 @@ describe("convertToR1Format", () => {
 	})
 
 	it("should handle mixed text and image content", () => {
-		const input: Anthropic.Messages.MessageParam[] = [
+		const input: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -104,7 +104,7 @@ describe("convertToR1Format", () => {
 	})
 
 	it("should merge mixed content messages with same role", () => {
-		const input: Anthropic.Messages.MessageParam[] = [
+		const input: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: [
@@ -165,7 +165,7 @@ describe("convertToR1Format", () => {
 	})
 
 	it("should handle messages with empty content", () => {
-		const input: Anthropic.Messages.MessageParam[] = [
+		const input: NeutralConversationHistory = [
 			{ role: "user", content: "" },
 			{ role: "assistant", content: "" },
 		]

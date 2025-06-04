@@ -333,7 +333,8 @@
     "test:extension": "jest",
     "test:types": "tsc --noEmit",
     "start-ollama-mock": "tsx test/ollama-mock-server/server.ts",
-    "install:all": "npm install && cd webview-ui && npm install && cd ../e2e && npm install && cd ../"
+    "install:all": "npm install && cd webview-ui && npm install && cd ../e2e && npm install && cd ../",
+    "generate:checklist": "tsx scripts/generate-master-list.ts"
   },
   "dependencies": {
     "@anthropic-ai/bedrock-sdk": "^0.22.1",

@@ -3,7 +3,7 @@
 Generated with scripts/generate-master-list.ts
 
 - [x] function: accessMcpResourceTool (src/core/tools/accessMcpResourceTool.ts)
-- [ ] interface: AccessMcpResourceToolUse (src/core/assistant-message/index.ts)
+- [x] interface: AccessMcpResourceToolUse (src/core/assistant-message/index.ts)
 - [x] function: activate (src/extension.ts)
 - [x] function: addCustomInstructions (src/core/prompts/sections/custom-instructions.ts)
 - [x] function: addLineNumbers (src/integrations/misc/extract-text.ts)

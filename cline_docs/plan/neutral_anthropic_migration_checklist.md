@@ -3,14 +3,14 @@
 This checklist tracks the remaining work required to remove direct usage of `@anthropic-ai/sdk` in favor of the upcoming `NeutralAnthropicClient`. The Anthropic SDK will still be used internally for network calls, but all tool interactions and history handling must go through the neutral client and provider-agnostic types.
 
 ## 1. Implement NeutralAnthropicClient
-- [ ] Create a wrapper client in `src/services/anthropic/NeutralAnthropicClient.ts` that:
+- [x] Create a wrapper client in `src/services/anthropic/NeutralAnthropicClient.ts` that:
   - Instantiates the official Anthropic SDK only for HTTP communication.
   - Converts between `NeutralConversationHistory` and Anthropic message formats.
   - Exposes streaming helpers that yield `ApiStreamChunk` in neutral form.
   - Provides token counting utilities independent of Anthropic types.
 
 ## 2. Refactor Provider Handlers
-- [ ] Replace direct `@anthropic-ai/sdk` imports in all handlers:
+- [x] Replace direct `@anthropic-ai/sdk` imports in all handlers:
   - `src/api/providers/anthropic.ts`
   - `src/api/providers/openrouter.ts`
   - `src/api/providers/unbound.ts`
@@ -22,8 +22,8 @@ This checklist tracks the remaining work required to remove direct usage of `@an
 - [ ] Remove leftover Anthropic specific types in these files and rely solely on neutral history structures.
 
 ## 3. Update Transformation Utilities
-- [ ] Audit all files under `src/api/transform/` for Anthropic types.
-- [ ] Convert helpers such as `convertToMistralMessages` and `convertToR1Format` to operate on `NeutralConversationHistory`.
+- [x] Audit all files under `src/api/transform/` for Anthropic types.
+- [x] Convert helpers such as `convertToMistralMessages` and `convertToR1Format` to operate on `NeutralConversationHistory`.
 - [ ] Ensure `McpConverters` provides any needed conversions.
 
 ## 4. Adjust Core Modules and Tests

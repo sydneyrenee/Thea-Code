@@ -3,7 +3,7 @@ import { EmbeddedMcpProvider } from '../../src/services/mcp/providers/EmbeddedMc
 let provider: EmbeddedMcpProvider | null = null;
 
 export const startServer = async (): Promise<void> => {
-  provider = new EmbeddedMcpProvider({ port: 0, hostname: 'localhost' });
+  provider = await EmbeddedMcpProvider.create({ port: 0, hostname: 'localhost' });
   await provider.start();
   const url = provider.getServerUrl();
   if (url) {

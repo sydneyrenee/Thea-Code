@@ -6,49 +6,52 @@ import { McpConverters } from '../core/McpConverters';
 
 // Mock the OpenAI client
 jest.mock('openai', () => {
-  return {
-    OpenAI: jest.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: jest.fn().mockImplementation(async ({ functions: _functions, function_call: _functionCall }) => {
-            void _functions;
-            void _functionCall;
-            await Promise.resolve();
-            // Mock streaming response
-            const stream = {
-              [Symbol.asyncIterator]: () => {
-                let count = 0;
-                const messages = [
-                  { choices: [{ delta: { content: 'I will use a tool to help you.' } }] },
-                  { 
-                    choices: [{ 
-                      delta: { 
-                        function_call: {
-                          name: 'test_tool',
-                          arguments: '{"param":"test value"}'
-                        } 
-                      } 
-                    }] 
-                  },
-                  { choices: [{ delta: { content: 'Here is the result from the tool.' } }] }
-                ];
-                
-                return {
-                  next: async () => {
-                    await Promise.resolve();
-                    if (count < messages.length) {
-                      return { value: messages[count++], done: false };
+  const OpenAI = jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: jest.fn().mockImplementation(async ({ functions: _functions, function_call: _functionCall }) => {
+          void _functions;
+          void _functionCall;
+          await Promise.resolve();
+          const stream = {
+            [Symbol.asyncIterator]: () => {
+              let count = 0;
+              const messages = [
+                { choices: [{ delta: { content: 'I will use a tool to help you.' } }] },
+                {
+                  choices: [{
+                    delta: {
+                      function_call: {
+                        name: 'test_tool',
+                        arguments: '{"param":"test value"}'
+                      }
                     }
-                    return { done: true };
+                  }]
+                },
+                { choices: [{ delta: { content: 'Here is the result from the tool.' } }] }
+              ];
+
+              return {
+                next: async () => {
+                  await Promise.resolve();
+                  if (count < messages.length) {
+                    return { value: messages[count++], done: false };
                   }
-                };
-              }
-            };
-            return stream;
-          })
-        }
+                  return { done: true };
+                }
+              };
+            }
+          };
+          return stream;
+        })
       }
-    }))
+    }
+  }));
+
+  return {
+    __esModule: true,
+    default: OpenAI,
+    OpenAI,
   };
 });
 

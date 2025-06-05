@@ -39,8 +39,9 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 
   private static async createServerInstance(): Promise<SdkMcpServer> {
     try {
-      // Correctly import McpServer from the SDK's CJS distribution
-      const mod = (await import("@modelcontextprotocol/sdk/dist/cjs/server/mcp.js")) as {
+      // Import McpServer using the package export which resolves to the
+      // appropriate module format (ESM or CJS) based on the current runtime.
+      const mod = (await import("@modelcontextprotocol/sdk/server/mcp.js")) as {
         McpServer?: new (options: { name: string; version: string }) => SdkMcpServer;
       };
       const { McpServer } = mod;

@@ -5,9 +5,9 @@ import { askFollowupQuestionTool } from "../askFollowupQuestionTool"
 import { TheaTask } from "../../TheaTask"
 import type { ToolUse } from "../../assistant-message"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../types"
-import { formatResponse } from "../prompts/responses"
+import { formatResponse } from "../../prompts/responses"
 
-jest.mock("../prompts/responses")
+jest.mock("../../prompts/responses")
 
 describe("askFollowupQuestionTool", () => {
     let mockTheaTask: jest.Mocked<Partial<TheaTask>> & {

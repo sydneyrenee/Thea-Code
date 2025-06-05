@@ -29,8 +29,10 @@ module.exports = {
 			],
 			moduleNameMapper: {
 				"^vscode$": "<rootDir>/src/__mocks__/vscode.js",
-				"@modelcontextprotocol/sdk$": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/index.js",
-				"@modelcontextprotocol/sdk/(.*)": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/$1",
+                                "@modelcontextprotocol/sdk$": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/index.js",
+                                "^@modelcontextprotocol/sdk/server/mcp\\.js$": "@modelcontextprotocol/sdk/server/mcp.js",
+                                "^@modelcontextprotocol/sdk/server/streamableHttp\\.js$": "@modelcontextprotocol/sdk/server/streamableHttp.js",
+                                "@modelcontextprotocol/sdk/(.*)": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/$1",
 				"^delay$": "<rootDir>/src/__mocks__/delay.js",
 				"^p-wait-for$": "<rootDir>/src/__mocks__/p-wait-for.js",
 				"^globby$": "<rootDir>/src/__mocks__/globby.js",

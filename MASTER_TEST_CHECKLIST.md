@@ -22,7 +22,7 @@ Generated with scripts/generate-master-list.ts
 - [ ] function: applyGitFallback (src/core/diff/strategies/new-unified/edit-strategies.ts)
 - [ ] function: applyRunLengthEncoding (src/integrations/misc/extract-text.ts)
 - [x] function: arePathsEqual (src/utils/path.ts)
-- [ ] function: askFollowupQuestionTool (src/core/tools/askFollowupQuestionTool.ts)
+- [x] function: askFollowupQuestionTool (src/core/tools/askFollowupQuestionTool.ts)
 - [ ] interface: AskFollowupQuestionToolUse (src/core/assistant-message/index.ts)
 - [ ] function: asObjectSafe (src/api/transform/vscode-lm-format.ts)
 - [ ] function: attemptCompletionTool (src/core/tools/attemptCompletionTool.ts)

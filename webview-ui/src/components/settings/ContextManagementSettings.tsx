@@ -79,10 +79,10 @@ export const ContextManagementSettings = ({
 				</div>
 
 				<div>
-					<VSCodeCheckbox
-						checked={showTheaIgnoredFiles}
-						onChange={(e: any) => setCachedStateField("showTheaIgnoredFiles", e.target.checked)}
-						data-testid="show-theaignored-files-checkbox">
+                                        <VSCodeCheckbox
+                                                checked={showTheaIgnoredFiles}
+                                                onChange={(checked: boolean) => setCachedStateField("showTheaIgnoredFiles", checked)}
+                                                data-testid="show-theaignored-files-checkbox">
 						<label className="block font-medium mb-1">
 							{t("settings:contextManagement.ignoreFileSetting.label")}
 						</label>
@@ -113,11 +113,11 @@ export const ContextManagementSettings = ({
 								disabled={maxReadFileLine === -1}
 							/>
 							<span>{t("settings:contextManagement.maxReadFile.lines")}</span>
-							<VSCodeCheckbox
-								checked={maxReadFileLine === -1}
-								onChange={(e: any) =>
-									setCachedStateField("maxReadFileLine", e.target.checked ? -1 : 500)
-								}
+                                                        <VSCodeCheckbox
+                                                                checked={maxReadFileLine === -1}
+                                                                onChange={(checked: boolean) =>
+                                                                        setCachedStateField("maxReadFileLine", checked ? -1 : 500)
+                                                                }
 								data-testid="max-read-file-always-full-checkbox">
 								{t("settings:contextManagement.maxReadFile.always_full_read")}
 							</VSCodeCheckbox>

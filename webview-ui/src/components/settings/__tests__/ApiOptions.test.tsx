@@ -23,12 +23,13 @@ jest.mock("@/components/ui/vscode-components", () => ({
 
 // Mock other components
 jest.mock("vscrui", () => ({
-	Checkbox: ({ children, checked, onChange }: any) => (
-		<label>
-			<input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-			{children}
-		</label>
-	),
+        Checkbox: ({ children, checked, onChange }: any) => (
+                <label>
+                        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+                        {children}
+                </label>
+        ),
+        Button: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
 }))
 
 // Mock @shadcn/ui components

@@ -1,7 +1,16 @@
 import React from "react"
 
-export const Checkbox = ({ children, onChange }: any) =>
-	React.createElement("div", { "data-testid": "mock-checkbox", onClick: onChange }, children)
+export const Checkbox = ({ children, onChange, ...props }: any) =>
+        React.createElement(
+                "label",
+                null,
+                React.createElement("input", {
+                        type: "checkbox",
+                        onChange: (e: any) => onChange?.(e.target.checked),
+                        ...props,
+                }),
+                children,
+        )
 
 export const Dropdown = ({ children, onChange }: any) =>
 	React.createElement("div", { "data-testid": "mock-dropdown", onClick: onChange }, children)

@@ -3,6 +3,8 @@ import { convertToOllamaHistory, convertToOllamaContentBlocks } from '../../tran
 import { NeutralConversationHistory, NeutralMessageContent } from '../../../shared/neutral-history';
 import { XmlMatcher } from '../../../utils/xml-matcher';
 import type { ApiStreamChunk } from '../../transform/stream';
+import { Readable } from 'stream';
+import nock from 'nock';
 
 // Mock the transform functions
 jest.mock('../../transform/neutral-ollama-format', () => ({
@@ -10,41 +12,6 @@ jest.mock('../../transform/neutral-ollama-format', () => ({
   convertToOllamaContentBlocks: jest.fn()
 }));
 
-// Mock the OpenAI client
-jest.mock('openai', () => {
-  const mockCreate = jest.fn().mockImplementation(() => {
-    return {
-      [Symbol.asyncIterator]: function* () {
-        yield {
-          choices: [{
-            delta: { content: 'Hello' }
-          }]
-        };
-        yield {
-          choices: [{
-            delta: { content: ' world' }
-          }]
-        };
-        yield {
-          choices: [{
-            delta: { content: '<think>This is reasoning</think>' }
-          }]
-        };
-      }
-    };
-  });
-
-  return {
-    __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
-      chat: {
-        completions: {
-          create: mockCreate
-        }
-      }
-    }))
-  };
-});
 
 // Mock the XmlMatcher
 jest.mock('../../../utils/xml-matcher', () => {
@@ -65,22 +32,28 @@ describe('OllamaHandler', () => {
   let handler: OllamaHandler;
   // Define availableModels as a const directly for .each
   const availableModels: string[] = ['llama2', 'mistral', 'gemma'];
-  
+
+
   beforeEach(() => {
     jest.clearAllMocks();
-    
+    nock.cleanAll();
+
     // Create handler with mock options
     handler = new OllamaHandler({
       ollamaBaseUrl: 'http://localhost:10000',
       ollamaModelId: 'llama2' // Default model for tests
     });
   });
+
+  afterEach(() => {
+    nock.cleanAll();
+  });
   
   describe('createMessage', () => {
     it.each(availableModels)('should use convertToOllamaHistory to convert messages with %s model', async (modelId) => {
       // Update handler to use the current model
       handler = new OllamaHandler({
-        ollamaBaseUrl: 'http://localhost:10000',
+      ollamaBaseUrl: 'http://localhost:10000',
         ollamaModelId: modelId
       });
       // Mock implementation
@@ -93,7 +66,29 @@ describe('OllamaHandler', () => {
         { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
       ];
       
-      // Call createMessage
+      let requestBody: any;
+      nock('http://localhost:10000')
+        .post('/v1/chat/completions')
+        .reply(function (_uri, body) {
+          requestBody = body;
+          const deltas = [
+            { content: 'Hello' },
+            { content: ' world' },
+            { content: '<think>This is reasoning</think>' }
+          ];
+          const stream = new Readable({ read() {} });
+          for (const delta of deltas) {
+            const chunk = {
+              id: 'id', object: 'chat.completion.chunk', created: 0, model: 'test',
+              choices: [{ delta, index: 0, finish_reason: null }]
+            };
+            stream.push(`data: ${JSON.stringify(chunk)}\n\n`);
+          }
+          stream.push('data: [DONE]\n\n');
+          stream.push(null);
+          return [200, stream];
+        });
+
       const stream = handler.createMessage('You are helpful.', neutralHistory);
       
       // Collect stream chunks
@@ -105,18 +100,15 @@ describe('OllamaHandler', () => {
       // Verify transform function was called
       expect(convertToOllamaHistory).toHaveBeenCalledWith(neutralHistory);
       
-      // Verify client.chat.completions.create was called with the correct arguments
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
-        model: modelId, // Use the modelId from the .each loop
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      expect(requestBody).toEqual(expect.objectContaining({
+        model: modelId,
         messages: expect.arrayContaining([
           { role: 'system', content: 'You are helpful.' },
           { role: 'user', content: 'Hello' }
         ]),
         temperature: 0,
         stream: true
-      });
+      }));
       
       // Verify stream chunks
       expect(chunks).toContainEqual({ type: 'text', text: 'Hello' });
@@ -142,7 +134,20 @@ describe('OllamaHandler', () => {
         { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
       ];
       
-      // Call createMessage
+      nock('http://localhost:10000')
+        .post('/v1/chat/completions')
+        .reply(() => {
+          const stream = new Readable({ read() {} });
+          const deltas = [{ content: 'Hello' }, { content: ' world' }];
+          for (const d of deltas) {
+            const chunk = { id: 'id', object: 'chat.completion.chunk', created: 0, model: 'test', choices: [{ delta: d, index: 0, finish_reason: null }] };
+            stream.push(`data: ${JSON.stringify(chunk)}\n\n`);
+          }
+          stream.push('data: [DONE]\n\n');
+          stream.push(null);
+          return [200, stream];
+        });
+
       const stream = handler.createMessage('You are helpful.', neutralHistory);
       
       // Collect stream chunks (just to complete the generator)
@@ -151,11 +156,8 @@ describe('OllamaHandler', () => {
         // Do nothing
       }
       
-      // Verify client.chat.completions.create was called with the correct arguments
-      // Should not add the new system prompt
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
-        model: modelId, // Use the modelId from the .each loop
+      expect(requestBody).toEqual({
+        model: modelId,
         messages: [
           { role: 'system', content: 'Existing system prompt' },
           { role: 'user', content: 'Hello' }
@@ -181,7 +183,17 @@ describe('OllamaHandler', () => {
         { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
       ];
       
-      // Call createMessage with empty system prompt
+      let requestBody: any;
+      nock('http://localhost:10000')
+        .post('/v1/chat/completions')
+        .reply(function (_uri, body) {
+          requestBody = body;
+          const stream = new Readable({ read() {} });
+          stream.push('data: [DONE]\n\n');
+          stream.push(null);
+          return [200, stream];
+        });
+
       const stream = handler.createMessage('', neutralHistory);
       
       // Collect stream chunks (just to complete the generator)
@@ -190,11 +202,8 @@ describe('OllamaHandler', () => {
         // Do nothing
       }
       
-      // Verify client.chat.completions.create was called with the correct arguments
-      // Should not add system prompt
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(handler['client'].chat.completions.create).toHaveBeenCalledWith({
-        model: modelId, // Use the modelId from the .each loop
+      expect(requestBody).toEqual({
+        model: modelId,
         messages: [
           { role: 'user', content: 'Hello' }
         ],
@@ -340,11 +349,13 @@ describe('OllamaHandler', () => {
         { role: 'user', content: 'Hello' }
       ]);
       
-      // Mock the client's create method to return a response
-      const mockCreate = jest.fn().mockResolvedValue({
-        choices: [{ message: { content: 'Hello world' } }]
-      });
-      handler['client'].chat.completions.create = mockCreate;
+      let requestBody: any;
+      nock('http://localhost:10000')
+        .post('/v1/chat/completions')
+        .reply(function (_uri, body) {
+          requestBody = body;
+          return [200, { choices: [{ message: { content: 'Hello world' } }] }];
+        });
       
       // Call completePrompt
       const result = await handler.completePrompt('Hello');
@@ -354,9 +365,8 @@ describe('OllamaHandler', () => {
         { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
       ]);
       
-      // Verify client.chat.completions.create was called with the correct arguments
-      expect(mockCreate).toHaveBeenCalledWith({
-        model: modelId, // Use the modelId from the .each loop
+      expect(requestBody).toEqual({
+        model: modelId,
         messages: [{ role: 'user', content: 'Hello' }],
         temperature: 0,
         stream: false
@@ -377,9 +387,9 @@ describe('OllamaHandler', () => {
         { role: 'user', content: 'Hello' }
       ]);
       
-      // Mock the client's create method to throw an error
-      const mockCreate = jest.fn().mockRejectedValue(new Error('API error'));
-      handler['client'].chat.completions.create = mockCreate;
+      nock('http://localhost:10000')
+        .post('/v1/chat/completions')
+        .reply(500, { error: { message: 'API error' } });
       
       // Call completePrompt and expect it to throw
       await expect(handler.completePrompt('Hello')).rejects.toThrow('Ollama completion error: API error');

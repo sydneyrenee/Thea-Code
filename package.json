@@ -374,7 +374,7 @@
     "lru-cache": "^11.1.0",
     "mammoth": "^1.9.1",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
-    "openai": "^5.1.0",
+    "openai": "^5.1.1",
     "os-name": "^6.1.0",
     "p-wait-for": "^5.0.2",
     "pdf-parse": "^1.1.1",

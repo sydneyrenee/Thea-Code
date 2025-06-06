@@ -6,10 +6,10 @@ import { TheaStateManager } from "../thea/TheaStateManager" // Renamed import an
 import { ContextProxy } from "../../config/ContextProxy"
 import { ProviderSettingsManager } from "../../config/ProviderSettingsManager"
 import { CustomModesManager } from "../../config/CustomModesManager"
-import type { defaultModeSlug } from "../../../shared/modes"
-import type { experimentDefault } from "../../../shared/experiments"
+import { defaultModeSlug } from "../../../shared/modes"
+import { experimentDefault } from "../../../shared/experiments"
 import { formatLanguage } from "../../../shared/language"
-import type { TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../../integrations/terminal/Terminal"
+import { TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../../integrations/terminal/Terminal"
 
 // Mock dependencies
 jest.mock("vscode")

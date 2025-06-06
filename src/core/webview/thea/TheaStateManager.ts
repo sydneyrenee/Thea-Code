@@ -8,8 +8,8 @@ import { GlobalState, TheaCodeSettings } from "../../../schemas"
 import { Mode, ModeConfig, defaultModeSlug } from "../../../shared/modes"
 import { ApiProvider } from "../../../shared/api"
 import { formatLanguage } from "../../../shared/language"
-import type { experimentDefault } from "../../../shared/experiments"
-import type { TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../../integrations/terminal/Terminal"
+import { experimentDefault } from "../../../shared/experiments"
+import { TERMINAL_SHELL_INTEGRATION_TIMEOUT } from "../../../integrations/terminal/Terminal"
 
 /**
  * Manages application state retrieval and updates.

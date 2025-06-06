@@ -11,7 +11,7 @@ import { ProviderSettingsManager } from "../../config/ProviderSettingsManager"
 import { CustomModesManager } from "../../config/CustomModesManager"
 import { TheaTask } from "../../TheaTask" // Renamed import
 import { McpServerManager } from "../../../services/mcp/management/McpServerManager"
-import type { defaultModeSlug } from "../../../shared/modes"
+import { defaultModeSlug } from "../../../shared/modes"
 import { HistoryItem } from "../../../shared/HistoryItem"
 import { t } from "../../../i18n"
 

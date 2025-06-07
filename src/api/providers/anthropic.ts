@@ -7,7 +7,6 @@ import {
 	ModelInfo,
 } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types
-import { convertToAnthropicContentBlocks } from "../transform/neutral-anthropic-format"; // Import conversion functions
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"

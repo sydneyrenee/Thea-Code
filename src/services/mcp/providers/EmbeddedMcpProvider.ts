@@ -13,6 +13,8 @@ import {
 } from "../types/McpProviderTypes";
 import { StdioTransportConfig, IMcpTransport } from "../types/McpTransportTypes";
 
+const isTestEnv = process.env.JEST_WORKER_ID !== undefined;
+
 // Define a more specific type for the MCP server instance from the SDK
 // This needs to align with the actual SDK's McpServer class structure
 interface SdkMcpServer {
@@ -48,14 +50,18 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
       if (!McpServer) {
         throw new Error("MCP SDK McpServer not found");
       }
-      console.log("Initializing MCP Server...");
+      if (!isTestEnv) {
+        console.log("Initializing MCP Server...");
+      }
       return new McpServer({
         name: "EmbeddedMcpProvider",
         version: "1.0.0"
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error("Failed to initialize MCP server:", errorMessage);
+      if (!isTestEnv) {
+        console.error("Failed to initialize MCP server:", errorMessage);
+      }
       throw error;
     }
   }
@@ -115,7 +121,9 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           }
         );
       } catch (error) {
-        console.error(`Failed to register tool ${name}:`, error);
+        if (!isTestEnv) {
+          console.error(`Failed to register tool ${name}:`, error);
+        }
       }
     }
 
@@ -147,7 +155,9 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           }
         );
       } catch (error) {
-        console.error(`Failed to register resource ${uri}:`, error);
+        if (!isTestEnv) {
+          console.error(`Failed to register resource ${uri}:`, error);
+        }
       }
     }
 
@@ -185,7 +195,12 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           }
         );
       } catch (error) {
-        console.error(`Failed to register resource template ${uriTemplate}:`, error);
+        if (!isTestEnv) {
+          console.error(
+            `Failed to register resource template ${uriTemplate}:`,
+            error
+          );
+        }
       }
     }
   }
@@ -302,7 +317,9 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           // Fallback to .port property if httpServer.address() didn't yield a port
           // This might be the case if the SDK sets .port directly after listening.
           actualPort = sdkSseTransportInstance.port;
-          console.warn("Retrieved port from sdkSseTransportInstance.port");
+          if (!isTestEnv) {
+            console.warn("Retrieved port from sdkSseTransportInstance.port");
+          }
         }
 
         if (!actualPort) {
@@ -311,9 +328,13 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
         
         const host = this.sseConfig.hostname || 'localhost';
         this.serverUrl = new URL(`http://${host}:${actualPort}`);
-        console.log(`MCP server (SSE) started at ${this.serverUrl.toString()}`);
+        if (!isTestEnv) {
+          console.log(`MCP server (SSE) started at ${this.serverUrl.toString()}`);
+        }
       } else {
-        console.log(`MCP server started with ${this.transportType} transport`);
+        if (!isTestEnv) {
+          console.log(`MCP server started with ${this.transportType} transport`);
+        }
       }
 
       this.isStarted = true;
@@ -325,13 +346,17 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
       this.emit('started', eventData);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error("Failed to start MCP server:", errorMessage);
+      if (!isTestEnv) {
+        console.error("Failed to start MCP server:", errorMessage);
+      }
       this.isStarted = false;
       if (this.transport) {
         try {
           await this.transport.close();
         } catch (closeError) {
-          console.error("Error closing transport:", closeError);
+          if (!isTestEnv) {
+            console.error("Error closing transport:", closeError);
+          }
         }
       }
       throw error;
@@ -347,7 +372,9 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
         await this.transport.close();
       }
     } catch (error) {
-      console.error("Error stopping MCP server:", error);
+      if (!isTestEnv) {
+        console.error("Error stopping MCP server:", error);
+      }
     } finally {
       this.transport = undefined;
       this.serverUrl = undefined;
@@ -425,7 +452,9 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           }
         );
       } catch (error) {
-        console.error(`Failed to register tool ${name}:`, error);
+        if (!isTestEnv) {
+          console.error(`Failed to register tool ${name}:`, error);
+        }
       }
     }
     this.emit('tool-registered', name);

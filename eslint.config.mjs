@@ -81,15 +81,15 @@ export default [
     "coverage/",
     "*.cjs",
     "src/__mocks__/**/*",
-    "webview-ui/",
-    "e2e/",
+    // "webview-ui/", // Removed from ignores so subproject linting works
+    // "e2e/", // Removed from ignores so subproject linting works
     "esbuild.js",
     "jest.config.js",
     "eslint.config.mjs",
     "temp_similarity_check.js",
     "scripts/",
     "test/",
-    "benchmark/",
+    // "benchmark/", // Removed from ignores so subproject linting works
     "**/*.md",
     "**/*.json",
     "**/*.yaml",

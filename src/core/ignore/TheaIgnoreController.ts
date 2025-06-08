@@ -43,17 +43,17 @@ export class TheaIgnoreController {
 		const fileWatcher = vscode.workspace.createFileSystemWatcher(ignorePattern)
 
 		// Watch for changes and updates
-		this.disposables.push(
-			fileWatcher.onDidChange(() => {
-				this.loadTheaIgnore()
-			}),
-			fileWatcher.onDidCreate(() => {
-				this.loadTheaIgnore()
-			}),
-			fileWatcher.onDidDelete(() => {
-				this.loadTheaIgnore()
-			}),
-		)
+               this.disposables.push(
+                       fileWatcher.onDidChange(() => {
+                               void this.loadTheaIgnore()
+                       }),
+                       fileWatcher.onDidCreate(() => {
+                               void this.loadTheaIgnore()
+                       }),
+                       fileWatcher.onDidDelete(() => {
+                               void this.loadTheaIgnore()
+                       }),
+               )
 
 		// Add fileWatcher itself to disposables
 		this.disposables.push(fileWatcher)
@@ -98,11 +98,10 @@ export class TheaIgnoreController {
 
 			// Ignore expects paths to be path.relative()'d
 			return !this.ignoreInstance.ignores(relativePath)
-		} catch (error) {
-			// console.error(`Error validating access for ${filePath}:`, error)
-			// Ignore is designed to work with relative file paths, so will throw error for paths outside cwd. We are allowing access to all files outside cwd.
-			return true
-		}
+               } catch {
+                       // Ignore is designed to work with relative file paths, so will throw error for paths outside cwd. We are allowing access to all files outside cwd.
+                       return true
+               }
 	}
 
 	/**

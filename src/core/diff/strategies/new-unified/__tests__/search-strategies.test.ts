@@ -1,15 +1,5 @@
 import { findAnchorMatch, findExactMatch, findSimilarityMatch, findLevenshteinMatch } from "../search-strategies"
 
-type SearchStrategy = (
-	searchStr: string,
-	content: string[],
-	startIndex?: number,
-) => {
-	index: number
-	confidence: number
-	strategy: string
-}
-
 const testCases = [
 	{
 		name: "should return no match if the search string is not found",

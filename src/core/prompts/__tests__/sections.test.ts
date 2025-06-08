@@ -36,9 +36,6 @@ describe("getCapabilitiesSection", () => {
                 getName: () => "MockStrategy",
                 getToolDescription: () => "apply_diff tool description",
                 applyDiff: (_originalContent: string, _diffContent: string): Promise<DiffResult> => {
-                        // mark parameters as used to satisfy linting rules
-                        void _originalContent
-                        void _diffContent
                         return Promise.resolve({ success: true, content: "mock result" })
                 },
         }

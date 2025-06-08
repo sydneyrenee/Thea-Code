@@ -493,3 +493,4 @@ Generated with scripts/generate-master-list.ts
 - [x] function: xmlThinkingToJson (src/utils/json-xml-bridge.ts)
 - [x] function: xmlToolResultToJson (src/utils/json-xml-bridge.ts)
 - [x] function: xmlToolUseToJson (src/utils/json-xml-bridge.ts)
+- [ ] function: waitFor (benchmark/src/utils.ts)

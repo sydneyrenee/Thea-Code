@@ -66,11 +66,11 @@ describe('OllamaHandler', () => {
         { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
       ];
       
-      let requestBody: any;
+      let requestBody: Record<string, unknown> | undefined;
       nock('http://localhost:10000')
         .post('/v1/chat/completions')
-        .reply(function (_uri, body) {
-          requestBody = body;
+        .reply(function (_uri, body: unknown) {
+          requestBody = body as Record<string, unknown>;
           const deltas = [
             { content: 'Hello' },
             { content: ' world' },
@@ -100,15 +100,23 @@ describe('OllamaHandler', () => {
       // Verify transform function was called
       expect(convertToOllamaHistory).toHaveBeenCalledWith(neutralHistory);
       
-      expect(requestBody).toEqual(expect.objectContaining({
-        model: modelId,
-        messages: expect.arrayContaining([
-          { role: 'system', content: 'You are helpful.' },
-          { role: 'user', content: 'Hello' }
-        ]),
-        temperature: 0,
-        stream: true
-      }));
+      const rb = requestBody as {
+        model: string;
+        messages: unknown;
+        temperature: number;
+        stream: boolean;
+      };
+      expect(rb).toEqual(
+        expect.objectContaining({
+          model: modelId,
+          messages: expect.arrayContaining([
+            { role: 'system', content: 'You are helpful.' },
+            { role: 'user', content: 'Hello' },
+          ]) as unknown,
+          temperature: 0,
+          stream: true,
+        }),
+      );
       
       // Verify stream chunks
       expect(chunks).toContainEqual({ type: 'text', text: 'Hello' });
@@ -183,11 +191,11 @@ describe('OllamaHandler', () => {
         { role: 'user', content: [{ type: 'text', text: 'Hello' }] }
       ];
       
-      let requestBody: any;
+      let requestBody: Record<string, unknown> | undefined;
       nock('http://localhost:10000')
         .post('/v1/chat/completions')
-        .reply(function (_uri, body) {
-          requestBody = body;
+        .reply(function (_uri, body: unknown) {
+          requestBody = body as Record<string, unknown>;
           const stream = new Readable({ read() {} });
           stream.push('data: [DONE]\n\n');
           stream.push(null);
@@ -349,11 +357,11 @@ describe('OllamaHandler', () => {
         { role: 'user', content: 'Hello' }
       ]);
       
-      let requestBody: any;
-      nock('http://localhost:10000')
-        .post('/v1/chat/completions')
-        .reply(function (_uri, body) {
-          requestBody = body;
+      let requestBody: Record<string, unknown> | undefined;
+        nock('http://localhost:10000')
+          .post('/v1/chat/completions')
+          .reply(function (_uri, body: unknown) {
+            requestBody = body as Record<string, unknown>;
           return [200, { choices: [{ message: { content: 'Hello world' } }] }];
         });
       

@@ -27,12 +27,14 @@ export const waitFor = (
 					}
 
 					resolve()
-				} else {
-					setTimeout(check, interval)
-				}
+                                } else {
+                                        setTimeout(() => {
+                                                void check()
+                                        }, interval)
+                                }
 			}
 
-			check()
+                        void check()
 		}),
 		new Promise((_, reject) => {
 			timeoutId = setTimeout(() => {

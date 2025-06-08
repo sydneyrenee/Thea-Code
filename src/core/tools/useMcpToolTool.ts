@@ -46,7 +46,7 @@ export async function useMcpToolTool(
 			if (mcp_arguments) {
 				try {
 					parsedArguments = JSON.parse(mcp_arguments)
-				} catch (error) {
+				} catch {
 					theaTask.consecutiveMistakeCount++
 					await theaTask.webviewCommunicator.say(
 						"error",
@@ -85,7 +85,7 @@ export async function useMcpToolTool(
 								return item.text
 							}
 							if (item.type === "resource") {
-								const { blob, ...rest } = item.resource
+								const { blob: _unused, ...rest } = item.resource
 								return JSON.stringify(rest, null, 2)
 							}
 							return ""

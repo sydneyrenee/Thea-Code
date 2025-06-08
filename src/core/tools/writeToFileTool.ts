@@ -98,19 +98,19 @@ export async function writeToFileTool(
 			if (!relPath) {
 				theaTask.consecutiveMistakeCount++
 				pushToolResult(await theaTask.sayAndCreateMissingParamError("write_to_file", "path"))
-				await theaTask.diffViewProvider.reset()
+				theaTask.diffViewProvider.reset()
 				return
 			}
 			if (!newContent) {
 				theaTask.consecutiveMistakeCount++
 				pushToolResult(await theaTask.sayAndCreateMissingParamError("write_to_file", "content"))
-				await theaTask.diffViewProvider.reset()
+				theaTask.diffViewProvider.reset()
 				return
 			}
 			if (!predictedLineCount) {
 				theaTask.consecutiveMistakeCount++
 				pushToolResult(await theaTask.sayAndCreateMissingParamError("write_to_file", "line_count"))
-				await theaTask.diffViewProvider.reset()
+				theaTask.diffViewProvider.reset()
 				return
 			}
 			theaTask.consecutiveMistakeCount = 0

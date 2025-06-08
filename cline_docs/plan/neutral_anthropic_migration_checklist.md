@@ -20,6 +20,7 @@ This checklist tracks the remaining work required to remove direct usage of `@an
   - `src/api/providers/vertex.ts`
 - [ ] Update each handler to depend on `NeutralAnthropicClient` for message creation, streaming, and token counting.
 - [ ] Remove leftover Anthropic specific types in these files and rely solely on neutral history structures.
+  - [x] `src/api/providers/unbound.ts` uses `NeutralConversationHistory`.
 
 ## 3. Update Transformation Utilities
 - [x] Audit all files under `src/api/transform/` for Anthropic types.

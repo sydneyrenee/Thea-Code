@@ -2,8 +2,7 @@ import * as vscode from "vscode"
 
 import { SYSTEM_PROMPT } from "../system"
 import { McpHub } from "../../../services/mcp/management/McpHub"
-import { TheaProvider } from "../../../core/webview/TheaProvider"
-import { defaultModeSlug, modes, Mode, ModeConfig } from "../../../shared/modes"
+import { defaultModeSlug, modes, ModeConfig } from "../../../shared/modes"
 import "../../../utils/path" // Import path utils to get access to toPosix string extension.
 import { addCustomInstructions } from "../sections/custom-instructions"
 import { EXPERIMENT_IDS } from "../../../shared/experiments"
@@ -118,14 +117,6 @@ const mockContext = {
 		},
 	},
 } as unknown as vscode.ExtensionContext
-
-// Create a minimal mock of TheaProvider
-const mockProvider = {
-	ensureMcpServersDirectoryExists: async () => "/mock/mcp/path",
-	ensureSettingsDirectoryExists: async () => "/mock/settings/path",
-	postMessageToWebview: async () => {},
-	context: mockContext,
-} as unknown as TheaProvider
 
 // Instead of extending McpHub, create a mock that implements just what we need
 const createMockMcpHub = (): McpHub =>

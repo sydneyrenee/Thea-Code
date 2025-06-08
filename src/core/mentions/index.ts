@@ -100,7 +100,7 @@ export async function getFileOrFolderContent(mentionPath: string, cwd: string): 
 								}
 								const content = await extractTextFromFile(absoluteFilePath)
 								return `<file_content path="${filePath}">\n${content}\n</file_content>`
-							} catch (error) {
+							} catch {
 								return undefined
 							}
 						})(),
@@ -170,7 +170,7 @@ const fileHandler: HandlerConfig = {
 		}
 
 		try {
-               const content = await getFileOrFolderContent(mentionPath, cwd)
+			const content = await getFileOrFolderContent(mentionPath, cwd)
 			return wrapContent(content, tag)
 		} catch (error) {
 			return wrapContent(handleError(error, "fetching content"), tag)
@@ -223,7 +223,7 @@ const commitHandler: HandlerConfig = {
 const terminalHandler: HandlerConfig = {
 	name: "terminal",
 	test: (mention: string) => mention === "terminal",
-	handler: async (mention) => {
+	handler: async () => {
 		const tag = createXmlTag("terminal_output")
 		try {
 			const terminalOutput = await getLatestTerminalOutput()

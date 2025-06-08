@@ -6,6 +6,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 import type { EXTENSION_NAME } from "../../../dist/thea-config" // Import branded constant
 
 interface UnboundUsage extends OpenAI.CompletionUsage {

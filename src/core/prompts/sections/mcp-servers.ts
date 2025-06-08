@@ -1,11 +1,11 @@
 import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/management/McpHub"
 
-export async function getMcpServersSection(
-	mcpHub?: McpHub,
-	diffStrategy?: DiffStrategy,
-	enableMcpServerCreation?: boolean,
-): Promise<string> {
+export function getMcpServersSection(
+        mcpHub?: McpHub,
+        diffStrategy?: DiffStrategy,
+        enableMcpServerCreation?: boolean,
+): string {
 	if (!mcpHub) {
 		return ""
 	}

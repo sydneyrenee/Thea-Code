@@ -116,7 +116,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests the file watcher setup
 		 */
-		it(`should set up file watcher for ${GLOBAL_FILENAMES.IGNORE_FILENAME} changes`, async () => {
+               it(`should set up file watcher for ${GLOBAL_FILENAMES.IGNORE_FILENAME} changes`, () => {
 			// Check that watcher was created with correct pattern
 			expect(vscode.workspace.createFileSystemWatcher).toHaveBeenCalledWith(
 				expect.objectContaining({

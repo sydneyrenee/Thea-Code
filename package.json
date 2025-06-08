@@ -403,6 +403,7 @@
     "@dotenvx/dotenvx": "^1.44.1",
     "@types/debug": "^4.1.12",
     "@types/diff-match-patch": "^1.0.36",
+    "@types/express": "^5.0.3",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.29",

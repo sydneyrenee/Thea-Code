@@ -1,7 +1,7 @@
 import { IMcpTransport } from "../types/McpTransportTypes";
 import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "./config/SseTransportConfig";
 import express from "express";
-import http, { AddressInfo } from "http";
+import http from "http";
 
 /**
  * SseTransport provides an implementation of the MCP transport using SSE.
@@ -50,8 +50,10 @@ export class SseTransport implements IMcpTransport {
         this.httpServer = app.listen(this.config.port, this.config.hostname, () => resolve());
       });
       await this.transport.start();
-      const address = this.httpServer.address() as AddressInfo;
-      this.port = address.port;
+        const address = this.httpServer.address();
+        if (address && typeof address !== 'string') {
+          this.port = address.port;
+        }
     } catch (error) {
       const msg = `Failed to initialize MCP SDK: ${error instanceof Error ? error.message : String(error)}`;
       console.error(msg);

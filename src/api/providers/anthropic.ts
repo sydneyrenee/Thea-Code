@@ -39,99 +39,25 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
                })
 
                for await (const chunk of stream) {
-                       switch (chunk.type) {
-				case "message_start": {
-					// Tells us cache reads/writes/input/output.
-					const usage = chunk.message.usage
+                       if (chunk.type === 'tool_use') {
+                               const toolResult = await this.processToolUse({
+                                       id: chunk.id,
+                                       name: chunk.name,
+                                       input: chunk.input,
+                               })
 
-					yield {
-						type: "usage",
-						inputTokens: usage.input_tokens || 0,
-						outputTokens: usage.output_tokens || 0,
-						cacheWriteTokens: usage.cache_creation_input_tokens || undefined,
-						cacheReadTokens: usage.cache_read_input_tokens || undefined,
-					}
+                               const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult)
 
-					break
-				}
-				case "message_delta": {
-					// Tells us stop_reason, stop_sequence, and output tokens
-					// along the way and at the end of the message.
-					yield {
-						type: "usage",
-						inputTokens: 0,
-						outputTokens: chunk.usage.output_tokens || 0,
-					}
-
-					break
-				}
-				case "message_stop":
-					// No usage data, just an indicator that the message is done.
-					break
-				case "content_block_start": {
-					switch (chunk.content_block.type) {
-						case "thinking": {
-							// We may receive multiple text blocks, in which
-							// case just insert a line break between them.
-							if (chunk.index > 0) {
-								yield { type: "reasoning", text: "\n" }
-							}
-
-							yield { type: "reasoning", text: chunk.content_block.thinking }
-							break
-						}
-						case "text": {
-							// We may receive multiple text blocks, in which
-							// case just insert a line break between them.
-							if (chunk.index > 0) {
-								yield { type: "text", text: "\n" }
-							}
-
-							yield { type: "text", text: chunk.content_block.text }
-							break
-						}
-						case "tool_use": {
-							const toolUseBlock = chunk.content_block;
-							// Process tool use using MCP integration via BaseProvider.processToolUse
-							const toolResult = await this.processToolUse({
-								id: toolUseBlock.id,
-								name: toolUseBlock.name,
-								input: toolUseBlock.input
-							});
-
-							// Ensure the tool result content is a string for StreamToolResult
-							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
-
-							// Yield tool result
-							yield {
-								type: 'tool_result',
-								id: toolUseBlock.id, // Corrected from 'tool_use_id' to 'id'
-								content: toolResultString
-							};
-							break;
-						}
-					}
-					break;
-				}
-				case "content_block_delta": {
-					switch (chunk.delta.type) {
-						case "thinking_delta": {
-							yield { type: "reasoning", text: chunk.delta.thinking }
-							break
-						}
-						case "text_delta": {
-							yield { type: "text", text: chunk.delta.text }
-							break
-						}
-					}
-					break
-				}
-				case "content_block_stop": {
-					break;
-				}
-			}
-		}
-	}
+                               yield {
+                                       type: 'tool_result',
+                                       id: chunk.id,
+                                       content: toolResultString,
+                               }
+                       } else {
+                               yield chunk
+                       }
+               }
+       }
 
 	getModel() {
 		const modelId = this.options.apiModelId;

@@ -67,7 +67,7 @@ export const handleError = (error: Error, message: string): string => {
 }
 
 // File utilities
-export async function getFileOrFolderContent(mentionPath: string, cwd: string, osInfo: string): Promise<string> {
+export async function getFileOrFolderContent(mentionPath: string, cwd: string): Promise<string> {
 	const absPath = path.resolve(cwd, mentionPath)
 
 	try {
@@ -170,7 +170,7 @@ const fileHandler: HandlerConfig = {
 		}
 
 		try {
-			const content = await getFileOrFolderContent(mentionPath, cwd, osInfo)
+               const content = await getFileOrFolderContent(mentionPath, cwd)
 			return wrapContent(content, tag)
 		} catch (error) {
 			return wrapContent(handleError(error, "fetching content"), tag)

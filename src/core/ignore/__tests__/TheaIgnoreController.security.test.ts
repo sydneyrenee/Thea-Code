@@ -4,7 +4,6 @@ import { TheaIgnoreController } from "../TheaIgnoreController"
 import * as path from "path"
 import * as fs from "fs/promises"
 import { fileExistsAtPath } from "../../../utils/fs"
-import * as vscode from "vscode"
 
 // Mock dependencies
 jest.mock("fs/promises")
@@ -21,10 +20,10 @@ jest.mock("vscode", () => {
 				dispose: jest.fn(),
 			})),
 		},
-		RelativePattern: jest.fn().mockImplementation((base, pattern) => ({
-			base,
-			pattern,
-		})),
+               RelativePattern: jest.fn().mockImplementation((base: string, pattern: string) => ({
+                       base,
+                       pattern,
+               })),
 	}
 })
 

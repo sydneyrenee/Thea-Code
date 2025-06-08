@@ -1,31 +1,11 @@
 import { diff_match_patch } from "diff-match-patch"
 import { EditResult, Hunk } from "./types"
-import { getDMPSimilarity, validateEditResult } from "./search-strategies"
+import { validateEditResult } from "./search-strategies"
 import * as path from "path"
 import simpleGit, { SimpleGit } from "simple-git"
 import * as tmp from "tmp"
 import * as fs from "fs"
 
-// Helper function to infer indentation - simplified version
-function inferIndentation(line: string, contextLines: string[], previousIndent: string = ""): string {
-	// If the line has explicit indentation in the change, use it exactly
-	const lineMatch = line.match(/^(\s+)/)
-	if (lineMatch) {
-		return lineMatch[1]
-	}
-
-	// If we have context lines, use the indentation from the first context line
-	const contextLine = contextLines[0]
-	if (contextLine) {
-		const contextMatch = contextLine.match(/^(\s+)/)
-		if (contextMatch) {
-			return contextMatch[1]
-		}
-	}
-
-	// Fallback to previous indent
-	return previousIndent
-}
 
 // Context matching edit strategy
 export function applyContextMatching(hunk: Hunk, content: string[], matchPosition: number): EditResult {
@@ -201,9 +181,9 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 					result: newLines,
 					strategy: "git-fallback",
 				}
-			} catch (cherryPickError) {
-				console.error("Strategy 1 failed with merge conflict")
-			}
+                        } catch {
+                                console.error("Strategy 1 failed with merge conflict")
+                        }
 		} catch (error) {
 			console.error("Strategy 1 failed:", error)
 		}
@@ -243,9 +223,9 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 					result: newLines,
 					strategy: "git-fallback",
 				}
-			} catch (cherryPickError) {
-				console.error("Strategy 2 failed with merge conflict")
-			}
+                        } catch {
+                                console.error("Strategy 2 failed with merge conflict")
+                        }
 		} catch (error) {
 			console.error("Strategy 2 failed:", error)
 		}

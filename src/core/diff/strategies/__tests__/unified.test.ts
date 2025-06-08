@@ -140,7 +140,7 @@ function App() {
 			}
 		})
 
-                it.skip("should successfully apply a diff with multiple hunks", async () => {
+               it.skip("should successfully apply a diff with multiple hunks", () => {
 			const originalContent = `import { readFile, writeFile } from 'fs';
 
 function processFile(path: string) {

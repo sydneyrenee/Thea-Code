@@ -10,7 +10,7 @@ import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-sear
 
 // Mock the sections
 jest.mock("../sections/modes", () => ({
-	getModesSection: jest.fn().mockImplementation(async () => `====\n\nMODES\n\n- Test modes section`),
+        getModesSection: jest.fn().mockImplementation(() => `====\n\nMODES\n\n- Test modes section`),
 }))
 
 // Mock the custom instructions
@@ -27,12 +27,12 @@ jest.mock("../sections/custom-instructions", () => {
 // Set up default mock implementation
 const { __setMockImplementation } = jest.requireMock("../sections/custom-instructions")
 __setMockImplementation(
-	async (
-		modeCustomInstructions: string,
-		globalCustomInstructions: string,
-		cwd: string,
-		mode: string,
-		options?: { language?: string },
+        (
+                modeCustomInstructions: string,
+                globalCustomInstructions: string,
+                cwd: string,
+                mode: string,
+                options?: { language?: string },
 	) => {
 		const sections = []
 
@@ -120,20 +120,20 @@ const mockContext = {
 
 // Instead of extending McpHub, create a mock that implements just what we need
 const createMockMcpHub = (): McpHub =>
-	({
-		getServers: () => [],
-		getMcpServersPath: async () => "/mock/mcp/path",
-		getMcpSettingsFilePath: async () => "/mock/settings/path",
-		dispose: async () => {},
-		// Add other required public methods with no-op implementations
-		restartConnection: async () => {},
-		readResource: async () => ({ contents: [] }),
-		callTool: async () => ({ content: [] }),
-		toggleServerDisabled: async () => {},
-		toggleToolAlwaysAllow: async () => {},
-		isConnecting: false,
-		connections: [],
-	}) as unknown as McpHub
+        ({
+                getServers: () => [],
+                getMcpServersPath: () => "/mock/mcp/path",
+                getMcpSettingsFilePath: () => "/mock/settings/path",
+                dispose: () => {},
+                // Add other required public methods with no-op implementations
+                restartConnection: () => {},
+                readResource: () => ({ contents: [] }),
+                callTool: () => ({ content: [] }),
+                toggleServerDisabled: () => {},
+                toggleToolAlwaysAllow: () => {},
+                isConnecting: false,
+                connections: [],
+        }) as unknown as McpHub
 
 describe("SYSTEM_PROMPT", () => {
 	let mockMcpHub: McpHub

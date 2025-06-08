@@ -1,14 +1,12 @@
-import defaultShell from "default-shell"
 import os from "os"
 import osName from "os-name"
-import { Mode, ModeConfig, getModeBySlug, defaultModeSlug, isToolAllowedForMode } from "../../../shared/modes"
+import { Mode, ModeConfig } from "../../../shared/modes"
 import { getShell } from "../../../utils/shell"
 
 export function getSystemInfoSection(cwd: string, currentMode: Mode, customModes?: ModeConfig[]): string {
-	const findModeBySlug = (slug: string, modes?: ModeConfig[]) => modes?.find((m) => m.slug === slug)
-
-	const currentModeName = findModeBySlug(currentMode, customModes)?.name || currentMode
-	const codeModeName = findModeBySlug(defaultModeSlug, customModes)?.name || "Code"
+        // mark parameters as used to satisfy lint rules
+        void currentMode
+        void customModes
 
 	let details = `====
 

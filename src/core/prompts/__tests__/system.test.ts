@@ -15,13 +15,14 @@ jest.mock("../sections/modes", () => ({
 
 // Mock the custom instructions
 jest.mock("../sections/custom-instructions", () => {
-	const addCustomInstructions = jest.fn()
-	return {
-		addCustomInstructions,
-		__setMockImplementation: (impl: any) => {
-			addCustomInstructions.mockImplementation(impl)
-		},
-	}
+        const addCustomInstructions = jest.fn()
+        return {
+                addCustomInstructions,
+                __setMockImplementation: (impl: (...args: unknown[]) => unknown) => {
+                        // Cast is safe in test context
+                        addCustomInstructions.mockImplementation(impl as any)
+                },
+        }
 })
 
 // Set up default mock implementation
@@ -641,22 +642,18 @@ describe("SYSTEM_PROMPT", () => {
 })
 
 describe("addCustomInstructions", () => {
-	let experiments: Record<string, boolean> | undefined
-	beforeAll(() => {
-		// Ensure fs mock is properly initialized
-		const mockFs = jest.requireMock("fs/promises")
-		mockFs._setInitialMockData()
-		mockFs.mkdir.mockImplementation(async (path: string) => {
-			if (path.startsWith("/test")) {
-				mockFs._mockDirectories.add(path)
-				return Promise.resolve()
-			}
-			throw new Error(`ENOENT: no such file or directory, mkdir '${path}'`)
-		})
-
-		// Initialize experiments as undefined by default
-		experiments = undefined
-	})
+        beforeAll(() => {
+                // Ensure fs mock is properly initialized
+                const mockFs = jest.requireMock("fs/promises")
+                mockFs._setInitialMockData()
+                mockFs.mkdir.mockImplementation(async (path: string) => {
+                        if (path.startsWith("/test")) {
+                                mockFs._mockDirectories.add(path)
+                                return Promise.resolve()
+                        }
+                        throw new Error(`ENOENT: no such file or directory, mkdir '${path}'`)
+                })
+        })
 
 	beforeEach(() => {
 		jest.clearAllMocks()

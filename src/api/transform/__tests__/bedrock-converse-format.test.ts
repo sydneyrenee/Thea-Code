@@ -1,7 +1,7 @@
 // npx jest src/api/transform/__tests__/bedrock-converse-format.test.ts
 
 import { convertToBedrockConverseMessages } from "../bedrock-converse-format"
-import type { NeutralConversationHistory } from "../../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import { ToolResultContentBlock } from "@aws-sdk/client-bedrock-runtime"
 
 describe("convertToBedrockConverseMessages", () => {

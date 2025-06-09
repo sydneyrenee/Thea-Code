@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/unbound-method */
 import * as vscode from "vscode"
 import { TheaProvider } from "../TheaProvider" // Renamed import
 import { TheaTaskStack } from "../thea/TheaTaskStack" // Renamed import and path

@@ -3,6 +3,8 @@
 import type { NeutralConversationHistory } from "../../shared/neutral-history"
 import OpenAI from "openai"
 
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import { convertToOpenAiMessages } from "../openai-format"
 
 describe("convertToOpenAiMessages", () => {

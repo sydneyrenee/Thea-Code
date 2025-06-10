@@ -103,20 +103,5 @@ jobs:
             echo "⚠️  No e2e folder found"
           fi
 
-      - name: Build TypeScript project
-        run: |
-          echo "🔨 Building main TypeScript project..."
-          npm run build
-
-      - name: Build webview-ui
-        working-directory: ./webview-ui
-        run: |
-          if [ -d "." ]; then
-            echo "🔨 Building webview-ui..."
-            npm run build
-          else
-            echo "⚠️  No webview-ui folder found to build"
-          fi
-
       - name: Setup complete
         run: echo "🎉 All deps are in place—network can go dark now. Happy coding!"

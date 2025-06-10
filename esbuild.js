@@ -181,7 +181,7 @@ const extensionConfig = {
 		},
 	],
 	entryPoints: ["src/extension.ts"],
-	format: "cjs",
+	format: "esm",
 	sourcesContent: false,
 	platform: "node",
 	outfile: "dist/extension.js",

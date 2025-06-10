@@ -311,7 +311,7 @@
   },
   "scripts": {
     "build": "npm run clean && npm run build:extension && npm run build:webui",
-    "build:extension": "npx esbuild --bundle ./src/extension.ts --external:vscode --platform=node --format=esm --outfile=dist/extension.js --sourcemap",
+    "build:extension": "node esbuild.js",
     "build:webui": "cd webview-ui && npm run build",
     "brand": "npm run prettier:branding",
     "semantic-release": "semantic-release",

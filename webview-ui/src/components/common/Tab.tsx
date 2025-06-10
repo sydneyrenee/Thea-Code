@@ -1,4 +1,4 @@
-import { HTMLAttributes, useCallback } from "react"
+import React, { HTMLAttributes, useCallback } from "react"
 
 import { useExtensionState } from "@/context/ExtensionStateContext"
 import { cn } from "@/lib/utils"

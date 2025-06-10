@@ -8,7 +8,7 @@ export { getMaxTokensForModel }
 /**
  * Mock version of the TaskHeader component
  */
-const TaskHeader: React.FC<any> = () => {
+const TaskHeader: React.FC<Record<string, unknown>> = () => {
 	return <div data-testid="mocked-task-header">Mocked TaskHeader</div>
 }
 

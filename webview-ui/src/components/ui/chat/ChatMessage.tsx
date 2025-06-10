@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import React, { useMemo } from "react"
 import { CopyIcon, CheckIcon } from "@radix-ui/react-icons"
 import { BrainCircuit, CircleUserRound } from "lucide-react"
 
@@ -20,7 +20,7 @@ interface ChatMessageProps {
 	append?: ChatHandler["append"]
 }
 
-export function ChatMessage({ message, isLast, isHeaderVisible, isLoading, append }: ChatMessageProps) {
+export function ChatMessage({ message, isLast, isHeaderVisible }: ChatMessageProps) {
 	const badges = useMemo(
 		() =>
 			message.annotations

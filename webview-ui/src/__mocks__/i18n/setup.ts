@@ -2,7 +2,7 @@ import i18next from "i18next"
 import { initReactI18next } from "react-i18next"
 
 // Mock translations for testing
-const translations: Record<string, Record<string, any>> = {
+const translations: Record<string, Record<string, unknown>> = {
 	en: {
 		chat: {
 			greeting: "What can Thea do for you?",
@@ -49,7 +49,7 @@ export function loadTranslations() {
 	// Translations are already loaded in the mock
 }
 
-export function addTranslation(language: string, namespace: string, resources: any) {
+export function addTranslation(language: string, namespace: string, resources: Record<string, unknown>) {
 	if (!translations[language]) {
 		translations[language] = {}
 	}

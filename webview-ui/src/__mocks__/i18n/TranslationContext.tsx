@@ -3,10 +3,10 @@ import i18next from "./setup"
 
 // Create a mock context
 export const TranslationContext = React.createContext<{
-	t: (key: string, options?: Record<string, any>) => string
+	t: (key: string, options?: Record<string, unknown>) => string
 	i18n: typeof i18next
 }>({
-	t: (key: string, options?: Record<string, any>) => {
+	t: (key: string, options?: Record<string, unknown>) => {
 		// Handle specific test cases
 		if (key === "settings.autoApprove.title") {
 			return "Auto-Approve"
@@ -24,7 +24,7 @@ export const TranslationProvider: React.FC<{ children: ReactNode }> = ({ childre
 	return (
 		<TranslationContext.Provider
 			value={{
-				t: (key: string, options?: Record<string, any>) => {
+				t: (key: string, options?: Record<string, unknown>) => {
 					// Handle specific test cases
 					if (key === "settings.autoApprove.title") {
 						return "Auto-Approve"

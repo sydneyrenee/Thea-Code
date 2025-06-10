@@ -1,3 +1,4 @@
+import React from "react"
 import { PaperPlaneIcon, StopIcon } from "@radix-ui/react-icons"
 
 import { Button, AutosizeTextarea } from "@/components/ui"

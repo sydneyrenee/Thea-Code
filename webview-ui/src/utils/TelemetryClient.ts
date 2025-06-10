@@ -30,7 +30,7 @@ class TelemetryClient {
 		return TelemetryClient.instance
 	}
 
-	public capture(eventName: string, properties?: Record<string, any>) {
+	public capture(eventName: string, properties?: Record<string, unknown>) {
 		if (TelemetryClient.telemetryEnabled) {
 			try {
 				posthog.capture(eventName, properties)

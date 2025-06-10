@@ -74,8 +74,8 @@ describe("ProviderSettingsManager", () => {
 
 			// Should have written the config with new IDs
 			expect(mockSecrets.store).toHaveBeenCalled()
-			const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
-			const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
 			expect(storedConfig.apiConfigs.default.id).toBeTruthy()
 			expect(storedConfig.apiConfigs.test.id).toBeTruthy()
 		})
@@ -168,8 +168,8 @@ describe("ProviderSettingsManager", () => {
 			await providerSettingsManager.saveConfig("test", newConfig)
 
 			// Get the actual stored config to check the generated ID
-			const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
-			const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
 			const testConfigId = storedConfig.apiConfigs.test.id
 
 			const expectedConfig = {
@@ -266,8 +266,8 @@ describe("ProviderSettingsManager", () => {
 
 			await providerSettingsManager.deleteConfig("test")
 		// Get the stored config to check the ID
-		const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
-		const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+		const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
 		expect(storedConfig.currentApiConfigName).toBe("default")
 		expect(Object.keys(storedConfig.apiConfigs)).toEqual(["default"])
 		expect(storedConfig.apiConfigs.default.id).toBeTruthy()
@@ -327,8 +327,8 @@ describe("ProviderSettingsManager", () => {
 				id: "test-id",
 			})
 		// Get the stored config to check the structure
-		const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
-		const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+		const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
 		expect(storedConfig.currentApiConfigName).toBe("test")
 		expect(storedConfig.apiConfigs.test).toEqual({
 			apiProvider: "anthropic",

@@ -1,6 +1,6 @@
 import * as assert from "assert"
 
-import { getCompletion, getMessage, sleep, waitForCompletion, waitUntilAborted } from "./utils"
+import { getCompletion, waitForCompletion } from "./utils"
 
 suite("Thea Code Modes", () => {
 	test("Should handle switching modes correctly", async function () {

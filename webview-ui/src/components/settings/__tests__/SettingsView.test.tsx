@@ -79,10 +79,10 @@ jest.mock("@/components/ui/vscode-components", () => ({
 		/>
 	),
 	VSCodeLink: ({ children, href }: any) => <a href={href || "#"}>{children}</a>,
-	VSCodeRadio: ({ children, value, checked, onChange }: any) => (
+	VSCodeRadio: ({ value, checked, onChange }: any) => (
 		<input type="radio" value={value} checked={checked} onChange={onChange} />
 	),
-	VSCodeRadioGroup: ({ children, value, onChange }: any) => <div onChange={onChange}>{children}</div>,
+	VSCodeRadioGroup: ({ children, onChange }: any) => <div onChange={onChange}>{children}</div>,
 }))
 
 // Mock Slider component

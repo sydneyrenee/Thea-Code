@@ -100,7 +100,7 @@ const StyledPre = styled.pre<{ theme: any }>`
 
 	${(props) =>
 		Object.keys(props.theme)
-			.map((key, index) => {
+			.map((key) => {
 				return `
       & ${key} {
         color: ${props.theme[key]};
@@ -135,7 +135,7 @@ const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 		],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ node, ...preProps }: any) => <StyledPre {...preProps} theme={theme} />,
+				pre: ({ ...preProps }: any) => <StyledPre {...preProps} theme={theme} />,
 			},
 		},
 	})

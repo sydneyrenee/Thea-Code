@@ -34,7 +34,7 @@ class TelemetryClient {
 		if (TelemetryClient.telemetryEnabled) {
 			try {
 				posthog.capture(eventName, properties)
-			} catch (error) {
+			} catch {
 				// Silently fail if there's an error capturing an event
 			}
 		}

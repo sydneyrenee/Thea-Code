@@ -119,7 +119,7 @@ async function createRun({ model }: { model: string }): Promise<{ id: number; mo
 
 	const {
 		run: [run],
-	} = await response.json()
+	} = (await response.json()) as { run: [unknown] }
 	return run
 }
 
@@ -168,4 +168,4 @@ async function main() {
 	}
 }
 
-main()
+void main()

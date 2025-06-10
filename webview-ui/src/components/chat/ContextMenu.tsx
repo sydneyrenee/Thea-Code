@@ -31,7 +31,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({
 	selectedType,
 	queryItems,
 	modes,
-	loading = false,
+	// loading = false,
 	dynamicSearchResults = [],
 	os,
 }) => {

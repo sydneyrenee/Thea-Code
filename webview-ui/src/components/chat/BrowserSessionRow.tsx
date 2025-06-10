@@ -460,7 +460,7 @@ const BrowserSessionRowContent = ({
 						</div>
 					)
 
-				case "browser_action":
+				case "browser_action": {
 					const browserAction = JSON.parse(message.text || "{}") as TheaSayBrowserAction // Renamed type
 					return (
 						<BrowserActionBox
@@ -469,6 +469,7 @@ const BrowserSessionRowContent = ({
 							text={browserAction.text}
 						/>
 					)
+				}
 
 				default:
 					return null

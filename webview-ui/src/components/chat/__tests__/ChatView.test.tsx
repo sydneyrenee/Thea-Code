@@ -61,6 +61,7 @@ interface ChatTextAreaProps {
 }
 
 jest.mock("../ChatTextArea", () => {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	const mockReact = require("react")
 	return {
 		__esModule: true,

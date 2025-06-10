@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import React, { useCallback } from "react"
 
 import { useClipboard } from "@/components/ui/hooks"
 import { Button } from "@/components/ui"
@@ -19,7 +19,9 @@ export const CopyButton = ({ itemTask }: CopyButtonProps) => {
 			const tempDiv = document.createElement("div")
 			tempDiv.innerHTML = itemTask
 			const text = tempDiv.textContent || tempDiv.innerText || ""
-			!isCopied && copy(text)
+			if (!isCopied) {
+				copy(text)
+			}
 		},
 		[isCopied, copy, itemTask],
 	)

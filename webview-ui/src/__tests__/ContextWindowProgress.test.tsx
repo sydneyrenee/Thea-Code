@@ -35,7 +35,7 @@ jest.mock("../components/chat/TaskHeader", () => {
 
 describe("ContextWindowProgress", () => {
 	// Helper function to render just the ContextWindowProgress part through TaskHeader
-	const renderComponent = (props: Record<string, any>) => {
+	const renderComponent = (props: Record<string, unknown>) => {
 		// Create a simple mock of the task that avoids importing the actual types
 		const defaultTask = {
 			ts: Date.now(),

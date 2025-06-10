@@ -5,7 +5,7 @@ import { useExtensionState } from "@/context/ExtensionStateContext"
 
 // Create context for translations
 export const TranslationContext = createContext<{
-	t: (key: string, options?: Record<string, any>) => string
+	t: (key: string, options?: Record<string, unknown>) => string
 	i18n: typeof i18next
 }>({
 	t: (key: string) => key,
@@ -34,7 +34,7 @@ export const TranslationProvider: React.FC<{ children: ReactNode }> = ({ childre
 
 	// Memoize the translation function to prevent unnecessary re-renders
 	const translate = useCallback(
-		(key: string, options?: Record<string, any>) => {
+		(key: string, options?: Record<string, unknown>) => {
 			return i18n.t(key, options)
 		},
 		[i18n],

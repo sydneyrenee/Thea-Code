@@ -233,7 +233,7 @@ describe("CustomModesManager", () => {
 			}
 
 			// Mock `${BRANDED_FILENAMES.MODES_FILENAME}` to not exist initially
-			let roomodesContent: any = null
+			let roomodesContent: unknown = null
 			;(fileExistsAtPath as jest.Mock).mockImplementation(async (path: string) => {
 				return path === mockSettingsPath
 			})
@@ -424,7 +424,7 @@ describe("CustomModesManager", () => {
 			)
 
 			// Mock the global state update to actually update the settingsContent
-			;(mockContext.globalState.update as jest.Mock).mockImplementation((key: string, value: any) => {
+			;(mockContext.globalState.update as jest.Mock).mockImplementation((key: string, value: unknown) => {
 				if (key === "customModes") {
 					settingsContent.customModes = value
 				}

@@ -2,14 +2,13 @@ import * as path from "path"
 import * as vscode from "vscode"
 import { promises as fs } from "fs"
 import { ModeConfig, getAllModesWithPrompts } from "../../../shared/modes"
-import type { GlobalFileNames } from "../../../shared/globalFileNames"
 
 export async function getModesSection(context: vscode.ExtensionContext): Promise<string> {
 	const settingsDir = path.join(context.globalStorageUri.fsPath, "settings")
 	await fs.mkdir(settingsDir, { recursive: true })
 
 	// Get all modes with their overrides from extension state
-	const allModes = await getAllModesWithPrompts(context)
+	const allModes = getAllModesWithPrompts(context)
 
 	let modesContent = `====
 

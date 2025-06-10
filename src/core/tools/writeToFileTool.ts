@@ -204,7 +204,7 @@ export async function writeToFileTool(
 			return
 		}
 	} catch (error) {
-		await handleError("writing file", error)
+		await handleError("writing file", error instanceof Error ? error : new Error(String(error)))
 		await theaTask.diffViewProvider.reset()
 		return
 	}

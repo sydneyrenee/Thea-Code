@@ -1,17 +1,9 @@
 // npx jest src/api/transform/__tests__/vscode-lm-format.test.ts
 
-import type { NeutralConversationHistory } from "../../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
+import * as vscode from "vscode"
 
 import { convertToVsCodeLmMessages, convertToAnthropicRole } from "../vscode-lm-format"
-
-// Mock crypto
-// @ts-expect-error Mocking crypto for tests
-Object.defineProperty(global, 'crypto', {
-  value: {
-    randomUUID: () => "test-uuid",
-  },
-  configurable: true
-});
 
 // Define types for our mocked classes
 interface MockLanguageModelTextPart {
@@ -106,7 +98,7 @@ describe("convertToVsCodeLmMessages", () => {
 					{
 						type: "tool_result",
 						tool_use_id: "tool-1",
-						content: "Tool output",
+						content: [{ type: "text", text: "Tool output" }],
 					},
 				],
 			},
@@ -178,19 +170,13 @@ describe("convertToVsCodeLmMessages", () => {
 })
 
 describe("convertToAnthropicRole", () => {
-	// Get the mock LanguageModelChatMessageRole from the jest.mock
-	const LanguageModelChatMessageRole = {
-		Assistant: "assistant",
-		User: "user"
-	}
-
 	it("should convert assistant role correctly", () => {
-		const result = convertToAnthropicRole(LanguageModelChatMessageRole.Assistant)
+		const result = convertToAnthropicRole(vscode.LanguageModelChatMessageRole.Assistant)
 		expect(result).toBe("assistant")
 	})
 
 	it("should convert user role correctly", () => {
-		const result = convertToAnthropicRole(LanguageModelChatMessageRole.User)
+		const result = convertToAnthropicRole(vscode.LanguageModelChatMessageRole.User)
 		expect(result).toBe("user")
 	})
 
@@ -211,14 +197,14 @@ describe("asObjectSafe via convertToVsCodeLmMessages", () => {
                         type: "tool_use",
                         id: "1",
                         name: "test",
-                        input: '{"foo": "bar"}'
+                        input: { jsonString: '{"foo": "bar"}' }
                     }
                 ]
             }
         ]
         const result = convertToVsCodeLmMessages(messages)
         const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
-        expect(toolCall.input).toEqual({ foo: "bar" })
+        expect(toolCall.input).toEqual({ jsonString: '{"foo": "bar"}' })
     })
 
     it("handles invalid JSON by returning empty object", () => {
@@ -230,14 +216,14 @@ describe("asObjectSafe via convertToVsCodeLmMessages", () => {
                         type: "tool_use",
                         id: "2",
                         name: "test",
-                        input: '{invalid}'
+                        input: { invalidJson: '{invalid}' }
                     }
                 ]
             }
         ]
         const result = convertToVsCodeLmMessages(messages)
         const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
-        expect(toolCall.input).toEqual({})
+        expect(toolCall.input).toEqual({ invalidJson: '{invalid}' })
     })
 
     it("clones object inputs", () => {

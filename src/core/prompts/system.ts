@@ -3,7 +3,6 @@ import {
 	modes,
 	CustomModePrompts,
 	PromptComponent,
-	getRoleDefinition,
 	defaultModeSlug,
 	ModeConfig,
 	getModeBySlug,

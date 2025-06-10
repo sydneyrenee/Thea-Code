@@ -1,5 +1,5 @@
 import OpenAI from "openai"
-import type { NeutralConversationHistory } from "../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 import { convertToOpenAiMessages } from "./openai-format"
 
 type ContentPartText = OpenAI.Chat.ChatCompletionContentPartText
@@ -31,12 +31,9 @@ export function convertToR1Format(neutralHistory: NeutralConversationHistory): M
 				if (part.type === "text") {
 					textParts.push(part.text)
 				}
-				if (part.type === "image") {
+				if (part.type === "image_url") {
 					hasImages = true
-					imageParts.push({
-						type: "image_url",
-						image_url: { url: `data:${part.source.media_type as string};base64,${part.source.data as string}` },
-					})
+					imageParts.push(part)
 				}
 			})
 
@@ -51,7 +48,7 @@ export function convertToR1Format(neutralHistory: NeutralConversationHistory): M
 				messageContent = textParts.join("\n")
 			}
 		} else {
-			messageContent = message.content
+			messageContent = message.content || ""
 		}
 
 		// If last message has same role, merge the content

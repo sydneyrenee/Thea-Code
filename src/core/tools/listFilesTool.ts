@@ -1,7 +1,7 @@
 import * as path from "path"
 import { TheaTask } from "../TheaTask" // Renamed from Cline
 import { TheaSayTool } from "../../shared/ExtensionMessage" // Renamed import
-import { ToolParamName, ToolUse } from "../assistant-message"
+import { ToolUse } from "../assistant-message"
 import { formatResponse } from "../prompts/responses"
 import { listFiles } from "../../services/glob/list-files"
 import { getReadablePath } from "../../utils/path"
@@ -71,6 +71,6 @@ export async function listFilesTool(
 			pushToolResult(result)
 		}
 	} catch (error) {
-		await handleError("listing files", error)
+		await handleError("listing files", error instanceof Error ? error : new Error(String(error)))
 	}
 }

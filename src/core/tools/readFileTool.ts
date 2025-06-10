@@ -174,6 +174,6 @@ export async function readFileTool(
 			pushToolResult(content)
 		}
 	} catch (error) {
-		await handleError("reading file", error)
+		await handleError("reading file", error instanceof Error ? error : new Error(String(error)))
 	}
 }

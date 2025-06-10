@@ -1,7 +1,7 @@
 // npx jest src/core/config/__tests__/ProviderSettingsManager.test.ts
 
 import { ExtensionContext } from "vscode"
-import type { EXTENSION_SECRETS_PREFIX } from "../../../../dist/thea-config" // Import branded constant
+import { EXTENSION_SECRETS_PREFIX } from "../../../../dist/thea-config" // Import as value, not type
 
 import { ProviderSettings } from "../../../schemas"
 import { ProviderSettingsManager, ProviderProfiles } from "../ProviderSettingsManager"
@@ -74,9 +74,8 @@ describe("ProviderSettingsManager", () => {
 
 			// Should have written the config with new IDs
 			expect(mockSecrets.store).toHaveBeenCalled()
-                        const storedConfig = JSON.parse(
-                                mockSecrets.store.mock.calls[0][1] as string,
-                        ) as ProviderProfiles
+			const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
+			const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
 			expect(storedConfig.apiConfigs.default.id).toBeTruthy()
 			expect(storedConfig.apiConfigs.test.id).toBeTruthy()
 		})
@@ -169,9 +168,8 @@ describe("ProviderSettingsManager", () => {
 			await providerSettingsManager.saveConfig("test", newConfig)
 
 			// Get the actual stored config to check the generated ID
-                        const storedConfig = JSON.parse(
-                                mockSecrets.store.mock.calls[0][1] as string,
-                        ) as ProviderProfiles
+			const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
+			const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
 			const testConfigId = storedConfig.apiConfigs.test.id
 
 			const expectedConfig = {
@@ -267,12 +265,12 @@ describe("ProviderSettingsManager", () => {
 			mockSecrets.get.mockResolvedValue(JSON.stringify(existingConfig))
 
 			await providerSettingsManager.deleteConfig("test")
-
-			// Get the stored config to check the ID
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
-			expect(storedConfig.currentApiConfigName).toBe("default")
-			expect(Object.keys(storedConfig.apiConfigs)).toEqual(["default"])
-			expect(storedConfig.apiConfigs.default.id).toBeTruthy()
+		// Get the stored config to check the ID
+		const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
+		const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
+		expect(storedConfig.currentApiConfigName).toBe("default")
+		expect(Object.keys(storedConfig.apiConfigs)).toEqual(["default"])
+		expect(storedConfig.apiConfigs.default.id).toBeTruthy()
 		})
 
 		it("should throw error when trying to delete non-existent config", async () => {
@@ -328,15 +326,15 @@ describe("ProviderSettingsManager", () => {
 				apiKey: "test-key",
 				id: "test-id",
 			})
-
-			// Get the stored config to check the structure
-			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1])
-			expect(storedConfig.currentApiConfigName).toBe("test")
-			expect(storedConfig.apiConfigs.test).toEqual({
-				apiProvider: "anthropic",
-				apiKey: "test-key",
-				id: "test-id",
-			})
+		// Get the stored config to check the structure
+		const mockCall = (mockSecrets.store as jest.Mock).mock.calls[0] as unknown as [string, string]
+		const storedConfig = JSON.parse(mockCall[1]) as ProviderProfiles
+		expect(storedConfig.currentApiConfigName).toBe("test")
+		expect(storedConfig.apiConfigs.test).toEqual({
+			apiProvider: "anthropic",
+			apiKey: "test-key",
+			id: "test-id",
+		})
 		})
 
 		it("should throw error when config does not exist", async () => {

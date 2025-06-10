@@ -150,7 +150,7 @@ export async function browserActionTool(
 		}
 	} catch (error) {
 		await theaTask.browserSession.closeBrowser() // if any error occurs, the browser session is terminated
-		await handleError("executing browser action", error)
+		await handleError("executing browser action", error instanceof Error ? error : new Error(String(error)))
 		return
 	}
 }

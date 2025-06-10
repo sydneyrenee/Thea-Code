@@ -16,7 +16,7 @@ export async function fetchInstructions(text: string, detail: InstructionsDetail
 			return await createMCPServerInstructions(detail.mcpHub, detail.diffStrategy)
 		}
 		case "create_mode": {
-			return await createModeInstructions(detail.context)
+			return createModeInstructions(detail.context)
 		}
 		default: {
 			return ""

@@ -2,7 +2,7 @@ import { AssistantMessage } from "@mistralai/mistralai/models/components/assista
 import { SystemMessage } from "@mistralai/mistralai/models/components/systemmessage"
 import { ToolMessage } from "@mistralai/mistralai/models/components/toolmessage"
 import { UserMessage } from "@mistralai/mistralai/models/components/usermessage"
-import type { NeutralConversationHistory } from "../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 import { convertToMistralMessages as convertFromNeutral } from "./neutral-mistral-format"
 
 export type MistralMessage =

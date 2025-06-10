@@ -6,7 +6,6 @@ import { TheaTask } from "../../TheaTask" // Renamed import
 import { ToolUse } from "../../assistant-message"
 import { formatResponse } from "../../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../types"
-import type { TheaAsk } from "../../../schemas" // Renamed import
 import { TheaAskResponse } from "../../../shared/WebviewMessage" // Import response type
 
 // Mock dependencies

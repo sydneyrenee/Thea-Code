@@ -1,6 +1,6 @@
 // npx jest src/api/transform/__tests__/mistral-format.test.ts
 
-import type { NeutralConversationHistory } from "../../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 
 import { convertToMistralMessages } from "../mistral-format"
 

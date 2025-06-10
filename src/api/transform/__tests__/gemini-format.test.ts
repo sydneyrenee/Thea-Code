@@ -1,6 +1,6 @@
 // npx jest src/api/transform/__tests__/gemini-format.test.ts
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return */
 import type { NeutralMessage } from "../../shared/neutral-history"
 
 import { convertAnthropicMessageToGemini } from "../gemini-format"

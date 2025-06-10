@@ -47,7 +47,8 @@ export async function askFollowupQuestionTool(
 					}
 				} catch (error) {
 					theaTask.consecutiveMistakeCount++
-					await theaTask.webviewCommunicator.say("error", `Failed to parse operations: ${error.message}`) // Use communicator
+					const errorMessage = error instanceof Error ? error.message : String(error)
+					await theaTask.webviewCommunicator.say("error", `Failed to parse operations: ${errorMessage}`) // Use communicator
 					pushToolResult(formatResponse.toolError("Invalid operations xml format"))
 					return
 				}
@@ -71,7 +72,7 @@ export async function askFollowupQuestionTool(
 			return
 		}
 	} catch (error) {
-		await handleError("asking question", error)
+		await handleError("asking question", error instanceof Error ? error : new Error(String(error)))
 		return
 	}
 }

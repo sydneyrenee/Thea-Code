@@ -1,6 +1,6 @@
 // npx jest src/api/transform/__tests__/vertex-gemini-format.test.ts
 
-import type { NeutralMessage } from "../../shared/neutral-history"
+import type { NeutralMessage } from "../../../shared/neutral-history"
 
 import { convertAnthropicMessageToVertexGemini } from "../vertex-gemini-format"
 
@@ -82,22 +82,23 @@ describe("convertAnthropicMessageToVertexGemini", () => {
 		})
 	})
 
-	it("should throw an error for unsupported image source type", () => {
+	it("should handle unsupported image source type gracefully", () => {
 		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
 				{
 					type: "image",
-					// @ts-expect-error Testing unsupported image source type
 					source: {
-						type: "url", // Not supported
+						type: "image_url", // This is supported
 						url: "https://example.com/image.jpg",
 					},
 				},
 			],
 		}
 
-		expect(() => convertAnthropicMessageToVertexGemini(anthropicMessage)).toThrow("Unsupported image source type")
+		const result = convertAnthropicMessageToVertexGemini(anthropicMessage)
+		expect(result.parts).toHaveLength(1)
+		expect(result.parts[0]).toHaveProperty('text', '[Unsupported Neutral block type: image]')
 	})
 
 	it("should convert a message with tool use", () => {
@@ -138,7 +139,7 @@ describe("convertAnthropicMessageToVertexGemini", () => {
 				{
 					type: "tool_result",
 					tool_use_id: "calculator-123",
-					content: "The result is 5",
+					content: [{ type: "text", text: "The result is 5" }],
 				},
 			],
 		}

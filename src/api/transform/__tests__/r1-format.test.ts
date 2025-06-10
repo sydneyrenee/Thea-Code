@@ -1,5 +1,5 @@
 import { convertToR1Format } from "../r1-format"
-import type { NeutralConversationHistory } from "../../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import OpenAI from "openai"
 
 describe("convertToR1Format", () => {

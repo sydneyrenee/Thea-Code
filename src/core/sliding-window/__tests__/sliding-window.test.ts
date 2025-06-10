@@ -3,7 +3,6 @@
 import { Anthropic } from "@anthropic-ai/sdk"
 
 import { ModelInfo } from "../../../shared/api"
-import { ApiHandler } from "../../../api"
 import { BaseProvider } from "../../../api/providers/base-provider"
 import { TOKEN_BUFFER_PERCENTAGE } from "../index"
 import { estimateTokenCount, truncateConversation, truncateConversationIfNeeded } from "../index"

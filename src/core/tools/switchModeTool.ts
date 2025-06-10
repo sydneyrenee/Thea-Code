@@ -69,7 +69,7 @@ export async function switchModeTool(
 			return
 		}
 	} catch (error) {
-		await handleError("switching mode", error)
+		await handleError("switching mode", error instanceof Error ? error : new Error(String(error)))
 		return
 	}
 }

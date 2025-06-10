@@ -1,4 +1,4 @@
-import type { NeutralConversationHistory, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history"
+import type { NeutralConversationHistory, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../../shared/neutral-history"
 import { convertToSimpleContent, convertToSimpleMessages } from "../simple-format"
 
 describe("simple-format", () => {

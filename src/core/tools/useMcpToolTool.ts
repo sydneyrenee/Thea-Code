@@ -83,11 +83,11 @@ export async function useMcpToolTool(
 						.map((item) => {
 							if (item.type === "text") {
 								return item.text
-							}
-							if (item.type === "resource") {
-								const { blob: _unused, ...rest } = item.resource
-								return JSON.stringify(rest, null, 2)
-							}
+							}						if (item.type === "resource") {
+							// eslint-disable-next-line @typescript-eslint/no-unused-vars
+							const { blob, ...rest } = item.resource
+							return JSON.stringify(rest, null, 2)
+						}
 							return ""
 						})
 						.filter(Boolean)
@@ -97,7 +97,7 @@ export async function useMcpToolTool(
 			return
 		}
 	} catch (error) {
-		await handleError("executing MCP tool", error)
+		await handleError("executing MCP tool", error instanceof Error ? error : new Error(String(error)))
 		return
 	}
 }

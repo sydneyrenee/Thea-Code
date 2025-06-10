@@ -1,5 +1,5 @@
 import * as vscode from "vscode"
-import type { NeutralConversationHistory, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../shared/neutral-history"
+import type { NeutralConversationHistory, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history"
 
 /**
  * Safely converts a value into a plain object.
@@ -73,10 +73,13 @@ export function convertToVsCodeLmMessages(
 								: (toolMessage.content?.map((part) => {
 										if (part.type === "image") {
 											return new vscode.LanguageModelTextPart(
-												`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === 'base64' ? part.source.media_type as string : 'media-type not applicable for URL source'} not supported by VSCode LM API]`,
+												`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === 'base64' ? part.source.media_type : 'media-type not applicable for URL source'} not supported by VSCode LM API]`,
 											)
 										}
-										return new vscode.LanguageModelTextPart(part.text)
+										if (part.type === "text") {
+											return new vscode.LanguageModelTextPart(part.text)
+										}
+										return new vscode.LanguageModelTextPart("")
 									}) ?? [new vscode.LanguageModelTextPart("")])
 
 						return new vscode.LanguageModelToolResultPart(toolMessage.tool_use_id, toolContentParts)
@@ -86,10 +89,13 @@ export function convertToVsCodeLmMessages(
 					...nonToolMessages.map((part) => {
 						if (part.type === "image") {
 							return new vscode.LanguageModelTextPart(
-								`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === 'base64' ? part.source.media_type as string : 'media-type not applicable for URL source'} not supported by VSCode LM API]`,
+								`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === 'base64' ? part.source.media_type : 'media-type not applicable for URL source'} not supported by VSCode LM API]`,
 							)
 						}
-						return new vscode.LanguageModelTextPart(part.text)
+						if (part.type === "text") {
+							return new vscode.LanguageModelTextPart(part.text)
+						}
+						return new vscode.LanguageModelTextPart("")
 					}),
 				]
 
@@ -131,7 +137,10 @@ export function convertToVsCodeLmMessages(
 						if (part.type === "image") {
 							return new vscode.LanguageModelTextPart("[Image generation not supported by VSCode LM API]")
 						}
-						return new vscode.LanguageModelTextPart(part.text)
+						if (part.type === "text") {
+							return new vscode.LanguageModelTextPart(part.text)
+						}
+						return new vscode.LanguageModelTextPart("")
 					}),
 				]
 

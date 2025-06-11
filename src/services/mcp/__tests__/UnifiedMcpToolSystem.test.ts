@@ -3,6 +3,50 @@ import { NeutralToolResult, ToolUseFormat } from '../types/McpToolTypes';
 import { McpConverters } from '../core/McpConverters';
 import { McpToolRouter } from '../core/McpToolRouter';
 
+// Mock EmbeddedMcpProvider
+jest.mock('../providers/EmbeddedMcpProvider', () => {
+  const { EventEmitter } = require('events');
+  
+  const MockEmbeddedMcpProvider = jest.fn().mockImplementation(() => {
+    const instance = new EventEmitter();
+    instance.start = jest.fn().mockImplementation(() => Promise.resolve());
+    instance.stop = jest.fn().mockImplementation(() => Promise.resolve());
+    instance.registerToolDefinition = jest.fn();
+    instance.unregisterTool = jest.fn().mockReturnValue(true);
+    instance.executeTool = jest.fn().mockImplementation(async () => ({
+      content: [{ type: "text", text: "Success" }]
+    }));
+    instance.getServerUrl = jest.fn().mockReturnValue(new URL("http://localhost:3000"));
+    return instance;
+  });
+  
+  MockEmbeddedMcpProvider.create = jest.fn().mockImplementation(async () => {
+    return new MockEmbeddedMcpProvider();
+  });
+  
+  return {
+    EmbeddedMcpProvider: MockEmbeddedMcpProvider
+  };
+});
+
+// Mock McpToolRegistry
+jest.mock('../core/McpToolRegistry', () => {
+  const mockRegistry = {
+    registerTool: jest.fn(),
+    unregisterTool: jest.fn().mockReturnValue(true),
+    getTool: jest.fn(),
+    getAllTools: jest.fn(),
+    hasTool: jest.fn(),
+    executeTool: jest.fn()
+  };
+  
+  return {
+    McpToolRegistry: {
+      getInstance: jest.fn().mockReturnValue(mockRegistry)
+    }
+  };
+});
+
 // Types for accessing private fields in tests
 type McpToolExecutorInternal = {
   mcpProvider: {
@@ -58,7 +102,9 @@ describe('McpToolExecutor', () => {
   });
   
   describe('tool registration', () => {
-    it('should register a tool with both the MCP server and the tool registry', () => {
+    it('should register a tool with both the MCP server and the tool registry', async () => {
+      await mcpToolSystem.initialize();
+      
       const toolDefinition = {
         name: 'test_tool',
         description: 'A test tool',
@@ -77,7 +123,9 @@ describe('McpToolExecutor', () => {
       expect(toolRegistry.registerTool).toHaveBeenCalledWith(toolDefinition);
     });
     
-    it('should unregister a tool from both the MCP server and the tool registry', () => {
+    it('should unregister a tool from both the MCP server and the tool registry', async () => {
+      await mcpToolSystem.initialize();
+      
       const result = mcpToolSystem.unregisterTool('test_tool');
       
       const { mcpProvider, toolRegistry } = mcpToolSystem as unknown as McpToolExecutorInternal;

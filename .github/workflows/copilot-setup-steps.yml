@@ -69,14 +69,14 @@ jobs:
               cp .env.example .env
             fi
             echo "📦 Installing npm-check-updates for webview-ui..."
-            npm install --no-save --no-audit npm-check-updates
+            npm install --no-save --no-audit --legacy-peer-deps npm-check-updates
             echo "🔒 Skipping updates for pinned dependencies (jest and related packages)..."
             npx npm-check-updates -u --reject jest,jest-environment-jsdom,jest-simple-dot-reporter,ts-jest,@types/jest,@testing-library/jest-dom
             echo "📥 Installing webview-ui dependencies..."
-            npm install --no-audit
+            npm install --no-audit --legacy-peer-deps
             if ! npx jest --version >/dev/null 2>&1; then
               echo "🧪 Jest missing in webview-ui—adding it now..."
-              npm install --save-dev jest
+              npm install --save-dev --legacy-peer-deps jest
             else
               echo "✔️  Jest is available in webview-ui"
             fi

@@ -11,7 +11,7 @@ import {
 	requestyDefaultModelId,
 	requestyDefaultModelInfo,
 } from "../../../shared/api"
-import { buildApiHandler } from "../../../api"
+import { buildApiHandler, ApiHandler } from "../../../api"
 
 // Mock dependencies
 jest.mock("vscode")
@@ -147,7 +147,7 @@ describe("ClineApiManager", () => {
 
 		// Mock the imported buildApiHandler function
 		const mockedBuildApiHandler = buildApiHandler as jest.MockedFunction<typeof buildApiHandler>
-		mockedBuildApiHandler.mockReturnValue({} as any)
+		mockedBuildApiHandler.mockReturnValue({} as ApiHandler)
 
 		// Execute
 		await manager.upsertApiConfiguration("test-config", mockApiConfig)
@@ -261,7 +261,7 @@ describe("ClineApiManager", () => {
 		const mockApiConfig = { apiProvider: "openrouter" as const }
 		const mockApiHandler = { getModel: jest.fn() }
 		const mockedBuildApiHandler = buildApiHandler as jest.MockedFunction<typeof buildApiHandler>
-		mockedBuildApiHandler.mockReturnValue(mockApiHandler as any)
+		mockedBuildApiHandler.mockReturnValue(mockApiHandler as ApiHandler)
 
 		// Execute
 		const result = manager.buildApiHandler(mockApiConfig)

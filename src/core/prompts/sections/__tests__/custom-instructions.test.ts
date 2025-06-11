@@ -87,14 +87,14 @@ describe("loadRuleFiles", () => {
 	it("should skip directories with same name as rule files", async () => {
 		mockedFs.readFile.mockImplementation(((filePath: string | Buffer | URL | number) => {
 			if (filePath.toString().endsWith(".Thearules")) {
-				const error = new Error("Directory error") as any
+				const error = new Error("Directory error") as Error & { code: string }
 				error.code = "EISDIR"
 				return Promise.reject(error)
 			}
 			if (filePath.toString().endsWith(".cursorrules")) {
 				return Promise.resolve("cursor rules content")
 			}
-			const error = new Error("File not found") as any
+			const error = new Error("File not found") as Error & { code: string }
 			error.code = "ENOENT"
 			return Promise.reject(error)
 		}) as unknown as { type: string })
@@ -179,11 +179,11 @@ describe("addCustomInstructions", () => {
 	it("should skip mode-specific rule files that are directories", async () => {
 		mockedFs.readFile.mockImplementation(((filePath: string | Buffer | URL | number) => {
 			if (filePath.toString().includes(".Thearules-test-mode")) {
-				const error = new Error("Directory error") as any
+				const error = new Error("Directory error") as Error & { code: string }
 				error.code = "EISDIR"
 				return Promise.reject(error)
 			}
-			const error = new Error("File not found") as any
+			const error = new Error("File not found") as Error & { code: string }
 			error.code = "ENOENT"
 			return Promise.reject(error)
 		}) as unknown as { type: string })

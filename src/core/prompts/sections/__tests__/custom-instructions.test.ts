@@ -87,12 +87,16 @@ describe("loadRuleFiles", () => {
 	it("should skip directories with same name as rule files", async () => {
 		mockedFs.readFile.mockImplementation(((filePath: string | Buffer | URL | number) => {
 			if (filePath.toString().endsWith(".Thearules")) {
-				return Promise.reject({ code: "EISDIR" })
+				const error = new Error("Directory error") as Error & { code: string }
+				error.code = "EISDIR"
+				return Promise.reject(error)
 			}
 			if (filePath.toString().endsWith(".cursorrules")) {
 				return Promise.resolve("cursor rules content")
 			}
-			return Promise.reject({ code: "ENOENT" })
+			const error = new Error("File not found") as Error & { code: string }
+			error.code = "ENOENT"
+			return Promise.reject(error)
 		}) as unknown as { type: string })
 
 		const result = await loadRuleFiles("/fake/path")
@@ -175,9 +179,13 @@ describe("addCustomInstructions", () => {
 	it("should skip mode-specific rule files that are directories", async () => {
 		mockedFs.readFile.mockImplementation(((filePath: string | Buffer | URL | number) => {
 			if (filePath.toString().includes(".Thearules-test-mode")) {
-				return Promise.reject({ code: "EISDIR" })
+				const error = new Error("Directory error") as Error & { code: string }
+				error.code = "EISDIR"
+				return Promise.reject(error)
 			}
-			return Promise.reject({ code: "ENOENT" })
+			const error = new Error("File not found") as Error & { code: string }
+			error.code = "ENOENT"
+			return Promise.reject(error)
 		}) as unknown as { type: string })
 
 		const result = await addCustomInstructions(

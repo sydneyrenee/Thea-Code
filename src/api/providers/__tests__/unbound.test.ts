@@ -1,6 +1,6 @@
 import { UnboundHandler } from "../unbound"
 import { ApiHandlerOptions } from "../../../shared/api"
-import { Anthropic } from "@anthropic-ai/sdk";
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import type OpenAI from "openai"; // Added for types
 import { EXTENSION_NAME } from "../../../../dist/thea-config" // Import branded constant
 import type { ApiStreamChunk } from "../../transform/stream"; // Added for chunk typing
@@ -115,7 +115,7 @@ describe("UnboundHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{
 				role: "user",
 				content: "Hello!",

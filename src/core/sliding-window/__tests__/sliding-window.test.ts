@@ -1,6 +1,6 @@
 // npx jest src/core/sliding-window/__tests__/sliding-window.test.ts
 
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../../shared/neutral-history"
 
 import { ModelInfo } from "../../../shared/api"
 import { BaseProvider } from "../../../api/providers/base-provider"
@@ -38,7 +38,7 @@ const mockApiHandler = new MockApiHandler()
  */
 describe("truncateConversation", () => {
 	it("should retain the first message", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{ role: "user", content: "First message" },
 			{ role: "assistant", content: "Second message" },
 			{ role: "user", content: "Third message" },
@@ -55,7 +55,7 @@ describe("truncateConversation", () => {
 	})
 
 	it("should remove the specified fraction of messages (rounded to even number)", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{ role: "user", content: "First message" },
 			{ role: "assistant", content: "Second message" },
 			{ role: "user", content: "Third message" },
@@ -74,7 +74,7 @@ describe("truncateConversation", () => {
 	})
 
 	it("should round to an even number of messages to remove", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{ role: "user", content: "First message" },
 			{ role: "assistant", content: "Second message" },
 			{ role: "user", content: "Third message" },
@@ -93,7 +93,7 @@ describe("truncateConversation", () => {
 	})
 
 	it("should handle edge case with fracToRemove = 0", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{ role: "user", content: "First message" },
 			{ role: "assistant", content: "Second message" },
 			{ role: "user", content: "Third message" },
@@ -105,7 +105,7 @@ describe("truncateConversation", () => {
 	})
 
 	it("should handle edge case with fracToRemove = 1", () => {
-		const messages: Anthropic.Messages.MessageParam[] = [
+		const messages: NeutralConversationHistory = [
 			{ role: "user", content: "First message" },
 			{ role: "assistant", content: "Second message" },
 			{ role: "user", content: "Third message" },
@@ -133,7 +133,7 @@ describe("estimateTokenCount", () => {
 	})
 
 	it("should estimate tokens for text blocks", async () => {
-		const content: Array<Anthropic.Messages.ContentBlockParam> = [
+		const content: NeutralMessageContent = [
 			{ type: "text", text: "This is a text block with 36 characters" },
 		]
 
@@ -143,7 +143,7 @@ describe("estimateTokenCount", () => {
 		expect(result).toBeGreaterThan(0)
 
 		// We can also verify that longer text results in more tokens
-		const longerContent: Array<Anthropic.Messages.ContentBlockParam> = [
+		const longerContent: NeutralMessageContent = [
 			{
 				type: "text",
 				text: "This is a longer text block with significantly more characters to encode into tokens",
@@ -155,11 +155,11 @@ describe("estimateTokenCount", () => {
 
 	it("should estimate tokens for image blocks based on data size", async () => {
 		// Small image
-		const smallImage: Array<Anthropic.Messages.ContentBlockParam> = [
+		const smallImage: NeutralMessageContent = [
 			{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: "small_dummy_data" } },
 		]
 		// Larger image with more data
-		const largerImage: Array<Anthropic.Messages.ContentBlockParam> = [
+		const largerImage: NeutralMessageContent = [
 			{ type: "image", source: { type: "base64", media_type: "image/png", data: "X".repeat(1000) } },
 		]
 
@@ -178,7 +178,7 @@ describe("estimateTokenCount", () => {
 	})
 
 	it("should estimate tokens for mixed content blocks", async () => {
-		const content: Array<Anthropic.Messages.ContentBlockParam> = [
+		const content: NeutralMessageContent = [
 			{ type: "text", text: "A text block with 30 characters" },
 			{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: "dummy_data" } },
 			{ type: "text", text: "Another text with 24 chars" },
@@ -193,7 +193,7 @@ describe("estimateTokenCount", () => {
 		expect(result).toBeGreaterThan(imageTokens)
 
 		// Also test against a version with only the image to verify text adds tokens
-		const imageOnlyContent: Array<Anthropic.Messages.ContentBlockParam> = [
+		const imageOnlyContent: NeutralMessageContent = [
 			{ type: "image", source: { type: "base64", media_type: "image/jpeg", data: "dummy_data" } },
 		]
 		const imageOnlyResult = await estimateTokenCount(imageOnlyContent, mockApiHandler)
@@ -201,7 +201,7 @@ describe("estimateTokenCount", () => {
 	})
 
 	it("should handle empty text blocks", async () => {
-		const content: Array<Anthropic.Messages.ContentBlockParam> = [{ type: "text", text: "" }]
+		const content: NeutralMessageContent = [{ type: "text", text: "" }]
 		expect(await estimateTokenCount(content, mockApiHandler)).toBe(0)
 	})
 
@@ -221,7 +221,7 @@ describe("truncateConversationIfNeeded", () => {
 		maxTokens,
 	})
 
-	const messages: Anthropic.Messages.MessageParam[] = [
+	const messages: NeutralConversationHistory = [
 		{ role: "user", content: "First message" },
 		{ role: "assistant", content: "Second message" },
 		{ role: "user", content: "Third message" },
@@ -327,7 +327,7 @@ describe("truncateConversationIfNeeded", () => {
 		// Test case 1: Small content that won't push us over the threshold
 		const smallContent = [{ type: "text" as const, text: "Small content" }]
 		const smallContentTokens = await estimateTokenCount(smallContent, mockApiHandler)
-		const messagesWithSmallContent: Anthropic.Messages.MessageParam[] = [
+		const messagesWithSmallContent: NeutralConversationHistory = [
 			...messages.slice(0, -1),
 			{ role: messages[messages.length - 1].role, content: smallContent },
 		]
@@ -352,7 +352,7 @@ describe("truncateConversationIfNeeded", () => {
 			},
 		]
 		const largeContentTokens = await estimateTokenCount(largeContent, mockApiHandler)
-		const messagesWithLargeContent: Anthropic.Messages.MessageParam[] = [
+		const messagesWithLargeContent: NeutralConversationHistory = [
 			...messages.slice(0, -1),
 			{ role: messages[messages.length - 1].role, content: largeContent },
 		]
@@ -371,7 +371,7 @@ describe("truncateConversationIfNeeded", () => {
 		// Test case 3: Very large content that will definitely exceed threshold
 		const veryLargeContent = [{ type: "text" as const, text: "X".repeat(1000) }]
 		const veryLargeContentTokens = await estimateTokenCount(veryLargeContent, mockApiHandler)
-		const messagesWithVeryLargeContent: Anthropic.Messages.MessageParam[] = [
+		const messagesWithVeryLargeContent: NeutralConversationHistory = [
 			...messages.slice(0, -1),
 			{ role: messages[messages.length - 1].role, content: veryLargeContent },
 		]
@@ -423,7 +423,7 @@ describe("getMaxTokens", () => {
 	})
 
 	// Reuse across tests for consistency
-	const messages: Anthropic.Messages.MessageParam[] = [
+	const messages: NeutralConversationHistory = [
 		{ role: "user", content: "First message" },
 		{ role: "assistant", content: "Second message" },
 		{ role: "user", content: "Third message" },

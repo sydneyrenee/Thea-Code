@@ -47,49 +47,6 @@ jest.mock("@google-cloud/vertexai", () => {
   };
 });
 
-// Mock the Anthropic Vertex SDK
-jest.mock("@anthropic-ai/vertex-sdk", () => {
-  return {
-    AnthropicVertex: jest.fn().mockImplementation(() => ({
-      messages: {
-        create: jest.fn().mockImplementation(() => {
-          return {
-            [Symbol.asyncIterator]: function* () {  
-              // Message start event
-              yield {
-                type: "message_start",
-                message: {
-                  usage: {
-                    input_tokens: 10,
-                    output_tokens: 0,
-                  },
-                },
-              };
-              // Content block start
-              yield {
-                type: "content_block_start",
-                content_block: {
-                  type: "text",
-                  text: "Test response",
-                },
-                index: 0,
-              };
-              // Content block delta
-              yield {
-                type: "content_block_delta",
-                delta: {
-                  type: "text_delta",
-                  text: " from Claude",
-                },
-              };
-            },
-          };
-        }),
-      },
-    })),
-  };
-});
-
 // Mock the neutral-vertex-format module
 jest.mock("../../transform/neutral-vertex-format", () => ({
   convertToVertexClaudeHistory: jest.fn().mockReturnValue([

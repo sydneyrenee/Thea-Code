@@ -5,6 +5,27 @@ import OpenAI from 'openai';
 
 // Note: This test uses port 10000 which is for Msty, a service that uses Ollama on the backend
 
+// Mock the McpIntegration to avoid initialization issues
+jest.mock('../../services/mcp/integration/McpIntegration', () => {
+  const mockInstance = {
+    initialize: jest.fn().mockResolvedValue(undefined),
+    registerTool: jest.fn(),
+    routeToolUse: jest.fn().mockResolvedValue('{}')
+  };
+
+  class MockMcpIntegration {
+    initialize = jest.fn().mockResolvedValue(undefined);
+    registerTool = jest.fn();
+    routeToolUse = jest.fn().mockResolvedValue('{}');
+
+    static getInstance = jest.fn().mockReturnValue(mockInstance);
+  }
+
+  return {
+    McpIntegration: MockMcpIntegration
+  };
+});
+
 // Mock the HybridMatcher
 jest.mock('../../utils/json-xml-bridge', () => {
   return {

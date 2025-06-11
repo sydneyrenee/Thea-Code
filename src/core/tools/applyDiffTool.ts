@@ -83,8 +83,7 @@ export async function applyDiffTool(
 				success: false,
 				error: "No diff strategy available",
 			}
-			let partResults = ""
-
+			
 			if (!diffResult.success) {
 				theaTask.consecutiveMistakeCount++
 				const currentCount = (theaTask.consecutiveMistakeCountForApplyDiff.get(relPath) || 0) + 1
@@ -99,7 +98,6 @@ export async function applyDiffTool(
 						formattedError = `<error_details>\n${
 							failPart.error
 						}${errorDetails ? `\n\nDetails:\n${errorDetails}` : ""}\n</error_details>`
-						partResults += formattedError
 					}
 				} else {
 					const errorDetails = diffResult.details ? JSON.stringify(diffResult.details, null, 2) : ""
@@ -121,7 +119,7 @@ export async function applyDiffTool(
 			theaTask.diffViewProvider.editType = "modify"
 			await theaTask.diffViewProvider.open(relPath)
 			await theaTask.diffViewProvider.update(diffResult.content, true)
-			await theaTask.diffViewProvider.scrollToFirstDiff()
+			theaTask.diffViewProvider.scrollToFirstDiff()
 
 			const completeMessage = JSON.stringify({
 				...sharedMessageProps,
@@ -173,12 +171,12 @@ export async function applyDiffTool(
 					`Changes successfully applied to ${relPath.toPosix()}:\n\n${newProblemsMessage}\n` + partFailHint,
 				)
 			}
-			await theaTask.diffViewProvider.reset()
+			theaTask.diffViewProvider.reset()
 			return
 		}
 	} catch (error) {
 		await handleError("applying diff", error)
-		await theaTask.diffViewProvider.reset()
+		theaTask.diffViewProvider.reset()
 		return
 	}
 }

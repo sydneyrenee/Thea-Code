@@ -131,7 +131,7 @@ export async function insertContentTool(
 
 		if (!userEdits) {
 			pushToolResult(`The content was successfully inserted in ${relPath.toPosix()}.${newProblemsMessage}`)
-			await theaTask.diffViewProvider.reset()
+			theaTask.diffViewProvider.reset()
 			return
 		}
 
@@ -149,13 +149,12 @@ export async function insertContentTool(
 				`<final_file_content path="${relPath.toPosix()}">\n${finalContent}\n</final_file_content>\n\n` +
 				`Please note:\n` +
 				`1. You do not need to re-write the file with these changes, as they have already been applied.\n` +
-				`2. Proceed with the task using the updated file content as the new baseline.\n` +
-				`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
-				`${newProblemsMessage}`,
+				`2. Proceed with the task using the updated file content as the new baseline.\n` +			`3. If the user's edits have addressed part of the task or changed the requirements, adjust your approach accordingly.` +
+			`${newProblemsMessage}`,
 		)
-		await theaTask.diffViewProvider.reset()
+		theaTask.diffViewProvider.reset()
 	} catch (error) {
 		await handleError("insert content", error)
-		await theaTask.diffViewProvider.reset()
+		theaTask.diffViewProvider.reset()
 	}
 }

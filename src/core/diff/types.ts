@@ -43,5 +43,5 @@ export interface DiffStrategy {
 	 */
 	applyDiff(originalContent: string, diffContent: string, startLine?: number, endLine?: number): Promise<DiffResult>
 
-	getProgressStatus?(toolUse: ToolUse, result?: any): ToolProgressStatus
+	getProgressStatus?(toolUse: ToolUse, result?: DiffResult): ToolProgressStatus
 }

@@ -57,7 +57,7 @@ describe("loadRuleFiles", () => {
 			if (filePath.toString().endsWith(".cursorrules")) {
 				return Promise.resolve("cursor rules content")
 			}
-			return Promise.reject({ code: "ENOENT" })
+			return Promise.reject(new Error("ENOENT"))
 		}) as unknown as { type: string })
 
 		const result = await loadRuleFiles("/fake/path")

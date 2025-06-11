@@ -200,12 +200,12 @@ export async function writeToFileTool(
 			} else {
 				pushToolResult(`The content was successfully saved to ${relPath.toPosix()}.${newProblemsMessage}`)
 			}
-			await theaTask.diffViewProvider.reset()
+			theaTask.diffViewProvider.reset()
 			return
 		}
 	} catch (error) {
 		await handleError("writing file", error instanceof Error ? error : new Error(String(error)))
-		await theaTask.diffViewProvider.reset()
+		theaTask.diffViewProvider.reset()
 		return
 	}
 }

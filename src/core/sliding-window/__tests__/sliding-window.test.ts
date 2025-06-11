@@ -230,6 +230,7 @@ describe("truncateConversationIfNeeded", () => {
 
 	it("should not truncate if tokens are below max tokens threshold", async () => {
 		const modelInfo = createModelInfo(100000, 30000)
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const maxTokens = 100000 - 30000 // 70000
 		const dynamicBuffer = modelInfo.contextWindow * TOKEN_BUFFER_PERCENTAGE // 10000
 		const totalTokens = 70000 - dynamicBuffer - 1 // Just below threshold - buffer

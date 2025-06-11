@@ -172,6 +172,7 @@ Detailed commit message with multiple lines
 			await openMention(url)
 			const mockUri = mockVscode.Uri.parse(url)
 			expect(mockVscode.env.openExternal).toHaveBeenCalled()
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 			const calledArg = mockVscode.env.openExternal.mock.calls[0][0]
 			expect(calledArg).toEqual(
 				expect.objectContaining({

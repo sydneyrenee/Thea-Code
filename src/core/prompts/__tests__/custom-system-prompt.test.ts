@@ -97,7 +97,7 @@ describe("File-Based Custom System Prompt", () => {
 			) {
 				return Promise.resolve(fileCustomSystemPrompt)
 			}
-			return Promise.reject({ code: "ENOENT" })
+			return Promise.reject(new Error("ENOENT"))
 		})
 
 		const prompt = await SYSTEM_PROMPT(
@@ -135,7 +135,7 @@ describe("File-Based Custom System Prompt", () => {
 			) {
 				return Promise.resolve(fileCustomSystemPrompt)
 			}
-			return Promise.reject({ code: "ENOENT" })
+			return Promise.reject(new Error("ENOENT"))
 		})
 
 		// Define custom role definition

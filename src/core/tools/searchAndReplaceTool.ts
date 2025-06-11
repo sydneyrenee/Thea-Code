@@ -167,12 +167,12 @@ export async function searchAndReplaceTool(
 			} else {
 				pushToolResult(`Changes successfully applied to ${relPath.toPosix()}:\n\n${newProblemsMessage}`)
 			}
-			await theaTask.diffViewProvider.reset()
+			theaTask.diffViewProvider.reset()
 			return
 		}
 	} catch (error) {
 		await handleError("applying search and replace", error)
-		await theaTask.diffViewProvider.reset()
+		theaTask.diffViewProvider.reset()
 		return
 	}
 }

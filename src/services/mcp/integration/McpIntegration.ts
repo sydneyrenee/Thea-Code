@@ -7,9 +7,40 @@ import { ToolUseFormat } from "../types/McpToolTypes";
 import { SseTransportConfig } from "../types/McpTransportTypes";
 
 /**
- * McpIntegration provides a facade for the MCP integration system.
- * It initializes all the necessary components and provides a simple interface
- * for the rest of the application to interact with the MCP system.
+ * McpIntegration provides a singleton facade for the MCP (Model Context Protocol) system.
+ * 
+ * This class serves as the main entry point for all MCP functionality in Thea Code,
+ * providing a unified interface for tool registration, execution, and server management.
+ * All providers automatically get MCP integration through BaseProvider.
+ * 
+ * Key Features:
+ * - Singleton pattern ensures consistent MCP state across the application
+ * - Automatic tool registration and execution
+ * - Support for multiple tool use formats (XML, JSON, OpenAI function calls)
+ * - Embedded MCP server with SSE and Stdio transports
+ * - Event-driven architecture for tool lifecycle management
+ * 
+ * Example Usage:
+ * ```typescript
+ * const mcpIntegration = McpIntegration.getInstance();
+ * 
+ * // Register a custom tool
+ * mcpIntegration.registerTool({
+ *   name: 'analyze_file',
+ *   description: 'Analyze a file for patterns',
+ *   paramSchema: {
+ *     type: 'object',
+ *     properties: { path: { type: 'string' } },
+ *     required: ['path']
+ *   }
+ * });
+ * 
+ * // Execute a tool (format auto-detected)
+ * const result = await mcpIntegration.routeToolUse({
+ *   format: ToolUseFormat.XML,
+ *   content: '<read_file><path>example.ts</path></read_file>'
+ * });
+ * ```
  */
 export class McpIntegration extends EventEmitter {
   private static instance: McpIntegration;

@@ -184,7 +184,9 @@ export class TheaIgnoreController {
 	 * Clean up resources when the controller is no longer needed
 	 */
 	dispose(): void {
-		this.disposables.forEach((d) => d.dispose())
+		this.disposables.forEach((d) => {
+			d.dispose()
+		})
 		this.disposables = []
 	}
 
@@ -197,6 +199,10 @@ export class TheaIgnoreController {
 			return undefined
 		}
 
-		return `# ${GLOBAL_FILENAMES.IGNORE_FILENAME}\n\n(The following is provided by a root-level ${GLOBAL_FILENAMES.IGNORE_FILENAME} file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)\n\n${this.theaIgnoreContent}\n${GLOBAL_FILENAMES.IGNORE_FILENAME}`
+		const filename = GLOBAL_FILENAMES.IGNORE_FILENAME
+		const header = `# ${filename}`
+		const description = `(The following is provided by a root-level ${filename} file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)`
+		
+		return `${header}\n\n${description}\n\n${this.theaIgnoreContent}\n${filename}`
 	}
 }

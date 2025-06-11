@@ -28,7 +28,7 @@ jest.mock("vscode", () => {
 				dispose: jest.fn(),
 			})),
 		},
-		RelativePattern: jest.fn().mockImplementation((base, pattern) => ({
+		RelativePattern: jest.fn().mockImplementation((base: string, pattern: string) => ({
 			base,
 			pattern,
 		})),
@@ -44,7 +44,15 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 	let controller: TheaIgnoreController // Use renamed class
 	let mockFileExists: jest.MockedFunction<typeof fileExistsAtPath>
 	let mockReadFile: jest.MockedFunction<typeof fs.readFile>
-	let mockWatcher: any
+	
+	interface MockFileWatcher {
+		onDidCreate: jest.MockedFunction<(callback: () => Promise<void> | void) => { dispose: () => void }>
+		onDidChange: jest.MockedFunction<(callback: () => Promise<void> | void) => { dispose: () => void }>
+		onDidDelete: jest.MockedFunction<(callback: () => Promise<void> | void) => { dispose: () => void }>
+		dispose: jest.MockedFunction<() => void>
+	}
+	
+	let mockWatcher: MockFileWatcher
 
 	beforeEach(() => {
 		// Reset mocks
@@ -465,7 +473,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 
 			// Simulate change event triggering reload
 			const onChangeHandler = mockWatcher.onDidChange.mock.calls[0][0]
-			await onChangeHandler()
+			await Promise.resolve(onChangeHandler())
 			// Allow time for async operations within handler
 			await new Promise((resolve) => setTimeout(resolve, 10))
 
@@ -494,7 +502,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 
 			// Find and trigger the onDelete handler
 			const onDeleteHandler = mockWatcher.onDidDelete.mock.calls[0][0]
-			await onDeleteHandler()
+			await Promise.resolve(onDeleteHandler())
 
 			// Verify content was reset
 			expect(controller.theaIgnoreContent).toBeUndefined()

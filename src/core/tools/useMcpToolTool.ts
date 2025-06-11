@@ -45,7 +45,7 @@ export async function useMcpToolTool(
 			let parsedArguments: Record<string, unknown> | undefined
 			if (mcp_arguments) {
 				try {
-					parsedArguments = JSON.parse(mcp_arguments)
+					parsedArguments = JSON.parse(mcp_arguments) as Record<string, unknown>
 				} catch {
 					theaTask.consecutiveMistakeCount++
 					await theaTask.webviewCommunicator.say(

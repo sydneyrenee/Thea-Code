@@ -10,11 +10,13 @@ import { formatResponse } from "../../prompts/responses"
 jest.mock("../../prompts/responses")
 
 describe("askFollowupQuestionTool", () => {
-    let mockTheaTask: jest.Mocked<Partial<TheaTask>> & {
+    type MockTheaTask = jest.Mocked<Partial<TheaTask>> & {
         consecutiveMistakeCount: number
         webviewCommunicator: { ask: jest.Mock; say: jest.Mock }
         sayAndCreateMissingParamError: jest.Mock
     }
+    
+    let mockTheaTask: MockTheaTask
     let mockAskApproval: jest.Mock
     let mockHandleError: jest.Mock
     let mockPushToolResult: jest.Mock

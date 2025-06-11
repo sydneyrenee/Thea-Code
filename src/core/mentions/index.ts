@@ -58,6 +58,13 @@ export const createXmlTag = (name: string, attrs: Record<string, string> = {}): 
 
 export const wrapContent = (content: string, tag: XmlTag): string => `${tag.start}\n${content}\n${tag.end}`
 
+const toError = (error: unknown): Error => {
+	if (error instanceof Error) {
+		return error
+	}
+	return new Error(String(error))
+}
+
 export const handleError = (error: Error, message: string): string => {
 	const errorMsg = `Error ${message}: ${error.message}`
 	if (error instanceof Error) {
@@ -76,10 +83,10 @@ export async function getFileOrFolderContent(mentionPath: string, cwd: string): 
 		if (stats.isFile()) {
 			try {
 				const content = await extractTextFromFile(absPath)
-				return content
-			} catch (error) {
-				return `(Failed to read contents of ${mentionPath}): ${error.message}`
-			}
+				return content		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			return `(Failed to read contents of ${mentionPath}): ${errorMessage}`
+		}
 		} else if (stats.isDirectory()) {
 			const entries = await fs.readdir(absPath, { withFileTypes: true })
 			let folderContent = ""
@@ -117,7 +124,8 @@ export async function getFileOrFolderContent(mentionPath: string, cwd: string): 
 			return `(Failed to read contents of ${mentionPath})`
 		}
 	} catch (error) {
-		throw new Error(`Failed to access path "${mentionPath}": ${error.message}`)
+		const errorMessage = error instanceof Error ? error.message : String(error)
+		throw new Error(`Failed to access path "${mentionPath}": ${errorMessage}`)
 	}
 }
 
@@ -149,7 +157,7 @@ const urlHandler: HandlerConfig = {
 			try {
 				content = await urlContentFetcher.urlToMarkdown(mention)
 			} catch (error) {
-				content = handleError(error, `fetching content for ${mention}`)
+				content = handleError(toError(error), `fetching content for ${mention}`)
 			}
 		}
 		return wrapContent(content, tag)
@@ -173,7 +181,7 @@ const fileHandler: HandlerConfig = {
 			const content = await getFileOrFolderContent(mentionPath, cwd)
 			return wrapContent(content, tag)
 		} catch (error) {
-			return wrapContent(handleError(error, "fetching content"), tag)
+			return wrapContent(handleError(toError(error), "fetching content"), tag)
 		}
 	},
 }
@@ -187,7 +195,7 @@ const problemsHandler: HandlerConfig = {
 			const problems = await getWorkspaceProblems(cwd)
 			return wrapContent(problems, tag)
 		} catch (error) {
-			return wrapContent(handleError(error, "fetching diagnostics"), tag)
+			return wrapContent(handleError(toError(error), "fetching diagnostics"), tag)
 		}
 	},
 }
@@ -201,7 +209,7 @@ const gitChangesHandler: HandlerConfig = {
 			const workingState = await getWorkingState(cwd)
 			return wrapContent(workingState, tag)
 		} catch (error) {
-			return wrapContent(handleError(error, "fetching working state"), tag)
+			return wrapContent(handleError(toError(error), "fetching working state"), tag)
 		}
 	},
 }
@@ -215,7 +223,7 @@ const commitHandler: HandlerConfig = {
 			const commitInfo = await getCommitInfo(mention, cwd)
 			return wrapContent(commitInfo, tag)
 		} catch (error) {
-			return wrapContent(handleError(error, "fetching commit info"), tag)
+			return wrapContent(handleError(toError(error), "fetching commit info"), tag)
 		}
 	},
 }
@@ -229,7 +237,7 @@ const terminalHandler: HandlerConfig = {
 			const terminalOutput = await getLatestTerminalOutput()
 			return wrapContent(terminalOutput, tag)
 		} catch (error) {
-			return wrapContent(handleError(error, "fetching terminal output"), tag)
+			return wrapContent(handleError(toError(error), "fetching terminal output"), tag)
 		}
 	},
 }
@@ -251,7 +259,7 @@ export async function parseMentions(
 	osInfo: string = "unix",
 ): Promise<string> {
 	const mentions: Set<string> = new Set()
-	let parsedText = text.replace(mentionRegexGlobal, (match, mention) => {
+	let parsedText = text.replace(mentionRegexGlobal, (match: string, mention: string) => {
 		mentions.add(mention)
 		if (mention.startsWith("http")) {
 			return `'${mention}' (see below for site content)`
@@ -289,8 +297,9 @@ export async function parseMentions(
 		try {
 			await urlContentFetcher.launchBrowser()
 		} catch (error) {
-			launchBrowserError = error
-			vscode.window.showErrorMessage(`Error fetching content for ${urlMention}: ${error.message}`)
+			launchBrowserError = toError(error)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			vscode.window.showErrorMessage(`Error fetching content for ${urlMention}: ${errorMessage}`)
 		}
 	}
 
@@ -318,7 +327,8 @@ export async function parseMentions(
 		try {
 			await urlContentFetcher.closeBrowser()
 		} catch (error) {
-			console.error(`Error closing browser: ${error.message}`)
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			console.error(`Error closing browser: ${errorMessage}`)
 		}
 	}
 

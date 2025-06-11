@@ -20,7 +20,7 @@ type ExperimentalSettingsProps = HTMLAttributes<HTMLDivElement> & {
 }
 
 export const ExperimentalSettings = ({
-	setCachedStateField,
+	setCachedStateField: _setCachedStateField, // eslint-disable-line @typescript-eslint/no-unused-vars
 	experiments,
 	setExperimentEnabled,
 	className,

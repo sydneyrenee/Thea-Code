@@ -175,7 +175,8 @@ export async function applyDiffTool(
 			return
 		}
 	} catch (error) {
-		await handleError("applying diff", error)
+		const errorObj = error instanceof Error ? error : new Error(String(error))
+		await handleError("applying diff", errorObj)
 		theaTask.diffViewProvider.reset()
 		return
 	}

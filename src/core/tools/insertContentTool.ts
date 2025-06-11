@@ -63,13 +63,15 @@ export async function insertContentTool(
 		}>
 
 		try {
-			parsedOperations = JSON.parse(operations)
-			if (!Array.isArray(parsedOperations)) {
+			const parsed: unknown = JSON.parse(operations)
+			if (!Array.isArray(parsed)) {
 				throw new Error("Operations must be an array")
 			}
+			parsedOperations = parsed as Array<{ start_line: number; content: string }>
 		} catch (error) {
 			theaTask.consecutiveMistakeCount++
-			await theaTask.webviewCommunicator.say("error", `Failed to parse operations JSON: ${error.message}`) // Use communicator
+			const errorMessage = error instanceof Error ? error.message : String(error)
+			await theaTask.webviewCommunicator.say("error", `Failed to parse operations JSON: ${errorMessage}`) // Use communicator
 			pushToolResult(formatResponse.toolError("Invalid operations JSON format"))
 			return
 		}
@@ -154,7 +156,8 @@ export async function insertContentTool(
 		)
 		theaTask.diffViewProvider.reset()
 	} catch (error) {
-		await handleError("insert content", error)
+		const errorObj = error instanceof Error ? error : new Error(String(error))
+		await handleError("insert content", errorObj)
 		theaTask.diffViewProvider.reset()
 	}
 }

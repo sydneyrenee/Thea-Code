@@ -35,7 +35,12 @@ export function getMcpServersSection(
 							?.map((resource) => `- ${resource.uri} (${resource.name}): ${resource.description}`)
 							.join("\n")
 
-						const config = JSON.parse(server.config)
+						interface ServerConfig {
+							command: string
+							args?: string[]
+						}
+
+						const config = JSON.parse(server.config) as ServerConfig
 
 						return (
 							`## ${server.name} (\`${config.command}${config.args && Array.isArray(config.args) ? ` ${config.args.join(" ")}` : ""}\`)` +

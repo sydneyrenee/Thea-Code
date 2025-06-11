@@ -20,13 +20,15 @@ jest.mock("../sections/custom-instructions", () => {
                 addCustomInstructions,
                 __setMockImplementation: (impl: (...args: unknown[]) => unknown) => {
                         // Cast is safe in test context
-                        addCustomInstructions.mockImplementation(impl as any)
+                        addCustomInstructions.mockImplementation(impl as typeof addCustomInstructions)
                 },
         }
 })
 
 // Set up default mock implementation
-const { __setMockImplementation } = jest.requireMock("../sections/custom-instructions")
+const { __setMockImplementation } = jest.requireMock("../sections/custom-instructions") as {
+	__setMockImplementation: (impl: (...args: unknown[]) => unknown) => void
+}
 __setMockImplementation(
         (
                 modeCustomInstructions: string,

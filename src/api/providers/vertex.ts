@@ -1,4 +1,5 @@
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
+import type { Messages } from "@anthropic-ai/sdk";
 import { VertexAI } from "@google-cloud/vertexai"
 
 import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
@@ -271,7 +272,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
 
 		// Create the stream with appropriate caching configuration
-		const params: MessageCreateParams = {
+		const params: Messages.MessageCreateParams = {
 			model: id,
 			max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 			temperature,
@@ -289,7 +290,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				// Only cache the last two user messages
 				const shouldCache = useCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
 				return formatMessageForCache(message, shouldCache)
-			}).filter((m): m is any => m.role === 'user' || m.role === 'assistant'),
+			}).filter((m): m is Messages.MessageParam => m.role === "user" || m.role === "assistant"),
 			stream: true,
 		}
 
@@ -478,12 +479,12 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				useCache ? formatMessageForCache(message, true) : message
 			);
 
-			const params: MessageCreateParams = {
+			const params: Messages.MessageCreateParamsNonStreaming = {
 				model: id,
 				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 				temperature,
 				system: "", // No system prompt needed for single completions
-				messages: messagesWithCache.filter((m): m is any => m.role === 'user' || m.role === 'assistant'),
+				messages: messagesWithCache.filter((m): m is Messages.MessageParam => m.role === "user" || m.role === "assistant"),
 				stream: false,
 			}
 

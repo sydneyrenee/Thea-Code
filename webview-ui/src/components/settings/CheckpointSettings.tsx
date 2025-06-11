@@ -17,7 +17,7 @@ type CheckpointSettingsProps = HTMLAttributes<HTMLDivElement> & {
 
 export const CheckpointSettings = ({
 	enableCheckpoints,
-	checkpointStorage = "task",
+	checkpointStorage: _checkpointStorage = "task", // eslint-disable-line @typescript-eslint/no-unused-vars
 	setCachedStateField,
 	...props
 }: CheckpointSettingsProps) => {
@@ -35,8 +35,8 @@ export const CheckpointSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={enableCheckpoints}
-						onChange={(e: any) => {
-							setCachedStateField("enableCheckpoints", e.target.checked)
+						onChange={(checked: boolean) => {
+							setCachedStateField("enableCheckpoints", checked)
 						}}>
 						<span className="font-medium">{t("settings:checkpoints.enable.label")}</span>
 					</VSCodeCheckbox>

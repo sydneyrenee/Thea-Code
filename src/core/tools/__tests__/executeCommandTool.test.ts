@@ -3,6 +3,7 @@
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 import { executeCommandTool } from "../executeCommandTool"
 import { TheaTask } from "../../TheaTask" // Renamed import
+import { TheaIgnoreController } from "../../ignore/TheaIgnoreController"
 import { ToolUse } from "../../assistant-message"
 import { formatResponse } from "../../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../types"
@@ -44,7 +45,7 @@ describe("executeCommandTool", () => {
 			didRejectTool: false,
 			theaIgnoreController: {
 				validateCommand: jest.fn().mockReturnValue(null), // Simplified mock
-			} as any, // Use 'as any' to bypass strict type check for mock
+			} as Partial<TheaIgnoreController>, // Use proper partial type instead of any
 			webviewCommunicator: {
 				// Add communicator mock setup
 				say: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),

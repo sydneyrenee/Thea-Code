@@ -1,4 +1,4 @@
-import { HTMLAttributes } from "react"
+import React, { HTMLAttributes } from "react"
 
 import { cn } from "@/lib/utils"
 

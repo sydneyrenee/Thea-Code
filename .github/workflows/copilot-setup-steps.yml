@@ -45,8 +45,6 @@ jobs:
         run: |
           echo "📦 Installing npm-check-updates for main project..."
           npm install --no-save --no-audit --silent npm-check-updates
-          echo "🔄 Bumping package.json dependencies..."
-          npx npm-check-updates -u
           echo "📥 Installing main project dependencies..."
           npm install --silent --no-audit
 
@@ -69,8 +67,6 @@ jobs:
             fi
             echo "📦 Installing npm-check-updates for webview-ui..."
             npm install --no-save --no-audit --silent npm-check-updates
-            echo "🔄 Bumping package.json dependencies in webview-ui..."
-            npx npm-check-updates -u
             echo "📥 Installing webview-ui dependencies..."
             npm install --silent --no-audit
             if ! npx jest --version >/dev/null 2>&1; then

@@ -30,7 +30,7 @@ describe("askFollowupQuestionTool", () => {
                 say: jest.fn().mockResolvedValue(undefined),
             },
             sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing param error"),
-        } as any
+        } as MockTheaTask
         mockAskApproval = jest.fn()
         mockHandleError = jest.fn().mockResolvedValue(undefined)
         mockPushToolResult = jest.fn()

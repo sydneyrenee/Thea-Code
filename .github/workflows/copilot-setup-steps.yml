@@ -44,17 +44,17 @@ jobs:
       - name: Update main project dependencies
         run: |
           echo "📦 Installing npm-check-updates for main project..."
-          npm install --no-save --no-audit --silent npm-check-updates
+          npm install --no-save --no-audit npm-check-updates
           echo "🔒 Skipping updates for pinned dependencies (jest and related packages)..."
           npx npm-check-updates -u --reject jest,jest-environment-jsdom,jest-simple-dot-reporter,ts-jest,@types/jest
           echo "📥 Installing main project dependencies..."
-          npm install --silent --no-audit
+          npm install --no-audit
 
       - name: Ensure Jest is available in main project
         run: |
           if ! npx jest --version >/dev/null 2>&1; then
             echo "🧪 Jest missing—adding it now..."
-            npm install --save-dev --silent jest
+            npm install --save-dev jest
           else
             echo "✔️  Jest is available in main project"
           fi
@@ -62,20 +62,21 @@ jobs:
       - name: Update webview-ui dependencies
         run: |
           if [ -d "webview-ui" ]; then
+            echo "📂 Found webview-ui directory, entering..."
             cd webview-ui
             if [ ! -f ".env" ] && [ -f ".env.example" ]; then
               echo "⚙️  Creating .env from .env.example in webview-ui"
               cp .env.example .env
             fi
             echo "📦 Installing npm-check-updates for webview-ui..."
-            npm install --no-save --no-audit --silent npm-check-updates
+            npm install --no-save --no-audit npm-check-updates
             echo "🔒 Skipping updates for pinned dependencies (jest and related packages)..."
             npx npm-check-updates -u --reject jest,jest-environment-jsdom,jest-simple-dot-reporter,ts-jest,@types/jest,@testing-library/jest-dom
             echo "📥 Installing webview-ui dependencies..."
-            npm install --silent --no-audit
+            npm install --no-audit
             if ! npx jest --version >/dev/null 2>&1; then
               echo "🧪 Jest missing in webview-ui—adding it now..."
-              npm install --save-dev --silent jest
+              npm install --save-dev jest
             else
               echo "✔️  Jest is available in webview-ui"
             fi
@@ -88,7 +89,7 @@ jobs:
           if [ -d "benchmark" ]; then
             cd benchmark
             echo "📥 Installing benchmark dependencies..."
-            npm ci --silent --no-audit
+            npm ci --no-audit
           else
             echo "⚠️  No benchmark folder found"
           fi
@@ -98,7 +99,7 @@ jobs:
           if [ -d "e2e" ]; then
             cd e2e
             echo "📥 Installing e2e test dependencies..."
-            npm ci --silent --no-audit
+            npm ci --no-audit
           else
             echo "⚠️  No e2e folder found"
           fi

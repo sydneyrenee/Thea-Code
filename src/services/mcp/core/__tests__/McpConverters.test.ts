@@ -44,8 +44,8 @@ describe("McpConverters", () => {
           name: "read_file",
           input: {
             path: "src/main.js",
-            start_line: "10",
-            end_line: "20"
+            start_line: 10,
+            end_line: 20
           }
         });
       });

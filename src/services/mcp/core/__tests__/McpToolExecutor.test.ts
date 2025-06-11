@@ -51,6 +51,11 @@ jest.mock("../../providers/EmbeddedMcpProvider", () => {
     return instance;
   });
   
+  // Add static create method to the mock constructor
+  MockEmbeddedMcpProvider.create = jest.fn().mockImplementation(async () => {
+    return new MockEmbeddedMcpProvider();
+  });
+  
   return {
     EmbeddedMcpProvider: MockEmbeddedMcpProvider
   };
@@ -157,16 +162,16 @@ describe("McpToolExecutor", () => {
       
       await executor.shutdown();
       
-      // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
-      
-      expect(mockProvider.stop).not.toHaveBeenCalled();
+      // Since executor was not initialized, mcpProvider should be undefined
+      expect((executor as any).mcpProvider).toBeUndefined();
     });
   });
   
   describe("Tool Registration", () => {
-    it("should register a tool with both the MCP provider and the tool registry", () => {
+    it("should register a tool with both the MCP provider and the tool registry", async () => {
       const executor = McpToolExecutor.getInstance();
+      await executor.initialize();
+      
       const toolDefinition: ToolDefinition = {
         name: "test-tool",
         description: "Test tool",
@@ -176,19 +181,20 @@ describe("McpToolExecutor", () => {
       executor.registerTool(toolDefinition);
       
       // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      const mockProvider = (executor as any).mcpProvider;
       
       expect(mockProvider.registerToolDefinition).toHaveBeenCalledWith(toolDefinition);
       expect(McpToolRegistry.getInstance().registerTool).toHaveBeenCalledWith(toolDefinition);
     });
     
-    it("should unregister a tool from both the MCP provider and the tool registry", () => {
+    it("should unregister a tool from both the MCP provider and the tool registry", async () => {
       const executor = McpToolExecutor.getInstance();
+      await executor.initialize();
       
       const result = executor.unregisterTool("test-tool");
       
       // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      const mockProvider = (executor as any).mcpProvider;
       
       expect(mockProvider.unregisterTool).toHaveBeenCalledWith("test-tool");
       expect(McpToolRegistry.getInstance().unregisterTool).toHaveBeenCalledWith("test-tool");
@@ -199,6 +205,8 @@ describe("McpToolExecutor", () => {
   describe("Tool Execution", () => {
     it("should execute a tool with valid input in neutral format", async () => {
       const executor = McpToolExecutor.getInstance();
+      await executor.initialize();
+      
       const request: NeutralToolUseRequest = {
         type: "tool_use",
         id: "test-id",
@@ -209,7 +217,7 @@ describe("McpToolExecutor", () => {
       const result = await executor.executeToolFromNeutralFormat(request);
       
       // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      const mockProvider = (executor as any).mcpProvider;
       
       expect(mockProvider.executeTool).toHaveBeenCalledWith("test-tool", { param: "value" });
       expect(result).toEqual({
@@ -223,6 +231,8 @@ describe("McpToolExecutor", () => {
     
     it("should handle errors when executing a tool", async () => {
       const executor = McpToolExecutor.getInstance();
+      await executor.initialize();
+      
       const request: NeutralToolUseRequest = {
         type: "tool_use",
         id: "error-id",
@@ -233,7 +243,7 @@ describe("McpToolExecutor", () => {
       const result = await executor.executeToolFromNeutralFormat(request);
       
       // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      const mockProvider = (executor as any).mcpProvider;
       
       expect(mockProvider.executeTool).toHaveBeenCalledWith("error-tool", {});
       expect(result).toEqual({
@@ -249,6 +259,8 @@ describe("McpToolExecutor", () => {
     
     it("should handle exceptions when executing a tool", async () => {
       const executor = McpToolExecutor.getInstance();
+      await executor.initialize();
+      
       const request: NeutralToolUseRequest = {
         type: "tool_use",
         id: "exception-id",
@@ -259,7 +271,7 @@ describe("McpToolExecutor", () => {
       const result = await executor.executeToolFromNeutralFormat(request);
       
       // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      const mockProvider = (executor as any).mcpProvider;
       
       expect(mockProvider.executeTool).toHaveBeenCalledWith("throw-error-tool", {});
       expect(result).toEqual({
@@ -278,14 +290,15 @@ describe("McpToolExecutor", () => {
   });
   
   describe("Event Handling", () => {
-    it("should forward tool-registered events from the MCP provider", () => {
+    it("should forward tool-registered events from the MCP provider", async () => {
       const executor = McpToolExecutor.getInstance();
-      const eventHandler = jest.fn();
+      await executor.initialize();
       
+      const eventHandler = jest.fn();
       executor.on("tool-registered", eventHandler);
       
-      // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance from the executor
+      const mockProvider = (executor as any).mcpProvider;
       
       // Emit the event from the provider
       mockProvider.emit("tool-registered", "test-tool");
@@ -293,14 +306,15 @@ describe("McpToolExecutor", () => {
       expect(eventHandler).toHaveBeenCalledWith("test-tool");
     });
     
-    it("should forward tool-unregistered events from the MCP provider", () => {
+    it("should forward tool-unregistered events from the MCP provider", async () => {
       const executor = McpToolExecutor.getInstance();
-      const eventHandler = jest.fn();
+      await executor.initialize();
       
+      const eventHandler = jest.fn();
       executor.on("tool-unregistered", eventHandler);
       
-      // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance from the executor
+      const mockProvider = (executor as any).mcpProvider;
       
       // Emit the event from the provider
       mockProvider.emit("tool-unregistered", "test-tool");
@@ -308,14 +322,15 @@ describe("McpToolExecutor", () => {
       expect(eventHandler).toHaveBeenCalledWith("test-tool");
     });
     
-    it("should forward started events from the MCP provider", () => {
+    it("should forward started events from the MCP provider", async () => {
       const executor = McpToolExecutor.getInstance();
-      const eventHandler = jest.fn();
+      await executor.initialize();
       
+      const eventHandler = jest.fn();
       executor.on("started", eventHandler);
       
-      // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance from the executor
+      const mockProvider = (executor as any).mcpProvider;
       
       // Emit the event from the provider
       const info = { url: "http://localhost:3000" };
@@ -324,14 +339,15 @@ describe("McpToolExecutor", () => {
       expect(eventHandler).toHaveBeenCalledWith(info);
     });
     
-    it("should forward stopped events from the MCP provider", () => {
+    it("should forward stopped events from the MCP provider", async () => {
       const executor = McpToolExecutor.getInstance();
-      const eventHandler = jest.fn();
+      await executor.initialize();
       
+      const eventHandler = jest.fn();
       executor.on("stopped", eventHandler);
       
-      // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance from the executor
+      const mockProvider = (executor as any).mcpProvider;
       
       // Emit the event from the provider
       mockProvider.emit("stopped");
@@ -348,12 +364,14 @@ describe("McpToolExecutor", () => {
       expect(registry).toBe(McpToolRegistry.getInstance());
     });
     
-    it("should return the server URL", () => {
+    it("should return the server URL", async () => {
       const executor = McpToolExecutor.getInstance();
+      await executor.initialize();
+      
       const url = executor.getServerUrl();
       
-      // Get the mock EmbeddedMcpProvider instance
-      const mockProvider = require("../../providers/EmbeddedMcpProvider").EmbeddedMcpProvider.mock.results[0].value;
+      // Get the mock EmbeddedMcpProvider instance from the executor
+      const mockProvider = (executor as any).mcpProvider;
       
       expect(url).toEqual(mockProvider.getServerUrl());
     });

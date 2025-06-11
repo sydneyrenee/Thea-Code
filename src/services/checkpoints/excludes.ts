@@ -3,7 +3,7 @@ import { join } from "path"
 
 import { fileExistsAtPath } from "../../utils/fs"
 
-import type { GIT_DISABLED_SUFFIX } from "./constants"
+import { GIT_DISABLED_SUFFIX } from "../../../dist/thea-config"
 
 const getBuildArtifactPatterns = () => [
 	".gradle/",

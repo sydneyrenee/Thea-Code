@@ -89,3 +89,7 @@ export const prefixCommand = (command: string): string => `${EXTENSION_NAME}.${c
 export const brandMessage = (message: string): string => `${EXTENSION_DISPLAY_NAME}: ${message}`;
 export const configSection = (): string => CONFIG.SECTION;
 // Add other helpers if needed
+
+export const GIT_DISABLED_SUFFIX = "_disabled";
+
+export const ANTHROPIC_DEFAULT_MAX_TOKENS = 4096;

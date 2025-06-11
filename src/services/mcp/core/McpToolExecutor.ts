@@ -20,14 +20,18 @@ export class McpToolExecutor extends EventEmitter {
    * Get the singleton instance of the McpToolExecutor
    * @param config Optional SSE transport configuration
    */
-  public static getInstance(config?: SseTransportConfig): McpToolExecutor {
+  public static getInstance(): McpToolExecutor {
     if (!McpToolExecutor.instance) {
-      McpToolExecutor.instance = new McpToolExecutor(config);
-    } else if (config) {
-      // Update config if provided
-      McpToolExecutor.instance.sseConfig = config;
+      McpToolExecutor.instance = new McpToolExecutor();
     }
     return McpToolExecutor.instance;
+  }
+
+  public static async initializeForTest(config?: SseTransportConfig): Promise<McpToolExecutor> {
+    const instance = McpToolExecutor.getInstance();
+    instance.sseConfig = config;
+    await instance.initialize();
+    return instance;
   }
 
   /**

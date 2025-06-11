@@ -1,5 +1,4 @@
-import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
-
+import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
 import { VertexAI } from "@google-cloud/vertexai"
 
 import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
@@ -12,7 +11,7 @@ import {
 } from "../transform/neutral-vertex-format"
 import { BaseProvider } from "./base-provider"
 
-import type { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
+import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../../../dist/thea-config"
 import { getModelParams, SingleCompletionHandler } from "../"
 import { GoogleAuth } from "google-auth-library"
 
@@ -63,14 +62,6 @@ interface VertexMessage {
 }
 
 // This type is used for type checking in the anthropic.messages.create calls
-type MessageCreateParamsNonStreaming = {
-	model: string
-	max_tokens: number
-	temperature: number
-	system: string | VertexTextBlock[]
-	messages: VertexMessage[]
-	stream: boolean
-}
 
 interface VertexMessageResponse {
 	content: Array<{ type: "text"; text: string }>
@@ -267,7 +258,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 	private async *createClaudeMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const model = this.getModel()
-		let { id, temperature, maxTokens, thinking } = model
+		const { id, temperature, maxTokens } = model
 		const useCache = model.info.supportsPromptCache
 
 		// Find indices of user messages that we want to cache
@@ -280,11 +271,10 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
 
 		// Create the stream with appropriate caching configuration
-		const params = {
+		const params: MessageCreateParams = {
 			model: id,
-			max_tokens: maxTokens,
+			max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 			temperature,
-			thinking,
 			// Cache the system prompt if caching is enabled
 			system: useCache
 				? [
@@ -299,13 +289,13 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				// Only cache the last two user messages
 				const shouldCache = useCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
 				return formatMessageForCache(message, shouldCache)
-			}),
+			}).filter((m): m is any => m.role === 'user' || m.role === 'assistant'),
 			stream: true,
 		}
 
-                const stream = (await this.anthropicClient.messages.create(
-                        params as MessageCreateParamsNonStreaming
-                )) as unknown as AsyncIterable<VertexMessageStreamEvent>
+		const stream = (await this.anthropicClient.messages.create(
+			params
+		)) as unknown as AsyncIterable<VertexMessageStreamEvent>
 
 		// Process the stream chunks
 		for await (const chunk of stream) {
@@ -471,7 +461,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 	private async completePromptClaude(prompt: string) {
 		try {
-			let { id, info, temperature, maxTokens, thinking } = this.getModel()
+			const { id, info, temperature, maxTokens } = this.getModel()
 			const useCache = info.supportsPromptCache
 
 			// Create a neutral history with a single message
@@ -488,13 +478,12 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				useCache ? formatMessageForCache(message, true) : message
 			);
 
-			const params: MessageCreateParamsNonStreaming = {
+			const params: MessageCreateParams = {
 				model: id,
 				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 				temperature,
-				thinking,
 				system: "", // No system prompt needed for single completions
-				messages: messagesWithCache,
+				messages: messagesWithCache.filter((m): m is any => m.role === 'user' || m.role === 'assistant'),
 				stream: false,
 			}
 

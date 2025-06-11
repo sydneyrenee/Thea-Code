@@ -429,16 +429,15 @@ describe.each([
 
 			// Configure globby mock to return our nested git repository.
 			const relativeGitPath = path.relative(workspaceDir, nestedGitDir)
+            jest.mocked(globby).mockImplementation((pattern: string | readonly string[]) => {
+    if (pattern === "**/.git") {
+     return Promise.resolve([relativeGitPath])
+    } else if (pattern === "**/.git_disabled") {
+     return Promise.resolve([`${relativeGitPath}_disabled`])
+    }
 
-                        jest.mocked(globby).mockImplementation((pattern: string | string[]) => {
-				if (pattern === "**/.git") {
-					return Promise.resolve([relativeGitPath])
-				} else if (pattern === "**/.git_disabled") {
-					return Promise.resolve([`${relativeGitPath}_disabled`])
-				}
-
-				return Promise.resolve([])
-			})
+    return Promise.resolve([])
+   })
 
 			// Create a spy on fs.rename to track when it's called.
 			const renameSpy = jest.spyOn(fs, "rename")
@@ -521,19 +520,13 @@ describe.each([
 
 			// Verify the event was emitted with the correct data.
 			expect(initializeEvent).not.toBeNull()
-			expect(initializeEvent.type).toBe("initialize")
-			expect(initializeEvent.workspaceDir).toBe(workspaceDir)
-			expect(initializeEvent.baseHash).toBeTruthy()
-			expect(typeof initializeEvent.created).toBe("boolean")
-			expect(typeof initializeEvent.duration).toBe("number")
-
-			// Verify the event was emitted with the correct data.
-			expect(initializeEvent).not.toBeNull()
-			expect(initializeEvent.type).toBe("initialize")
-			expect(initializeEvent.workspaceDir).toBe(workspaceDir)
-			expect(initializeEvent.baseHash).toBeTruthy()
-			expect(typeof initializeEvent.created).toBe("boolean")
-			expect(typeof initializeEvent.duration).toBe("number")
+			if (initializeEvent) {
+				expect(initializeEvent.type).toBe("initialize")
+				expect(initializeEvent.workspaceDir).toBe(workspaceDir)
+				expect(initializeEvent.baseHash).toBeTruthy()
+				expect(typeof initializeEvent.created).toBe("boolean")
+				expect(typeof initializeEvent.duration).toBe("number")
+			}
 
 			// Clean up.
 			await fs.rm(shadowDir, { recursive: true, force: true })

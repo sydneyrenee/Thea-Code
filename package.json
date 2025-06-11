@@ -337,9 +337,6 @@
     "generate:checklist": "tsx scripts/generate-master-list.ts"
   },
   "dependencies": {
-    "@anthropic-ai/bedrock-sdk": "^0.22.1",
-    "@anthropic-ai/sdk": "^0.54.0",
-    "@anthropic-ai/vertex-sdk": "^0.11.4",
     "@aws-sdk/client-bedrock-runtime": "^3.828.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@google/generative-ai": "^0.24.1",

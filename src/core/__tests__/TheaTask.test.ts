@@ -4,7 +4,6 @@ import * as os from "os"
 import * as path from "path"
 
 import * as vscode from "vscode"
-import { Anthropic } from "@anthropic-ai/sdk";
 
 import { GlobalState } from "../../schemas"
 import { NeutralMessage, NeutralConversationHistory, NeutralMessageContent, NeutralTextContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history";
@@ -531,14 +530,14 @@ describe("TheaTask", () => {
 				}
 
 				// Create test conversation history with mixed content
-				const conversationHistory: (Anthropic.MessageParam & { ts?: number })[] = [
+				const conversationHistory: NeutralConversationHistory = [
 					{
 						role: "user" as const,
 						content: [
 							{
 								type: "text" as const,
 								text: "Here is an image",
-							} satisfies Anthropic.TextBlockParam,
+							},
 							{
 								type: "image" as const,
 								source: {
@@ -546,7 +545,7 @@ describe("TheaTask", () => {
 									media_type: "image/jpeg",
 									data: "base64data",
 								},
-							} satisfies Anthropic.ImageBlockParam,
+							},
 						],
 					},
 					{
@@ -555,7 +554,7 @@ describe("TheaTask", () => {
 							{
 								type: "text" as const,
 								text: "I see the image",
-							} satisfies Anthropic.TextBlockParam,
+							},
 						],
 					},
 				]

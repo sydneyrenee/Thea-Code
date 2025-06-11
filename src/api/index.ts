@@ -1,4 +1,8 @@
-import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
+// Define neutral thinking config to avoid direct Anthropic SDK dependency
+interface NeutralThinkingConfig {
+	type: "enabled";
+	budget_tokens: number;
+}
 
 import { ApiConfiguration, ModelInfo, ApiHandlerOptions } from "../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../shared/neutral-history"; // Import neutral history types
@@ -103,7 +107,7 @@ export function getModelParams({
 	} = options
 
 	let maxTokens = model.maxTokens ?? defaultMaxTokens
-	let thinking: BetaThinkingConfigParam | undefined = undefined
+	let thinking: NeutralThinkingConfig | undefined = undefined
 	let temperature = customTemperature ?? defaultTemperature
 
 	if (model.thinking) {

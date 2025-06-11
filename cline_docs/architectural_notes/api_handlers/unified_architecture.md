@@ -42,18 +42,19 @@ To support models that use JSON instead of XML for reasoning/thinking blocks and
 - Supported streaming responses in both formats
 - Added prompting options for both formats
 
-### 1.4 MCP Integration
+### 1.4 MCP Integration - ✅ COMPLETED
 
-The latest evolution is the MCP (Model Context Protocol) integration:
+The MCP (Model Context Protocol) integration has been successfully implemented:
 
-- Created an embedded MCP server to host all tools
-- Implemented converters from both XML and JSON formats to MCP protocol calls
-- Developed a routing system for tool execution
-- Provided a unified interface for tool use across different AI models
+- ✅ Created an embedded MCP server to host all tools
+- ✅ Implemented converters from both XML and JSON formats to MCP protocol calls  
+- ✅ Developed a routing system for tool execution via `McpToolRouter`
+- ✅ Provided a unified interface for tool use across all AI models
+- ✅ Integrated MCP into `BaseProvider` for automatic tool support
 
-## 2. Current Unified Architecture
+## 2. Final Unified Architecture
 
-### 2.1 High-Level Architecture
+### 2.1 Implemented High-Level Architecture
 
 ```mermaid
 flowchart TB
@@ -61,100 +62,112 @@ flowchart TB
         A[TheaTask] --> B[ApiHandler Interface]
     end
     
-    subgraph "Message Handling Layer"
-        B --> C[Message Handler]
-        C --> D[Neutral Format Converter]
-        C --> E[Role & Prompt Management]
-        C --> F[Content Processing]
+    subgraph "Provider Layer"
+        B --> BP[BaseProvider]
+        BP --> ANT[AnthropicHandler]
+        BP --> OAI[OpenAiHandler]
+        OAI --> OLL[OllamaHandler]
+        OAI --> DS[DeepSeekHandler]
+        BP --> GEM[GeminiHandler]
+        BP --> OTH[Other Providers...]
     end
     
-    subgraph "Provider Communication Layer"
-        D --> G[Provider Client]
-        G --> H[Token Tracking]
-        G --> I[Pricing Calculation]
-        G --> J[Rate Limiting]
-        G --> K[Error Handling]
+    subgraph "Format Layer"
+        ANT --> NFA[Neutral→Anthropic]
+        OAI --> NFO[Neutral→OpenAI]
+        GEM --> NFG[Neutral→Gemini]
     end
     
     subgraph "MCP Integration"
-        L[McpIntegration]
-        M[McpToolRouter]
-        N[McpToolExecutor]
-        O[McpConverters]
+        BP --> MI[McpIntegration]
+        MI --> MTR[McpToolRouter]
+        MTR --> MTE[McpToolExecutor]
+        MTE --> TOOLS[Tool Implementations]
     end
     
-    subgraph "MCP Server"
-        P[EmbeddedMcpProvider]
-        Q[McpToolRegistry]
-    end
-    
-    subgraph "Provider APIs"
-        G --> R[Anthropic API]
-        G --> S[OpenAI API]
-        G --> T[Ollama API]
-        G --> U[Other Provider APIs]
-    end
-    
-    C --> L
-    L --> M
-    M --> N
-    M --> O
-    N --> P
-    N --> Q
+    subgraph "External APIs"
+        NFA --> AAPI[Anthropic API]
+        NFO --> OAPI[OpenAI/Compatible APIs]
+        NFG --> GAPI[Google Gemini API]
 ```
 
-### 2.2 Key Components
+### 2.2 Protocol-Specific Adapter Pattern
 
-#### 2.2.1 Message Handling Layer
+A key architectural insight implemented during MCP integration is that **MCP should be invoked from protocol-specific handlers rather than from each individual provider**. This eliminates code duplication and ensures consistent behavior:
 
-- **Message Handler**: Orchestrates the overall message processing flow
-- **Neutral Format Converter**: Converts between neutral format and provider-specific formats
-- **Role & Prompt Management**: Handles system prompts, user/assistant roles, and message history
-- **Content Processing**: Processes different content types (text, images, tools)
+```mermaid
+flowchart TD
+    subgraph "Provider Handlers"
+        BP[BaseProvider]
+        OAI[OpenAiHandler]
+        OLL[OllamaHandler]
+        ANT[AnthropicHandler]
+        GEM[GeminiHandler]
+        DS[DeepSeekHandler]
+        REQ[RequestyHandler]
+    end
+    
+    subgraph "MCP Integration"
+        MI[McpIntegration]
+        MTR[McpToolRouter]
+        MTE[McpToolExecutor]
+    end
+    
+    BP --> MI
+    OAI --> BP
+    OLL --> OAI
+    ANT --> BP
+    GEM --> BP
+    DS --> OAI
+    REQ --> OAI
+    
+    MI --> MTR
+    MTR --> MTE
+```
 
-#### 2.2.2 Provider Communication Layer
+### 2.3 Key Components
 
-- **Provider Client**: Manages the actual API communication with providers
-- **Token Tracking**: Counts and tracks token usage across requests
-- **Pricing Calculation**: Calculates costs based on token usage and provider rates
-- **Rate Limiting**: Implements rate limiting to avoid API throttling
-- **Error Handling**: Provides consistent error handling across providers
+#### 2.3.1 Provider Layer
 
-#### 2.2.3 MCP Integration
+- **BaseProvider**: Base class that all providers extend, providing MCP integration and common functionality
+- **Protocol Handlers**: Core protocol implementations (AnthropicHandler, OpenAiHandler, GeminiHandler)
+- **Provider Extensions**: Specific providers that extend protocol handlers (OllamaHandler extends OpenAiHandler)
 
-- **McpIntegration**: A facade that provides a simple interface for the rest of the application
-- **McpToolRouter**: Detects format and routes tool use requests to appropriate handlers
-- **McpToolExecutor**: Core component for tool use across different AI models
-- **McpConverters**: Utility functions for converting between different formats and MCP protocol
+#### 2.3.2 MCP Integration Layer
 
-#### 2.2.4 MCP Server
+- **McpIntegration**: Singleton facade providing the main interface for MCP functionality
+- **McpToolRouter**: Routes tool use requests and handles format detection (XML/JSON/OpenAI)
+- **McpToolExecutor**: Core component that executes tools and manages the MCP server
+- **McpToolRegistry**: Central registry for all available tools
 
-- **EmbeddedMcpProvider**: Hosts tools from various sources
-- **McpToolRegistry**: Central registry for all tools in the system
+#### 2.3.3 Format Conversion Layer
 
-### 2.3 Format Conversion Flow
+- **Neutral Format**: `NeutralConversationHistory` used as the common interface
+- **Transform Files**: Dedicated conversion logic (neutral-anthropic-format.ts, neutral-openai-format.ts, etc.)
+- **McpConverters**: Handle tool use format conversions between XML/JSON/OpenAI and MCP protocol
+
+### 2.4 Tool Use Format Flow
 
 ```mermaid
 flowchart LR
-    subgraph "XML Format"
-        XML["<tool_name>\n<param>value</param>\n</tool_name>"]
+    subgraph "Input Formats"
+        XML["XML Format\n&lt;tool_name&gt;\n&lt;param&gt;value&lt;/param&gt;\n&lt;/tool_name&gt;"]
+        JSON["JSON Format\n{type: 'tool_use',\nname: 'tool_name',\ninput: {param: 'value'}}"]
+        OPENAI["OpenAI Format\nFunction Call Schema"]
     end
     
-    subgraph "JSON Format"
-        JSON["{type: 'tool_use',\nname: 'tool_name',\ninput: {param: 'value'}}"]
+    subgraph "MCP Processing"
+        DETECT[Format Detection]
+        CONVERT[McpConverters]
+        EXECUTE[McpToolExecutor]
     end
     
-    subgraph "OpenAI Format"
-        OpenAI["OpenAI Function Call Format"]
-    end
-    
-    subgraph "MCP Format (Neutral)"
-        MCP["NeutralToolUseRequest"]
-    end
-    
-    XML <--"McpConverters.xmlToMcp()"--> MCP
-    JSON <--"McpConverters.jsonToMcp()"--> MCP
-    OpenAI <--"McpConverters.openAiToMcp()"--> MCP
+    XML --> DETECT
+    JSON --> DETECT
+    OPENAI --> DETECT
+    DETECT --> CONVERT
+    CONVERT --> EXECUTE
+    EXECUTE --> RESULT[Tool Result]
     
     MCP --> EMCP["EmbeddedMcpProvider\n(Tool Execution)"]
     EMCP --> Result["NeutralToolResult"]

@@ -1,12 +1,168 @@
-# Model Context Protocol (MCP) Comprehensive Guide
+# Model Context Protocol (MCP) Implementation Guide
 
-**Date:** 2025-05-05
+**Date:** 2025-06-11  
+**Status:** ✅ FULLY IMPLEMENTED
 
 ## 1. Introduction
 
-The Model Context Protocol (MCP) is a standardized communication protocol designed to facilitate interaction between AI models and external tools, resources, and prompts. This comprehensive guide provides a detailed technical analysis of how MCP works, implementation strategies, and integration with OpenAI-compatible models like Ollama.
+The Model Context Protocol (MCP) integration in Thea Code provides a unified system for tool execution across all AI providers. This guide documents the **completed implementation** and provides examples for using and extending the MCP system.
 
-## 2. Protocol Overview
+**Key Achievements:**
+- ✅ Full MCP integration in all 16 active providers
+- ✅ Unified tool registration and execution
+- ✅ Support for XML, JSON, and OpenAI function call formats
+- ✅ Embedded MCP server with SSE and Stdio transports
+- ✅ Automatic tool discovery and routing
+
+## 2. Quick Start Guide
+
+### 2.1 Using MCP Tools in Providers
+
+All providers automatically have access to MCP tools through the `BaseProvider` class:
+
+```typescript
+// Example: Any provider can use tools seamlessly
+const handler = new OllamaHandler(options);
+// Tools are automatically registered and available
+// AI models can call read_file, write_file, execute_command, etc.
+```
+
+### 2.2 Tool Registration API
+
+Register custom tools using the `McpIntegration` interface:
+
+```typescript
+import { McpIntegration } from '../services/mcp/integration/McpIntegration';
+
+const mcpIntegration = McpIntegration.getInstance();
+
+// Register a custom tool
+mcpIntegration.registerTool({
+  name: 'custom_analyzer',
+  description: 'Analyze code for patterns',
+  paramSchema: {
+    type: 'object',
+    properties: {
+      file_path: { type: 'string', description: 'Path to analyze' },
+      pattern: { type: 'string', description: 'Pattern to search for' }
+    },
+    required: ['file_path']
+  }
+});
+```
+
+### 2.3 Tool Usage in AI Conversations
+
+Tools work automatically across all supported formats:
+
+**XML Format (used by Claude):**
+```xml
+<read_file>
+<path>src/example.ts</path>
+</read_file>
+```
+
+**JSON Format (used by some models):**
+```json
+{
+  "type": "tool_use",
+  "id": "abc123",
+  "name": "read_file", 
+  "input": {"path": "src/example.ts"}
+}
+```
+
+**OpenAI Function Format (used by OpenAI/compatible models):**
+```json
+{
+  "tool_calls": [{
+    "id": "call_abc123",
+    "type": "function",
+    "function": {
+      "name": "read_file",
+      "arguments": "{\"path\":\"src/example.ts\"}"
+    }
+  }]
+}
+```
+
+## 3. Implementation Architecture
+
+### 3.1 Core Components
+
+The Thea Code MCP implementation consists of these key components:
+
+```mermaid
+flowchart TB
+    subgraph "MCP Integration Layer"
+        MI[McpIntegration<br/>Singleton Facade]
+        MTR[McpToolRouter<br/>Format Detection & Routing]
+        MTE[McpToolExecutor<br/>Tool Execution Engine]
+        REG[McpToolRegistry<br/>Tool Registration]
+    end
+    
+    subgraph "Provider Integration"
+        BP[BaseProvider<br/>Base class for all providers]
+        ANT[AnthropicHandler]
+        OAI[OpenAiHandler] 
+        GEM[GeminiHandler]
+    end
+    
+    subgraph "Format Support"
+        XML[XML Tool Calls]
+        JSON[JSON Tool Calls]
+        FUNC[OpenAI Functions]
+    end
+    
+    BP --> MI
+    ANT --> BP
+    OAI --> BP
+    GEM --> BP
+    
+    MI --> MTR
+    MTR --> MTE
+    MTE --> REG
+    
+    XML --> MTR
+    JSON --> MTR
+    FUNC --> MTR
+```
+
+### 3.2 Key Classes and Interfaces
+
+#### McpIntegration (Singleton Facade)
+```typescript
+// Primary interface for MCP functionality
+export class McpIntegration extends EventEmitter {
+  // Get singleton instance
+  static getInstance(config?: SseTransportConfig): McpIntegration
+  
+  // Tool registration
+  registerTool(tool: ToolDefinition): void
+  
+  // Tool execution
+  routeToolUse(request: ToolUseRequest): Promise<ToolUseResult>
+  
+  // Server management
+  initialize(): Promise<void>
+  getServerUrl(): URL | undefined
+}
+```
+
+#### ToolDefinition Interface
+```typescript
+interface ToolDefinition {
+  name: string;
+  description: string;
+  paramSchema: {
+    type: 'object';
+    properties: Record<string, any>;
+    required?: string[];
+  };
+}
+```
+
+## 4. Protocol Support
 
 MCP is built on JSON-RPC 2.0, a lightweight remote procedure call protocol using JSON for data encoding. The protocol defines a set of standardized methods for:
 

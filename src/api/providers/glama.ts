@@ -3,7 +3,7 @@ import OpenAI from "openai"
 
 import { ApiHandlerOptions, ModelInfo, glamaDefaultModelId, glamaDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
-import { convertToOpenAiMessages } from "../transform/openai-format"
+import { convertToOpenAiHistory } from "../transform/neutral-openai-format"
 import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
@@ -39,10 +39,12 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 	}
 
 	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-		// Convert Anthropic messages to OpenAI format
+		// Convert neutral history to OpenAI format
+               const convertedMessages = convertToOpenAiHistory(messages);
+               
                const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
                        { role: "system", content: systemPrompt },
-                       ...convertToOpenAiMessages(messages),
+                       ...convertedMessages,
                ]
 
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)

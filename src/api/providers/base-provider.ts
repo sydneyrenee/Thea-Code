@@ -10,7 +10,44 @@ import o200kBase from "js-tiktoken/ranks/o200k_base"
 const TOKEN_FUDGE_FACTOR = 1.5
 
 /**
- * Base class for API providers that implements common functionality
+ * Base class for all API providers in Thea Code.
+ * 
+ * This class provides the unified architecture foundation that all providers inherit from,
+ * including automatic MCP (Model Context Protocol) integration, tool registration, and
+ * standardized interfaces using neutral message formats.
+ * 
+ * Key Features:
+ * - Automatic MCP integration via singleton pattern
+ * - Tool registration and execution capabilities
+ * - Neutral format interface (NeutralConversationHistory)
+ * - Common token counting functionality
+ * - Standardized error handling and lifecycle management
+ * 
+ * Architecture Benefits:
+ * - All providers automatically support all tools through MCP
+ * - Consistent behavior across different AI providers
+ * - Reduced code duplication through shared functionality
+ * - Easy testing and maintenance
+ * 
+ * Example Implementation:
+ * ```typescript
+ * export class MyProvider extends BaseProvider {
+ *   constructor(options: MyProviderOptions) {
+ *     super(); // Automatically sets up MCP integration
+ *   }
+ * 
+ *   async createMessage(systemPrompt: string, messages: NeutralConversationHistory): Promise<ApiStream> {
+ *     // Convert neutral format to provider format
+ *     const providerMessages = neutralToMyProviderFormat(messages, systemPrompt);
+ *     // Make API call and return stream
+ *     return new ApiStream(await this.callAPI(providerMessages));
+ *   }
+ * 
+ *   getModel() {
+ *     return { id: 'my-model', info: { maxTokens: 100000, ... } };
+ *   }
+ * }
+ * ```
  */
 export abstract class BaseProvider implements ApiHandler {
 	protected mcpIntegration: McpIntegration;
@@ -73,7 +110,45 @@ export abstract class BaseProvider implements ApiHandler {
 		return Promise.resolve(0); // Return 0 for unexpected content types
 	}
 
-        protected registerTools(): void {
+	/**
+	 * Registers common tools available to all providers through the MCP system.
+	 * 
+	 * This method is called automatically during construction and registers the standard
+	 * set of tools that all AI models can use. Providers can override this method to
+	 * add custom tools specific to their capabilities.
+	 * 
+	 * Standard Tools Registered:
+	 * - read_file: Read file contents with optional line range
+	 * - write_to_file: Write content to a file
+	 * - apply_diff: Apply code changes using diff format
+	 * - execute_command: Run terminal commands
+	 * - list_directory: List directory contents
+	 * 
+	 * Tool Execution:
+	 * Tools are automatically executed by the MCP system when AI models invoke them.
+	 * The format conversion (XML/JSON/OpenAI) is handled transparently.
+	 * 
+	 * Custom Tool Registration:
+	 * ```typescript
+	 * protected registerTools(): void {
+	 *   super.registerTools(); // Get standard tools
+	 *   
+	 *   // Add custom tool
+	 *   this.mcpIntegration.registerTool({
+	 *     name: 'custom_analyzer',
+	 *     description: 'Analyze code for specific patterns',
+	 *     paramSchema: {
+	 *       type: 'object',
+	 *       properties: {
+	 *         pattern: { type: 'string', description: 'Pattern to search for' }
+	 *       },
+	 *       required: ['pattern']
+	 *     }
+	 *   });
+	 * }
+	 * ```
+	 */
+	protected registerTools(): void {
                 // Register common tools with basic parameter schemas. The actual
                 // execution for these tools is handled by the MCP provider.
 

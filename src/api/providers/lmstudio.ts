@@ -4,7 +4,7 @@ import axios from "axios"
 import { SingleCompletionHandler } from "../"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
 import { NeutralConversationHistory } from "../../shared/neutral-history"; // Import NeutralConversationHistory
-import { convertToOpenAiMessages } from "../transform/openai-format"
+import { convertToOpenAiHistory } from "../transform/neutral-openai-format"; // Use neutral format conversion
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
@@ -24,11 +24,14 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 	}
 
        override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+               // Convert neutral history to OpenAI format
+               const openAiMessages = convertToOpenAiHistory(messages);
 
-               const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-                       { role: "system", content: systemPrompt },
-                       ...convertToOpenAiMessages(messages),
-               ]
+               // Add system prompt if not already included
+               const hasSystemMessage = openAiMessages.some(msg => msg.role === 'system');
+               if (systemPrompt && systemPrompt.trim() !== '' && !hasSystemMessage) {
+                       openAiMessages.unshift({ role: 'system', content: systemPrompt });
+               }
 
 		try {
 			// Create params object with optional draft model
@@ -47,13 +50,43 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 
 			const stream = await this.client.chat.completions.create(params);
 
-			// Stream handling
+			// Stream handling with MCP integration for tool use
 			for await (const chunk of stream) {
 				const delta = chunk.choices[0]?.delta;
 				if (delta?.content) {
 					yield {
 						type: "text",
 						text: delta.content,
+					}
+				}
+
+				// Handle tool calls if present (MCP integration)
+				if (delta?.tool_calls) {
+					for (const toolCall of delta.tool_calls) {
+						if (toolCall.function?.name && toolCall.function?.arguments) {
+							try {
+								const toolUseInput = {
+									name: toolCall.function.name,
+									arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
+								};
+
+								const toolResult = await this.processToolUse(toolUseInput);
+								const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+
+								yield {
+									type: 'tool_result',
+									id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+									content: toolResultString,
+								};
+							} catch (error) {
+								console.warn('LMStudio tool use error:', error);
+								yield {
+									type: 'tool_result',
+									id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+									content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+								};
+							}
+						}
 					}
 				}
 			}

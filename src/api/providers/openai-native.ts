@@ -107,8 +107,8 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 		// Add reasoning_effort if it's available in the model info
 		const reasoningEffort = this.getModel().info.reasoningEffort;
 		if (reasoningEffort !== undefined) {
-			 
-			(requestOptions as unknown as { type: string }).reasoning_effort = reasoningEffort;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+			(requestOptions as any).reasoning_effort = reasoningEffort;
 		}
 		
 		const stream = await this.client.chat.completions.create(requestOptions);
@@ -151,6 +151,36 @@ export class OpenAiNativeHandler extends BaseProvider implements SingleCompletio
 				yield {
 					type: "text",
 					text: delta.content,
+				}
+			}
+
+			// Handle tool calls with MCP integration
+			if (delta?.tool_calls) {
+				for (const toolCall of delta.tool_calls) {
+					if (toolCall.function?.name && toolCall.function?.arguments) {
+						try {
+							const toolUseInput = {
+								name: toolCall.function.name,
+								arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
+							};
+
+							const toolResult = await this.processToolUse(toolUseInput);
+							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+								content: toolResultString,
+							};
+						} catch (error) {
+							console.warn('OpenAI Native tool use error:', error);
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+							};
+						}
+					}
 				}
 			}
 

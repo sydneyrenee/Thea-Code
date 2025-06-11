@@ -7,7 +7,7 @@ import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
 import type { NeutralConversationHistory } from "../../shared/neutral-history"
-import type { EXTENSION_NAME } from "../../../dist/thea-config" // Import branded constant
+import { EXTENSION_NAME } from "../../../dist/thea-config"
 
 interface UnboundUsage extends OpenAI.CompletionUsage {
 	cache_creation_input_tokens?: number
@@ -116,6 +116,36 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 				yield {
 					type: "text",
 					text: delta.content,
+				}
+			}
+
+			// Handle tool calls with MCP integration
+			if (delta?.tool_calls) {
+				for (const toolCall of delta.tool_calls) {
+					if (toolCall.function?.name && toolCall.function?.arguments) {
+						try {
+							const toolUseInput = {
+								name: toolCall.function.name,
+								arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
+							};
+
+							const toolResult = await this.processToolUse(toolUseInput);
+							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+								content: toolResultString,
+							};
+						} catch (error) {
+							console.warn('Unbound tool use error:', error);
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,	
+								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+							};
+						}
+					}
 				}
 			}
 

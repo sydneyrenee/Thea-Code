@@ -37,9 +37,40 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 		})
 
 		for await (const chunk of result.stream) {
-			yield {
-				type: "text",
-				text: chunk.text(),
+			if (chunk.text()) {
+				yield {
+					type: "text",
+					text: chunk.text(),
+				}
+			}
+
+			// Handle function calls (tool use) with MCP integration
+			const functionCalls = chunk.functionCalls();
+			if (functionCalls) {
+				for (const functionCall of functionCalls) {
+					try {
+						const toolUseInput = {
+							name: functionCall.name,
+							arguments: functionCall.args || {},
+						};
+
+						const toolResult = await this.processToolUse(toolUseInput);
+						const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+
+						yield {
+							type: 'tool_result',
+							id: `${functionCall.name}-${Date.now()}`,
+							content: toolResultString,
+						};
+					} catch (error) {
+						console.warn('Gemini tool use error:', error);
+						yield {
+							type: 'tool_result',
+							id: `${functionCall.name}-${Date.now()}`,
+							content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+						};
+					}
+				}
 			}
 		}
 

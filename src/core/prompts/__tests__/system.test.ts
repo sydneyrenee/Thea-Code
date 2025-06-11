@@ -26,9 +26,7 @@ jest.mock("../sections/custom-instructions", () => {
 })
 
 // Set up default mock implementation
-const { __setMockImplementation } = jest.requireMock("../sections/custom-instructions") as {
-	__setMockImplementation: (impl: (...args: unknown[]) => unknown) => void
-}
+const { __setMockImplementation } = jest.requireMock("../sections/custom-instructions")
 __setMockImplementation(
         (
                 modeCustomInstructions: string,

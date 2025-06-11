@@ -70,6 +70,40 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 				}
 			}
 
+			// Handle tool calls with MCP integration
+			if (delta?.toolCalls) {
+				for (const toolCall of delta.toolCalls) {
+					if (toolCall.function?.name && toolCall.function?.arguments) {
+						try {
+							const args = typeof toolCall.function.arguments === 'string' 
+								? JSON.parse(toolCall.function.arguments) as Record<string, unknown>
+								: toolCall.function.arguments as Record<string, unknown>;
+
+							const toolUseInput = {
+								name: toolCall.function.name,
+								arguments: args,
+							};
+
+							const toolResult = await this.processToolUse(toolUseInput);
+							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+								content: toolResultString,
+							};
+						} catch (error) {
+							console.warn('Mistral tool use error:', error);
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+							};
+						}
+					}
+				}
+			}
+
 			if (chunk.data.usage) {
 				yield {
 					type: "usage",

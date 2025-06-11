@@ -7,7 +7,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { BaseProvider } from "./base-provider"
-import type { EXTENSION_ID } from "../../../dist/thea-config" // Import branded constant
+import { EXTENSION_ID as EXTENSION_ID_VALUE } from "../../../dist/thea-config"
 import { NeutralConversationHistory } from "../../shared/neutral-history"
 const GLAMA_DEFAULT_TEMPERATURE = 0
 
@@ -109,7 +109,7 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 						labels: [
 							{
 								key: "app",
-								value: EXTENSION_ID,
+								value: EXTENSION_ID_VALUE,
 							},
 						],
 					}),
@@ -126,6 +126,36 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 				yield {
 					type: "text",
 					text: delta.content,
+				}
+			}
+
+			// Handle tool calls with MCP integration
+			if (delta?.tool_calls) {
+				for (const toolCall of delta.tool_calls) {
+					if (toolCall.function?.name && toolCall.function?.arguments) {
+						try {
+							const toolUseInput = {
+								name: toolCall.function.name,
+								arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
+							};
+
+							const toolResult = await this.processToolUse(toolUseInput);
+							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+								content: toolResultString,
+							};
+						} catch (error) {
+							console.warn('Glama tool use error:', error);
+							yield {
+								type: 'tool_result',
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
+								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
+							};
+						}
+					}
 				}
 			}
 		}

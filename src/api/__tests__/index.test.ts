@@ -1,9 +1,13 @@
 // npx jest src/api/__tests__/index.test.ts
 
-import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
-
 import { getModelParams } from "../index"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
+
+// Define neutral thinking config type to avoid Anthropic SDK dependency
+interface NeutralThinkingConfig {
+	type: "enabled";
+	budget_tokens: number;
+}
 
 describe("getModelParams", () => {
 	it("should return default values when no custom values are provided", () => {
@@ -87,7 +91,7 @@ describe("getModelParams", () => {
 			model,
 		})
 
-		const expectedThinking: BetaThinkingConfigParam = {
+		const expectedThinking: NeutralThinkingConfig = {
 			type: "enabled",
 			budget_tokens: 1600, // 80% of 2000
 		}
@@ -114,7 +118,7 @@ describe("getModelParams", () => {
 			defaultMaxTokens: 2000,
 		})
 
-		const expectedThinking: BetaThinkingConfigParam = {
+		const expectedThinking: NeutralThinkingConfig = {
 			type: "enabled",
 			budget_tokens: 2400, // 80% of 3000
 		}
@@ -141,7 +145,7 @@ describe("getModelParams", () => {
 			model,
 		})
 
-		const expectedThinking: BetaThinkingConfigParam = {
+		const expectedThinking: NeutralThinkingConfig = {
 			type: "enabled",
 			budget_tokens: 1500, // Using the custom value
 		}
@@ -190,7 +194,7 @@ describe("getModelParams", () => {
 			model,
 		})
 
-		const expectedThinking: BetaThinkingConfigParam = {
+		const expectedThinking: NeutralThinkingConfig = {
 			type: "enabled",
 			budget_tokens: 1024, // Minimum is 1024
 		}
@@ -217,7 +221,7 @@ describe("getModelParams", () => {
 			model,
 		})
 
-		const expectedThinking: BetaThinkingConfigParam = {
+		const expectedThinking: NeutralThinkingConfig = {
 			type: "enabled",
 			budget_tokens: 3200, // 80% of 4000
 		}
@@ -243,7 +247,7 @@ describe("getModelParams", () => {
 			model,
 		})
 
-		const expectedThinking: BetaThinkingConfigParam = {
+		const expectedThinking: NeutralThinkingConfig = {
 			type: "enabled",
 			budget_tokens: Math.floor(ANTHROPIC_DEFAULT_MAX_TOKENS * 0.8),
 		}

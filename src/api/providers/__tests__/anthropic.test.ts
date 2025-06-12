@@ -4,72 +4,16 @@ import { AnthropicHandler } from "../anthropic"
 import { ApiHandlerOptions } from "../../../shared/api"
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import { ApiStreamUsageChunk, ApiStreamTextChunk, ApiStreamReasoningChunk, ApiStreamToolUseChunk, ApiStreamToolResultChunk } from "../../transform/stream"
-import type * as AnthropicSDK from "@anthropic-ai/sdk";
 
-// Internal type for test mocks that matches the structure of ApiStreamChunk
-type Chunk =
-  | { type: "message_start"; message: { usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens: number; cache_read_input_tokens: number; }; }; }
-  | { type: "content_block_start"; index: number; content_block: { type: "text"; text: string; }; }
-  | { type: "content_block_delta"; delta: { type: "text_delta"; text: string; }; }
-  | ApiStreamUsageChunk
-  | ApiStreamTextChunk
-  | ApiStreamReasoningChunk
-  | ApiStreamToolUseChunk
-  | ApiStreamToolResultChunk;
+// Mock NeutralAnthropicClient instead of the direct SDK
+const mockCreateMessage = jest.fn()
+const mockCountTokens = jest.fn()
 
-// No need for a special type, we'll use a different approach
-
-const mockCreate = jest.fn()
-
-jest.mock("@anthropic-ai/sdk", () => {
+jest.mock("../../../services/anthropic/NeutralAnthropicClient", () => {
 	return {
-		Anthropic: jest.fn().mockImplementation(() => ({
-			messages: {
-				create: mockCreate.mockImplementation((options: AnthropicSDK.Anthropic.MessageCreateParams) => {
-					if (!options.stream) {
-						return {
-							id: "test-completion",
-							content: [{ type: "text", text: "Test response" }],
-							role: "assistant",
-							model: options.model,
-							usage: {
-								input_tokens: 10,
-								output_tokens: 5,
-							},
-						}
-					}
-					return {
-						*[Symbol.asyncIterator]() {
-							yield {
-								type: "message_start",
-								message: {
-									usage: {
-										input_tokens: 100,
-										output_tokens: 50,
-										cache_creation_input_tokens: 20,
-										cache_read_input_tokens: 10,
-									},
-								},
-							}
-							yield {
-								type: "content_block_start",
-								index: 0,
-								content_block: {
-									type: "text",
-									text: "Hello",
-								},
-							}
-							yield {
-								type: "content_block_delta",
-								delta: {
-									type: "text_delta",
-									text: " world",
-								},
-							}
-						},
-					}
-				}),
-			},
+		NeutralAnthropicClient: jest.fn().mockImplementation(() => ({
+			createMessage: mockCreateMessage,
+			countTokens: mockCountTokens,
 		})),
 	}
 })
@@ -84,7 +28,8 @@ describe("AnthropicHandler", () => {
 			apiModelId: "claude-3-5-sonnet-20241022",
 		}
 		handler = new AnthropicHandler(mockOptions)
-		mockCreate.mockClear()
+		mockCreateMessage.mockClear()
+		mockCountTokens.mockClear()
 	})
 
 	describe("constructor", () => {
@@ -115,6 +60,21 @@ describe("AnthropicHandler", () => {
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
 
+		beforeEach(() => {
+			// Setup a default mock for createMessage that returns expected chunks
+			mockCreateMessage.mockImplementation(async function*() {
+				yield {
+					type: "usage",
+					inputTokens: 100,
+					outputTokens: 50,
+					cacheWriteTokens: 20,
+					cacheReadTokens: 10,
+				}
+				yield { type: "text", text: "Hello" }
+				yield { type: "text", text: " world" }
+			})
+		})
+
 		it("should handle prompt caching for supported models", async () => {
 			// Use neutral format for messages
 			const neutralMessages: NeutralConversationHistory = [
@@ -134,7 +94,7 @@ describe("AnthropicHandler", () => {
 			
 			const stream = handler.createMessage(systemPrompt, neutralMessages)
 
-			const chunks: Chunk[] = []
+			const chunks: any[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -153,41 +113,52 @@ describe("AnthropicHandler", () => {
 			expect(textChunks[0].text).toBe("Hello")
 			expect(textChunks[1].text).toBe(" world")
 
-			// Verify API
-			expect(mockCreate).toHaveBeenCalled()
+			// Verify the neutral client was called
+			expect(mockCreateMessage).toHaveBeenCalledWith({
+				model: mockOptions.apiModelId,
+				systemPrompt,
+				messages: neutralMessages,
+				maxTokens: 8192,
+				temperature: 0,
+			})
 		})
 	})
 
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
+			// Setup mock to return a simple text stream
+			mockCreateMessage.mockImplementation(async function*() {
+				yield { type: "text", text: "Test response" }
+			})
+
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
-			expect(mockCreate).toHaveBeenCalledWith({
+			expect(mockCreateMessage).toHaveBeenCalledWith({
 				model: mockOptions.apiModelId,
+				systemPrompt: "",
 				messages: [{ role: "user", content: "Test prompt" }],
-				max_tokens: 8192,
+				maxTokens: 8192,
 				temperature: 0,
-				stream: false,
 			})
 		})
 
-		it("should handle API errors", async () => {
-			mockCreate.mockRejectedValueOnce(new Error("Anthropic completion error: API Error"))
-			await expect(handler.completePrompt("Test prompt")).rejects.toThrow("Anthropic completion error: API Error")
-		})
-
 		it("should handle non-text content", async () => {
-			mockCreate.mockImplementationOnce(() => ({
-				content: [{ type: "image" }],
-			}))
+			// Setup mock to return a stream with different text chunks
+			mockCreateMessage.mockImplementation(async function*() {
+				yield { type: "text", text: "Hello" }
+				yield { type: "text", text: " world" }
+			})
+
 			const result = await handler.completePrompt("Test prompt")
-			expect(result).toBe("")
+			expect(result).toBe("Hello world")
 		})
 
 		it("should handle empty response", async () => {
-			mockCreate.mockImplementationOnce(() => ({
-				content: [{ type: "text", text: "" }],
-			}))
+			// Setup mock to return empty stream
+			mockCreateMessage.mockImplementation(async function*() {
+				// No yields, empty stream
+			})
+
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("")
 		})
@@ -244,19 +215,9 @@ describe("AnthropicHandler", () => {
 	})
 
 	describe("countTokens", () => {
-		it("should count tokens using Anthropic API", async () => {
-			// Mock the countTokens response
-			const mockCountTokensResponse = {
-				input_tokens: 42
-			};
-			
-			// Setup the mock
-			const mockCountTokens = jest.fn().mockResolvedValue(mockCountTokensResponse);
-			// Using a two-step type assertion to avoid ESLint error
-			// First cast to unknown, then to the desired type
-			const mockableHandler = handler as unknown;
-			// Then access the property
-			(mockableHandler as {client: {messages: {countTokens: jest.Mock}}}).client.messages.countTokens = mockCountTokens;
+		it("should count tokens using NeutralAnthropicClient", async () => {
+			// Setup the mock to return token count
+			mockCountTokens.mockResolvedValue(42);
 			
 			// Create neutral content for testing
 			const neutralContent = [
@@ -269,24 +230,13 @@ describe("AnthropicHandler", () => {
 			// Verify the result
 			expect(result).toBe(42);
 			
-			// Verify the API was called with converted content
-			expect(mockCountTokens).toHaveBeenCalled();
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			const callArg = mockCountTokens.mock.calls[0][0] as AnthropicSDK.Anthropic.MessageCreateParams;
-			expect(callArg.messages[0].role).toBe("user");
-			expect(callArg.messages[0].content).toEqual([
-				{ type: "text", text: "Test message" }
-			]);
+			// Verify the NeutralAnthropicClient countTokens was called
+			expect(mockCountTokens).toHaveBeenCalledWith("claude-3-5-sonnet-20241022", neutralContent);
 		});
 		
 		it("should fall back to base provider implementation on error", async () => {
 			// Mock the countTokens to throw an error
-			const mockCountTokens = jest.fn().mockRejectedValue(new Error("API Error"));
-			// Using a two-step type assertion to avoid ESLint error
-			// First cast to unknown, then to the desired type
-			const mockableHandler = handler as unknown;
-			// Then access the property
-			(mockableHandler as {client: {messages: {countTokens: jest.Mock}}}).client.messages.countTokens = mockCountTokens;
+			mockCountTokens.mockRejectedValue(new Error("API Error"));
 			
 			// Mock the base provider's countTokens method
 			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')

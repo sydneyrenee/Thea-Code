@@ -12,7 +12,7 @@ import {
 } from "./types"
 import { formatResponse } from "../prompts/responses"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
-import Anthropic from "@anthropic-ai/sdk"
+import type { NeutralTextContentBlock, NeutralImageContentBlock } from "../../shared/neutral-history"
 
 export async function attemptCompletionTool(
 	theaTask: TheaTask, // Renamed parameter and type
@@ -134,7 +134,7 @@ export async function attemptCompletionTool(
 			}
 
 			await theaTask.webviewCommunicator.say("user_feedback", text ?? "", images) // Use communicator
-			const toolResults: (Anthropic.TextBlockParam | Anthropic.ImageBlockParam)[] = []
+			const toolResults: (NeutralTextContentBlock | NeutralImageContentBlock)[] = []
 
 			if (commandResult) {
 				if (typeof commandResult === "string") {

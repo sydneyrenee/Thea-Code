@@ -1,7 +1,6 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import fs from "fs/promises"
-import { Anthropic } from "@anthropic-ai/sdk" // Assuming this path is correct
 
 import { HistoryItem } from "../../../shared/HistoryItem" // Adjusted path
 import { ContextProxy } from "../../config/ContextProxy" // Adjusted path
@@ -13,6 +12,7 @@ import { ShadowCheckpointService } from "../../../services/checkpoints/ShadowChe
 import { downloadTask } from "../../../integrations/misc/export-markdown" // Adjusted path
 import { t } from "../../../i18n" // Adjusted path
 import { getWorkspacePath } from "../../../utils/path" // Adjusted path
+import type { NeutralConversationHistory } from "../../../shared/neutral-history" // Import neutral history types
 
 /**
  * Manages task history storage, retrieval, and associated file operations.
@@ -68,7 +68,7 @@ export class TheaTaskHistory {
 		taskDirPath: string
 		apiConversationHistoryFilePath: string
 		uiMessagesFilePath: string
-		apiConversationHistory: Anthropic.MessageParam[]
+		apiConversationHistory: NeutralConversationHistory
 	}> {
                 const history = this.getHistoryList()
 		const historyItem = history.find((item) => item.id === id)
@@ -80,13 +80,13 @@ export class TheaTaskHistory {
 			const apiConversationHistoryFilePath = path.join(taskDirPath, GlobalFileNames.apiConversationHistory)
 			const uiMessagesFilePath = path.join(taskDirPath, GlobalFileNames.uiMessages)
 
-			let apiConversationHistory: Anthropic.MessageParam[] = []
+			let apiConversationHistory: NeutralConversationHistory = []
 			try {
 				const fileExists = await fileExistsAtPath(apiConversationHistoryFilePath)
                                 if (fileExists) {
                                         apiConversationHistory = JSON.parse(
                                                 await fs.readFile(apiConversationHistoryFilePath, "utf8"),
-                                        ) as Anthropic.MessageParam[]
+                                        ) as NeutralConversationHistory
                                 }
 			} catch (readError) {
 				console.error(`Error reading conversation history for task ${id}:`, readError)

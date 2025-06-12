@@ -108,7 +108,7 @@ export const BrowserSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={browserToolEnabled}
-						onChange={(e: any) => setCachedStateField("browserToolEnabled", e.target.checked)}>
+						onChange={(e: Event & { target: { checked: boolean; value: string } }) => setCachedStateField("browserToolEnabled", e.target.checked)}>
 						<span className="font-medium">{t("settings:browser.enable.label")}</span>
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">
@@ -163,7 +163,7 @@ export const BrowserSettings = ({
 						<div>
 							<VSCodeCheckbox
 								checked={remoteBrowserEnabled}
-								onChange={(e: any) => {
+								onChange={(e: Event & { target: { checked: boolean; value: string } }) => {
 									// Update the global state - remoteBrowserEnabled now means "enable remote browser connection".
 									setCachedStateField("remoteBrowserEnabled", e.target.checked)
 
@@ -184,7 +184,7 @@ export const BrowserSettings = ({
 								<div className="flex items-center gap-2">
 									<VSCodeTextField
 										value={remoteBrowserHost ?? ""}
-										onChange={(e: any) =>
+										onChange={(e: Event & { target: { checked: boolean; value: string } }) =>
 											setCachedStateField("remoteBrowserHost", e.target.value || undefined)
 										}
 										placeholder={t("settings:browser.remote.urlPlaceholder")}

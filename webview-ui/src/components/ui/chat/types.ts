@@ -16,9 +16,9 @@ export type ChatHandler = {
 
 	messages: Message[]
 
-	reload?: (options?: { data?: any }) => void
+	reload?: (options?: { data?: unknown }) => void
 	stop?: () => void
-	append: (message: Message, options?: { data?: any }) => Promise<string | null | undefined>
+	append: (message: Message, options?: { data?: unknown }) => Promise<string | null | undefined>
 	reset?: () => void
 }
 

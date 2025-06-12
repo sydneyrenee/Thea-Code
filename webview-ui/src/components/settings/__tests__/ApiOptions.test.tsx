@@ -9,48 +9,48 @@ import ApiOptions from "../ApiOptions"
 
 // Mock VSCode components
 jest.mock("@/components/ui/vscode-components", () => ({
-	VSCodeTextField: ({ children, value, onBlur }: any) => (
+	VSCodeTextField: ({ children, value, onBlur }: { [key: string]: unknown }) => (
 		<div>
 			{children}
 			<input type="text" value={value} onChange={onBlur} />
 		</div>
 	),
-	VSCodeLink: ({ children, href }: any) => <a href={href}>{children}</a>,
-	VSCodeRadio: ({ children, value, checked }: any) => <input type="radio" value={value} checked={checked} />,
-	VSCodeRadioGroup: ({ children }: any) => <div>{children}</div>,
-	VSCodeButton: ({ children }: any) => <div>{children}</div>,
+	VSCodeLink: ({ children, href }: { [key: string]: unknown }) => <a href={href}>{children}</a>,
+	VSCodeRadio: ({ children, value, checked }: { [key: string]: unknown }) => <input type="radio" value={value} checked={checked} />,
+	VSCodeRadioGroup: ({ children }: { [key: string]: unknown }) => <div>{children}</div>,
+	VSCodeButton: ({ children }: { [key: string]: unknown }) => <div>{children}</div>,
 }))
 
 // Mock other components
 jest.mock("vscrui", () => ({
-        Checkbox: ({ children, checked, onChange }: any) => (
+        Checkbox: ({ children, checked, onChange }: { [key: string]: unknown }) => (
                 <label>
                         <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
                         {children}
                 </label>
         ),
-        Button: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+        Button: ({ children, onClick }: { [key: string]: unknown }) => <button onClick={onClick}>{children}</button>,
 }))
 
 // Mock @shadcn/ui components
 jest.mock("@/components/ui", () => ({
-	Select: ({ children, value, onValueChange }: any) => (
+	Select: ({ children, value, onValueChange }: { [key: string]: unknown }) => (
 		<div className="select-mock">
 			<select value={value} onChange={(e) => onValueChange && onValueChange(e.target.value)}>
 				{children}
 			</select>
 		</div>
 	),
-	SelectTrigger: ({ children }: any) => <div className="select-trigger-mock">{children}</div>,
-	SelectValue: ({ children }: any) => <div className="select-value-mock">{children}</div>,
-	SelectContent: ({ children }: any) => <div className="select-content-mock">{children}</div>,
-	SelectItem: ({ children, value }: any) => (
+	SelectTrigger: ({ children }: { [key: string]: unknown }) => <div className="select-trigger-mock">{children}</div>,
+	SelectValue: ({ children }: { [key: string]: unknown }) => <div className="select-value-mock">{children}</div>,
+	SelectContent: ({ children }: { [key: string]: unknown }) => <div className="select-content-mock">{children}</div>,
+	SelectItem: ({ children, value }: { [key: string]: unknown }) => (
 		<option value={value} className="select-item-mock">
 			{children}
 		</option>
 	),
-	SelectSeparator: ({ children }: any) => <div className="select-separator-mock">{children}</div>,
-	Button: ({ children, onClick }: any) => (
+	SelectSeparator: ({ children }: { [key: string]: unknown }) => <div className="select-separator-mock">{children}</div>,
+	Button: ({ children, onClick }: { [key: string]: unknown }) => (
 		<button onClick={onClick} className="button-mock">
 			{children}
 		</button>
@@ -58,7 +58,7 @@ jest.mock("@/components/ui", () => ({
 }))
 
 jest.mock("../TemperatureControl", () => ({
-	TemperatureControl: ({ value, onChange }: any) => (
+	TemperatureControl: ({ value, onChange }: { [key: string]: unknown }) => (
 		<div data-testid="temperature-control">
 			<input
 				type="range"
@@ -74,7 +74,7 @@ jest.mock("../TemperatureControl", () => ({
 
 // Mock ThinkingBudget component
 jest.mock("../ThinkingBudget", () => ({
-	ThinkingBudget: ({ apiConfiguration, setApiConfigurationField, modelInfo, provider }: any) =>
+	ThinkingBudget: ({ apiConfiguration, setApiConfigurationField, modelInfo, provider }: { [key: string]: unknown }) =>
 		modelInfo?.thinking ? (
 			<div data-testid="thinking-budget" data-provider={provider}>
 				<input data-testid="thinking-tokens" value={apiConfiguration?.modelMaxThinkingTokens} />

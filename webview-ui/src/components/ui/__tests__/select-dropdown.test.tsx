@@ -23,7 +23,7 @@ jest.mock("../dropdown-menu", () => {
 		}: {
 			children: ReactNode
 			disabled?: boolean
-			[key: string]: any
+			[key: string]: unknown
 		}) => (
 			<button data-testid="dropdown-trigger" disabled={disabled} {...props}>
 				{children}

@@ -738,7 +738,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							onChange={(e) => {
 								const value =
 									((e as unknown as CustomEvent)?.detail?.target?.value) ||
-									((e as any).target as HTMLTextAreaElement).value
+									((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(mode, customModes)
 								if (customMode) {
 									// For custom modes, update the JSON file
@@ -898,7 +898,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						onChange={(e) => {
 							const value =
 								((e as unknown as CustomEvent)?.detail?.target?.value) ||
-								((e as any).target as HTMLTextAreaElement).value
+								((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({
 								type: "customInstructions",
@@ -1013,7 +1013,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							onChange={(e) => {
 								const value =
 									((e as unknown as CustomEvent)?.detail?.target?.value) ||
-									((e as any).target as HTMLTextAreaElement).value
+									((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 								const trimmedValue = value.trim()
 								updateSupportPrompt(activeSupportTab, trimmedValue || undefined)
 							}}
@@ -1048,7 +1048,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										<VSCodeDropdown
 											value={enhancementApiConfigId || ""}
 											data-testid="api-config-dropdown"
-											onChange={(e: any) => {
+											onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 												const value = e.detail?.target?.value || e.target?.value
 												setEnhancementApiConfigId(value)
 												vscode.postMessage({
@@ -1148,7 +1148,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									onChange={(e: Event | React.FormEvent<HTMLElement>) => {
 										const target =
 											(e as CustomEvent)?.detail?.target ||
-											((e as any).target as HTMLInputElement)
+											((e as React.ChangeEvent<HTMLInputElement>).target as HTMLInputElement)
 										handleNameChange(target.value)
 									}}
 									style={{ width: "100%" }}
@@ -1166,7 +1166,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									onChange={(e: Event | React.FormEvent<HTMLElement>) => {
 										const target =
 											(e as CustomEvent)?.detail?.target ||
-											((e as any).target as HTMLInputElement)
+											((e as React.ChangeEvent<HTMLInputElement>).target as HTMLInputElement)
 										setNewModeSlug(target.value)
 									}}
 									style={{ width: "100%" }}
@@ -1233,7 +1233,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									onChange={(e) => {
 										const value =
 											((e as unknown as CustomEvent)?.detail?.target?.value) ||
-											((e as any).target as HTMLTextAreaElement).value
+											((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 										setNewModeRoleDefinition(value)
 									}}
 									rows={4}
@@ -1302,7 +1302,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									onChange={(e) => {
 										const value =
 											((e as unknown as CustomEvent)?.detail?.target?.value) ||
-											((e as any).target as HTMLTextAreaElement).value
+											((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 										setNewModeCustomInstructions(value)
 									}}
 									rows={4}

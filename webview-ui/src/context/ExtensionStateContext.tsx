@@ -15,7 +15,7 @@ import { TelemetrySetting } from "../../../src/shared/TelemetrySetting"
 export interface ExtensionStateContextType extends ExtensionState {
 	didHydrateState: boolean
 	showWelcome: boolean
-	theme: any
+	theme: Record<string, string>
 	mcpServers: McpServer[]
 	currentCheckpoint?: string
 	filePaths: string[]
@@ -164,7 +164,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
 	const [showWelcome, setShowWelcome] = useState(false)
-	const [theme, setTheme] = useState<any>(undefined)
+	const [theme, setTheme] = useState<Record<string, string> | undefined>(undefined)
 	const [filePaths, setFilePaths] = useState<string[]>([])
 	const [openedTabs, setOpenedTabs] = useState<Array<{ label: string; isActive: boolean; path?: string }>>([])
 

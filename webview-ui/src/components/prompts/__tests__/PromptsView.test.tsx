@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import PromptsView from "../PromptsView"
-import { ExtensionStateContext } from "../../../context/ExtensionStateContext"
+import { ExtensionStateContext, ExtensionStateContextType } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
 
 // Mock vscode API
@@ -26,7 +26,7 @@ const mockExtensionState = {
 const renderPromptsView = (props = {}) => {
 	const mockOnDone = jest.fn()
 	return render(
-		<ExtensionStateContext.Provider value={{ ...mockExtensionState, ...props } as any}>
+		<ExtensionStateContext.Provider value={{ ...mockExtensionState, ...props } as Partial<ExtensionStateContextType> as ExtensionStateContextType}>
 			<PromptsView onDone={mockOnDone} />
 		</ExtensionStateContext.Provider>,
 	)
@@ -58,7 +58,7 @@ describe("PromptsView", () => {
 
 	it("switches between tabs correctly", async () => {
 		const { rerender } = render(
-			<ExtensionStateContext.Provider value={{ ...mockExtensionState, mode: "code" } as any}>
+			<ExtensionStateContext.Provider value={{ ...mockExtensionState, mode: "code" } as Partial<ExtensionStateContextType> as ExtensionStateContextType}>
 				<PromptsView onDone={jest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
@@ -75,7 +75,7 @@ describe("PromptsView", () => {
 		// Click Ask tab and update context
 		fireEvent.click(askTab)
 		rerender(
-			<ExtensionStateContext.Provider value={{ ...mockExtensionState, mode: "ask" } as any}>
+			<ExtensionStateContext.Provider value={{ ...mockExtensionState, mode: "ask" } as Partial<ExtensionStateContextType> as ExtensionStateContextType}>
 				<PromptsView onDone={jest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
@@ -87,7 +87,7 @@ describe("PromptsView", () => {
 		// Click Architect tab and update context
 		fireEvent.click(architectTab)
 		rerender(
-			<ExtensionStateContext.Provider value={{ ...mockExtensionState, mode: "architect" } as any}>
+			<ExtensionStateContext.Provider value={{ ...mockExtensionState, mode: "architect" } as Partial<ExtensionStateContextType> as ExtensionStateContextType}>
 				<PromptsView onDone={jest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
@@ -124,7 +124,7 @@ describe("PromptsView", () => {
 		// Test with built-in mode (code)
 		const { unmount } = render(
 			<ExtensionStateContext.Provider
-				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as any}>
+				value={{ ...mockExtensionState, mode: "code", customModes: [customMode] } as Partial<ExtensionStateContextType> as ExtensionStateContextType}>
 				<PromptsView onDone={jest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)
@@ -147,7 +147,7 @@ describe("PromptsView", () => {
 		// Test with custom mode
 		render(
 			<ExtensionStateContext.Provider
-				value={{ ...mockExtensionState, mode: "custom-mode", customModes: [customMode] } as any}>
+				value={{ ...mockExtensionState, mode: "custom-mode", customModes: [customMode] } as Partial<ExtensionStateContextType> as ExtensionStateContextType}>
 				<PromptsView onDone={jest.fn()} />
 			</ExtensionStateContext.Provider>,
 		)

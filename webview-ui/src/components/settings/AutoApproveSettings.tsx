@@ -62,9 +62,19 @@ export const AutoApproveSettings = ({
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
 
-	const handleCheckboxChange = (field: string) => 
+	const handleCheckboxChange = (field: keyof Pick<AutoApproveSettingsProps, 
+		| "alwaysAllowReadOnly"
+		| "alwaysAllowReadOnlyOutsideWorkspace"
+		| "alwaysAllowWrite"
+		| "alwaysAllowWriteOutsideWorkspace"
+		| "alwaysAllowBrowser"
+		| "alwaysApproveResubmit"
+		| "alwaysAllowMcp"
+		| "alwaysAllowModeSwitch"
+		| "alwaysAllowSubtasks"
+		| "alwaysAllowExecute">) => 
 		(checked: boolean) => {
-			setCachedStateField(field as any, checked)
+			setCachedStateField(field, checked)
 		}
 
 	const handleAddCommand = () => {
@@ -275,7 +285,7 @@ export const AutoApproveSettings = ({
 						<div className="flex gap-2">
 							<VSCodeTextField
 								value={commandInput}
-								onInput={(e: any) => setCommandInput(e.target.value)}
+								onInput={(e: Event & { target: { value: string } }) => setCommandInput(e.target.value)}
 								placeholder={t("settings:autoApprove.execute.commandPlaceholder")}
 								className="grow"
 								data-testid="command-input"

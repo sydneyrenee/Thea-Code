@@ -3,7 +3,6 @@
 import { AnthropicHandler } from "../anthropic"
 import { ApiHandlerOptions } from "../../../shared/api"
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
-import { ApiStreamUsageChunk, ApiStreamTextChunk, ApiStreamReasoningChunk, ApiStreamToolUseChunk, ApiStreamToolResultChunk } from "../../transform/stream"
 
 // Mock NeutralAnthropicClient instead of the direct SDK
 const mockCreateMessage = jest.fn()
@@ -70,6 +69,8 @@ describe("AnthropicHandler", () => {
 					cacheWriteTokens: 20,
 					cacheReadTokens: 10,
 				}
+				// Add await to satisfy async requirement
+				await Promise.resolve()
 				yield { type: "text", text: "Hello" }
 				yield { type: "text", text: " world" }
 			})
@@ -94,7 +95,14 @@ describe("AnthropicHandler", () => {
 			
 			const stream = handler.createMessage(systemPrompt, neutralMessages)
 
-			const chunks: any[] = []
+			const chunks: Array<{
+				type: string;
+				inputTokens?: number;
+				outputTokens?: number;
+				cacheWriteTokens?: number;
+				cacheReadTokens?: number;
+				text?: string;
+			}> = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -129,6 +137,7 @@ describe("AnthropicHandler", () => {
 			// Setup mock to return a simple text stream
 			mockCreateMessage.mockImplementation(async function*() {
 				yield { type: "text", text: "Test response" }
+				await Promise.resolve() // Add await to satisfy async requirement
 			})
 
 			const result = await handler.completePrompt("Test prompt")
@@ -147,6 +156,7 @@ describe("AnthropicHandler", () => {
 			mockCreateMessage.mockImplementation(async function*() {
 				yield { type: "text", text: "Hello" }
 				yield { type: "text", text: " world" }
+				await Promise.resolve() // Add await to satisfy async requirement
 			})
 
 			const result = await handler.completePrompt("Test prompt")

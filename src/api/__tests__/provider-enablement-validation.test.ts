@@ -3,7 +3,7 @@
  * This test specifically addresses issue #107 - Provider Handler Re-enablement
  */
 import { buildApiHandler } from "../index"
-import { ApiConfiguration, ModelInfo } from "../../shared/api"
+import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
 import { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
 
@@ -30,7 +30,8 @@ jest.mock('../../services/mcp/integration/McpIntegration', () => {
 
 // Mock FakeAI implementation for testing
 const mockFakeAI = {
-  async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+  async *createMessage(_systemPrompt: string, _messages: NeutralConversationHistory): ApiStream {
+    await Promise.resolve() // Add await to satisfy async requirement
     yield { type: "text" as const, text: "Mock response" }
   },
   getModel(): { id: string; info: ModelInfo } {
@@ -50,10 +51,10 @@ const mockFakeAI = {
   async countTokens(content: NeutralMessageContent): Promise<number> {
     // Simple token count estimation
     const text = content.map(item => item.type === 'text' ? item.text : '').join(' ')
-    return text.split(/\s+/).length
+    return Promise.resolve(text.split(/\s+/).length)
   },
-  async completePrompt(prompt: string): Promise<string> {
-    return "Mock completion response"
+  async completePrompt(_prompt: string): Promise<string> {
+    return Promise.resolve("Mock completion response")
   }
 }
 
@@ -112,7 +113,7 @@ describe("Provider Enablement Validation", () => {
     it("should default to anthropic for unknown provider", () => {
       const config: ApiConfiguration = {
         ...baseConfig,
-        apiProvider: "unknown-provider" as any
+        apiProvider: "unknown-provider" as ApiProvider
       }
 
       const handler = buildApiHandler(config)

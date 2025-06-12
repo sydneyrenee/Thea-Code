@@ -15,7 +15,7 @@ import { TelemetrySetting } from "../../../src/shared/TelemetrySetting"
 export interface ExtensionStateContextType extends ExtensionState {
 	didHydrateState: boolean
 	showWelcome: boolean
-	theme: Record<string, string>
+	theme: Record<string, string> | undefined
 	mcpServers: McpServer[]
 	currentCheckpoint?: string
 	filePaths: string[]

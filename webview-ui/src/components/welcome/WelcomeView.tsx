@@ -29,7 +29,7 @@ const WelcomeView = () => {
 
 	// Using a lazy initializer so it reads once at mount
 	const [imagesBaseUri] = useState(() => {
-		const w = window as any
+		const w = window as Window & { IMAGES_BASE_URI?: string }
 		return w.IMAGES_BASE_URI || ""
 	})
 
@@ -65,7 +65,7 @@ const WelcomeView = () => {
 
 							// Shuffle providers based on machine ID (will be consistent for the same machine)
 							const orderedProviders = [...providers]
-							knuthShuffle(orderedProviders, (machineId as any) || Date.now())
+							knuthShuffle(orderedProviders, (machineId as string | number) || Date.now())
 
 							// Render the provider cards
 							return orderedProviders.map((provider, index) => (

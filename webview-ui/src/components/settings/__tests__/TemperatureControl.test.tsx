@@ -14,7 +14,7 @@ global.ResizeObserver = MockResizeObserver
 
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
+	Slider: ({ value, onValueChange, "data-testid": dataTestId }: { value: number[]; onValueChange: (value: number[]) => void; "data-testid"?: string }) => (
 		<input
 			type="range"
 			value={value[0]}

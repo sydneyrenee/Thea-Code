@@ -59,7 +59,7 @@ describe("Command Validation", () => {
 		})
 
 		it("handles undefined/empty allowed commands", () => {
-			expect(isAllowedSingleCommand("npm test", undefined as any)).toBe(false)
+			expect(isAllowedSingleCommand("npm test", undefined as unknown as string[])).toBe(false)
 			expect(isAllowedSingleCommand("npm test", [])).toBe(false)
 		})
 	})

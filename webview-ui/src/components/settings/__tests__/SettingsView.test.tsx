@@ -34,7 +34,7 @@ jest.mock("lucide-react", () => {
 // Mock ApiConfigManager component
 jest.mock("../ApiConfigManager", () => ({
 	__esModule: true,
-	default: ({ currentApiConfigName }: any) => (
+	default: ({ currentApiConfigName }: { [key: string]: unknown }) => (
 		<div data-testid="api-config-management">
 			<span>Current config: {currentApiConfigName}</span>
 		</div>
@@ -43,7 +43,7 @@ jest.mock("../ApiConfigManager", () => ({
 
 // Mock VSCode components
 jest.mock("@/components/ui/vscode-components", () => ({
-	VSCodeButton: ({ children, onClick, appearance, "data-testid": dataTestId }: any) =>
+	VSCodeButton: ({ children, onClick, appearance, "data-testid": dataTestId }: { [key: string]: unknown }) =>
 		appearance === "icon" ? (
 			<button
 				onClick={onClick}
@@ -57,7 +57,7 @@ jest.mock("@/components/ui/vscode-components", () => ({
 				{children}
 			</button>
 		),
-	VSCodeCheckbox: ({ children, onChange, checked, "data-testid": dataTestId }: any) => (
+	VSCodeCheckbox: ({ children, onChange, checked, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<label>
 			<input
 				type="checkbox"
@@ -69,7 +69,7 @@ jest.mock("@/components/ui/vscode-components", () => ({
 			{children}
 		</label>
 	),
-	VSCodeTextField: ({ value, onInput, placeholder, "data-testid": dataTestId }: any) => (
+	VSCodeTextField: ({ value, onInput, placeholder, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<input
 			type="text"
 			value={value}
@@ -78,17 +78,17 @@ jest.mock("@/components/ui/vscode-components", () => ({
 			data-testid={dataTestId}
 		/>
 	),
-	VSCodeLink: ({ children, href }: any) => <a href={href || "#"}>{children}</a>,
-	VSCodeRadio: ({ value, checked, onChange }: any) => (
+	VSCodeLink: ({ children, href }: { [key: string]: unknown }) => <a href={href || "#"}>{children}</a>,
+	VSCodeRadio: ({ value, checked, onChange }: { [key: string]: unknown }) => (
 		<input type="radio" value={value} checked={checked} onChange={onChange} />
 	),
-	VSCodeRadioGroup: ({ children, onChange }: any) => <div onChange={onChange}>{children}</div>,
+	VSCodeRadioGroup: ({ children, onChange }: { [key: string]: unknown }) => <div onChange={onChange}>{children}</div>,
 }))
 
 // Mock Slider component
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Slider: ({ value, onValueChange, "data-testid": dataTestId }: any) => (
+	Slider: ({ value, onValueChange, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<input
 			type="range"
 			value={value[0]}
@@ -99,7 +99,7 @@ jest.mock("@/components/ui", () => ({
 }))
 
 // Mock window.postMessage to trigger state hydration
-const mockPostMessage = (state: any) => {
+const mockPostMessage = (state: unknown) => {
 	window.postMessage(
 		{
 			type: "state",

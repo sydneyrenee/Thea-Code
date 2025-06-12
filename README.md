@@ -30,7 +30,7 @@ English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) 
 <h1>Thea Code</h1>
 
 <a href="SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Feature%20Requests-yellow?style=for-the-badge" alt="Feature Requests"></a>
-<a href="https://docs.thea-placeholder.com" target="_blank"><img src="https://img.shields.io/badge/Documentation-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation"></a>
+<a href="docs/" target="_blank"><img src="https://img.shields.io/badge/Documentation-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation"></a>
 
 </div>
 
@@ -41,11 +41,22 @@ English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) 
 - Run terminal commands
 - Automate browser actions
 - Integrate with any OpenAI-compatible or custom API/model
+- **Use any model that supports function calling or MCP** with unified tool access
+- **Work with Computer Use** on any model supporting vision and function calling
 - Adapt its “personality” and capabilities through **Custom Modes**
 
 Whether you’re seeking a flexible coding partner, a system architect, or specialized roles like a QA engineer or product manager, Thea Code can help you build software more efficiently.
 
 Check out the [CHANGELOG](CHANGELOG.md) for detailed updates and fixes.
+
+### 🚀 Universal Tool Integration
+
+Thea Code features **Model Context Protocol (MCP) integration** across all 16 active AI providers, providing:
+
+- **Unified tool access** across OpenAI, Anthropic, Ollama, and all other supported providers
+- **Automatic format conversion** supporting XML, JSON, and OpenAI function call formats
+- **Computer Use capabilities** with any vision-enabled model
+- **Extensible tool system** via MCP for unlimited custom functionality
 
 > **Note**: Thea Code is a fork of Roo Code. We'd like to express our special thanks to the Roo Code team for their excellent work which served as the foundation for this project.
 
@@ -73,49 +84,56 @@ Thea Code 0.0.5 brings the initial release of this community fork!
 
 ## Quick Start
 
-1. [Install Thea Code](https://docs.thea-placeholder.com/getting-started/installing)
-2. [Connect Your AI Provider](https://docs.thea-placeholder.com/getting-started/connecting-api-provider)
-3. [Try Your First Task](https://docs.thea-placeholder.com/getting-started/your-first-task)
+1. **Install Thea Code** from the VS Code marketplace or build from source
+2. **Connect Your AI Provider** - Configure OpenAI, Anthropic, Ollama, or any compatible API
+3. **Start Coding** - Use natural language to interact with your codebase
 
 ## Key Features
 
 ### Multiple Modes
 
-Thea Code adapts to your needs with specialized [modes](https://docs.thea-placeholder.com/basic-usage/using-modes):
+Thea Code adapts to your needs with specialized modes:
 
 - **Code Mode:** For general-purpose coding tasks
 - **Architect Mode:** For planning and technical leadership
 - **Ask Mode:** For answering questions and providing information
 - **Debug Mode:** For systematic problem diagnosis
-- **[Custom Modes](https://docs.thea-placeholder.com/advanced-usage/custom-modes):** Create unlimited specialized personas for security auditing, performance optimization, documentation, or any other task
+- **Custom Modes:** Create unlimited specialized personas for security auditing, performance optimization, documentation, or any other task
 
-### Smart Tools
+### Smart Tools & MCP Integration
 
-Thea Code comes with powerful [tools](https://docs.thea-placeholder.com/basic-usage/how-tools-work) that can:
+Thea Code comes with powerful tools that work across all AI providers:
 
-- Read and write files in your project
-- Execute commands in your VS Code terminal
-- Control a web browser
-- Use external tools via [MCP (Model Context Protocol)](https://docs.thea-placeholder.com/advanced-usage/mcp)
+- **Read and write files** in your project
+- **Execute commands** in your VS Code terminal
+- **Control a web browser** for automated testing and interaction
+- **Computer Use** capabilities with vision-enabled models
+- **External tool integration** via MCP (Model Context Protocol)
 
-MCP extends Thea Code's capabilities by allowing you to add unlimited custom tools. Integrate with external APIs, connect to databases, or create specialized development tools - MCP provides the framework to expand Thea Code's functionality to meet your specific needs.
+**Model Context Protocol (MCP)** extends Thea Code's capabilities by providing:
+- **Universal tool access** across all 16 supported AI providers
+- **Automatic format conversion** between XML, JSON, and OpenAI function call formats
+- **Seamless integration** - tools work the same way regardless of your chosen AI provider
+- **Extensible architecture** - add unlimited custom tools for your specific workflow
+
+Whether you're using OpenAI, Anthropic Claude, Ollama, or any other supported provider, all tools work consistently. MCP provides the framework to expand Thea Code's functionality to meet your specific needs - integrate with external APIs, connect to databases, or create specialized development tools.
 
 ### Customization
 
 Make Thea Code work your way with:
 
-- [Custom Instructions](https://docs.thea-placeholder.com/advanced-usage/custom-instructions) for personalized behavior
-- [Custom Modes](https://docs.thea-placeholder.com/advanced-usage/custom-modes) for specialized tasks
-- [Local Models](https://docs.thea-placeholder.com/advanced-usage/local-models) for offline use
-- [Auto-Approval Settings](https://docs.thea-placeholder.com/advanced-usage/auto-approving-actions) for faster workflows
+- **Custom Instructions** for personalized behavior
+- **Custom Modes** for specialized tasks
+- **Local Models** for offline use
+- **Auto-Approval Settings** for faster workflows
 
 ## Resources
 
 ### Documentation
 
-- [Basic Usage Guide](https://docs.thea-placeholder.com/basic-usage/the-chat-interface)
-- [Advanced Features](https://docs.thea-placeholder.com/advanced-usage/auto-approving-actions)
-- [Frequently Asked Questions](https://docs.thea-placeholder.com/faq)
+- **[Architecture & MCP Guide](docs/)** - Complete documentation on MCP integration and system architecture
+- **[MCP Implementation Guide](docs/architectural_notes/tool_use/mcp/mcp_comprehensive_guide.md)** - Detailed guide for developers
+- **[Migration Guide](docs/architectural_notes/MIGRATION_GUIDE.md)** - Guide for contributors and developers
 
 ### Community
 

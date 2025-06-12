@@ -20,7 +20,7 @@ English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) 
   <p>Connect with developers, contribute ideas, and stay ahead with the latest AI-powered coding tools.</p>
   
   <a href="https://discord.gg/EmberHarmony" target="_blank"><img src="https://img.shields.io/badge/Join%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord"></a>
-  <a href="https://www.reddit.com/r/thea-placeholder/" target="_blank"><img src="https://img.shields.io/badge/Join%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Join Reddit"></a>
+  <a href="https://www.reddit.com/r/TheaCode/" target="_blank"><img src="https://img.shields.io/badge/Join%20Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Join Reddit"></a>
   
 </div>
 <br>
@@ -29,7 +29,7 @@ English • [Català](locales/ca/README.md) • [Deutsch](locales/de/README.md) 
 <div align="center">
 <h1>Thea Code</h1>
 
-<a href="SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Feature%20Requests-yellow?style=for-the-badge" alt="Feature Requests"></a>
+<a href="https://github.com/SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop" target="_blank"><img src="https://img.shields.io/badge/Feature%20Requests-yellow?style=for-the-badge" alt="Feature Requests"></a>
 <a href="docs/" target="_blank"><img src="https://img.shields.io/badge/Documentation-6B46C1?style=for-the-badge&logo=readthedocs&logoColor=white" alt="Documentation"></a>
 
 </div>
@@ -138,8 +138,8 @@ Make Thea Code work your way with:
 ### Community
 
 - **Discord:** [Join our Discord server](https://discord.gg/EmberHarmony) for real-time help and discussions
-- **Reddit:** [Visit our subreddit](https://www.reddit.com/r/thea-placeholder) to share experiences and tips
-- **GitHub:** Report [issues](SolaceHarmony/Thea-Code/issues) or request [features](SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
+- **Reddit:** [Visit our subreddit](https://www.reddit.com/r/TheaCode) to share experiences and tips
+- **GitHub:** Report [issues](https://github.com/SolaceHarmony/Thea-Code/issues) or request [features](https://github.com/SolaceHarmony/Thea-Code/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop)
 
 ---
 
@@ -214,4 +214,4 @@ Special thanks to the original Roo Code contributors whose work provided the fou
 
 ---
 
-**Enjoy Thea Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/thea-placeholder/) or [Discord](https://discord.gg/EmberHarmony). Happy coding!
+**Enjoy Thea Code!** Whether you keep it on a short leash or let it roam autonomously, we can’t wait to see what you build. If you have questions or feature ideas, drop by our [Reddit community](https://www.reddit.com/r/TheaCode/) or [Discord](https://discord.gg/EmberHarmony). Happy coding!

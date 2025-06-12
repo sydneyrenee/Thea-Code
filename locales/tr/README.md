@@ -47,9 +47,9 @@ Detaylı güncellemeler ve düzeltmeler için [CHANGELOG](../CHANGELOG.md) dosya
 
 ---
 
-## 🎉 Thea Code 3.11 Yayınlandı
+## 🎉 Thea Code 0.0.5 Yayınlandı
 
-Thea Code 3.11 önemli performans iyileştirmeleri ve yeni özellikler getiriyor!
+Thea Code 0.0.5 önemli performans iyileştirmeleri ve yeni özellikler getiriyor!
 
 - Hızlı Düzenlemeler - Düzenlemeler artık çok daha hızlı uygulanıyor. Daha az bekleme, daha çok kodlama.
 - API Anahtar Bakiyeleri - OpenRouter ve Requesty bakiyelerinizi ayarlarda görüntüleyin.

@@ -47,9 +47,9 @@ Confira o [CHANGELOG](../CHANGELOG.md) para atualizações e correções detalha
 
 ---
 
-## 🎉 Thea Code 3.11 Lançado
+## 🎉 Thea Code 0.0.5 Lançado
 
-O Thea Code 3.11 traz melhorias significativas de desempenho e novas funcionalidades!
+O Thea Code 0.0.5 traz melhorias significativas de desempenho e novas funcionalidades!
 
 - Edições rápidas - As edições agora são aplicadas muito mais rápido. Menos espera, mais codificação.
 - Saldos de chaves API - Visualize seus saldos OpenRouter e Requesty nas configurações.

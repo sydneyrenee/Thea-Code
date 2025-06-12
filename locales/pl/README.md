@@ -47,9 +47,9 @@ Sprawdź [CHANGELOG](../CHANGELOG.md), aby uzyskać szczegółowe informacje o a
 
 ---
 
-## 🎉 Thea Code 3.11 został wydany
+## 🎉 Thea Code 0.0.5 został wydany
 
-Thea Code 3.11 przynosi znaczące usprawnienia wydajności i nowe funkcje!
+Thea Code 0.0.5 przynosi znaczące usprawnienia wydajności i nowe funkcje!
 
 - Szybkie edycje - Zmiany są teraz stosowane znacznie szybciej. Mniej czekania, więcej kodowania.
 - Salda kluczy API - Sprawdź stan swoich kont OpenRouter i Requesty w ustawieniach.

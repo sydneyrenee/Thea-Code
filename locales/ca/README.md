@@ -47,9 +47,9 @@ Consulteu el [CHANGELOG](../CHANGELOG.md) per a actualitzacions i correccions de
 
 ---
 
-## 🎉 Thea Code 3.11 Llançat
+## 🎉 Thea Code 0.0.5 Llançat
 
-Thea Code 3.11 aporta millores significatives de rendiment i noves funcionalitats!
+Thea Code 0.0.5 aporta millores significatives de rendiment i noves funcionalitats!
 
 - Edicions ràpides - Les edicions ara s'apliquen molt més ràpid. Menys espera, més codificació.
 - Saldos de claus d'API - Visualitza els teus saldos d'OpenRouter i Requesty a la configuració.

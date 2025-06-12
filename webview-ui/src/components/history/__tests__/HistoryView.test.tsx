@@ -1,5 +1,6 @@
 // cd webview-ui && npx jest src/components/history/__tests__/HistoryView.test.ts
 
+import React from "react"
 import { render, screen, fireEvent, within, act } from "@testing-library/react"
 import HistoryView from "../HistoryView"
 import { useExtensionState } from "../../../context/ExtensionStateContext"
@@ -9,10 +10,10 @@ jest.mock("../../../context/ExtensionStateContext")
 jest.mock("../../../utils/vscode")
 jest.mock("../../../i18n/TranslationContext")
 jest.mock("react-virtuoso", () => ({
-	Virtuoso: ({ data, itemContent }: any) => (
+	Virtuoso: ({ data, itemContent }: { data: Array<Record<string, unknown>>; itemContent: (index: number, item: Record<string, unknown>) => React.ReactNode }) => (
 		<div data-testid="virtuoso-container">
-			{data.map((item: any, index: number) => (
-				<div key={item.id} data-testid={`virtuoso-item-${item.id}`}>
+			{data.map((item: Record<string, unknown>, index: number) => (
+				<div key={item.id as string} data-testid={`virtuoso-item-${item.id as string}`}>
 					{itemContent(index, item)}
 				</div>
 			))}

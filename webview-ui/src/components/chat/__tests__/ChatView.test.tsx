@@ -17,11 +17,11 @@ interface ClineMessage {
 interface ExtensionState {
 	version: string
 	clineMessages: ClineMessage[]
-	taskHistory: any[]
+	taskHistory: Array<Record<string, unknown>>
 	shouldShowAnnouncement: boolean
 	allowedCommands: string[]
 	alwaysAllowExecute: boolean
-	[key: string]: any
+	[key: string]: unknown
 }
 
 // Mock vscode API

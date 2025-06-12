@@ -11,6 +11,14 @@ interface MarkdownBlockProps {
 	markdown?: string
 }
 
+interface ASTNode {
+	type?: string
+	value?: string
+	children?: ASTNode[]
+	lang?: string
+	[key: string]: unknown
+}
+
 /**
  * Custom remark plugin that converts plain URLs in text into clickable links
  *
@@ -20,15 +28,15 @@ interface MarkdownBlockProps {
  * This caused the entire content to disappear because the structure became invalid.
  */
 const remarkUrlToLink = () => {
-	return (tree: any) => {
+	return (tree: ASTNode) => {
 		// Visit all "text" nodes in the markdown AST (Abstract Syntax Tree)
-		visit(tree, "text", (node: any, index, parent) => {
+		visit(tree, "text", (node: ASTNode, index, parent) => {
 			const urlRegex = /https?:\/\/[^\s<>)"]+/g
 			const matches = node.value.match(urlRegex)
 			if (!matches) return
 
 			const parts = node.value.split(urlRegex)
-			const children: any[] = []
+			const children: ASTNode[] = []
 
 			parts.forEach((part: string, i: number) => {
 				if (part) children.push({ type: "text", value: part })
@@ -153,7 +161,7 @@ const StyledMarkdown = styled.div`
 	}
 `
 
-const StyledPre = styled.pre<{ theme: any }>`
+const StyledPre = styled.pre<{ theme: Record<string, string> }>`
 	& .hljs {
 		color: var(--vscode-editor-foreground, #fff);
 	}
@@ -177,7 +185,7 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 			remarkUrlToLink,
 			() => {
 				return (tree) => {
-					visit(tree, "code", (node: any) => {
+					visit(tree, "code", (node: ASTNode) => {
 						if (!node.lang) {
 							node.lang = "javascript"
 						} else if (node.lang.includes(".")) {
@@ -188,14 +196,14 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 			},
 		],
 		rehypePlugins: [
-			rehypeHighlight as any,
+			rehypeHighlight as (options?: Options) => unknown,
 			{
 				// languages: {},
 			} as Options,
 		],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ children, ...preProps }: any) => {
+				pre: ({ children, ...preProps }: React.HTMLAttributes<HTMLPreElement> & { children?: React.ReactNode }) => {
 					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {
 						const child = children[0] as React.ReactElement<{ className?: string }>
 						if (child.props?.className?.includes("language-mermaid")) {
@@ -208,7 +216,7 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 						</StyledPre>
 					)
 				},
-				code: (props: any) => {
+				code: (props: React.HTMLAttributes<HTMLElement> & { className?: string; children?: React.ReactNode }) => {
 					const className = props.className || ""
 					if (className.includes("language-mermaid")) {
 						const codeText = String(props.children || "")

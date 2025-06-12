@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react"
+import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
 import rehypeHighlight, { Options } from "rehype-highlight"
 import styled from "styled-components"
@@ -93,7 +93,7 @@ const StyledMarkdown = styled.div<{ forceWrap: boolean }>`
 	}
 `
 
-const StyledPre = styled.pre<{ theme: any }>`
+const StyledPre = styled.pre<{ theme: Record<string, string> }>`
 	& .hljs {
 		color: var(--vscode-editor-foreground, #fff);
 	}
@@ -116,7 +116,7 @@ const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 		remarkPlugins: [
 			() => {
 				return (tree) => {
-					visit(tree, "code", (node: any) => {
+					visit(tree, "code", (node: { lang?: string; [key: string]: unknown }) => {
 						if (!node.lang) {
 							node.lang = "javascript"
 						} else if (node.lang.includes(".")) {
@@ -128,14 +128,14 @@ const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 			},
 		],
 		rehypePlugins: [
-			rehypeHighlight as any,
+			rehypeHighlight as (options?: Options) => unknown,
 			{
 				// languages: {},
 			} as Options,
 		],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ ...preProps }: any) => <StyledPre {...preProps} theme={theme} />,
+				pre: ({ ...preProps }: React.HTMLAttributes<HTMLPreElement>) => <StyledPre {...preProps} theme={theme} />,
 			},
 		},
 	})

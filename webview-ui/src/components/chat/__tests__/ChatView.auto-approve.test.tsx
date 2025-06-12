@@ -3,6 +3,7 @@ import { render, waitFor } from "@testing-library/react"
 import ChatView from "../ChatView"
 import { ExtensionStateContextProvider } from "../../../context/ExtensionStateContext"
 import { vscode } from "../../../utils/vscode"
+import { TheaMessage } from "../../../../../src/shared/ExtensionMessage"
 
 // Mock vscode API
 jest.mock("../../../utils/vscode", () => ({
@@ -25,21 +26,21 @@ jest.mock("hast-util-to-text", () => ({
 // Mock components that use ESM dependencies
 jest.mock("../BrowserSessionRow", () => ({
 	__esModule: true,
-	default: function MockBrowserSessionRow({ messages }: { messages: any[] }) {
+	default: function MockBrowserSessionRow({ messages }: { messages: TheaMessage[] }) {
 		return <div data-testid="browser-session">{JSON.stringify(messages)}</div>
 	},
 }))
 
 jest.mock("../ChatRow", () => ({
 	__esModule: true,
-	default: function MockChatRow({ message }: { message: any }) {
+	default: function MockChatRow({ message }: { message: TheaMessage }) {
 		return <div data-testid="chat-row">{JSON.stringify(message)}</div>
 	},
 }))
 
 jest.mock("../TaskHeader", () => ({
 	__esModule: true,
-	default: function MockTaskHeader({ task }: { task: any }) {
+	default: function MockTaskHeader({ task }: { task: TheaMessage }) {
 		return <div data-testid="task-header">{JSON.stringify(task)}</div>
 	},
 }))
@@ -66,7 +67,7 @@ jest.mock("../ContextMenu", () => ({
 }))
 
 // Mock window.postMessage to trigger state hydration
-const mockPostMessage = (state: any) => {
+const mockPostMessage = (state: Partial<Record<string, unknown>>) => {
 	window.postMessage(
 		{
 			type: "state",

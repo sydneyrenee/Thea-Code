@@ -30,7 +30,7 @@ jest.mock('../../services/mcp/integration/McpIntegration', () => {
 
 // Mock FakeAI implementation for testing
 const mockFakeAI = {
-  async *createMessage(_systemPrompt: string, _messages: NeutralConversationHistory): ApiStream {
+  async *createMessage(): ApiStream {
     await Promise.resolve() // Add await to satisfy async requirement
     yield { type: "text" as const, text: "Mock response" }
   },
@@ -53,7 +53,7 @@ const mockFakeAI = {
     const text = content.map(item => item.type === 'text' ? item.text : '').join(' ')
     return Promise.resolve(text.split(/\s+/).length)
   },
-  async completePrompt(_prompt: string): Promise<string> {
+  async completePrompt(): Promise<string> {
     return Promise.resolve("Mock completion response")
   }
 }

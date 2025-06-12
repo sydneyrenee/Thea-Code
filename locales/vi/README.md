@@ -47,9 +47,9 @@ Kiểm tra [CHANGELOG](../CHANGELOG.md) để biết thông tin chi tiết về 
 
 ---
 
-## 🎉 Đã Phát Hành Thea Code 3.11
+## 🎉 Đã Phát Hành Thea Code 0.0.5
 
-Thea Code 3.11 mang đến những cải tiến hiệu suất đáng kể và các tính năng mới!
+Thea Code 0.0.5 mang đến những cải tiến hiệu suất đáng kể và các tính năng mới!
 
 - Chỉnh sửa nhanh - Các chỉnh sửa giờ đây được áp dụng nhanh hơn nhiều. Ít thời gian chờ đợi, nhiều thời gian lập trình.
 - Số dư khóa API - Xem số dư OpenRouter và Requesty của bạn trong cài đặt.

@@ -47,15 +47,14 @@ Consulta il [CHANGELOG](../CHANGELOG.md) per aggiornamenti dettagliati e correzi
 
 ---
 
-## 🎉 Thea Code 3.11 Rilasciato
+## 🎉 Thea Code 0.0.5 Rilasciato
 
-Thea Code 3.11 porta significativi miglioramenti di prestazioni e nuove funzionalità!
+Thea Code 0.0.5 porta il rilascio iniziale di questo fork della comunità!
 
-- Modifiche veloci - Le modifiche ora vengono applicate molto più velocemente. Meno attesa, più codifica.
-- Saldi delle chiavi API - Visualizza i tuoi saldi OpenRouter e Requesty nelle impostazioni.
-- Configurazione MCP a livello di progetto - Ora puoi configurarla per progetto/area di lavoro.
-- Supporto Gemini migliorato - Tentativi più intelligenti, escaping corretto, aggiunto al provider Vertex.
-- Importazione/Esportazione impostazioni - Backup o condivisione facile della tua configurazione tra diverse installazioni.
+- Fork iniziale da Roo Code con rebrand
+- Documentazione aggiornata per riflettere la nuova identità del progetto
+- Corretti i riferimenti nelle linee guida per i contributi
+- Mantenuta la compatibilità con le funzionalità esistenti
 
 ---
 

@@ -100,6 +100,15 @@ const McpSettingsSchema = z.object({
 	mcpServers: z.record(ServerConfigSchema),
 })
 
+// Type definitions for configuration objects  
+interface ExtensionContext {
+	extension?: {
+		packageJSON?: {
+			version?: string
+		}
+	}
+}
+
 export class McpHub {
 	private providerRef: WeakRef<TheaProvider> // Renamed type
 	private disposables: vscode.Disposable[] = []
@@ -461,7 +470,8 @@ export class McpHub {
 		try {
 			// Get version safely with fallback
 			const provider = this.providerRef.deref()
-			const version = provider?.context?.extension?.packageJSON?.version || "1.0.0"
+			const context = provider?.context as ExtensionContext | undefined
+			const version = context?.extension?.packageJSON?.version || "1.0.0"
 
 			const client = new Client(
 				{
@@ -495,22 +505,22 @@ export class McpHub {
 				})
 
 				// Set up stdio specific error handling
-				transport.onerror = async (error) => {
+				transport.onerror = (error) => {
 					console.error(`Transport error for "${name}":`, error)
 					const connection = this.findConnection(name, source)
 					if (connection) {
 						connection.server.status = "disconnected"
-						this.appendErrorMessage(connection, error instanceof Error ? error.message : `${error}`)
+						this.appendErrorMessage(connection, error instanceof Error ? error.message : String(error))
 					}
-					await this.notifyWebviewOfServerChanges()
+					void this.notifyWebviewOfServerChanges()
 				}
 
-				transport.onclose = async () => {
+				transport.onclose = () => {
 					const connection = this.findConnection(name, source)
 					if (connection) {
 						connection.server.status = "disconnected"
 					}
-					await this.notifyWebviewOfServerChanges()
+					void this.notifyWebviewOfServerChanges()
 				}
 
 				// transport.stderr is only available after the process has been started. However we can't start it separately from the .connect() call because it also starts the transport. And we can't place this after the connect call since we need to capture the stderr stream before the connection is established, in order to capture errors during the connection process.
@@ -518,7 +528,7 @@ export class McpHub {
 				await transport.start()
 				const stderrStream = transport.stderr
 				if (stderrStream) {
-					stderrStream.on("data", async (data: Buffer) => {
+					stderrStream.on("data", (data: Buffer) => {
 						const output = data.toString()
 						// Check if output contains INFO level log
 						const isInfoLog = /INFO/i.test(output)
@@ -533,7 +543,7 @@ export class McpHub {
 							if (connection) {
 								this.appendErrorMessage(connection, output)
 								if (connection.server.status === "disconnected") {
-									await this.notifyWebviewOfServerChanges()
+									void this.notifyWebviewOfServerChanges()
 								}
 							}
 						}
@@ -573,7 +583,7 @@ export class McpHub {
 				})
 
 				// Set up SSE specific error handling
-				transport.onerror = async (error) => {
+				transport.onerror = (error) => {
 					console.error(`Transport error for "${name}":`, error)
 					const connection = this.findConnection(name, source)
 					if (connection) {
@@ -582,7 +592,7 @@ export class McpHub {
 						const errorMessage = error instanceof Error ? error.message : String(error)
 						this.appendErrorMessage(connection, errorMessage)
 					}
-					await this.notifyWebviewOfServerChanges()
+					void this.notifyWebviewOfServerChanges()
 				}
 			}
 
@@ -899,13 +909,15 @@ export class McpHub {
 					// awaitWriteFinish: true,
 				})
 
-				watchPathsWatcher.on("change", async (changedPath) => {
-					try {
-						// Pass the source from the config to restartConnection
-						await this.restartConnection(name, source)
-					} catch (error) {
-						console.error(`Failed to restart server ${name} after change in ${changedPath}:`, error)
-					}
+				watchPathsWatcher.on("change", (changedPath) => {
+					void (async () => {
+						try {
+							// Pass the source from the config to restartConnection
+							await this.restartConnection(name, source)
+						} catch (error) {
+							console.error(`Failed to restart server ${name} after change in ${changedPath}:`, error)
+						}
+					})()
 				})
 
 				watchers.push(watchPathsWatcher)
@@ -921,13 +933,15 @@ export class McpHub {
 					// awaitWriteFinish: true, // This helps with atomic writes
 				})
 
-				indexJsWatcher.on("change", async () => {
-					try {
-						// Pass the source from the config to restartConnection
-						await this.restartConnection(name, source)
-					} catch (error) {
-						console.error(`Failed to restart server ${name} after change in ${filePath}:`, error)
-					}
+				indexJsWatcher.on("change", () => {
+					void (async () => {
+						try {
+							// Pass the source from the config to restartConnection
+							await this.restartConnection(name, source)
+						} catch (error) {
+							console.error(`Failed to restart server ${name} after change in ${filePath}:`, error)
+						}
+					})()
 				})
 
 				watchers.push(indexJsWatcher)
@@ -941,7 +955,7 @@ export class McpHub {
 	}
 
 	private removeAllFileWatchers() {
-		this.fileWatchers.forEach((watchers) => watchers.forEach((watcher) => watcher.close()))
+		this.fileWatchers.forEach((watchers) => watchers.forEach((watcher) => void watcher.close()))
 		this.fileWatchers.clear()
 	}
 
@@ -964,7 +978,7 @@ export class McpHub {
 			try {
 				await this.deleteConnection(serverName, connection.server.source)
 				// Parse the config to validate it
-				const parsedConfig = JSON.parse(config)
+				const parsedConfig = JSON.parse(config) as Record<string, unknown>
 				try {
 					// Validate the config
 					const validatedConfig = this.validateServerConfig(parsedConfig, serverName)
@@ -988,7 +1002,7 @@ export class McpHub {
 		// Get global server order from settings file
 		const settingsPath = await this.getMcpSettingsFilePath()
 		const content = await fs.readFile(settingsPath, "utf-8")
-		const config = JSON.parse(content)
+		const config = JSON.parse(content) as { mcpServers?: Record<string, unknown> }
 		const globalServerOrder = Object.keys(config.mcpServers || {})
 
 		// Get project server order if available
@@ -997,9 +1011,9 @@ export class McpHub {
 		if (projectMcpPath) {
 			try {
 				const projectContent = await fs.readFile(projectMcpPath, "utf-8")
-				const projectConfig = JSON.parse(projectContent)
+				const projectConfig = JSON.parse(projectContent) as { mcpServers?: Record<string, unknown> }
 				projectServerOrder = Object.keys(projectConfig.mcpServers || {})
-			} catch (error) {
+			} catch {
 				// Silently continue with empty project server order
 			}
 		}
@@ -1082,7 +1096,7 @@ export class McpHub {
 	 */
 	private async updateServerConfig(
 		serverName: string,
-		configUpdate: Record<string, any>,
+		configUpdate: Record<string, unknown>,
 		source: "global" | "project" = "global",
 	): Promise<void> {
 		// Determine which config file to update
@@ -1193,7 +1207,7 @@ export class McpHub {
 			// Ensure the settings file exists and is accessible
 			try {
 				await fs.access(configPath)
-			} catch (error) {
+			} catch {
 				throw new Error("Settings file not accessible")
 			}
 

@@ -5,8 +5,11 @@ import type OpenAI from "openai" // Added for types
 import { EXTENSION_NAME } from "../../../../dist/thea-config" // Import branded constant
 import type { ApiStreamChunk } from "../../transform/stream" // Added for chunk typing
 
-// Mock OpenAI client
-const mockCreate = jest.fn()
+// Mock OpenAI client  
+const mockCreate = jest.fn<
+	Promise<OpenAI.Chat.Completions.ChatCompletion> | OpenAI.Chat.Completions.ChatCompletion,
+	[OpenAI.Chat.Completions.ChatCompletionCreateParams, OpenAI.RequestOptions?]
+>()
 const mockWithResponse = jest.fn()
 
 jest.mock("openai", () => {
@@ -53,7 +56,6 @@ jest.mock("openai", () => {
 							},
 						}
 
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 						const result = mockCreate(options, requestOptions)
 						if (options.stream) {
 							mockWithResponse.mockReturnValue(
@@ -62,10 +64,8 @@ jest.mock("openai", () => {
 									response: { headers: new Map() },
 								}),
 							)
-							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 							result.withResponse = mockWithResponse
 						}
-						// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 						return result
 					},
 				},
@@ -195,20 +195,22 @@ describe("UnboundHandler", () => {
 		it("should complete prompt successfully", async () => {
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
-			expect(mockCreate).toHaveBeenCalledWith(
-				expect.objectContaining({
-					model: "claude-3-5-sonnet-20241022",
-					messages: [{ role: "user", content: "Test prompt" }],
-					temperature: 0,
-					max_tokens: 8192,
-				}),
-				expect.objectContaining({
-					headers: expect.objectContaining({
-						// eslint-disable-line @typescript-eslint/no-unsafe-assignment
-						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-					}),
-				}),
-			)
+			// Verify the call was made with correct parameters
+			expect(mockCreate).toHaveBeenCalledTimes(1)
+			const [params, options] = mockCreate.mock.calls[0]
+			
+			// Verify request parameters
+			expect(params).toMatchObject({
+				model: "claude-3-5-sonnet-20241022",
+				messages: [{ role: "user", content: "Test prompt" }],
+				temperature: 0,
+				max_tokens: 8192,
+			})
+			
+			// Verify request options and headers
+			expect(options?.headers).toBeDefined()
+			const headers = options?.headers as Record<string, string>
+			expect(headers["X-Unbound-Metadata"]).toContain(EXTENSION_NAME)
 		})
 
 		it("should handle API errors", async () => {
@@ -243,20 +245,22 @@ describe("UnboundHandler", () => {
 			const nonAnthropicHandler = new UnboundHandler(nonAnthropicOptions)
 
 			await nonAnthropicHandler.completePrompt("Test prompt")
-			expect(mockCreate).toHaveBeenCalledWith(
-				expect.objectContaining({
-					model: "gpt-4o",
-					messages: [{ role: "user", content: "Test prompt" }],
-					temperature: 0,
-				}),
-				expect.objectContaining({
-					headers: expect.objectContaining({
-						// eslint-disable-line @typescript-eslint/no-unsafe-assignment
-						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-					}),
-				}),
-			)
-			expect(mockCreate.mock.calls[0][0]).not.toHaveProperty("max_tokens") // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+			// Verify the call was made with correct parameters
+			expect(mockCreate).toHaveBeenCalledTimes(1)
+			const [params, options] = mockCreate.mock.calls[0]
+			
+			// Verify request parameters
+			expect(params).toMatchObject({
+				model: "gpt-4o",
+				messages: [{ role: "user", content: "Test prompt" }],
+				temperature: 0,
+			})
+			
+			// Verify request options and headers
+			expect(options?.headers).toBeDefined()
+			const headers = options?.headers as Record<string, string>
+			expect(headers["X-Unbound-Metadata"]).toContain(EXTENSION_NAME)
+			expect(mockCreate.mock.calls[0][0]).not.toHaveProperty("max_tokens")
 		})
 
 		it("should not set temperature for openai/o3-mini", async () => {
@@ -277,19 +281,21 @@ describe("UnboundHandler", () => {
 			const openaiHandler = new UnboundHandler(openaiOptions)
 
 			await openaiHandler.completePrompt("Test prompt")
-			expect(mockCreate).toHaveBeenCalledWith(
-				expect.objectContaining({
-					model: "o3-mini",
-					messages: [{ role: "user", content: "Test prompt" }],
-				}),
-				expect.objectContaining({
-					headers: expect.objectContaining({
-						// eslint-disable-line @typescript-eslint/no-unsafe-assignment
-						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-					}),
-				}),
-			)
-			expect(mockCreate.mock.calls[0][0]).not.toHaveProperty("temperature") // eslint-disable-line @typescript-eslint/no-unsafe-member-access
+			// Verify the call was made with correct parameters
+			expect(mockCreate).toHaveBeenCalledTimes(1)
+			const [params, options] = mockCreate.mock.calls[0]
+			
+			// Verify request parameters
+			expect(params).toMatchObject({
+				model: "o3-mini",
+				messages: [{ role: "user", content: "Test prompt" }],
+			})
+			
+			// Verify request options and headers
+			expect(options?.headers).toBeDefined()
+			const headers = options?.headers as Record<string, string>
+			expect(headers["X-Unbound-Metadata"]).toContain(EXTENSION_NAME)
+			expect(mockCreate.mock.calls[0][0]).not.toHaveProperty("temperature")
 		})
 	})
 

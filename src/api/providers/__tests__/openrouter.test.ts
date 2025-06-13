@@ -99,8 +99,8 @@ describe("OpenRouterHandler", () => {
 
 	test("createMessage generates correct stream chunks", async () => {
 		const handler = new OpenRouterHandler(mockOptions)
+		// eslint-disable-next-line @typescript-eslint/require-await
 		const mockStream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> = (async function* () {
-			// eslint-disable-line @typescript-eslint/require-await
 			yield {
 				id: "test-id-1",
 				created: 1678886400,
@@ -166,10 +166,9 @@ describe("OpenRouterHandler", () => {
 				model: mockOptions.openRouterModelId,
 				temperature: 0,
 				messages: expect.arrayContaining([
-					// eslint-disable-line @typescript-eslint/no-unsafe-assignment
 					{ role: "system", content: systemPrompt },
 					{ role: "user", content: "test message" },
-				]),
+				]) as unknown,
 				stream: true,
 			}),
 		)
@@ -180,8 +179,8 @@ describe("OpenRouterHandler", () => {
 			...mockOptions,
 			openRouterUseMiddleOutTransform: true,
 		})
+		// eslint-disable-next-line @typescript-eslint/require-await
 		const mockStream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> = (async function* () {
-			// eslint-disable-line @typescript-eslint/require-await
 			yield {
 				id: "test-id-3",
 				created: 1678886402,
@@ -218,8 +217,8 @@ describe("OpenRouterHandler", () => {
 			...mockOptions,
 			openRouterModelId: "anthropic/claude-3.5-sonnet",
 		})
+		// eslint-disable-next-line @typescript-eslint/require-await
 		const mockStream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> = (async function* () {
-			// eslint-disable-line @typescript-eslint/require-await
 			yield {
 				id: "test-id-4",
 				created: 1678886403,
@@ -253,25 +252,23 @@ describe("OpenRouterHandler", () => {
 		expect(mockCreate).toHaveBeenCalledWith(
 			expect.objectContaining({
 				messages: expect.arrayContaining([
-					// eslint-disable-line @typescript-eslint/no-unsafe-assignment
 					expect.objectContaining({
 						role: "system",
 						content: expect.arrayContaining([
-							// eslint-disable-line @typescript-eslint/no-unsafe-assignment
 							expect.objectContaining({
 								cache_control: { type: "ephemeral" },
 							}),
-						]),
+						]) as unknown,
 					}),
-				]),
+				]) as unknown,
 			}),
 		)
 	})
 
 	test("createMessage handles API errors", async () => {
 		const handler = new OpenRouterHandler(mockOptions)
+		// eslint-disable-next-line @typescript-eslint/require-await
 		const mockStream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> = (async function* () {
-			// eslint-disable-line @typescript-eslint/require-await
 			throw new Error("API Error") // Throw error directly from the stream
 		})()
 
@@ -336,8 +333,8 @@ describe("OpenRouterHandler", () => {
 
 	test("createMessage processes OpenAI tool calls", async () => {
 		const handler = new OpenRouterHandler(mockOptions)
+		// eslint-disable-next-line @typescript-eslint/require-await
 		const mockStream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk> = (async function* () {
-			// eslint-disable-line @typescript-eslint/require-await
 			yield {
 				id: "test-id-6",
 				created: 1678886405,

@@ -1,7 +1,6 @@
 import { OllamaHandler, getOllamaModels } from "../ollama"
 import { McpIntegration } from "../../../services/mcp/integration/McpIntegration"
 import { NeutralConversationHistory } from "../../../shared/neutral-history"
-// import { HybridMatcher } from '../../../utils/json-xml-bridge'; // Removed unused import
 import { OpenAiHandler } from "../openai"
 import type OpenAI from "openai"
 import type { ApiStreamChunk } from "../../transform/stream"
@@ -239,9 +238,10 @@ describe("Ollama MCP Integration", () => {
 				type: "tool_use",
 				name: "weather",
 				id: "weather-123",
-				input: expect.objectContaining({ // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				input: expect.objectContaining({
+
 					location: "San Francisco",
-				}),
+				}) as { location: string },
 			}),
 		)
 

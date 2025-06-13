@@ -425,15 +425,6 @@ export function xmlThinkingToJson(xmlContent: string): string {
  */
 export function jsonToolUseToXml(jsonObj: ToolUseJsonObject | GenericParsedJson): string {
 	if (typeof jsonObj === "object" && jsonObj.type === "tool_use" && jsonObj.name) {
-		// Ensure name is a string before using in template literal
-		let toolNameStr: string
-		if (typeof jsonObj.name === "string") {
-			toolNameStr = jsonObj.name
-		} else if (typeof jsonObj.name === "number" || typeof jsonObj.name === "boolean") {
-			toolNameStr = String(jsonObj.name)
-		} else {
-			toolNameStr = JSON.stringify(jsonObj.name)
-		}
 		// Create the opening tool tag with the tool name
 		const toolName = safeStringify(jsonObj.name)
 
@@ -715,7 +706,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFun
 						type: "tool_use",
 						id: toolCall.id || `function-${Date.now()}`,
 						name: toolCall.function.name,
-						input: { raw: toolCall.function.arguments as string },
+						input: { raw: toolCall.function.arguments },
 					}
 				}
 			}

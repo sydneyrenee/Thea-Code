@@ -70,7 +70,7 @@ describe("GeminiHandler", () => {
 
 			// Setup the mock implementation
 			const mockGenerateContentStream = jest.fn().mockResolvedValue(mockStream)
-			 
+
 			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
@@ -99,7 +99,7 @@ describe("GeminiHandler", () => {
 			})
 
 			// Verify the model configuration
-			 
+
 			expect((handler["client"] as unknown as { type: string }).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
@@ -123,7 +123,7 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContentStream = jest.fn().mockRejectedValue(mockError)
-			 
+
 			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
@@ -146,14 +146,14 @@ describe("GeminiHandler", () => {
 					text: () => "Test response",
 				},
 			})
-			 
+
 			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
-			 
+
 			expect((handler["client"] as unknown as { type: string }).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
@@ -173,7 +173,7 @@ describe("GeminiHandler", () => {
 		it("should handle API errors", async () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContent = jest.fn().mockRejectedValue(mockError)
-			 
+
 			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
@@ -189,7 +189,7 @@ describe("GeminiHandler", () => {
 					text: () => "",
 				},
 			})
-			 
+
 			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
@@ -221,127 +221,126 @@ describe("GeminiHandler", () => {
 	describe("countTokens", () => {
 		it("should count tokens for text content", async () => {
 			// Mock the base provider's countTokens method
-			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
-				.mockResolvedValue(10);
-			
+			const mockBaseCountTokens = jest
+				.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), "countTokens")
+				.mockResolvedValue(10)
+
 			// Create neutral content for testing
-			const neutralContent = [
-				{ type: "text" as const, text: "Test message" }
-			];
-			
+			const neutralContent = [{ type: "text" as const, text: "Test message" }]
+
 			// Call the method
-			const result = await handler.countTokens(neutralContent);
-			
+			const result = await handler.countTokens(neutralContent)
+
 			// Verify the result
-			expect(result).toBe(10);
-			
+			expect(result).toBe(10)
+
 			// Verify the base method was called with the original neutral content
-			expect(mockBaseCountTokens).toHaveBeenCalledWith(neutralContent);
-			
+			expect(mockBaseCountTokens).toHaveBeenCalledWith(neutralContent)
+
 			// Restore the original implementation
-			mockBaseCountTokens.mockRestore();
-		});
-		
+			mockBaseCountTokens.mockRestore()
+		})
+
 		it("should handle mixed content including images", async () => {
 			// Mock the base provider's countTokens method
-			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+			const mockBaseCountTokens = jest
+				.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), "countTokens")
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				.mockImplementation(((content: NeutralMessageContent) => {
 					// Return 5 tokens for text content
 					if (Array.isArray(content) && content.length === 1 && content[0].type === "text") {
-						return 5;
+						return 5
 					}
-					return 0;
-				}) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-			
+					return 0
+				}) as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+
 			// Create mixed content with text and image
-			const mixedContent: NeutralMessageContent = [ // Explicitly type as NeutralMessageContent
+			const mixedContent: NeutralMessageContent = [
+				// Explicitly type as NeutralMessageContent
 				{ type: "text" as const, text: "Test message" },
 				{
 					type: "image_base64" as const, // Changed from "image" to "image_base64"
 					source: {
 						type: "base64" as const,
 						media_type: "image/png",
-						data: "base64data"
-					}
-				}
-			];
-			
+						data: "base64data",
+					},
+				},
+			]
+
 			// Call the method
-			const result = await handler.countTokens(mixedContent);
-			
+			const result = await handler.countTokens(mixedContent)
+
 			// Verify the result (5 for text + 258 for image)
-			expect(result).toBe(263);
-			
+			expect(result).toBe(263)
+
 			// Restore the original implementation
-			mockBaseCountTokens.mockRestore();
-		});
-		
+			mockBaseCountTokens.mockRestore()
+		})
+
 		it("should handle tool use content", async () => {
 			// Mock the base provider's countTokens method
-			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
+			const mockBaseCountTokens = jest
+				.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), "countTokens")
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				.mockImplementation(((content: NeutralMessageContent) => {
 					// Return 15 tokens for the JSON string representation
 					if (Array.isArray(content) && content.length === 1 && content[0].type === "text") {
-						return 15;
+						return 15
 					}
-					return 0;
-				}) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-			
+					return 0
+				}) as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+
 			// Create tool use content
 			const toolUseContent = [
 				{
 					type: "tool_use" as const,
 					id: "calculator-123",
 					name: "calculator",
-					input: { a: 5, b: 10, operation: "add" }
-				}
-			];
-			
+					input: { a: 5, b: 10, operation: "add" },
+				},
+			]
+
 			// Call the method
-			const result = await handler.countTokens(toolUseContent);
-			
+			const result = await handler.countTokens(toolUseContent)
+
 			// Verify the result
-			expect(result).toBe(15);
-			
+			expect(result).toBe(15)
+
 			// Restore the original implementation
-			mockBaseCountTokens.mockRestore();
-		});
-		
+			mockBaseCountTokens.mockRestore()
+		})
+
 		it("should handle errors by falling back to base implementation", async () => {
 			// Mock the implementation to throw an error first time, then succeed second time
-                        const mockBaseCountTokens = jest
-                                .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
-                                .mockResolvedValue(8);
-			
+			const mockBaseCountTokens = jest
+				.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), "countTokens")
+				.mockResolvedValue(8)
+
 			// Create a spy on console.warn
-			const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
-			
+			const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation()
+
 			// Create content that will cause an error in our custom logic
-			const content = [{ type: "text" as const, text: "Test content" }];
-			
-                        // Force an error in the try block
-                        const mockError = new Error("Test error");
-                        mockBaseCountTokens.mockImplementationOnce(() => {
-                                throw mockError;
-                        });
-			
+			const content = [{ type: "text" as const, text: "Test content" }]
+
+			// Force an error in the try block
+			const mockError = new Error("Test error")
+			mockBaseCountTokens.mockImplementationOnce(() => {
+				throw mockError
+			})
+
 			// Call the method (this will throw and then call the original)
-			const result = await handler.countTokens(content);
-			
+			const result = await handler.countTokens(content)
+
 			// Verify the warning was logged
-			expect(consoleWarnSpy).toHaveBeenCalledWith(
-				"Gemini token counting error, using fallback",
-				mockError
-			);
-			
+			expect(consoleWarnSpy).toHaveBeenCalledWith("Gemini token counting error, using fallback", mockError)
+
 			// Verify the result from the fallback
-			expect(result).toBe(8);
-			
+			expect(result).toBe(8)
+
 			// Restore the original implementations
-			mockBaseCountTokens.mockRestore();
-			consoleWarnSpy.mockRestore();
-		});
+			mockBaseCountTokens.mockRestore()
+			consoleWarnSpy.mockRestore()
+		})
 	})
 })

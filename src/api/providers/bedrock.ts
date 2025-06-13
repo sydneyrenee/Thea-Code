@@ -266,7 +266,10 @@ export class AwsBedrockHandler extends BaseProvider implements SingleCompletionH
 				// Parse the chunk as JSON if it's a string (for tests)
 				let streamEvent: StreamEvent
 				try {
-					streamEvent = typeof chunk === "string" ? JSON.parse(chunk) as StreamEvent : (chunk as unknown as StreamEvent)  
+					streamEvent =
+						typeof chunk === "string"
+							? (JSON.parse(chunk) as StreamEvent)
+							: (chunk as unknown as StreamEvent)
 				} catch (e) {
 					logger.error("Failed to parse stream event", {
 						ctx: "bedrock",
@@ -493,14 +496,14 @@ Please check:
 			//Do a deep copy of the model info so that later in the code the model id and maxTokens can be set.
 			// The bedrockModels array is a constant and updating the model ID from the returned invokedModelID value
 			// in a prompt router response isn't possible on the constant.
-			let model = JSON.parse(JSON.stringify(bedrockModels[id])) as ModelInfo  
+			let model = JSON.parse(JSON.stringify(bedrockModels[id])) as ModelInfo
 
 			// If modelMaxTokens is explicitly set in options, override the default
 			if (this.options.modelMaxTokens && this.options.modelMaxTokens > 0) {
-				model.maxTokens = this.options.modelMaxTokens  
+				model.maxTokens = this.options.modelMaxTokens
 			}
 
-			return { id, info: model }  
+			return { id, info: model }
 		}
 
 		return { id: bedrockDefaultModelId, info: bedrockModels[bedrockDefaultModelId] }
@@ -576,10 +579,10 @@ Please check:
 		try {
 			// Bedrock doesn't have a native token counting API
 			// Use the base provider's implementation
-			return super.countTokens(content);
+			return super.countTokens(content)
 		} catch (error) {
-			console.warn("Bedrock token counting error, using fallback", error);
-			return super.countTokens(content);
+			console.warn("Bedrock token counting error, using fallback", error)
+			return super.countTokens(content)
 		}
 	}
 
@@ -671,9 +674,9 @@ Please check:
 			if (response.output && response.output instanceof Uint8Array) {
 				try {
 					const outputStr = new TextDecoder().decode(response.output)
-					const output = JSON.parse(outputStr) as { content?: string }  
-					if (output.content) {  
-						return output.content  
+					const output = JSON.parse(outputStr) as { content?: string }
+					if (output.content) {
+						return output.content
 					}
 				} catch (parseError) {
 					logger.error("Failed to parse Bedrock response", {

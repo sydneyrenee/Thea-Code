@@ -43,17 +43,17 @@ export class TheaIgnoreController {
 		const fileWatcher = vscode.workspace.createFileSystemWatcher(ignorePattern)
 
 		// Watch for changes and updates
-               this.disposables.push(
-                       fileWatcher.onDidChange(() => {
-                               void this.loadTheaIgnore()
-                       }),
-                       fileWatcher.onDidCreate(() => {
-                               void this.loadTheaIgnore()
-                       }),
-                       fileWatcher.onDidDelete(() => {
-                               void this.loadTheaIgnore()
-                       }),
-               )
+		this.disposables.push(
+			fileWatcher.onDidChange(() => {
+				void this.loadTheaIgnore()
+			}),
+			fileWatcher.onDidCreate(() => {
+				void this.loadTheaIgnore()
+			}),
+			fileWatcher.onDidDelete(() => {
+				void this.loadTheaIgnore()
+			}),
+		)
 
 		// Add fileWatcher itself to disposables
 		this.disposables.push(fileWatcher)
@@ -98,10 +98,10 @@ export class TheaIgnoreController {
 
 			// Ignore expects paths to be path.relative()'d
 			return !this.ignoreInstance.ignores(relativePath)
-               } catch {
-                       // Ignore is designed to work with relative file paths, so will throw error for paths outside cwd. We are allowing access to all files outside cwd.
-                       return true
-               }
+		} catch {
+			// Ignore is designed to work with relative file paths, so will throw error for paths outside cwd. We are allowing access to all files outside cwd.
+			return true
+		}
 	}
 
 	/**
@@ -202,7 +202,7 @@ export class TheaIgnoreController {
 		const filename = GLOBAL_FILENAMES.IGNORE_FILENAME
 		const header = `# ${filename}`
 		const description = `(The following is provided by a root-level ${filename} file where the user has specified files and directories that should not be accessed. When using list_files, you'll notice a ${LOCK_TEXT_SYMBOL} next to files that are blocked. Attempting to access the file's contents e.g. through read_file will result in an error.)`
-		
+
 		return `${header}\n\n${description}\n\n${this.theaIgnoreContent}\n${filename}`
 	}
 }

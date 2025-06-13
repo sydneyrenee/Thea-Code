@@ -4,14 +4,14 @@ import axios from "axios"
 import { ContextProxy } from "../../config/ContextProxy" // Adjusted path
 import { ProviderSettingsManager } from "../../config/ProviderSettingsManager" // Adjusted path
 import {
-        ApiConfiguration,
+	ApiConfiguration,
 	openRouterDefaultModelId,
 	openRouterDefaultModelInfo,
 	glamaDefaultModelId,
 	glamaDefaultModelInfo,
 	requestyDefaultModelId,
-        requestyDefaultModelInfo,
-        // ProviderSettings is imported from schemas and re-exported as ApiConfiguration below
+	requestyDefaultModelInfo,
+	// ProviderSettings is imported from schemas and re-exported as ApiConfiguration below
 } from "../../../shared/api" // Adjusted path
 import { Mode } from "../../../shared/modes" // Adjusted path
 import { buildApiHandler as globalBuildApiHandler } from "../../../api" // Renamed import
@@ -35,10 +35,10 @@ export class TheaApiManager {
 	 * Note: Does not update the active TheaTask instance's API handler directly. That is the responsibility of the calling TheaProvider.
 	 */
 	async updateApiConfiguration(apiConfiguration: ApiConfiguration): Promise<void> {
-                const mode = this.contextProxy.getValue("mode") // Get mode via contextProxy
+		const mode = this.contextProxy.getValue("mode") // Get mode via contextProxy
 
 		if (mode) {
-                        const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName")
+			const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName")
 			const listApiConfig = await this.providerSettingsManager.listConfig()
 			const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 
@@ -81,7 +81,7 @@ export class TheaApiManager {
 			}
 		} else {
 			// If no saved config for this mode, associate the current config with this mode
-                        const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName")
+			const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName")
 			if (currentApiConfigName) {
 				const config = listApiConfig?.find((c) => c.name === currentApiConfigName)
 				if (config?.id) {
@@ -138,17 +138,14 @@ export class TheaApiManager {
 	 */
 	async handleOpenRouterCallback(code: string): Promise<void> {
 		// Fetch only necessary parts instead of full getState()
-                const apiConfiguration = this.contextProxy.getProviderSettings()
-                const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName") ?? "default"
+		const apiConfiguration = this.contextProxy.getProviderSettings()
+		const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName") ?? "default"
 
 		let apiKey: string
 		try {
 			const baseUrl = apiConfiguration.openRouterBaseUrl || "https://openrouter.ai/api/v1"
 			const baseUrlDomain = baseUrl.match(/^(https?:\/\/[^\/]+)/)?.[1] || "https://openrouter.ai"
-                const response = await axios.post<{ key?: string }>(
-                        `${baseUrlDomain}/api/v1/auth/keys`,
-                        { code },
-                )
+			const response = await axios.post<{ key?: string }>(`${baseUrlDomain}/api/v1/auth/keys`, { code })
 			if (response.data?.key) {
 				apiKey = response.data.key
 			} else {
@@ -177,15 +174,15 @@ export class TheaApiManager {
 	 * Handles OAuth callback from Glama.
 	 */
 	async handleGlamaCallback(code: string): Promise<void> {
-                const apiConfiguration = this.contextProxy.getProviderSettings()
-                const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName") ?? "default"
+		const apiConfiguration = this.contextProxy.getProviderSettings()
+		const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName") ?? "default"
 
 		let apiKey: string
 		try {
-                const response = await axios.post<{ apiKey?: string }>(
-                        "https://glama.ai/api/gateway/v1/auth/exchange-code",
-                        { code },
-                )
+			const response = await axios.post<{ apiKey?: string }>(
+				"https://glama.ai/api/gateway/v1/auth/exchange-code",
+				{ code },
+			)
 			if (response.data?.apiKey) {
 				apiKey = response.data.apiKey
 			} else {
@@ -214,8 +211,8 @@ export class TheaApiManager {
 	 * Handles callback from Requesty.
 	 */
 	async handleRequestyCallback(code: string): Promise<void> {
-                const apiConfiguration = this.contextProxy.getProviderSettings()
-                const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName") ?? "default"
+		const apiConfiguration = this.contextProxy.getProviderSettings()
+		const currentApiConfigName = this.contextProxy.getValue("currentApiConfigName") ?? "default"
 
 		const newConfiguration: ApiConfiguration = {
 			...apiConfiguration,

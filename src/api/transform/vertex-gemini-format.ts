@@ -1,1 +1,1 @@
-export { convertToVertexGeminiMessage as convertAnthropicMessageToVertexGemini } from './neutral-vertex-format'
+export { convertToVertexGeminiMessage as convertAnthropicMessageToVertexGemini } from "./neutral-vertex-format"

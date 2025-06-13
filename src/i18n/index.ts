@@ -6,7 +6,7 @@ import i18next from "./setup"
  * @param language The language code to use
  */
 export async function initializeI18n(language: string): Promise<void> {
-        await i18next.changeLanguage(language)
+	await i18next.changeLanguage(language)
 }
 
 /**
@@ -24,7 +24,7 @@ export function getCurrentLanguage(): string {
  * @param language The language code to change to
  */
 export async function changeLanguage(language: string): Promise<void> {
-        await i18next.changeLanguage(language)
+	await i18next.changeLanguage(language)
 }
 
 /**
@@ -35,7 +35,7 @@ export async function changeLanguage(language: string): Promise<void> {
  * @returns The translated string
  */
 export function t(key: string, options?: Record<string, unknown>): string {
-        return i18next.t(key, options)
+	return i18next.t(key, options)
 }
 
 export default i18next

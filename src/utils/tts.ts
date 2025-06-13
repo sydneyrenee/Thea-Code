@@ -1,4 +1,4 @@
-import * as say from 'say';
+import * as say from "say"
 
 interface Say {
 	speak: (text: string, voice?: string, speed?: number, callback?: (err?: string) => void) => void

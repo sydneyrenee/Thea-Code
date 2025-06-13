@@ -147,23 +147,23 @@ export class FileRestrictionError extends Error {
 }
 
 interface ToolParams {
-        path?: string
-        diff?: unknown
-        content?: unknown
-        operations?: unknown
-        [key: string]: unknown
+	path?: string
+	diff?: unknown
+	content?: unknown
+	operations?: unknown
+	[key: string]: unknown
 }
 
 export function isToolAllowedForMode(
-        tool: string,
-        modeSlug: string,
-        customModes: ModeConfig[],
-        toolRequirements?: Record<string, boolean>,
-        toolParams?: ToolParams, // All tool parameters
-        experiments?: Record<string, boolean>,
+	tool: string,
+	modeSlug: string,
+	customModes: ModeConfig[],
+	toolRequirements?: Record<string, boolean>,
+	toolParams?: ToolParams, // All tool parameters
+	experiments?: Record<string, boolean>,
 ): boolean {
-        // Always allow these tools
-        if ((ALWAYS_AVAILABLE_TOOLS as readonly string[]).includes(tool)) {
+	// Always allow these tools
+	if ((ALWAYS_AVAILABLE_TOOLS as readonly string[]).includes(tool)) {
 		return true
 	}
 
@@ -249,15 +249,15 @@ export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
 
 // Helper function to get all modes with their prompt overrides from extension state
 export function getAllModesWithPrompts(context: vscode.ExtensionContext): ModeConfig[] {
-        const customModes = context.globalState.get<ModeConfig[]>("customModes") ?? []
-        const customModePrompts = context.globalState.get<CustomModePrompts>("customModePrompts") ?? {}
+	const customModes = context.globalState.get<ModeConfig[]>("customModes") ?? []
+	const customModePrompts = context.globalState.get<CustomModePrompts>("customModePrompts") ?? {}
 
-        const allModes = getAllModes(customModes)
-        return allModes.map((mode) => ({
-                ...mode,
-                roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
-                customInstructions: customModePrompts[mode.slug]?.customInstructions ?? mode.customInstructions,
-        }))
+	const allModes = getAllModes(customModes)
+	return allModes.map((mode) => ({
+		...mode,
+		roleDefinition: customModePrompts[mode.slug]?.roleDefinition ?? mode.roleDefinition,
+		customInstructions: customModePrompts[mode.slug]?.customInstructions ?? mode.customInstructions,
+	}))
 }
 
 // Helper function to get complete mode details with all overrides

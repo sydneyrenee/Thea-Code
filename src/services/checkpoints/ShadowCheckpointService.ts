@@ -79,20 +79,17 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			if (!(await fileExistsAtPath(this.checkpointsDir))) {
 				throw new Error(`Checkpoint directory does not exist after creation attempt: ${this.checkpointsDir}`)
 			}
-                } catch (error) {
-                        const message =
-                                error instanceof Error
-                                        ? error.message
-                                        : String(error)
-                        throw new Error(
-                                `Cannot initialize git: failed to create checkpoint directory: ${this.checkpointsDir}: ${message}`,
-                        )
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			throw new Error(
+				`Cannot initialize git: failed to create checkpoint directory: ${this.checkpointsDir}: ${message}`,
+			)
 		}
 
 		const git = simpleGit(this.checkpointsDir)
-                const gitVersion = await git.version()
-                const gitVersionStr = `${gitVersion.major}.${gitVersion.minor}.${gitVersion.patch}`
-                this.log(`[${this.constructor.name}#create] git = ${gitVersionStr}`)
+		const gitVersion = await git.version()
+		const gitVersionStr = `${gitVersion.major}.${gitVersion.minor}.${gitVersion.patch}`
+		this.log(`[${this.constructor.name}#create] git = ${gitVersionStr}`)
 
 		let created = false
 		const startTime = Date.now()
@@ -114,8 +111,8 @@ export abstract class ShadowCheckpointService extends EventEmitter {
 			await git.init()
 			await git.addConfig("core.worktree", this.workspaceDir) // Sets the working tree to the current workspace.
 			await git.addConfig("commit.gpgSign", "false") // Disable commit signing for shadow repo.
-                        await git.addConfig("user.name", EXTENSION_DISPLAY_NAME as string)
-                        await git.addConfig("user.email", AUTHOR_EMAIL as string)
+			await git.addConfig("user.name", EXTENSION_DISPLAY_NAME as string)
+			await git.addConfig("user.email", AUTHOR_EMAIL as string)
 			await this.writeExcludeFile()
 			await this.stageAll(git)
 			const { commit } = await git.commit("initial commit", { "--allow-empty": null })

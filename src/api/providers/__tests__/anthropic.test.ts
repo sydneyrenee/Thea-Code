@@ -61,7 +61,7 @@ describe("AnthropicHandler", () => {
 
 		beforeEach(() => {
 			// Setup a default mock for createMessage that returns expected chunks
-			mockCreateMessage.mockImplementation(async function*() {
+			mockCreateMessage.mockImplementation(async function* () {
 				yield {
 					type: "usage",
 					inputTokens: 100,
@@ -91,17 +91,17 @@ describe("AnthropicHandler", () => {
 					role: "user",
 					content: [{ type: "text", text: "Second message" }],
 				},
-			];
-			
+			]
+
 			const stream = handler.createMessage(systemPrompt, neutralMessages)
 
 			const chunks: Array<{
-				type: string;
-				inputTokens?: number;
-				outputTokens?: number;
-				cacheWriteTokens?: number;
-				cacheReadTokens?: number;
-				text?: string;
+				type: string
+				inputTokens?: number
+				outputTokens?: number
+				cacheWriteTokens?: number
+				cacheReadTokens?: number
+				text?: string
 			}> = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
@@ -135,7 +135,7 @@ describe("AnthropicHandler", () => {
 	describe("completePrompt", () => {
 		it("should complete prompt successfully", async () => {
 			// Setup mock to return a simple text stream
-			mockCreateMessage.mockImplementation(async function*() {
+			mockCreateMessage.mockImplementation(async function* () {
 				yield { type: "text", text: "Test response" }
 				await Promise.resolve() // Add await to satisfy async requirement
 			})
@@ -153,7 +153,7 @@ describe("AnthropicHandler", () => {
 
 		it("should handle non-text content", async () => {
 			// Setup mock to return a stream with different text chunks
-			mockCreateMessage.mockImplementation(async function*() {
+			mockCreateMessage.mockImplementation(async function* () {
 				yield { type: "text", text: "Hello" }
 				yield { type: "text", text: " world" }
 				await Promise.resolve() // Add await to satisfy async requirement
@@ -165,7 +165,7 @@ describe("AnthropicHandler", () => {
 
 		it("should handle empty response", async () => {
 			// Setup mock to return empty stream
-			mockCreateMessage.mockImplementation(async function*() {
+			mockCreateMessage.mockImplementation(async function* () {
 				// No yields, empty stream
 			})
 
@@ -227,44 +227,41 @@ describe("AnthropicHandler", () => {
 	describe("countTokens", () => {
 		it("should count tokens using NeutralAnthropicClient", async () => {
 			// Setup the mock to return token count
-			mockCountTokens.mockResolvedValue(42);
-			
+			mockCountTokens.mockResolvedValue(42)
+
 			// Create neutral content for testing
-			const neutralContent = [
-				{ type: "text" as const, text: "Test message" }
-			];
-			
+			const neutralContent = [{ type: "text" as const, text: "Test message" }]
+
 			// Call the method
-			const result = await handler.countTokens(neutralContent);
-			
+			const result = await handler.countTokens(neutralContent)
+
 			// Verify the result
-			expect(result).toBe(42);
-			
+			expect(result).toBe(42)
+
 			// Verify the NeutralAnthropicClient countTokens was called
-			expect(mockCountTokens).toHaveBeenCalledWith("claude-3-5-sonnet-20241022", neutralContent);
-		});
-		
+			expect(mockCountTokens).toHaveBeenCalledWith("claude-3-5-sonnet-20241022", neutralContent)
+		})
+
 		it("should fall back to base provider implementation on error", async () => {
 			// Mock the countTokens to throw an error
-			mockCountTokens.mockRejectedValue(new Error("API Error"));
-			
+			mockCountTokens.mockRejectedValue(new Error("API Error"))
+
 			// Mock the base provider's countTokens method
-			const mockBaseCountTokens = jest.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), 'countTokens')
-				.mockResolvedValue(24);
-			
+			const mockBaseCountTokens = jest
+				.spyOn(Object.getPrototypeOf(Object.getPrototypeOf(handler)), "countTokens")
+				.mockResolvedValue(24)
+
 			// Create neutral content for testing
-			const neutralContent = [
-				{ type: "text" as const, text: "Test message" }
-			];
-			
+			const neutralContent = [{ type: "text" as const, text: "Test message" }]
+
 			// Call the method
-			const result = await handler.countTokens(neutralContent);
-			
+			const result = await handler.countTokens(neutralContent)
+
 			// Verify the result comes from the base implementation
-			expect(result).toBe(24);
-			
+			expect(result).toBe(24)
+
 			// Verify the base method was called with the original neutral content
-			expect(mockBaseCountTokens).toHaveBeenCalledWith(neutralContent);
-		});
+			expect(mockBaseCountTokens).toHaveBeenCalledWith(neutralContent)
+		})
 	})
 })

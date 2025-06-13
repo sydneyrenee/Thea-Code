@@ -16,8 +16,8 @@ type Message = OpenAI.Chat.ChatCompletionMessageParam
  * @returns Array of OpenAI messages where consecutive messages with the same role are combined
  */
 export function convertToR1Format(neutralHistory: NeutralConversationHistory): Message[] {
-        const messages = convertToOpenAiMessages(neutralHistory)
-        return messages.reduce<Message[]>((merged, message) => {
+	const messages = convertToOpenAiMessages(neutralHistory)
+	return messages.reduce<Message[]>((merged, message) => {
 		const lastMessage = merged[merged.length - 1]
 		let messageContent: string | (ContentPartText | ContentPartImage)[] = ""
 		let hasImages = false

@@ -24,13 +24,13 @@ export function combineApiRequests(messages: TheaMessage[]): TheaMessage[] {
 
 	for (let i = 0; i < messages.length; i++) {
 		if (messages[i].type === "say" && messages[i].say === "api_req_started") {
-                        const startedRequest = JSON.parse(messages[i].text || "{}") as Record<string, unknown>
+			const startedRequest = JSON.parse(messages[i].text || "{}") as Record<string, unknown>
 			let j = i + 1
 
 			while (j < messages.length) {
 				if (messages[j].type === "say" && messages[j].say === "api_req_finished") {
-                                        const finishedRequest = JSON.parse(messages[j].text || "{}") as Record<string, unknown>
-                                        const combinedRequest = { ...startedRequest, ...finishedRequest }
+					const finishedRequest = JSON.parse(messages[j].text || "{}") as Record<string, unknown>
+					const combinedRequest = { ...startedRequest, ...finishedRequest }
 
 					combinedApiRequests.push({
 						...messages[i],

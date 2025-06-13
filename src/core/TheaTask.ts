@@ -25,7 +25,15 @@ import { UrlContentFetcher } from "../services/browser/UrlContentFetcher"
 import { listFiles } from "../services/glob/list-files"
 import { CheckpointStorage } from "../shared/checkpoints" // Will be moved to TaskCheckpointManager
 import { ApiConfiguration } from "../shared/api"
-import { NeutralMessage, NeutralMessageContent, NeutralImageContentBlock, NeutralConversationHistory, NeutralTextContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../shared/neutral-history";
+import {
+	NeutralMessage,
+	NeutralMessageContent,
+	NeutralImageContentBlock,
+	NeutralConversationHistory,
+	NeutralTextContentBlock,
+	NeutralToolUseContentBlock,
+	NeutralToolResultContentBlock,
+} from "../shared/neutral-history"
 import { findLastIndex } from "../shared/array"
 import { combineApiRequests } from "../shared/combineApiRequests"
 import { combineCommandSequences } from "../shared/combineCommandSequences"
@@ -75,46 +83,57 @@ import { TaskStateManager } from "./TaskStateManager" // Import the new state ma
 import { TaskWebviewCommunicator } from "./TaskWebviewCommunicator" // Import the new communicator
 
 interface TheaMessageMetricsPayload {
-    tokensIn?: number;
-    tokensOut?: number;
-    cacheWrites?: number;
-    cacheReads?: number;
-    cost?: number;
+	tokensIn?: number
+	tokensOut?: number
+	cacheWrites?: number
+	cacheReads?: number
+	cost?: number
 }
 
 function convertTheaMessagesToNeutralForMetrics(theaMessages: TheaMessage[]): NeutralConversationHistory {
-    const neutralHistory: NeutralConversationHistory = [];
-    for (const tm of theaMessages) {
-        // We are interested in 'api_req_started' messages as they historically contained metrics in tm.text
-        if (tm.type === "say" && tm.say === "api_req_started" && tm.text) {
-            try {
-                const metricsPayload = JSON.parse(tm.text) as TheaMessageMetricsPayload;
-                // Ensure metricsPayload is an object and not null before accessing properties
-                if (metricsPayload && typeof metricsPayload === 'object') {
-                    neutralHistory.push({
-                        role: 'assistant', // Assigning a role; 'assistant' or 'system' could be context-dependent
-                        content: '',    // Content is not the primary concern for this metrics conversion
-                        ts: tm.ts,      // Preserve timestamp
-                        metadata: {
-                            apiMetrics: { // Store extracted metrics here
-                                tokensIn: typeof metricsPayload.tokensIn === 'number' ? metricsPayload.tokensIn : undefined,
-                                tokensOut: typeof metricsPayload.tokensOut === 'number' ? metricsPayload.tokensOut : undefined,
-                                cacheWrites: typeof metricsPayload.cacheWrites === 'number' ? metricsPayload.cacheWrites : undefined,
-                                cacheReads: typeof metricsPayload.cacheReads === 'number' ? metricsPayload.cacheReads : undefined,
-                                cost: typeof metricsPayload.cost === 'number' ? metricsPayload.cost : undefined,
-                            }
-                        }
-                    });
-                }
-            } catch (e) {
-                // Log parsing errors, but continue processing other messages
-                console.error(`[convertTheaMessagesToNeutralForMetrics] Error parsing metrics from TheaMessage text: ${tm.text}, Error: ${e}`);
-            }
-        }
-        // Other TheaMessage types are currently ignored by this specific conversion utility,
-        // as it's focused on extracting metrics for getApiMetrics.
-    }
-    return neutralHistory;
+	const neutralHistory: NeutralConversationHistory = []
+	for (const tm of theaMessages) {
+		// We are interested in 'api_req_started' messages as they historically contained metrics in tm.text
+		if (tm.type === "say" && tm.say === "api_req_started" && tm.text) {
+			try {
+				const metricsPayload = JSON.parse(tm.text) as TheaMessageMetricsPayload
+				// Ensure metricsPayload is an object and not null before accessing properties
+				if (metricsPayload && typeof metricsPayload === "object") {
+					neutralHistory.push({
+						role: "assistant", // Assigning a role; 'assistant' or 'system' could be context-dependent
+						content: "", // Content is not the primary concern for this metrics conversion
+						ts: tm.ts, // Preserve timestamp
+						metadata: {
+							apiMetrics: {
+								// Store extracted metrics here
+								tokensIn:
+									typeof metricsPayload.tokensIn === "number" ? metricsPayload.tokensIn : undefined,
+								tokensOut:
+									typeof metricsPayload.tokensOut === "number" ? metricsPayload.tokensOut : undefined,
+								cacheWrites:
+									typeof metricsPayload.cacheWrites === "number"
+										? metricsPayload.cacheWrites
+										: undefined,
+								cacheReads:
+									typeof metricsPayload.cacheReads === "number"
+										? metricsPayload.cacheReads
+										: undefined,
+								cost: typeof metricsPayload.cost === "number" ? metricsPayload.cost : undefined,
+							},
+						},
+					})
+				}
+			} catch (e) {
+				// Log parsing errors, but continue processing other messages
+				console.error(
+					`[convertTheaMessagesToNeutralForMetrics] Error parsing metrics from TheaMessage text: ${tm.text}, Error: ${e}`,
+				)
+			}
+		}
+		// Other TheaMessage types are currently ignored by this specific conversion utility,
+		// as it's focused on extracting metrics for getApiMetrics.
+	}
+	return neutralHistory
 }
 
 export type ToolResponse = string | NeutralMessageContent
@@ -282,7 +301,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		if (enableCheckpoints) {
 			this.checkpointManager = new TaskCheckpointManager({
 				taskId: this.taskId,
- 			providerRef: this.providerRef, // Fixed type
+				providerRef: this.providerRef, // Fixed type
 				checkpointStorage: checkpointStorage,
 				getMessages: () => this.taskStateManager.theaTaskMessages, // Pass getter for messages
 				saveMessages: () => this.taskStateManager.saveClineMessages(), // Use state manager method // Renamed type
@@ -384,7 +403,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		await this.webviewCommunicator.say("text", task, images)
 		this.isInitialized = true
 
-		const imageBlocks: NeutralImageContentBlock[] = formatResponse.imageBlocks(images);
+		const imageBlocks: NeutralImageContentBlock[] = formatResponse.imageBlocks(images)
 
 		console.log(`[subtasks] task ${this.taskId}.${this.instanceId} starting`)
 
@@ -492,35 +511,45 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		] // Initialize from state manager
 		// v2.0 xml tags refactor caveat: replace tool use blocks with text blocks as API disallows tool use without schema
 		// Force re-parse
-		const conversationWithoutToolBlocks: NeutralConversationHistory = existingApiConversationHistory.map((message: NeutralMessage): NeutralMessage => {
-			if (Array.isArray(message.content)) {
-				const newContent: NeutralMessageContent = message.content.map((block: NeutralTextContentBlock | NeutralImageContentBlock | NeutralToolUseContentBlock | NeutralToolResultContentBlock) => {
-					if (block.type === "tool_use") {
-						const inputAsXml = Object.entries(block.input)
-							.map(([key, value]) => `<${key}>\n${String(value)}\n</${key}>`)
-							.join("\n");
-						return {
-							type: "text",
-							text: `<${block.name}>\n${inputAsXml}\n</${block.name}>`,
-						}; // Implicitly NeutralTextContentBlock
-					} else if (block.type === "tool_result") {
-						const contentAsTextBlocks = block.content.filter(
-							(item): item is NeutralTextContentBlock => item.type === "text"
-						);
-						const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n");
-						const toolName = findToolName(block.tool_use_id, existingApiConversationHistory);
-						return {
-							type: "text",
-							text: `[${toolName} Result]\n\n${textContent}`,
-						}; // Implicitly NeutralTextContentBlock
-					}
-					return block;
-				});
-				return { ...message, content: newContent };
-			}
-			return message;
-		});
-		existingApiConversationHistory = conversationWithoutToolBlocks;
+		const conversationWithoutToolBlocks: NeutralConversationHistory = existingApiConversationHistory.map(
+			(message: NeutralMessage): NeutralMessage => {
+				if (Array.isArray(message.content)) {
+					const newContent: NeutralMessageContent = message.content.map(
+						(
+							block:
+								| NeutralTextContentBlock
+								| NeutralImageContentBlock
+								| NeutralToolUseContentBlock
+								| NeutralToolResultContentBlock,
+						) => {
+							if (block.type === "tool_use") {
+								const inputAsXml = Object.entries(block.input)
+									.map(([key, value]) => `<${key}>\n${String(value)}\n</${key}>`)
+									.join("\n")
+								return {
+									type: "text",
+									text: `<${block.name}>\n${inputAsXml}\n</${block.name}>`,
+								} // Implicitly NeutralTextContentBlock
+							} else if (block.type === "tool_result") {
+								const contentAsTextBlocks = block.content.filter(
+									(item): item is NeutralTextContentBlock => item.type === "text",
+								)
+								const textContent = contentAsTextBlocks.map((item) => item.text).join("\n\n")
+								const toolName = findToolName(block.tool_use_id, existingApiConversationHistory)
+								return {
+									type: "text",
+									text: `[${toolName} Result]\n\n${textContent}`,
+								} // Implicitly NeutralTextContentBlock
+							}
+							return block
+						},
+					)
+					return { ...message, content: newContent }
+				}
+				return message
+			},
+		)
+		existingApiConversationHistory = conversationWithoutToolBlocks
 
 		// FIXME: remove tool use blocks altogether
 
@@ -543,17 +572,25 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 
 				if (hasToolUse) {
 					const toolUseBlocks = content.filter(
-						(block): block is NeutralToolUseContentBlock => block.type === "tool_use"
-					);
-					const toolResponses: NeutralToolResultContentBlock[] = toolUseBlocks.map((block: NeutralToolUseContentBlock) => ({
-						type: 'tool_result',
-						tool_use_id: block.id,
-						content: [{ type: 'text', text: `Tool use for ${block.name} was interrupted. Please try again.` }],
-						status: 'error', // Using the 'status' field from NeutralToolResultContentBlock
-						error: { message: `Tool use for ${block.name} was interrupted. Please try again.` } // Optional error details
-					} as NeutralToolResultContentBlock));
-					modifiedApiConversationHistory = [...existingApiConversationHistory]; // no changes
-					modifiedOldUserContent = [...toolResponses];
+						(block): block is NeutralToolUseContentBlock => block.type === "tool_use",
+					)
+					const toolResponses: NeutralToolResultContentBlock[] = toolUseBlocks.map(
+						(block: NeutralToolUseContentBlock) =>
+							({
+								type: "tool_result",
+								tool_use_id: block.id,
+								content: [
+									{
+										type: "text",
+										text: `Tool use for ${block.name} was interrupted. Please try again.`,
+									},
+								],
+								status: "error", // Using the 'status' field from NeutralToolResultContentBlock
+								error: { message: `Tool use for ${block.name} was interrupted. Please try again.` }, // Optional error details
+							}) as NeutralToolResultContentBlock,
+					)
+					modifiedApiConversationHistory = [...existingApiConversationHistory] // no changes
+					modifiedOldUserContent = [...toolResponses]
 				} else {
 					modifiedApiConversationHistory = [...existingApiConversationHistory]
 					modifiedOldUserContent = []
@@ -571,28 +608,38 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						: [{ type: "text", text: previousAssistantMessage.content }]
 
 					const toolUseBlocks = assistantContent.filter(
-						(block): block is NeutralToolUseContentBlock => block.type === "tool_use"
-					);
+						(block): block is NeutralToolUseContentBlock => block.type === "tool_use",
+					)
 
 					if (toolUseBlocks.length > 0) {
 						const existingToolResults = existingUserContent.filter(
-							(block): block is NeutralToolResultContentBlock => block.type === "tool_result"
-						);
+							(block): block is NeutralToolResultContentBlock => block.type === "tool_result",
+						)
 
 						const missingToolResponses: NeutralToolResultContentBlock[] = toolUseBlocks
 							.filter(
 								(toolUse) => !existingToolResults.some((result) => result.tool_use_id === toolUse.id),
 							)
-							.map((toolUse: NeutralToolUseContentBlock) => ({
-								type: 'tool_result',
-								tool_use_id: toolUse.id,
-								content: [{ type: 'text', text: `Tool use for ${toolUse.name} was interrupted. Please try again.` }],
-								status: 'error',
-								error: { message: `Tool use for ${toolUse.name} was interrupted. Please try again.` }
-							} as NeutralToolResultContentBlock));
+							.map(
+								(toolUse: NeutralToolUseContentBlock) =>
+									({
+										type: "tool_result",
+										tool_use_id: toolUse.id,
+										content: [
+											{
+												type: "text",
+												text: `Tool use for ${toolUse.name} was interrupted. Please try again.`,
+											},
+										],
+										status: "error",
+										error: {
+											message: `Tool use for ${toolUse.name} was interrupted. Please try again.`,
+										},
+									}) as NeutralToolResultContentBlock,
+							)
 
-						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1); // removes the last user message
-						modifiedOldUserContent = [...existingUserContent, ...missingToolResponses];
+						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1) // removes the last user message
+						modifiedOldUserContent = [...existingUserContent, ...missingToolResponses]
 					} else {
 						modifiedApiConversationHistory = existingApiConversationHistory.slice(0, -1)
 						modifiedOldUserContent = [...existingUserContent]
@@ -747,7 +794,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			return [false, `Working directory '${workingDir}' does not exist.`]
 		}
 
-                const terminalInfo = TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, this.taskId)
+		const terminalInfo = TerminalRegistry.getOrCreateTerminal(workingDir, !!customCwd, this.taskId)
 
 		// Update the working directory in case the terminal we asked for has
 		// a different working directory so that the model will know where the
@@ -1022,11 +1069,11 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			if (alwaysApproveResubmit) {
 				let errorMsg: string
 
-				const typedError = error as { 
-					error?: { metadata?: { raw?: unknown } },
-					message?: string,
-					status?: number,
-					errorDetails?: Array<{ "@type"?: string, retryDelay?: string }>
+				const typedError = error as {
+					error?: { metadata?: { raw?: unknown } }
+					message?: string
+					status?: number
+					errorDetails?: Array<{ "@type"?: string; retryDelay?: string }>
 				}
 
 				if (typedError.error?.metadata?.raw) {
@@ -1043,7 +1090,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				// If the error is a 429, and the error details contain a retry delay, use that delay instead of exponential backoff
 				if (typedError.status === 429) {
 					const geminiRetryDetails = typedError.errorDetails?.find(
-						detail => detail["@type"] === "type.googleapis.com/google.rpc.RetryInfo"
+						(detail) => detail["@type"] === "type.googleapis.com/google.rpc.RetryInfo",
 					)
 					if (geminiRetryDetails) {
 						const match = geminiRetryDetails.retryDelay?.match(/^(\d+)s$/)
@@ -1525,7 +1572,6 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		})
 	}
 
-
 	// Renamed from recursivelyMakeClineRequests
 	async recursivelyMakeTheaRequests(userContent: UserContent, includeFileDetails: boolean = false): Promise<boolean> {
 		if (this.abort) {
@@ -1890,40 +1936,54 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						if (shouldProcessMentions(block.text as string)) {
 							return {
 								...block,
-								text: await parseMentions(block.text as string, this.cwd, this.urlContentFetcher, osInfo as string),
+								text: await parseMentions(
+									block.text as string,
+									this.cwd,
+									this.urlContentFetcher,
+									osInfo as string,
+								),
 							}
 						}
 						return block
 					} else if (block.type === "tool_result") {
-						let processedNestedContent: NeutralMessageContent = [];
-						if (typeof block.content === "string") { // This case should ideally not occur if input is valid NeutralToolResultContentBlock
+						let processedNestedContent: NeutralMessageContent = []
+						if (typeof block.content === "string") {
+							// This case should ideally not occur if input is valid NeutralToolResultContentBlock
 							const processedText = shouldProcessMentions(block.content)
 								? await parseMentions(block.content, this.cwd, this.urlContentFetcher, osInfo as string)
-								: block.content;
-							processedNestedContent = [{ type: "text", text: processedText }];
+								: block.content
+							processedNestedContent = [{ type: "text", text: processedText }]
 						} else if (Array.isArray(block.content)) {
 							// Ensure block.content is treated as NeutralMessageContent for mapping
-							const currentNestedContent = block.content as NeutralMessageContent;
+							const currentNestedContent = block.content as NeutralMessageContent
 							processedNestedContent = await Promise.all(
 								currentNestedContent.map(async (nestedBlock) => {
 									if (nestedBlock.type === "text" && shouldProcessMentions(nestedBlock.text)) {
 										return {
 											...nestedBlock,
-											text: await parseMentions(nestedBlock.text, this.cwd, this.urlContentFetcher, osInfo as string),
-										};
+											text: await parseMentions(
+												nestedBlock.text,
+												this.cwd,
+												this.urlContentFetcher,
+												osInfo as string,
+											),
+										}
 									}
-									return nestedBlock;
-								})
-							);
+									return nestedBlock
+								}),
+							)
 						}
 						const filteredNestedContent = processedNestedContent.filter(
 							(b): b is NeutralTextContentBlock | NeutralImageContentBlock =>
-								b.type === 'text' || b.type === 'image' || b.type === 'image_url' || b.type === 'image_base64'
-						);
+								b.type === "text" ||
+								b.type === "image" ||
+								b.type === "image_url" ||
+								b.type === "image_base64",
+						)
 						return {
 							...block,
 							content: filteredNestedContent,
-						};
+						}
 					}
 					return block
 				}),
@@ -2066,7 +2126,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 				// Add this terminal's outputs to the details
 				if (terminalOutputs.length > 0) {
 					terminalDetails += `\n## Terminal ${inactiveTerminal.id}`
-					terminalOutputs.forEach(output => {
+					terminalOutputs.forEach((output) => {
 						terminalDetails += `\n### New Output\n${output}`
 					})
 				}

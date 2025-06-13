@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method */
 import * as vscode from "vscode"
 import * as os from "os"
 import fs from "fs/promises"
@@ -12,7 +11,7 @@ jest.mock("os")
 jest.mock("fs/promises")
 jest.mock("../../../services/mcp/management/McpHub")
 jest.mock("path", () => {
-	const originalPath = jest.requireActual("path")
+	const originalPath: Record<string, unknown> = jest.requireActual("path")
 	return {
 		...originalPath,
 		// Ensure consistent path separators in tests regardless of platform
@@ -26,6 +25,15 @@ describe("TheaMcpManager", () => {
 	let mcpManager: TheaMcpManager
 	let mockContext: vscode.ExtensionContext
 	let mockMcpHub: jest.Mocked<McpHub>
+
+	// Declare mock functions in outer scope to avoid unbound method issues
+	let updateServerTimeoutMock: jest.Mock
+	let deleteServerMock: jest.Mock
+	let toggleServerDisabledMock: jest.Mock
+	let restartConnectionMock: jest.Mock
+	let getMcpSettingsFilePathMock: jest.Mock
+	let getAllServersMock: jest.Mock
+
 	const TEST_TEMP_DIR = "/tmp/thea-test"
 	// Store original platform value
 	const originalPlatform = process.platform
@@ -48,14 +56,21 @@ describe("TheaMcpManager", () => {
 		;(fs.mkdir as jest.Mock).mockResolvedValue(undefined)
 		;(fs.access as jest.Mock).mockResolvedValue(undefined)
 
-		// Mock McpHub
+		// Create individual mock functions to avoid unbound method issues
+		updateServerTimeoutMock = jest.fn().mockResolvedValue(undefined)
+		deleteServerMock = jest.fn().mockResolvedValue(undefined)
+		toggleServerDisabledMock = jest.fn().mockResolvedValue(undefined)
+		restartConnectionMock = jest.fn().mockResolvedValue(undefined)
+		getMcpSettingsFilePathMock = jest.fn().mockResolvedValue(`${TEST_TEMP_DIR}/mcp/settings.json`)
+		getAllServersMock = jest.fn().mockReturnValue([{ name: "server1", host: "localhost", port: 8000 }])
+
 		mockMcpHub = {
-			updateServerTimeout: jest.fn().mockResolvedValue(undefined),
-			deleteServer: jest.fn().mockResolvedValue(undefined),
-			toggleServerDisabled: jest.fn().mockResolvedValue(undefined),
-			restartConnection: jest.fn().mockResolvedValue(undefined),
-			getMcpSettingsFilePath: jest.fn().mockResolvedValue(`${TEST_TEMP_DIR}/mcp/settings.json`),
-			getAllServers: jest.fn().mockReturnValue([{ name: "server1", host: "localhost", port: 8000 }]),
+			updateServerTimeout: updateServerTimeoutMock,
+			deleteServer: deleteServerMock,
+			toggleServerDisabled: toggleServerDisabledMock,
+			restartConnection: restartConnectionMock,
+			getMcpSettingsFilePath: getMcpSettingsFilePathMock,
+			getAllServers: getAllServersMock,
 		} as unknown as jest.Mocked<McpHub>
 
 		// Create instance of ClineMcpManager
@@ -152,7 +167,7 @@ describe("TheaMcpManager", () => {
 			await mcpManager.updateServerTimeout("server1", 60000)
 
 			// Verify
-			expect(mockMcpHub.updateServerTimeout).toHaveBeenCalledWith("server1", 60000)
+			expect(updateServerTimeoutMock).toHaveBeenCalledWith("server1", 60000)
 		})
 
 		test("deleteServer delegates to McpHub", async () => {
@@ -160,7 +175,7 @@ describe("TheaMcpManager", () => {
 			await mcpManager.deleteServer("server1")
 
 			// Verify
-			expect(mockMcpHub.deleteServer).toHaveBeenCalledWith("server1")
+			expect(deleteServerMock).toHaveBeenCalledWith("server1")
 		})
 
 		test("toggleServerDisabled delegates to McpHub", async () => {
@@ -168,7 +183,7 @@ describe("TheaMcpManager", () => {
 			await mcpManager.toggleServerDisabled("server1", true)
 
 			// Verify
-			expect(mockMcpHub.toggleServerDisabled).toHaveBeenCalledWith("server1", true)
+			expect(toggleServerDisabledMock).toHaveBeenCalledWith("server1", true)
 		})
 
 		test("restartConnection delegates to McpHub", async () => {
@@ -176,7 +191,7 @@ describe("TheaMcpManager", () => {
 			await mcpManager.restartConnection("server1")
 
 			// Verify
-			expect(mockMcpHub.restartConnection).toHaveBeenCalledWith("server1")
+			expect(restartConnectionMock).toHaveBeenCalledWith("server1")
 		})
 
 		test("getMcpSettingsFilePath delegates to McpHub", async () => {
@@ -184,7 +199,7 @@ describe("TheaMcpManager", () => {
 			const result = await mcpManager.getMcpSettingsFilePath()
 
 			// Verify
-			expect(mockMcpHub.getMcpSettingsFilePath).toHaveBeenCalled()
+			expect(getMcpSettingsFilePathMock).toHaveBeenCalled()
 			expect(result).toBe(`${TEST_TEMP_DIR}/mcp/settings.json`)
 		})
 
@@ -193,7 +208,7 @@ describe("TheaMcpManager", () => {
 			const result = mcpManager.getAllServers()
 
 			// Verify
-			expect(mockMcpHub.getAllServers).toHaveBeenCalled()
+			expect(getAllServersMock).toHaveBeenCalled()
 			expect(result).toEqual([{ name: "server1", host: "localhost", port: 8000 }])
 		})
 	})

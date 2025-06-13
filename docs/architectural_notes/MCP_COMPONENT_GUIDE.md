@@ -48,27 +48,30 @@ The main entry point for all MCP functionality. Provides a singleton interface t
 
 ```typescript
 // Primary usage
-const mcpIntegration = McpIntegration.getInstance();
+const mcpIntegration = McpIntegration.getInstance()
 
 // Tool registration
 mcpIntegration.registerTool({
-  name: 'custom_tool',
-  description: 'My custom tool',
-  paramSchema: { /* JSON Schema */ }
-});
+	name: "custom_tool",
+	description: "My custom tool",
+	paramSchema: {
+		/* JSON Schema */
+	},
+})
 
 // Tool execution
 const result = await mcpIntegration.routeToolUse({
-  format: ToolUseFormat.XML,
-  content: '<tool_name><param>value</param></tool_name>'
-});
+	format: ToolUseFormat.XML,
+	content: "<tool_name><param>value</param></tool_name>",
+})
 
 // Server management
-await mcpIntegration.initialize();
-const serverUrl = mcpIntegration.getServerUrl();
+await mcpIntegration.initialize()
+const serverUrl = mcpIntegration.getServerUrl()
 ```
 
 **Key Responsibilities:**
+
 - Provides singleton access to MCP system
 - Coordinates tool registration and execution
 - Manages MCP server lifecycle
@@ -83,12 +86,13 @@ Handles format detection and routing of tool use requests to the appropriate exe
 ```typescript
 // Automatic format detection and routing
 const result = await mcpToolRouter.routeToolUse({
-  format: ToolUseFormat.AUTO_DETECT, // Detects XML, JSON, or OpenAI format
-  content: toolUseContent
-});
+	format: ToolUseFormat.AUTO_DETECT, // Detects XML, JSON, or OpenAI format
+	content: toolUseContent,
+})
 ```
 
 **Key Responsibilities:**
+
 - Detects tool use format (XML/JSON/OpenAI)
 - Routes requests to McpToolExecutor
 - Provides consistent interface regardless of input format
@@ -102,11 +106,12 @@ The core execution engine that manages the MCP server and executes tools.
 
 ```typescript
 // Direct tool execution (usually called via router)
-const executor = McpToolExecutor.getInstance();
-const result = await executor.executeTool('read_file', { path: 'example.ts' });
+const executor = McpToolExecutor.getInstance()
+const result = await executor.executeTool("read_file", { path: "example.ts" })
 ```
 
 **Key Responsibilities:**
+
 - Manages embedded MCP server lifecycle
 - Executes tool calls via MCP protocol
 - Handles tool results and errors
@@ -119,27 +124,28 @@ const result = await executor.executeTool('read_file', { path: 'example.ts' });
 Central registry for all available tools in the system.
 
 ```typescript
-const registry = McpToolRegistry.getInstance();
+const registry = McpToolRegistry.getInstance()
 
 // Register a tool
 registry.registerTool({
-  name: 'analyze_code',
-  description: 'Analyze code for patterns',
-  paramSchema: {
-    type: 'object',
-    properties: {
-      file_path: { type: 'string' }
-    },
-    required: ['file_path']
-  }
-});
+	name: "analyze_code",
+	description: "Analyze code for patterns",
+	paramSchema: {
+		type: "object",
+		properties: {
+			file_path: { type: "string" },
+		},
+		required: ["file_path"],
+	},
+})
 
 // Get registered tools
-const tools = registry.getTools();
-const tool = registry.getTool('analyze_code');
+const tools = registry.getTools()
+const tool = registry.getTool("analyze_code")
 ```
 
 **Key Responsibilities:**
+
 - Stores tool definitions and schemas
 - Validates tool registrations
 - Provides tool lookup functionality
@@ -153,18 +159,19 @@ Utility functions for converting between different tool use formats and MCP prot
 
 ```typescript
 // Convert XML to MCP format
-const mcpRequest = McpConverters.xmlToMcp('<read_file><path>example.ts</path></read_file>');
+const mcpRequest = McpConverters.xmlToMcp("<read_file><path>example.ts</path></read_file>")
 
 // Convert JSON to MCP format
-const jsonRequest = { type: 'tool_use', name: 'read_file', input: { path: 'example.ts' } };
-const mcpRequest2 = McpConverters.jsonToMcp(jsonRequest);
+const jsonRequest = { type: "tool_use", name: "read_file", input: { path: "example.ts" } }
+const mcpRequest2 = McpConverters.jsonToMcp(jsonRequest)
 
 // Convert OpenAI function call to MCP format
-const functionCall = { name: 'read_file', arguments: '{"path":"example.ts"}' };
-const mcpRequest3 = McpConverters.openAiToMcp(functionCall);
+const functionCall = { name: "read_file", arguments: '{"path":"example.ts"}' }
+const mcpRequest3 = McpConverters.openAiToMcp(functionCall)
 ```
 
 **Key Responsibilities:**
+
 - Converts between XML, JSON, and OpenAI formats
 - Transforms to/from MCP protocol format
 - Handles format validation and error cases
@@ -181,16 +188,17 @@ Implements Server-Sent Events transport for MCP communication.
 ```typescript
 // Configure SSE transport
 const config: SseTransportConfig = {
-  host: 'localhost',
-  port: 3000,
-  path: '/mcp'
-};
+	host: "localhost",
+	port: 3000,
+	path: "/mcp",
+}
 
-const transport = new SseTransport(config);
-await transport.start();
+const transport = new SseTransport(config)
+await transport.start()
 ```
 
 **Key Features:**
+
 - HTTP-based transport using Server-Sent Events
 - Configurable host, port, and path
 - Used for web-based MCP clients
@@ -203,11 +211,12 @@ await transport.start();
 Implements standard input/output transport for process-based MCP communication.
 
 ```typescript
-const transport = new StdioTransport();
-await transport.start();
+const transport = new StdioTransport()
+await transport.start()
 ```
 
 **Key Features:**
+
 - Process-based communication via stdin/stdout
 - Used for embedded MCP servers
 - Lower overhead than HTTP transport
@@ -221,13 +230,13 @@ await transport.start();
 
 ```typescript
 interface ToolDefinition {
-  name: string;
-  description: string;
-  paramSchema: {
-    type: 'object';
-    properties: Record<string, any>;
-    required?: string[];
-  };
+	name: string
+	description: string
+	paramSchema: {
+		type: "object"
+		properties: Record<string, any>
+		required?: string[]
+	}
 }
 ```
 
@@ -237,15 +246,15 @@ interface ToolDefinition {
 
 ```typescript
 interface ToolUseRequest {
-  format: ToolUseFormat;
-  content: string | object;
+	format: ToolUseFormat
+	content: string | object
 }
 
 enum ToolUseFormat {
-  XML = 'xml',
-  JSON = 'json',
-  OPENAI = 'openai',
-  AUTO_DETECT = 'auto'
+	XML = "xml",
+	JSON = "json",
+	OPENAI = "openai",
+	AUTO_DETECT = "auto",
 }
 ```
 
@@ -255,10 +264,10 @@ enum ToolUseFormat {
 
 ```typescript
 interface SseTransportConfig {
-  host?: string;
-  port?: number;
-  path?: string;
-  cors?: boolean;
+	host?: string
+	port?: number
+	path?: string
+	cors?: boolean
 }
 ```
 
@@ -270,7 +279,7 @@ interface SseTransportConfig {
 // 1. Define tool in your provider's registerTools method
 protected registerTools(): void {
   super.registerTools(); // Get standard tools
-  
+
   this.mcpIntegration.registerTool({
     name: 'my_new_tool',
     description: 'Description of what the tool does',
@@ -291,15 +300,15 @@ protected registerTools(): void {
 ```typescript
 // Extend McpConverters for custom formats
 class CustomConverters extends McpConverters {
-  static customFormatToMcp(customInput: CustomFormat): McpToolRequest {
-    return {
-      method: 'tools/call',
-      params: {
-        name: customInput.toolName,
-        arguments: customInput.parameters
-      }
-    };
-  }
+	static customFormatToMcp(customInput: CustomFormat): McpToolRequest {
+		return {
+			method: "tools/call",
+			params: {
+				name: customInput.toolName,
+				arguments: customInput.parameters,
+			},
+		}
+	}
 }
 ```
 
@@ -307,23 +316,23 @@ class CustomConverters extends McpConverters {
 
 ```typescript
 // Test tool registration
-test('should register custom tool', () => {
-  const registry = McpToolRegistry.getInstance();
-  registry.registerTool(customTool);
-  
-  expect(registry.getTool('custom_tool')).toBeDefined();
-});
+test("should register custom tool", () => {
+	const registry = McpToolRegistry.getInstance()
+	registry.registerTool(customTool)
+
+	expect(registry.getTool("custom_tool")).toBeDefined()
+})
 
 // Test tool execution
-test('should execute tool via integration', async () => {
-  const integration = McpIntegration.getInstance();
-  const result = await integration.routeToolUse({
-    format: ToolUseFormat.XML,
-    content: '<read_file><path>test.ts</path></read_file>'
-  });
-  
-  expect(result.success).toBe(true);
-});
+test("should execute tool via integration", async () => {
+	const integration = McpIntegration.getInstance()
+	const result = await integration.routeToolUse({
+		format: ToolUseFormat.XML,
+		content: "<read_file><path>test.ts</path></read_file>",
+	})
+
+	expect(result.success).toBe(true)
+})
 ```
 
 ## Configuration
@@ -349,12 +358,12 @@ MCP_LOG_LEVEL=info
 ```typescript
 // Configure MCP integration
 const config: SseTransportConfig = {
-  host: process.env.MCP_SERVER_HOST || 'localhost',
-  port: parseInt(process.env.MCP_SERVER_PORT || '3000'),
-  path: process.env.MCP_SERVER_PATH || '/mcp'
-};
+	host: process.env.MCP_SERVER_HOST || "localhost",
+	port: parseInt(process.env.MCP_SERVER_PORT || "3000"),
+	path: process.env.MCP_SERVER_PATH || "/mcp",
+}
 
-const mcpIntegration = McpIntegration.getInstance(config);
+const mcpIntegration = McpIntegration.getInstance(config)
 ```
 
 ## Best Practices
@@ -373,11 +382,11 @@ const mcpIntegration = McpIntegration.getInstance(config);
 
 ```typescript
 // Set environment variable
-process.env.MCP_DEBUG = 'true';
+process.env.MCP_DEBUG = "true"
 
 // Or configure programmatically
-const integration = McpIntegration.getInstance();
-integration.setDebugMode(true);
+const integration = McpIntegration.getInstance()
+integration.setDebugMode(true)
 ```
 
 ### Common Issues

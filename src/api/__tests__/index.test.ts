@@ -5,8 +5,8 @@ import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "../providers/constants"
 
 // Define neutral thinking config type to avoid Anthropic SDK dependency
 interface NeutralThinkingConfig {
-	type: "enabled";
-	budget_tokens: number;
+	type: "enabled"
+	budget_tokens: number
 }
 
 describe("getModelParams", () => {

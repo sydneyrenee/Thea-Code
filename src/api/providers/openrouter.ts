@@ -7,9 +7,7 @@ import { convertToOpenAiMessages } from "../transform/openai-format"
 import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
 
 import { convertToR1Format } from "../transform/r1-format"
-import type {
-  NeutralConversationHistory
-} from "../../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../shared/neutral-history"
 
 import { DEEP_SEEK_DEFAULT_TEMPERATURE } from "./constants"
 import { getModelParams, SingleCompletionHandler, ApiHandler } from ".."
@@ -22,9 +20,9 @@ const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
 // Add custom interface for OpenRouter params.
 type OpenRouterChatCompletionParams = OpenAI.Chat.ChatCompletionCreateParams & {
-        transforms?: string[]
-        include_reasoning?: boolean
-        thinking?: unknown
+	transforms?: string[]
+	include_reasoning?: boolean
+	thinking?: unknown
 }
 
 export class OpenRouterHandler extends BaseProvider implements ApiHandler, SingleCompletionHandler {
@@ -63,27 +61,27 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 	): AsyncGenerator<ApiStreamChunk> {
 		let { id: modelId, maxTokens, thinking, temperature, topP } = this.getModel()
 
-                const history: NeutralConversationHistory = [...messages]
+		const history: NeutralConversationHistory = [...messages]
 
-                if (systemPrompt) {
-                        const firstUser = history.find((m) => m.role === "user")
-                        if (firstUser) {
-                                if (typeof firstUser.content === "string") {
-                                        firstUser.content = `${systemPrompt}\n${firstUser.content}`
-                                } else if (Array.isArray(firstUser.content)) {
-                                        firstUser.content.unshift({ type: "text", text: systemPrompt })
-                                }
-                        } else {
-                                history.unshift({ role: "user", content: systemPrompt })
-                        }
-                }
+		if (systemPrompt) {
+			const firstUser = history.find((m) => m.role === "user")
+			if (firstUser) {
+				if (typeof firstUser.content === "string") {
+					firstUser.content = `${systemPrompt}\n${firstUser.content}`
+				} else if (Array.isArray(firstUser.content)) {
+					firstUser.content.unshift({ type: "text", text: systemPrompt })
+				}
+			} else {
+				history.unshift({ role: "user", content: systemPrompt })
+			}
+		}
 
-                let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiMessages(history)
+		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiMessages(history)
 
 		// DeepSeek highly recommends using user instead of system role.
-                if (modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning") {
-                        openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...history])
-                }
+		if (modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning") {
+			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...history])
+		}
 
 		// prompt caching: https://openrouter.ai/docs/prompt-caching
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
@@ -164,8 +162,8 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 
 			if (delta?.content) {
 				// Check for tool calls using the OpenAI handler's method
-				const toolCalls = this.openAiHandler.extractToolCalls(delta);
-				
+				const toolCalls = this.openAiHandler.extractToolCalls(delta)
+
 				if (toolCalls.length > 0) {
 					// Process tool calls using the OpenAI handler's logic
 					for (const toolCall of toolCalls) {
@@ -174,18 +172,19 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 							const toolResult = await this.processToolUse({
 								id: toolCall.id,
 								name: toolCall.function.name,
-								input: JSON.parse(toolCall.function.arguments || '{}')
-							});
-							
+								input: JSON.parse(toolCall.function.arguments || "{}"),
+							})
+
 							// Ensure the tool result content is a string
-							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
-							
+							const toolResultString =
+								typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
+
 							// Yield tool result
 							yield {
-								type: 'tool_result',
+								type: "tool_result",
 								id: toolCall.id,
-								content: toolResultString
-							};
+								content: toolResultString,
+							}
 						}
 					}
 				} else {
@@ -205,9 +204,9 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 	}
 
 	processUsageMetrics(usage: {
-		prompt_tokens?: number;
-		completion_tokens?: number;
-		cost?: number;
+		prompt_tokens?: number
+		completion_tokens?: number
+		cost?: number
 	}): ApiStreamUsageChunk {
 		return {
 			type: "usage",
@@ -261,27 +260,27 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 }
 
 interface OpenRouterRawModel {
-  id: string;
-  top_provider?: {
-    max_completion_tokens?: number | null;
-    [key: string]: unknown;
-  } | null;
-  context_length?: number | null;
-  architecture?: {
-    modality?: string | null;
-    [key: string]: unknown;
-  } | null;
-  pricing?: {
-    prompt?: string | null;
-    completion?: string | null;
-    [key: string]: unknown;
-  } | null;
-  description?: string | null;
-  [key: string]: unknown;
+	id: string
+	top_provider?: {
+		max_completion_tokens?: number | null
+		[key: string]: unknown
+	} | null
+	context_length?: number | null
+	architecture?: {
+		modality?: string | null
+		[key: string]: unknown
+	} | null
+	pricing?: {
+		prompt?: string | null
+		completion?: string | null
+		[key: string]: unknown
+	} | null
+	description?: string | null
+	[key: string]: unknown
 }
 
 interface OpenRouterModelsResponse {
-  data: OpenRouterRawModel[];
+	data: OpenRouterRawModel[]
 }
 
 export async function getOpenRouterModels(options?: ApiHandlerOptions) {

@@ -19,7 +19,7 @@ module.exports = {
 							allowJs: true,
 						},
 						diagnostics: {
-							ignoreCodes: ["TS2339", "TS2307", "TS2345"]
+							ignoreCodes: ["TS2339", "TS2307", "TS2345"],
 						},
 					},
 				],
@@ -29,10 +29,11 @@ module.exports = {
 			],
 			moduleNameMapper: {
 				"^vscode$": "<rootDir>/src/__mocks__/vscode.js",
-                                "@modelcontextprotocol/sdk$": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/index.js",
-                                "^@modelcontextprotocol/sdk/server/mcp\\.js$": "@modelcontextprotocol/sdk/server/mcp.js",
-                                "^@modelcontextprotocol/sdk/server/streamableHttp\\.js$": "@modelcontextprotocol/sdk/server/streamableHttp.js",
-                                "@modelcontextprotocol/sdk/(.*)": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/$1",
+				"@modelcontextprotocol/sdk$": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/index.js",
+				"^@modelcontextprotocol/sdk/server/mcp\\.js$": "@modelcontextprotocol/sdk/server/mcp.js",
+				"^@modelcontextprotocol/sdk/server/streamableHttp\\.js$":
+					"@modelcontextprotocol/sdk/server/streamableHttp.js",
+				"@modelcontextprotocol/sdk/(.*)": "<rootDir>/src/__mocks__/@modelcontextprotocol/sdk/$1",
 				"^delay$": "<rootDir>/src/__mocks__/delay.js",
 				"^p-wait-for$": "<rootDir>/src/__mocks__/p-wait-for.js",
 				"^globby$": "<rootDir>/src/__mocks__/globby.js",
@@ -61,26 +62,25 @@ module.exports = {
 							lib: ["dom", "dom.iterable", "esnext"],
 						},
 						diagnostics: {
-							ignoreCodes: ["TS2339", "TS2307", "TS2345"]
+							ignoreCodes: ["TS2339", "TS2307", "TS2345"],
 						},
 					},
 				],
 			},
 			moduleNameMapper: {
 				"\\.(css|less|scss|sass)$": "identity-obj-proxy",
-				"\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/webview-ui/src/__mocks__/fileMock.js",
-				"^@/(.*)$": "<rootDir>/webview-ui/src/$1"
+				"\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$":
+					"<rootDir>/webview-ui/src/__mocks__/fileMock.js",
+				"^@/(.*)$": "<rootDir>/webview-ui/src/$1",
 			},
-			transformIgnorePatterns: [
-				"node_modules/(?!(@testing-library)/)"
-			],
-		}
+			transformIgnorePatterns: ["node_modules/(?!(@testing-library)/)"],
+		},
 	],
 	transformIgnorePatterns: [
 		"node_modules/(?!(@modelcontextprotocol|delay|p-wait-for|globby|serialize-error|strip-ansi|default-shell|os-name|strip-bom)/)",
 	],
 	modulePathIgnorePatterns: [".vscode-test"],
-        reporters: [["jest-simple-dot-reporter", {}]],
-        globalSetup: "<rootDir>/test/globalSetup.ts",
-        globalTeardown: "<rootDir>/test/globalTeardown.ts",
+	reporters: [["jest-simple-dot-reporter", {}]],
+	globalSetup: "<rootDir>/test/globalSetup.ts",
+	globalTeardown: "<rootDir>/test/globalTeardown.ts",
 }

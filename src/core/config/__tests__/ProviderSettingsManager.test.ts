@@ -265,12 +265,12 @@ describe("ProviderSettingsManager", () => {
 			mockSecrets.get.mockResolvedValue(JSON.stringify(existingConfig))
 
 			await providerSettingsManager.deleteConfig("test")
-		// Get the stored config to check the ID
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-		const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
-		expect(storedConfig.currentApiConfigName).toBe("default")
-		expect(Object.keys(storedConfig.apiConfigs)).toEqual(["default"])
-		expect(storedConfig.apiConfigs.default.id).toBeTruthy()
+			// Get the stored config to check the ID
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
+			expect(storedConfig.currentApiConfigName).toBe("default")
+			expect(Object.keys(storedConfig.apiConfigs)).toEqual(["default"])
+			expect(storedConfig.apiConfigs.default.id).toBeTruthy()
 		})
 
 		it("should throw error when trying to delete non-existent config", async () => {
@@ -326,15 +326,15 @@ describe("ProviderSettingsManager", () => {
 				apiKey: "test-key",
 				id: "test-id",
 			})
-		// Get the stored config to check the structure
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-		const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
-		expect(storedConfig.currentApiConfigName).toBe("test")
-		expect(storedConfig.apiConfigs.test).toEqual({
-			apiProvider: "anthropic",
-			apiKey: "test-key",
-			id: "test-id",
-		})
+			// Get the stored config to check the structure
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+			const storedConfig = JSON.parse(mockSecrets.store.mock.calls[0][1]) as ProviderProfiles
+			expect(storedConfig.currentApiConfigName).toBe("test")
+			expect(storedConfig.apiConfigs.test).toEqual({
+				apiProvider: "anthropic",
+				apiKey: "test-key",
+				id: "test-id",
+			})
 		})
 
 		it("should throw error when config does not exist", async () => {

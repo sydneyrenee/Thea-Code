@@ -10,24 +10,23 @@ const isTestEnv = process.env.NODE_ENV === "test" || process.env.JEST_WORKER_ID 
 
 // Load translations based on environment
 if (!isTestEnv) {
-        try {
-
+	try {
 		const localesDir = path.join(__dirname, "i18n", "locales")
 
-                try {
-                        // Find all language directories
-                        const languageDirs = fs.readdirSync(localesDir, { withFileTypes: true })
+		try {
+			// Find all language directories
+			const languageDirs = fs.readdirSync(localesDir, { withFileTypes: true })
 
-                        const languages = languageDirs
-                                .filter((dirent: fs.Dirent) => dirent.isDirectory())
-                                .map((dirent: fs.Dirent) => dirent.name)
+			const languages = languageDirs
+				.filter((dirent: fs.Dirent) => dirent.isDirectory())
+				.map((dirent: fs.Dirent) => dirent.name)
 
-                        // Process each language
-                        languages.forEach((language: string) => {
-                                const langPath = path.join(localesDir, language)
+			// Process each language
+			languages.forEach((language: string) => {
+				const langPath = path.join(localesDir, language)
 
 				// Find all JSON files in the language directory
-                                const files = fs.readdirSync(langPath).filter((file: string) => file.endsWith(".json"))
+				const files = fs.readdirSync(langPath).filter((file: string) => file.endsWith(".json"))
 
 				// Initialize language in translations object
 				if (!translations[language]) {
@@ -35,9 +34,9 @@ if (!isTestEnv) {
 				}
 
 				// Process each namespace file
-                                files.forEach((file: string) => {
-                                        const namespace = path.basename(file, ".json")
-                                        const filePath = path.join(langPath, file)
+				files.forEach((file: string) => {
+					const namespace = path.basename(file, ".json")
+					const filePath = path.join(langPath, file)
 
 					try {
 						// Read and parse the JSON file

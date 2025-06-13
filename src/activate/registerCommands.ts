@@ -27,11 +27,11 @@ export function setPanel(
 	type: "sidebar" | "tab",
 ): void {
 	if (type === "sidebar") {
-		sidebarPanel = newPanel as vscode.WebviewView;
-		tabPanel = undefined;
+		sidebarPanel = newPanel as vscode.WebviewView
+		tabPanel = undefined
 	} else {
-		tabPanel = newPanel as vscode.WebviewPanel;
-		sidebarPanel = undefined;
+		tabPanel = newPanel as vscode.WebviewPanel
+		sidebarPanel = undefined
 	}
 }
 
@@ -45,7 +45,9 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 	const { context } = options
 
 	for (const [command, callback] of Object.entries(getCommandsMap(options))) {
-		context.subscriptions.push(vscode.commands.registerCommand(command, callback as (...args: unknown[]) => unknown));
+		context.subscriptions.push(
+			vscode.commands.registerCommand(command, callback as (...args: unknown[]) => unknown),
+		)
 	}
 }
 
@@ -59,18 +61,18 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			await provider.postMessageToWebview({ type: "action", action: "chatButtonClicked" })
 		},
 		[COMMANDS.MCP_BUTTON]: () => {
-			void provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" });
+			void provider.postMessageToWebview({ type: "action", action: "mcpButtonClicked" })
 		},
 		[COMMANDS.PROMPTS_BUTTON]: () => {
-			void provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" });
+			void provider.postMessageToWebview({ type: "action", action: "promptsButtonClicked" })
 		},
 		[COMMANDS.POPOUT_BUTTON]: () => openTheaInNewTab({ context, outputChannel }), // Renamed function call
 		[COMMANDS.OPEN_NEW_TAB]: () => openTheaInNewTab({ context, outputChannel }), // Renamed function call
 		[COMMANDS.SETTINGS_BUTTON]: () => {
-			void provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" });
+			void provider.postMessageToWebview({ type: "action", action: "settingsButtonClicked" })
 		},
 		[COMMANDS.HISTORY_BUTTON]: () => {
-			void provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" });
+			void provider.postMessageToWebview({ type: "action", action: "historyButtonClicked" })
 		},
 		[COMMANDS.HELP_BUTTON]: () => {
 			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL))
@@ -116,7 +118,7 @@ const openTheaInNewTab = async ({ context, outputChannel }: Omit<RegisterCommand
 	const hasVisibleEditors = vscode.window.visibleTextEditors.length > 0
 
 	if (!hasVisibleEditors) {
-		void await vscode.commands.executeCommand("workbench.action.newGroupRight");
+		void (await vscode.commands.executeCommand("workbench.action.newGroupRight"))
 	}
 
 	const targetCol = hasVisibleEditors ? Math.max(lastCol + 1, 1) : vscode.ViewColumn.Two
@@ -146,6 +148,6 @@ const openTheaInNewTab = async ({ context, outputChannel }: Omit<RegisterCommand
 	})
 
 	// Lock the editor group so clicking on files doesn't open them over the panel.
-	void await delay(100);
-	void await vscode.commands.executeCommand("workbench.action.lockEditorGroup");
+	void (await delay(100))
+	void (await vscode.commands.executeCommand("workbench.action.lockEditorGroup"))
 }

@@ -5,9 +5,9 @@ import axios from "axios"
 
 import { GlamaHandler } from "../glama"
 import { ApiHandlerOptions } from "../../../shared/api"
-import type { NeutralConversationHistory } from "../../../shared/neutral-history"; // Fixed import path
-import type OpenAI from "openai";
-import type { ApiStreamChunk } from '../../transform/stream';
+import type { NeutralConversationHistory } from "../../../shared/neutral-history" // Fixed import path
+import type OpenAI from "openai"
+import type { ApiStreamChunk } from "../../transform/stream"
 // Mock OpenAI client
 const mockCreate = jest.fn()
 const mockWithResponse = jest.fn()
@@ -113,7 +113,8 @@ describe("GlamaHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: NeutralConversationHistory = [ // Explicitly type as NeutralConversationHistory
+		const messages: NeutralConversationHistory = [
+			// Explicitly type as NeutralConversationHistory
 			{
 				role: "user",
 				content: "Hello!",
@@ -171,7 +172,7 @@ describe("GlamaHandler", () => {
 				}
 				fail("Expected error to be thrown")
 			} catch (e) {
-				const error = e as Error; // Type assertion
+				const error = e as Error // Type assertion
 				expect(error).toBeInstanceOf(Error)
 				expect(error.message).toBe("API Error") // Now safe
 			}

@@ -9,7 +9,7 @@ describe("mode-validator", () => {
 		describe("code mode", () => {
 			it("allows all code mode tools", () => {
 				// Code mode has all groups
-				Object.entries(TOOL_GROUPS).forEach(([/* group */, config]) => {
+				Object.entries(TOOL_GROUPS).forEach(([, /* group */ config]) => {
 					config.tools.forEach((tool: string) => {
 						expect(isToolAllowedForMode(tool, codeMode, [])).toBe(true)
 					})

@@ -22,14 +22,14 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 			baseURL: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
 			apiKey: "ollama", // Ollama uses a dummy key via OpenAI client
 		})
-		
+
 		// Create an OpenAI handler for tool use detection and processing
 		this.openAiHandler = new OpenAiHandler({
 			...options,
 			// Override any OpenAI-specific options as needed
 			openAiApiKey: "ollama", // Use the same dummy key
 			openAiBaseUrl: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
-			openAiModelId: this.options.ollamaModelId || ""
+			openAiModelId: this.options.ollamaModelId || "",
 		})
 	}
 
@@ -39,7 +39,7 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 		const openAiMessages = convertToOllamaHistory(messages)
 
 		// Add system prompt if not already included
-		const hasSystemMessage = openAiMessages.some(msg => msg.role === 'system')
+		const hasSystemMessage = openAiMessages.some((msg) => msg.role === "system")
 		if (systemPrompt && systemPrompt.trim() !== "" && !hasSystemMessage) {
 			openAiMessages.unshift({ role: "system", content: systemPrompt })
 		}
@@ -53,18 +53,18 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 
 		// Hybrid matching logic for reasoning/thinking blocks only
 		const matcher = new HybridMatcher(
-			"think",  // XML tag name for reasoning
-			"thinking" // JSON type for reasoning
+			"think", // XML tag name for reasoning
+			"thinking", // JSON type for reasoning
 			// Removed transformFn, transformation will happen in the loop
-		);
-		
+		)
+
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta ?? {}
 
 			if (delta.content) {
 				// Use OpenAI handler for all tool use detection (including XML and JSON patterns)
-				const toolCalls = this.openAiHandler.extractToolCalls(delta);
-				
+				const toolCalls = this.openAiHandler.extractToolCalls(delta)
+
 				if (toolCalls.length > 0) {
 					// Process tool calls using OpenAI handler's logic
 					for (const toolCall of toolCalls) {
@@ -73,18 +73,19 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 							const toolResult = await this.processToolUse({
 								id: toolCall.id,
 								name: toolCall.function.name,
-								input: JSON.parse(toolCall.function.arguments || '{}')
-							});
-							
+								input: JSON.parse(toolCall.function.arguments || "{}"),
+							})
+
 							// Ensure the tool result content is a string
-							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
-							
+							const toolResultString =
+								typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
+
 							// Yield tool result
 							yield {
-								type: 'tool_result',
+								type: "tool_result",
 								id: toolCall.id,
-								content: toolResultString
-							};
+								content: toolResultString,
+							}
 						}
 					}
 				} else {
@@ -92,18 +93,21 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 					for (const matchedChunk of matcher.update(delta.content)) {
 						yield {
 							type: matchedChunk.matched ? "reasoning" : "text",
-							text: typeof matchedChunk.data === 'string' ? matchedChunk.data : JSON.stringify(matchedChunk.data),
-						} as ApiStreamChunk; // Ensure it conforms to ApiStreamChunk
+							text:
+								typeof matchedChunk.data === "string"
+									? matchedChunk.data
+									: JSON.stringify(matchedChunk.data),
+						} as ApiStreamChunk // Ensure it conforms to ApiStreamChunk
 					}
 				}
 			}
 		}
-		
+
 		for (const finalChunk of matcher.final()) {
 			yield {
 				type: finalChunk.matched ? "reasoning" : "text",
-				text: typeof finalChunk.data === 'string' ? finalChunk.data : JSON.stringify(finalChunk.data),
-			} as ApiStreamChunk; // Ensure it conforms to ApiStreamChunk
+				text: typeof finalChunk.data === "string" ? finalChunk.data : JSON.stringify(finalChunk.data),
+			} as ApiStreamChunk // Ensure it conforms to ApiStreamChunk
 		}
 	}
 
@@ -112,10 +116,10 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 		try {
 			// Convert neutral content to Ollama format (string)
 			const ollamaContent = convertToOllamaContentBlocks(content)
-			
+
 			// Use the base provider's implementation for token counting
 			// This will use tiktoken to count tokens in the string
-			return super.countTokens([{ type: 'text', text: ollamaContent }])
+			return super.countTokens([{ type: "text", text: ollamaContent }])
 		} catch (error) {
 			console.warn("Ollama token counting error, using fallback", error)
 			return super.countTokens(content)
@@ -134,19 +138,19 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 		try {
 			// Create a simple neutral history with a single user message
 			const neutralHistory: NeutralConversationHistory = [
-				{ role: 'user', content: [{ type: 'text', text: prompt }] }
+				{ role: "user", content: [{ type: "text", text: prompt }] },
 			]
-			
+
 			// Convert to Ollama format
 			const openAiMessages = convertToOllamaHistory(neutralHistory)
-			
+
 			const response = await this.client.chat.completions.create({
 				model: this.getModel().id,
 				messages: openAiMessages,
 				temperature: this.options.modelTemperature ?? 0,
 				stream: false,
 			})
-			
+
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
 			if (error instanceof Error) {
@@ -165,9 +169,9 @@ export async function getOllamaModels(baseUrl = "http://localhost:10000") {
 		}
 
 		const response = await axios.get(`${baseUrl}/api/tags`)
-		const responseData = response.data as { models: { name: string; [key: string]: unknown }[] } | undefined;
+		const responseData = response.data as { models: { name: string; [key: string]: unknown }[] } | undefined
 		const modelsArray = responseData?.models?.map((model: { name: string }) => model.name) || []
-		return [...new Set<string>(modelsArray)]; // Assert modelsArray is string[] for Set
+		return [...new Set<string>(modelsArray)] // Assert modelsArray is string[] for Set
 	} catch {
 		// Silently return empty array on error
 		return []

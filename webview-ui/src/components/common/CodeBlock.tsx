@@ -135,7 +135,9 @@ const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 		],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ ...preProps }: React.HTMLAttributes<HTMLPreElement>) => <StyledPre {...preProps} theme={theme} />,
+				pre: ({ ...preProps }: React.HTMLAttributes<HTMLPreElement>) => (
+					<StyledPre {...preProps} theme={theme} />
+				),
 			},
 		},
 	})

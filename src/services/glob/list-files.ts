@@ -90,8 +90,8 @@ async function globbyLevelByLevel(limit: number, options?: Options) {
 	})
 	try {
 		return await Promise.race([globbingProcess(), timeoutPromise])
-        } catch (error) {
-                console.warn("Globbing timed out, returning partial results", error)
-                return Array.from(results)
-        }
+	} catch (error) {
+		console.warn("Globbing timed out, returning partial results", error)
+		return Array.from(results)
+	}
 }

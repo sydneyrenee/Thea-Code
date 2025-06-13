@@ -50,8 +50,8 @@ export function prepareSearchString(changes: Change[]): string {
 
 // Helper function to evaluate similarity between two texts
 export function evaluateSimilarity(original: string, modified: string): number {
-	const cmp = new CmpStr();
-	return cmp.compare('dice', original, modified) as number;
+	const cmp = new CmpStr()
+	return cmp.compare("dice", original, modified) as number
 }
 
 // Helper function to validate using diff-match-patch
@@ -245,8 +245,8 @@ export function findSimilarityMatch(
 
 	for (let i = startIndex; i < content.length - searchLines.length + 1; i++) {
 		const windowStr = content.slice(i, i + searchLines.length).join("\n")
-		const cmp = new CmpStr();
-		const score = cmp.compare('dice', searchStr, windowStr) as number;
+		const cmp = new CmpStr()
+		const score = cmp.compare("dice", searchStr, windowStr) as number
 		if (score > bestScore && score >= confidenceThreshold) {
 			const similarity = getDMPSimilarity(searchStr, windowStr)
 			const contextSimilarity = validateContextLines(searchStr, windowStr, confidenceThreshold)

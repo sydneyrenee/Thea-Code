@@ -22,9 +22,9 @@ jest.mock("../../../services/checkpoints/ShadowCheckpointService")
 jest.mock("../../../integrations/misc/export-markdown")
 jest.mock("../../../utils/path")
 jest.mock("../../../shared/storagePathManager", () => ({
-        getTaskDirectoryPath: jest.fn().mockImplementation(
-                (storagePath: string, id: string) => path.join(storagePath, "tasks", id),
-        ),
+	getTaskDirectoryPath: jest
+		.fn()
+		.mockImplementation((storagePath: string, id: string) => path.join(storagePath, "tasks", id)),
 }))
 
 describe("TheaTaskHistory", () => {
@@ -212,9 +212,7 @@ describe("TheaTaskHistory", () => {
 			mockContextProxy.getValue.mockImplementation(() => Promise.resolve([]))
 
 			// Mock the deleteTaskFromState method
-                        const deleteTaskFromStateSpy = jest
-                                .spyOn(taskHistory, "deleteTaskFromState")
-                                .mockResolvedValue(undefined)
+			const deleteTaskFromStateSpy = jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
 
 			// Execute & Verify
 			await expect(taskHistory.getTaskWithId("non-existent-id")).rejects.toThrow("Task non-existent-id not found")
@@ -257,9 +255,9 @@ describe("TheaTaskHistory", () => {
 				tokensOut: 200,
 				totalCost: 0.01,
 			}
-                        const mockGetTaskWithId = jest
-                                .spyOn(taskHistory, "getTaskWithId")
-                                .mockResolvedValue({ historyItem: mockHistoryItem })
+			const mockGetTaskWithId = jest
+				.spyOn(taskHistory, "getTaskWithId")
+				.mockResolvedValue({ historyItem: mockHistoryItem })
 
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" }) // Keep as is, represents return value
 			const mockInitClineWithHistoryItem = jest.fn().mockResolvedValue({ taskId: mockHistoryItem.id }) // Keep as is, represents return value
@@ -285,7 +283,7 @@ describe("TheaTaskHistory", () => {
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" })
 			const mockInitClineWithHistoryItem = jest.fn()
 			const mockPostWebviewAction = jest.fn().mockResolvedValue(undefined)
-                        const mockGetTaskWithId = jest.spyOn(taskHistory, "getTaskWithId")
+			const mockGetTaskWithId = jest.spyOn(taskHistory, "getTaskWithId")
 
 			// Execute
 			await taskHistory.showTaskWithId(
@@ -315,8 +313,8 @@ describe("TheaTaskHistory", () => {
 				totalCost: 0.01,
 			}
 			const mockApiHistory = [{ role: "user", content: "Hello" }]
-                        const mockGetTaskWithId = jest
-                                .spyOn(taskHistory, "getTaskWithId")
+			const mockGetTaskWithId = jest
+				.spyOn(taskHistory, "getTaskWithId")
 				.mockResolvedValue({ historyItem: mockHistoryItem, apiConversationHistory: mockApiHistory })
 
 			// Execute
@@ -332,9 +330,9 @@ describe("TheaTaskHistory", () => {
 		test("deletes task data, directory, and shadow checkpoints", async () => {
 			// Setup
 			const taskId = "test-task-id"
-                        const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-                        jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
-                        jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
+			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
+			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
+			jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
 
 			// Mock getCurrentCline to return a different task ID
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "different-task-id" })
@@ -358,10 +356,10 @@ describe("TheaTaskHistory", () => {
 		test("finishes subtask when deleting current task", async () => {
 			// Setup
 			const taskId = "current-task-id"
-                        const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-                        jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
+			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
+			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
 
-                        jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
+			jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
 
 			// Mock getCurrentCline to return the same task ID
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId })
@@ -377,9 +375,7 @@ describe("TheaTaskHistory", () => {
 		test("handles task not found error", async () => {
 			// Setup
 			const taskId = "non-existent-id"
-                        jest
-                                .spyOn(taskHistory, "getTaskWithId")
-                                .mockRejectedValue(new Error("Task non-existent-id not found"))
+			jest.spyOn(taskHistory, "getTaskWithId").mockRejectedValue(new Error("Task non-existent-id not found"))
 
 			const mockGetCurrentCline = jest.fn()
 			const mockFinishSubTask = jest.fn()
@@ -394,9 +390,9 @@ describe("TheaTaskHistory", () => {
 		test("handles shadow checkpoint deletion error", async () => {
 			// Setup
 			const taskId = "test-task-id"
-                        const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-                        jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
-                        jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
+			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
+			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
+			jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
 
 			// Mock ShadowCheckpointService to throw an error
 			const mockError = new Error("Shadow deletion error")

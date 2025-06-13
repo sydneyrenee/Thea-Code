@@ -236,12 +236,12 @@ describe("TheaStateManager", () => {
 		expect(mockContextProxy.setValue).toHaveBeenCalledWith("diffEnabled", false)
 	})
 
-        test("getGlobalState delegates to contextProxy.getValue", () => {
-                // Setup
-                mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
+	test("getGlobalState delegates to contextProxy.getValue", () => {
+		// Setup
+		mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
 
-                // Execute
-                const result = stateManager.getGlobalState("diffEnabled")
+		// Execute
+		const result = stateManager.getGlobalState("diffEnabled")
 
 		// Verify
 		expect(mockContextProxy.getValue).toHaveBeenCalledWith("diffEnabled")
@@ -256,12 +256,12 @@ describe("TheaStateManager", () => {
 		expect(mockContextProxy.setValue).toHaveBeenCalledWith("diffEnabled", false)
 	})
 
-        test("getValue delegates to contextProxy.getValue", () => {
-                // Setup
-                mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
+	test("getValue delegates to contextProxy.getValue", () => {
+		// Setup
+		mockContextProxy.getValue.mockImplementation(() => Promise.resolve(true))
 
-                // Execute
-                const result = stateManager.getValue("diffEnabled")
+		// Execute
+		const result = stateManager.getValue("diffEnabled")
 
 		// Verify
 		expect(mockContextProxy.getValue).toHaveBeenCalledWith("diffEnabled")

@@ -57,9 +57,9 @@ async function executeRipgrepForFiles(
 					}
 
 					count++
-                                } catch {
-                                        // Silently ignore errors processing individual paths
-                                }
+				} catch {
+					// Silently ignore errors processing individual paths
+				}
 			} else {
 				rl.close()
 				rgProcess.kill()
@@ -67,9 +67,9 @@ async function executeRipgrepForFiles(
 		})
 
 		let errorOutput = ""
-                rgProcess.stderr.on("data", (data: Buffer) => {
-                        errorOutput += data.toString()
-                })
+		rgProcess.stderr.on("data", (data: Buffer) => {
+			errorOutput += data.toString()
+		})
 
 		rl.on("close", () => {
 			if (errorOutput && fileResults.length === 0) {
@@ -131,21 +131,21 @@ export async function searchWorkspaceFiles(
 		const fzfResults = fzf.find(query).map((result) => result.item.original)
 
 		// Verify types of the shortest results
-            const verifiedResults = await Promise.all(
-                    fzfResults.map((result) => {
-                        const fullPath = path.join(workspacePath, result.path)
-                        // Verify if the path exists and is actually a directory
-                        if (fs.existsSync(fullPath)) {
-                                const isDirectory = fs.lstatSync(fullPath).isDirectory()
-                                return {
-                                        ...result,
-                                        type: isDirectory ? ("folder" as const) : ("file" as const),
-                                }
-                        }
-                        // If path doesn't exist, keep original type
-                        return result
-                    }),
-            )
+		const verifiedResults = await Promise.all(
+			fzfResults.map((result) => {
+				const fullPath = path.join(workspacePath, result.path)
+				// Verify if the path exists and is actually a directory
+				if (fs.existsSync(fullPath)) {
+					const isDirectory = fs.lstatSync(fullPath).isDirectory()
+					return {
+						...result,
+						type: isDirectory ? ("folder" as const) : ("file" as const),
+					}
+				}
+				// If path doesn't exist, keep original type
+				return result
+			}),
+		)
 
 		return verifiedResults
 	} catch (error) {

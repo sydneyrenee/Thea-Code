@@ -16,13 +16,13 @@ jest.mock("vscode", () => ({
 			get: jest.fn().mockReturnValue(null),
 		}),
 	},
-        window: {
-                createTerminal: (...args: Parameters<typeof vscode.window.createTerminal>) => {
-                        mockCreateTerminal(...args)
-                        return {
-                                exitStatus: undefined,
-                        }
-                },
+	window: {
+		createTerminal: (...args: Parameters<typeof vscode.window.createTerminal>) => {
+			mockCreateTerminal(...args)
+			return {
+				exitStatus: undefined,
+			}
+		},
 	},
 	ThemeIcon: jest.fn(),
 }))
@@ -37,7 +37,7 @@ describe("TerminalProcess", () => {
 		}
 	>
 	let mockTerminalInfo: Terminal
-        let mockExecution: unknown
+	let mockExecution: unknown
 	let mockStream: AsyncIterableIterator<string>
 
 	beforeEach(() => {
@@ -46,7 +46,7 @@ describe("TerminalProcess", () => {
 			shellIntegration: {
 				executeCommand: jest.fn(),
 			},
-                        name: EXTENSION_DISPLAY_NAME as string,
+			name: EXTENSION_DISPLAY_NAME as string,
 			processId: Promise.resolve(123),
 			creationOptions: {},
 			exitStatus: undefined,
@@ -85,7 +85,7 @@ describe("TerminalProcess", () => {
 			})
 
 			// Mock stream data with shell integration sequences.
-                        mockStream = (function* () {
+			mockStream = (function* () {
 				yield "\x1b]633;C\x07" // The first chunk contains the command start sequence with bell character.
 				yield "Initial output\n"
 				yield "More output\n"
@@ -131,10 +131,8 @@ describe("TerminalProcess", () => {
 
 			// Set up event listeners to verify events are emitted
 			const eventPromises = Promise.all([
-                                new Promise<void>((resolve) =>
-                                        noShellProcess.once("no_shell_integration", () => resolve()),
-                                ),
-                                new Promise<void>((resolve) => noShellProcess.once("completed", () => resolve())),
+				new Promise<void>((resolve) => noShellProcess.once("no_shell_integration", () => resolve())),
+				new Promise<void>((resolve) => noShellProcess.once("completed", () => resolve())),
 				new Promise<void>((resolve) => noShellProcess.once("continue", resolve)),
 			])
 
@@ -142,9 +140,9 @@ describe("TerminalProcess", () => {
 			await noShellProcess.run("test command")
 			await eventPromises
 
-                        // Verify sendText was called with the command
-                        // eslint-disable-next-line @typescript-eslint/unbound-method
-                        expect(noShellTerminal.sendText).toHaveBeenCalledWith("test command", true)
+			// Verify sendText was called with the command
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			expect(noShellTerminal.sendText).toHaveBeenCalledWith("test command", true)
 		})
 
 		it("sets hot state for compiling commands", async () => {
@@ -160,7 +158,7 @@ describe("TerminalProcess", () => {
 				terminalProcess.on("shell_execution_complete", () => resolve())
 			})
 
-                        mockStream = (function* () {
+			mockStream = (function* () {
 				yield "\x1b]633;C\x07" // The first chunk contains the command start sequence with bell character.
 				yield "compiling...\n"
 				yield "still compiling...\n"

@@ -64,18 +64,13 @@ export class McpServerManager {
 	/**
 	 * Notify all registered providers of server state changes.
 	 */
-       static notifyProviders(message: ExtensionMessage): void {
-               this.providers.forEach((provider) => {
-                       provider
-                               .postMessageToWebview(message)
-                               .catch((error: unknown) => {
-                                       console.error(
-                                               "Failed to notify provider:",
-                                               error,
-                                       )
-                               })
-               })
-       }
+	static notifyProviders(message: ExtensionMessage): void {
+		this.providers.forEach((provider) => {
+			provider.postMessageToWebview(message).catch((error: unknown) => {
+				console.error("Failed to notify provider:", error)
+			})
+		})
+	}
 
 	/**
 	 * Clean up the singleton instance and all its resources.

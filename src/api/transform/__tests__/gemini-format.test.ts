@@ -87,13 +87,11 @@ describe("convertAnthropicMessageToGemini", () => {
 		const anthropicMessage: NeutralMessage = {
 			role: "user",
 			content: [
-				 
 				{
 					type: "image",
 					source: {
 						type: "url", // Not supported
 						url: "https://example.com/image.jpg",
-						 
 					} as unknown as { type: string },
 				},
 			],

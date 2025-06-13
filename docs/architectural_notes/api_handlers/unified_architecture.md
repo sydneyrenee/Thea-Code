@@ -13,6 +13,7 @@ The project initially used an Anthropic-centric design where:
 - Each provider handler implemented internal translation between Anthropic format and provider-specific formats
 
 This design led to several challenges:
+
 - Tight coupling to Anthropic's API structure
 - Redundant conversion logic in each handler
 - Inconsistent behavior across handlers
@@ -28,6 +29,7 @@ To address these challenges, the project transitioned to a neutral format approa
 - Implemented bidirectional conversion between neutral format and provider-specific formats
 
 This transition provided:
+
 - Decoupling from Anthropic's specific message format
 - Centralized conversion logic
 - Consistent interface across handlers
@@ -47,7 +49,7 @@ To support models that use JSON instead of XML for reasoning/thinking blocks and
 The MCP (Model Context Protocol) integration has been successfully implemented:
 
 - ✅ Created an embedded MCP server to host all tools
-- ✅ Implemented converters from both XML and JSON formats to MCP protocol calls  
+- ✅ Implemented converters from both XML and JSON formats to MCP protocol calls
 - ✅ Developed a routing system for tool execution via `McpToolRouter`
 - ✅ Provided a unified interface for tool use across all AI models
 - ✅ Integrated MCP into `BaseProvider` for automatic tool support
@@ -61,7 +63,7 @@ flowchart TB
     subgraph "Application Layer"
         A[TheaTask] --> B[ApiHandler Interface]
     end
-    
+
     subgraph "Provider Layer"
         B --> BP[BaseProvider]
         BP --> ANT[AnthropicHandler]
@@ -71,20 +73,20 @@ flowchart TB
         BP --> GEM[GeminiHandler]
         BP --> OTH[Other Providers...]
     end
-    
+
     subgraph "Format Layer"
         ANT --> NFA[Neutral→Anthropic]
         OAI --> NFO[Neutral→OpenAI]
         GEM --> NFG[Neutral→Gemini]
     end
-    
+
     subgraph "MCP Integration"
         BP --> MI[McpIntegration]
         MI --> MTR[McpToolRouter]
         MTR --> MTE[McpToolExecutor]
         MTE --> TOOLS[Tool Implementations]
     end
-    
+
     subgraph "External APIs"
         NFA --> AAPI[Anthropic API]
         NFO --> OAPI[OpenAI/Compatible APIs]
@@ -106,13 +108,13 @@ flowchart TD
         DS[DeepSeekHandler]
         REQ[RequestyHandler]
     end
-    
+
     subgraph "MCP Integration"
         MI[McpIntegration]
         MTR[McpToolRouter]
         MTE[McpToolExecutor]
     end
-    
+
     BP --> MI
     OAI --> BP
     OLL --> OAI
@@ -120,7 +122,7 @@ flowchart TD
     GEM --> BP
     DS --> OAI
     REQ --> OAI
-    
+
     MI --> MTR
     MTR --> MTE
 ```
@@ -155,23 +157,23 @@ flowchart LR
         JSON["JSON Format\n{type: 'tool_use',\nname: 'tool_name',\ninput: {param: 'value'}}"]
         OPENAI["OpenAI Format\nFunction Call Schema"]
     end
-    
+
     subgraph "MCP Processing"
         DETECT[Format Detection]
         CONVERT[McpConverters]
         EXECUTE[McpToolExecutor]
     end
-    
+
     XML --> DETECT
     JSON --> DETECT
     OPENAI --> DETECT
     DETECT --> CONVERT
     CONVERT --> EXECUTE
     EXECUTE --> RESULT[Tool Result]
-    
+
     MCP --> EMCP["EmbeddedMcpProvider\n(Tool Execution)"]
     EMCP --> Result["NeutralToolResult"]
-    
+
     Result <--"McpConverters.mcpToXml()"--> XMLResult["XML Result"]
     Result <--"McpConverters.mcpToJson()"--> JSONResult["JSON Result"]
     Result <--"McpConverters.mcpToOpenAi()"--> OpenAIResult["OpenAI Result"]
@@ -220,49 +222,53 @@ Provider handlers now integrate with the MCP system:
 ### 4.1 Phase 1: Complete Provider Handler Updates
 
 1. **Update Remaining Handlers**:
-   - Update LmStudioHandler and DeepSeekHandler to use the neutral format
-   - Ensure proper system role handling in all handlers
-   - Add comprehensive tests for all handlers
+
+    - Update LmStudioHandler and DeepSeekHandler to use the neutral format
+    - Ensure proper system role handling in all handlers
+    - Add comprehensive tests for all handlers
 
 2. **Standardize Error Handling**:
-   - Implement consistent error handling across handlers
-   - Map provider-specific errors to standard error types
+    - Implement consistent error handling across handlers
+    - Map provider-specific errors to standard error types
 
 ### 4.2 Phase 2: MCP Integration
 
 1. **Implement MCP Components**:
-   - Create the `EmbeddedMcpProvider` and `McpToolRegistry`
-   - Implement the `McpToolExecutor` and `McpConverters`
-   - Create the `McpToolRouter` and `McpIntegration` facade
+
+    - Create the `EmbeddedMcpProvider` and `McpToolRegistry`
+    - Implement the `McpToolExecutor` and `McpConverters`
+    - Create the `McpToolRouter` and `McpIntegration` facade
 
 2. **Update Handlers to Use MCP**:
-   - Modify handlers to use the `McpIntegration` facade
-   - Register tools with the `McpToolRegistry`
-   - Update tool use processing to use the MCP system
+    - Modify handlers to use the `McpIntegration` facade
+    - Register tools with the `McpToolRegistry`
+    - Update tool use processing to use the MCP system
 
 ### 4.3 Phase 3: Testing and Optimization
 
 1. **Comprehensive Testing**:
-   - Create unit tests for all MCP components
-   - Create integration tests for the entire stack
-   - Test with different model outputs (XML, JSON, OpenAI format)
+
+    - Create unit tests for all MCP components
+    - Create integration tests for the entire stack
+    - Test with different model outputs (XML, JSON, OpenAI format)
 
 2. **Performance Optimization**:
-   - Profile the implementation to identify bottlenecks
-   - Optimize critical paths for better performance
-   - Ensure efficient handling of streaming responses
+    - Profile the implementation to identify bottlenecks
+    - Optimize critical paths for better performance
+    - Ensure efficient handling of streaming responses
 
 ### 4.4 Phase 4: Documentation and Training
 
 1. **Update Documentation**:
-   - Create comprehensive documentation for the MCP architecture
-   - Document the integration of old and new patterns
-   - Provide examples of how to use the MCP system
+
+    - Create comprehensive documentation for the MCP architecture
+    - Document the integration of old and new patterns
+    - Provide examples of how to use the MCP system
 
 2. **Developer Training**:
-   - Train developers on the new architecture
-   - Provide examples of how to use the MCP system
-   - Create tutorials for common tasks
+    - Train developers on the new architecture
+    - Provide examples of how to use the MCP system
+    - Create tutorials for common tasks
 
 ## 5. Benefits of the Unified Architecture
 
@@ -298,22 +304,22 @@ Maintain a registry of provider capabilities that handlers can query:
 
 ```typescript
 const providerCapabilities = {
-  "anthropic": {
-    supportsImages: true,
-    supportsTools: true,
-    maxTokens: 200000
-  },
-  "openai": {
-    supportsImages: true,
-    supportsTools: true,
-    maxTokens: 128000
-  },
-  "ollama": {
-    supportsImages: false,
-    supportsTools: false,
-    maxTokens: 32000
-  }
-};
+	anthropic: {
+		supportsImages: true,
+		supportsTools: true,
+		maxTokens: 200000,
+	},
+	openai: {
+		supportsImages: true,
+		supportsTools: true,
+		maxTokens: 128000,
+	},
+	ollama: {
+		supportsImages: false,
+		supportsTools: false,
+		maxTokens: 32000,
+	},
+}
 ```
 
 ### 6.3 Extension Mechanism
@@ -322,22 +328,22 @@ Implement an extension mechanism for provider-specific features:
 
 ```typescript
 interface NeutralMessage {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string | NeutralMessageContent;
-  extensions?: {
-    // Provider-specific extensions
-    ollama?: {
-      mirostat?: number;
-      mirostatEta?: number;
-      // Other Ollama-specific parameters
-    };
-    lmstudio?: {
-      draftModel?: string;
-      speculativeDecoding?: boolean;
-      // Other LM Studio-specific parameters
-    };
-    // Other provider extensions
-  };
+	role: "user" | "assistant" | "system" | "tool"
+	content: string | NeutralMessageContent
+	extensions?: {
+		// Provider-specific extensions
+		ollama?: {
+			mirostat?: number
+			mirostatEta?: number
+			// Other Ollama-specific parameters
+		}
+		lmstudio?: {
+			draftModel?: string
+			speculativeDecoding?: boolean
+			// Other LM Studio-specific parameters
+		}
+		// Other provider extensions
+	}
 }
 ```
 
@@ -347,8 +353,8 @@ Implement a negotiation mechanism where the core application can query what feat
 
 ```typescript
 interface FeatureNegotiation {
-  supportsFeature(feature: string): boolean;
-  getFeatureOptions(feature: string): any;
+	supportsFeature(feature: string): boolean
+	getFeatureOptions(feature: string): any
 }
 ```
 

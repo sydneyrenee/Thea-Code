@@ -1,11 +1,11 @@
 // Define neutral thinking config to avoid direct Anthropic SDK dependency
 interface NeutralThinkingConfig {
-	type: "enabled";
-	budget_tokens: number;
+	type: "enabled"
+	budget_tokens: number
 }
 
 import { ApiConfiguration, ModelInfo, ApiHandlerOptions } from "../shared/api"
-import type { NeutralConversationHistory, NeutralMessageContent } from "../shared/neutral-history"; // Import neutral history types
+import type { NeutralConversationHistory, NeutralMessageContent } from "../shared/neutral-history" // Import neutral history types
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./providers/constants"
 import { GlamaHandler } from "./providers/glama"
 import { AnthropicHandler } from "./providers/anthropic"

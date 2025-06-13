@@ -19,8 +19,8 @@ describe("AwsBedrockHandler with invokedModelId", () => {
 		mockSend = jest.spyOn(BedrockRuntimeClient.prototype, "send").mockImplementation((() => {
 			return Promise.resolve({
 				stream: createMockStream([]),
-			});
-		}) as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+			})
+		}) as any) // eslint-disable-line @typescript-eslint/no-explicit-any
 	})
 
 	afterEach(() => {

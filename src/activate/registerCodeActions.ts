@@ -43,61 +43,64 @@ const registerCodeAction = (
 	let userInput: string | undefined
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand(command, async (
-			argFilePath?: string,
-			argSelectedText?: string,
-			argStartLine?: number,
-			argEndLine?: number,
-			argDiagnostics?: vscode.Diagnostic[],
-		) => {
-			if (inputPrompt) {
-				userInput = await vscode.window.showInputBox({
-					prompt: inputPrompt,
-					placeHolder: inputPlaceholder,
-				});
-			}
+		vscode.commands.registerCommand(
+			command,
+			async (
+				argFilePath?: string,
+				argSelectedText?: string,
+				argStartLine?: number,
+				argEndLine?: number,
+				argDiagnostics?: vscode.Diagnostic[],
+			) => {
+				if (inputPrompt) {
+					userInput = await vscode.window.showInputBox({
+						prompt: inputPrompt,
+						placeHolder: inputPlaceholder,
+					})
+				}
 
-			let filePath: string;
-			let selectedText: string;
-			let startLine: number | undefined;
-			let endLine: number | undefined;
-			let diagnostics: vscode.Diagnostic[] | undefined;
+				let filePath: string
+				let selectedText: string
+				let startLine: number | undefined
+				let endLine: number | undefined
+				let diagnostics: vscode.Diagnostic[] | undefined
 
-			// Determine if called from code action or direct command
-			if (argFilePath !== undefined && argSelectedText !== undefined) {
-				// Called from code action.
-				filePath = argFilePath;
-				selectedText = argSelectedText;
-				startLine = argStartLine;
-				endLine = argEndLine;
-				diagnostics = argDiagnostics;
-			} else {
-				// Called directly from command palette.
-				const context = EditorUtils.getEditorContext();
-				if (!context) return;
-				({ filePath, selectedText, startLine, endLine, diagnostics } = context);
-			}
+				// Determine if called from code action or direct command
+				if (argFilePath !== undefined && argSelectedText !== undefined) {
+					// Called from code action.
+					filePath = argFilePath
+					selectedText = argSelectedText
+					startLine = argStartLine
+					endLine = argEndLine
+					diagnostics = argDiagnostics
+				} else {
+					// Called directly from command palette.
+					const context = EditorUtils.getEditorContext()
+					if (!context) return
+					;({ filePath, selectedText, startLine, endLine, diagnostics } = context)
+				}
 
-			const params: Record<string, string | vscode.Diagnostic[]> = {
-				filePath,
-				selectedText,
-			};
+				const params: Record<string, string | vscode.Diagnostic[]> = {
+					filePath,
+					selectedText,
+				}
 
-			if (startLine !== undefined) {
-				params.startLine = startLine.toString();
-			}
-			if (endLine !== undefined) {
-				params.endLine = endLine.toString();
-			}
-			if (diagnostics) {
-				params.diagnostics = diagnostics;
-			}
-			if (userInput) {
-				params.userInput = userInput;
-			}
+				if (startLine !== undefined) {
+					params.startLine = startLine.toString()
+				}
+				if (endLine !== undefined) {
+					params.endLine = endLine.toString()
+				}
+				if (diagnostics) {
+					params.diagnostics = diagnostics
+				}
+				if (userInput) {
+					params.userInput = userInput
+				}
 
-			await TheaProvider.handleCodeAction(command, promptType, params);
-		}),
+				await TheaProvider.handleCodeAction(command, promptType, params)
+			},
+		),
 	)
 }
 

@@ -12,11 +12,11 @@ export class TheaTaskStack {
 	 * Adds a new Cline instance to the stack.
 	 * @param task The TheaTask instance to add to the stack
 	 */
-       async addTheaTask(task: TheaTask): Promise<void> {
-               await Promise.resolve()
-               console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`)
-               this.stack.push(task)
-       }
+	async addTheaTask(task: TheaTask): Promise<void> {
+		await Promise.resolve()
+		console.log(`[subtasks] adding task ${task.taskId}.${task.instanceId} to stack`)
+		this.stack.push(task)
+	}
 
 	/**
 	 * Removes and destroys the top Cline instance (the current finished task).
@@ -39,11 +39,11 @@ export class TheaTaskStack {
 				// Abort the running task and set isAbandoned to true so
 				// all running promises will exit as well.
 				await task.abortTask(true) // Use renamed variable
-                       } catch (e: unknown) {
-                               console.error(
-                                       `[TheaTaskStack] encountered error while aborting task ${task.taskId}.${task.instanceId}: ${e instanceof Error ? e.message : String(e)}`,
-                               )
-                       }
+			} catch (e: unknown) {
+				console.error(
+					`[TheaTaskStack] encountered error while aborting task ${task.taskId}.${task.instanceId}: ${e instanceof Error ? e.message : String(e)}`,
+				)
+			}
 		}
 		// Return the popped cline instance (it's already undefined if not found)
 		return task // Return renamed variable
@@ -81,12 +81,12 @@ export class TheaTaskStack {
 	 * Finishes a subtask and resumes its parent task
 	 * @param lastMessage Optional message to pass to the parent task
 	 */
-       async finishSubTask(lastMessage?: string): Promise<void> {
-               console.log(`[subtasks] finishing subtask ${lastMessage}`)
-               await this.removeCurrentTheaTask()
-               const current = this.getCurrentTheaTask()
-               if (current) {
-                       await current.resumePausedTask(lastMessage)
-               }
-       }
+	async finishSubTask(lastMessage?: string): Promise<void> {
+		console.log(`[subtasks] finishing subtask ${lastMessage}`)
+		await this.removeCurrentTheaTask()
+		const current = this.getCurrentTheaTask()
+		if (current) {
+			await current.resumePausedTask(lastMessage)
+		}
+	}
 }

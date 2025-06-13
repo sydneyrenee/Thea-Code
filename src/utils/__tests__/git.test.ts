@@ -11,13 +11,16 @@ type ExecFunction = (
 type PromisifiedExec = (command: string, options?: { cwd?: string }) => Promise<{ stdout: string; stderr: string }>
 
 type MockedChildProcessModule = {
-    exec: jest.MockedFunction<ExecFunction>;
-};
+	exec: jest.MockedFunction<ExecFunction>
+}
 
 // Mock child_process.exec
-jest.mock("child_process", (): MockedChildProcessModule => ({
-	exec: jest.fn() as jest.MockedFunction<ExecFunction>,
-}))
+jest.mock(
+	"child_process",
+	(): MockedChildProcessModule => ({
+		exec: jest.fn() as jest.MockedFunction<ExecFunction>,
+	}),
+)
 
 // Mock util.promisify to return our own mock function
 jest.mock("util", () => ({
@@ -79,16 +82,18 @@ describe("git utils", () => {
 				],
 			])
 
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				// Find matching response
-				for (const [cmd, response] of responses) {
-					if (command === cmd) {
-						callback(null, response)
-						return
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					// Find matching response
+					for (const [cmd, response] of responses) {
+						if (command === cmd) {
+							callback(null, response)
+							return
+						}
 					}
-				}
-				callback(new Error(`Unexpected command: ${command}`))
-			})
+					callback(new Error(`Unexpected command: ${command}`))
+				},
+			)
 
 			const result = await searchCommits("test", cwd)
 
@@ -113,13 +118,15 @@ describe("git utils", () => {
 		})
 
 		it("should return empty array when git is not installed", async () => {
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				if (command === "git --version") {
-					callback(new Error("git not found"))
-					return
-				}
-				callback(new Error("Unexpected command"))
-			})
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					if (command === "git --version") {
+						callback(new Error("git not found"))
+						return
+					}
+					callback(new Error("Unexpected command"))
+				},
+			)
 
 			const result = await searchCommits("test", cwd)
 			expect(result).toEqual([])
@@ -132,16 +139,18 @@ describe("git utils", () => {
 				["git rev-parse --git-dir", null], // null indicates error should be called
 			])
 
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				const response = responses.get(command)
-				if (response === null) {
-					callback(new Error("not a git repository"))
-				} else if (response) {
-					callback(null, response)
-				} else {
-					callback(new Error("Unexpected command"))
-				}
-			})
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					const response = responses.get(command)
+					if (response === null) {
+						callback(new Error("not a git repository"))
+					} else if (response) {
+						callback(null, response)
+					} else {
+						callback(new Error("Unexpected command"))
+					}
+				},
+			)
 
 			const result = await searchCommits("test", cwd)
 			expect(result).toEqual([])
@@ -163,15 +172,17 @@ describe("git utils", () => {
 				],
 			])
 
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				for (const [cmd, response] of responses) {
-					if (command === cmd) {
-						callback(null, response)
-						return
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					for (const [cmd, response] of responses) {
+						if (command === cmd) {
+							callback(null, response)
+							return
+						}
 					}
-				}
-				callback(new Error("Unexpected command"))
-			})
+					callback(new Error("Unexpected command"))
+				},
+			)
 
 			const result = await searchCommits("abc123", cwd)
 			expect(result).toHaveLength(2)
@@ -209,15 +220,17 @@ describe("git utils", () => {
 				['git show --format="" abc123', { stdout: mockDiff, stderr: "" }],
 			])
 
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				for (const [cmd, response] of responses) {
-					if (command.startsWith(cmd)) {
-						callback(null, response)
-						return
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					for (const [cmd, response] of responses) {
+						if (command.startsWith(cmd)) {
+							callback(null, response)
+							return
+						}
 					}
-				}
-				callback(new Error("Unexpected command"))
-			})
+					callback(new Error("Unexpected command"))
+				},
+			)
 
 			const result = await getCommitInfo("abc123", cwd)
 			expect(result).toContain("Commit: abc123")
@@ -227,13 +240,15 @@ describe("git utils", () => {
 		})
 
 		it("should return error message when git is not installed", async () => {
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				if (command === "git --version") {
-					callback(new Error("git not found"))
-					return
-				}
-				callback(new Error("Unexpected command"))
-			})
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					if (command === "git --version") {
+						callback(new Error("git not found"))
+						return
+					}
+					callback(new Error("Unexpected command"))
+				},
+			)
 
 			const result = await getCommitInfo("abc123", cwd)
 			expect(result).toBe("Git is not installed")
@@ -245,16 +260,18 @@ describe("git utils", () => {
 				["git rev-parse --git-dir", null], // null indicates error should be called
 			])
 
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				const response = responses.get(command)
-				if (response === null) {
-					callback(new Error("not a git repository"))
-				} else if (response) {
-					callback(null, response)
-				} else {
-					callback(new Error("Unexpected command"))
-				}
-			})
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					const response = responses.get(command)
+					if (response === null) {
+						callback(new Error("not a git repository"))
+					} else if (response) {
+						callback(null, response)
+					} else {
+						callback(new Error("Unexpected command"))
+					}
+				},
+			)
 
 			const result = await getCommitInfo("abc123", cwd)
 			expect(result).toBe("Not a git repository")
@@ -273,15 +290,17 @@ describe("git utils", () => {
 				["git diff HEAD", { stdout: mockDiff, stderr: "" }],
 			])
 
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				for (const [cmd, response] of responses) {
-					if (command === cmd) {
-						callback(null, response)
-						return
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					for (const [cmd, response] of responses) {
+						if (command === cmd) {
+							callback(null, response)
+							return
+						}
 					}
-				}
-				callback(new Error("Unexpected command"))
-			})
+					callback(new Error("Unexpected command"))
+				},
+			)
 
 			const result = await getWorkingState(cwd)
 			expect(result).toContain("Working directory changes:")
@@ -296,28 +315,32 @@ describe("git utils", () => {
 				["git status --short", { stdout: "", stderr: "" }],
 			])
 
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				for (const [cmd, response] of responses) {
-					if (command === cmd) {
-						callback(null, response)
-						return
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					for (const [cmd, response] of responses) {
+						if (command === cmd) {
+							callback(null, response)
+							return
+						}
 					}
-				}
-				callback(new Error("Unexpected command"))
-			})
+					callback(new Error("Unexpected command"))
+				},
+			)
 
 			const result = await getWorkingState(cwd)
 			expect(result).toBe("No changes in working directory")
 		})
 
 		it("should return error message when git is not installed", async () => {
-			exec.mockImplementation((command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
-				if (command === "git --version") {
-					callback(new Error("git not found"))
-					return
-				}
-				callback(new Error("Unexpected command"))
-			})
+			exec.mockImplementation(
+				(command: string, options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+					if (command === "git --version") {
+						callback(new Error("git not found"))
+						return
+					}
+					callback(new Error("Unexpected command"))
+				},
+			)
 
 			const result = await getWorkingState(cwd)
 			expect(result).toBe("Git is not installed")
@@ -329,7 +352,11 @@ describe("git utils", () => {
 				["git rev-parse --git-dir", null], // null indicates error should be called
 			])
 
-			exec.mockImplementation(((command: string, _options: { cwd?: string }, callback: Parameters<ExecFunction>[2]) => {
+			exec.mockImplementation(((
+				command: string,
+				_options: { cwd?: string },
+				callback: Parameters<ExecFunction>[2],
+			) => {
 				const response = responses.get(command)
 				if (response === null) {
 					callback(new Error("not a git repository"))

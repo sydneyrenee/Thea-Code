@@ -62,8 +62,8 @@ export class TheaCacheManager {
 			const fileExists = await fileExistsAtPath(filePath)
 
 			if (fileExists) {
-                                const fileContents = await fs.readFile(filePath, "utf8")
-                                return JSON.parse(fileContents) as Record<string, ModelInfo>
+				const fileContents = await fs.readFile(filePath, "utf8")
+				return JSON.parse(fileContents) as Record<string, ModelInfo>
 			}
 		} catch (error) {
 			console.error(`Error reading models from cache file ${filename}: ${error}`)

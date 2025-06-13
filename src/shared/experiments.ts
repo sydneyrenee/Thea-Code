@@ -27,10 +27,7 @@ export const experimentConfigsMap: Record<ExperimentKey, ExperimentConfig> = {
 }
 
 export const experimentDefault: Record<ExperimentId, boolean> = Object.fromEntries(
-        Object.entries(experimentConfigsMap).map(([key, config]) => [
-                EXPERIMENT_IDS[key as ExperimentKey],
-                config.enabled,
-        ]),
+	Object.entries(experimentConfigsMap).map(([key, config]) => [EXPERIMENT_IDS[key as ExperimentKey], config.enabled]),
 ) as Record<ExperimentId, boolean>
 
 export const experiments = {

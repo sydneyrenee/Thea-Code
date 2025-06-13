@@ -111,6 +111,7 @@ Thea Code comes with powerful tools that work across all AI providers:
 - **External tool integration** via MCP (Model Context Protocol)
 
 **Model Context Protocol (MCP)** extends Thea Code's capabilities by providing:
+
 - **Universal tool access** across all 16 supported AI providers
 - **Automatic format conversion** between XML, JSON, and OpenAI function call formats
 - **Seamless integration** - tools work the same way regardless of your chosen AI provider

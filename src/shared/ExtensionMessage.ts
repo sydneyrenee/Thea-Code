@@ -102,7 +102,7 @@ export interface ExtensionMessage {
 	customMode?: ModeConfig
 	slug?: string
 	success?: boolean
-        values?: Record<string, unknown>
+	values?: Record<string, unknown>
 	requestId?: string
 	promptText?: string
 	results?: Array<{

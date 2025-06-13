@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unused-vars, @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-misused-promises, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument */
+// TODO: Continue fixing remaining ESLint issues in other methods
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
@@ -112,13 +112,13 @@ export class McpHub {
 
 	constructor(provider: TheaProvider) {
 		// Renamed type
-               this.providerRef = new WeakRef(provider)
-               void this.watchMcpSettingsFile()
-               this.watchProjectMcpFile()
-               this.setupWorkspaceFoldersWatcher()
-               void this.initializeGlobalMcpServers()
-               void this.initializeProjectMcpServers()
-       }
+		this.providerRef = new WeakRef(provider)
+		void this.watchMcpSettingsFile()
+		this.watchProjectMcpFile()
+		this.setupWorkspaceFoldersWatcher()
+		void this.initializeGlobalMcpServers()
+		void this.initializeProjectMcpServers()
+	}
 
 	/**
 	 * Validates and normalizes server configuration
@@ -127,52 +127,52 @@ export class McpHub {
 	 * @returns The validated configuration
 	 * @throws Error if the configuration is invalid
 	 */
-       private validateServerConfig(
-               config: Record<string, unknown>,
-               serverName?: string,
-       ): z.infer<typeof ServerConfigSchema> {
-               // Detect configuration issues before validation
-               const hasStdioFields = Object.prototype.hasOwnProperty.call(
-                       config,
-                       "command",
-               )
-               const hasSseFields = Object.prototype.hasOwnProperty.call(
-                       config,
-                       "url",
-               )
+	private validateServerConfig(
+		config: Record<string, unknown>,
+		serverName?: string,
+	): z.infer<typeof ServerConfigSchema> {
+		// Detect configuration issues before validation
+		const hasStdioFields = Object.prototype.hasOwnProperty.call(config, "command")
+		const hasSseFields = Object.prototype.hasOwnProperty.call(config, "url")
 
 		// Check for mixed fields
 		if (hasStdioFields && hasSseFields) {
 			throw new Error(mixedFieldsErrorMessage)
 		}
 
+		// Create a mutable copy of the config to modify
+		const configCopy: Record<string, unknown> = { ...config }
+
 		// Check if it's a stdio or SSE config and add type if missing
-               if (!("type" in config)) {
-                       if (hasStdioFields) {
-                               ;(config as Record<string, unknown>).type = "stdio"
-                       } else if (hasSseFields) {
-                               ;(config as Record<string, unknown>).type = "sse"
-                       } else {
-                               throw new Error(missingFieldsErrorMessage)
-                       }
-               } else if (
-                       (config as Record<string, unknown>).type !== "stdio" &&
-                       (config as Record<string, unknown>).type !== "sse"
-               ) {
-			throw new Error(typeErrorMessage)
+		if (!("type" in configCopy)) {
+			if (hasStdioFields) {
+				configCopy.type = "stdio"
+			} else if (hasSseFields) {
+				configCopy.type = "sse"
+			} else {
+				throw new Error(missingFieldsErrorMessage)
+			}
+		} else {
+			// Check if type is valid
+			const configType = configCopy.type
+			if (typeof configType !== "string" || (configType !== "stdio" && configType !== "sse")) {
+				throw new Error(typeErrorMessage)
+			}
 		}
 
 		// Check for type/field mismatch
-               if ((config as { type?: string }).type === "stdio" && !hasStdioFields) {
-                       throw new Error(stdioFieldsErrorMessage)
-               }
-               if ((config as { type?: string }).type === "sse" && !hasSseFields) {
-                       throw new Error(sseFieldsErrorMessage)
-               }
+		const configType = configCopy.type as string
+		if (configType === "stdio" && !hasStdioFields) {
+			throw new Error(stdioFieldsErrorMessage)
+		}
+		if (configType === "sse" && !hasSseFields) {
+			throw new Error(sseFieldsErrorMessage)
+		}
 
 		// Validate the config against the schema
 		try {
-			return ServerConfigSchema.parse(config)
+			// Use the modified configCopy for validation
+			return ServerConfigSchema.parse(configCopy)
 		} catch (validationError) {
 			if (validationError instanceof z.ZodError) {
 				// Extract and format validation errors
@@ -195,7 +195,6 @@ export class McpHub {
 	 * @param error The error object
 	 */
 	private showErrorMessage(message: string, error: unknown): void {
-		const errorMessage = error instanceof Error ? error.message : `${error}`
 		console.error(`${message}:`, error)
 		// if (vscode.window && typeof vscode.window.showErrorMessage === 'function') {
 		// 	vscode.window.showErrorMessage(`${message}: ${errorMessage}`)
@@ -218,7 +217,7 @@ export class McpHub {
 	private async handleConfigFileChange(filePath: string, source: "global" | "project"): Promise<void> {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
-			const config = JSON.parse(content)
+			const config: unknown = JSON.parse(content)
 			const result = McpSettingsSchema.safeParse(config)
 
 			if (!result.success) {
@@ -256,10 +255,20 @@ export class McpHub {
 			if (!projectMcpPath) return
 
 			const content = await fs.readFile(projectMcpPath, "utf-8")
-			let config: any
+			// Define a type for the expected config structure
+			type RawConfigType = {
+				mcpServers?: Record<string, unknown>
+			}
+
+			let config: RawConfigType = { mcpServers: {} }
 
 			try {
-				config = JSON.parse(content)
+				// Parse with type assertion to the expected structure
+				const parsedConfig = JSON.parse(content) as unknown
+				// Verify it's an object before assigning
+				if (parsedConfig && typeof parsedConfig === "object" && !Array.isArray(parsedConfig)) {
+					config = parsedConfig as RawConfigType
+				}
 			} catch (parseError) {
 				const errorMessage = t("common:errors.invalid_mcp_settings_syntax")
 				console.error(errorMessage, parseError)
@@ -328,7 +337,7 @@ export class McpHub {
 				mcpSettingsFilePath,
 				`{
   "mcpServers": {
-    
+
   }
 }`,
 			)
@@ -357,20 +366,30 @@ export class McpHub {
 			}
 
 			const content = await fs.readFile(configPath, "utf-8")
-			let config
-			try {
-				config = JSON.parse(content)
-				// If config is an array, convert it to an object with mcpServers property
-				if (Array.isArray(config)) {
-					config = { mcpServers: {} }
-					// Write the corrected format back to the file
-					await fs.writeFile(configPath, JSON.stringify(config, null, 2))
-				}
-			} catch (error) {
-				// If parsing fails, initialize with empty mcpServers object
-				config = { mcpServers: {} }
-				await fs.writeFile(configPath, JSON.stringify(config, null, 2))
+			// Define a type for the expected config structure
+			type RawConfigType = {
+				mcpServers?: Record<string, unknown>
 			}
+
+			let config: RawConfigType = { mcpServers: {} }
+
+			try {
+				// Parse with type assertion to the expected structure
+				const parsedConfig = JSON.parse(content) as unknown
+
+				// If config is an array, convert it to an object with mcpServers property
+				if (Array.isArray(parsedConfig)) {
+					// Write the corrected format back to the file
+					await fs.writeFile(configPath, JSON.stringify({ mcpServers: {} }, null, 2))
+				} else if (parsedConfig && typeof parsedConfig === "object") {
+					// It's an object, use it as our config
+					config = parsedConfig as RawConfigType
+				}
+			} catch {
+				// If parsing fails, initialize with empty mcpServers object
+				await fs.writeFile(configPath, JSON.stringify({ mcpServers: {} }, null, 2))
+			}
+
 			const result = McpSettingsSchema.safeParse(config)
 
 			if (result.success) {
@@ -385,7 +404,9 @@ export class McpHub {
 				if (source === "global") {
 					// Still try to connect with the raw config, but show warnings
 					try {
-						await this.updateServerConnections(config.mcpServers || {}, source)
+						// Ensure mcpServers exists before accessing it
+						const mcpServers = config.mcpServers || {}
+						await this.updateServerConnections(mcpServers, source)
 					} catch (error) {
 						this.showErrorMessage(`Failed to initialize ${source} MCP servers with raw config`, error)
 					}
@@ -438,10 +459,14 @@ export class McpHub {
 		await this.deleteConnection(name, source)
 
 		try {
+			// Get version safely with fallback
+			const provider = this.providerRef.deref()
+			const version = provider?.context?.extension?.packageJSON?.version || "1.0.0"
+
 			const client = new Client(
 				{
 					name: EXTENSION_DISPLAY_NAME,
-					version: this.providerRef.deref()?.context.extension?.packageJSON?.version ?? "1.0.0",
+					version,
 				},
 				{
 					capabilities: {},
@@ -450,16 +475,24 @@ export class McpHub {
 
 			let transport: StdioClientTransport | SSEClientTransport
 
-                       if ((config as { type: string }).type === "stdio") {
-                               transport = new StdioClientTransport({
-                                       command: (config as { command: string }).command,
-                                       args: (config as { args?: string[] }).args,
-                                       env: {
-                                               ...(config as { env?: Record<string, string> }).env,
-                                               ...(process.env.PATH ? { PATH: process.env.PATH } : {}),
-                                       },
-                                       stderr: "pipe",
-                               })
+			// Type guard for stdio config
+			if (config.type === "stdio") {
+				// For stdio type, we know these properties exist based on the schema
+				const stdioConfig = config as z.infer<typeof ServerConfigSchema> & {
+					command: string
+					args?: string[]
+					env?: Record<string, string>
+				}
+
+				transport = new StdioClientTransport({
+					command: stdioConfig.command,
+					args: stdioConfig.args,
+					env: {
+						...stdioConfig.env,
+						...(process.env.PATH ? { PATH: process.env.PATH } : {}),
+					},
+					stderr: "pipe",
+				})
 
 				// Set up stdio specific error handling
 				transport.onerror = async (error) => {
@@ -510,21 +543,31 @@ export class McpHub {
 				}
 				transport.start = async () => {} // No-op now, .connect() won't fail
 			} else {
-				// SSE connection
+				// SSE connection - type guard for SSE config
+				const sseConfig = config as z.infer<typeof ServerConfigSchema> & {
+					url: string
+					headers?: Record<string, string>
+				}
+
 				const sseOptions = {
 					requestInit: {
-						headers: config.headers,
+						headers: sseConfig.headers,
 					},
 				}
+
 				// Configure ReconnectingEventSource options
+				const hasAuthHeader =
+					sseConfig.headers &&
+					"Authorization" in sseConfig.headers &&
+					typeof sseConfig.headers["Authorization"] === "string"
+
 				const reconnectingEventSourceOptions = {
 					max_retry_time: 5000, // Maximum retry time in milliseconds
-					withCredentials: config.headers?.["Authorization"] ? true : false, // Enable credentials if Authorization header exists
+					withCredentials: hasAuthHeader ? true : false, // Enable credentials if Authorization header exists
 				}
+
 				global.EventSource = ReconnectingEventSource
-                                transport = new SSEClientTransport(
-                                        new URL((config as { url: string }).url),
-                                        {
+				transport = new SSEClientTransport(new URL(sseConfig.url), {
 					...sseOptions,
 					eventSourceInit: reconnectingEventSourceOptions,
 				})
@@ -535,10 +578,22 @@ export class McpHub {
 					const connection = this.findConnection(name, source)
 					if (connection) {
 						connection.server.status = "disconnected"
-						this.appendErrorMessage(connection, error instanceof Error ? error.message : `${error}`)
+						// Ensure error is converted to string safely
+						const errorMessage = error instanceof Error ? error.message : String(error)
+						this.appendErrorMessage(connection, errorMessage)
 					}
 					await this.notifyWebviewOfServerChanges()
 				}
+			}
+
+			// Get project path safely
+			let projectPath: string | undefined = undefined
+			if (
+				source === "project" &&
+				vscode.workspace.workspaceFolders &&
+				vscode.workspace.workspaceFolders.length > 0
+			) {
+				projectPath = vscode.workspace.workspaceFolders[0].uri.fsPath
 			}
 
 			const connection: McpConnection = {
@@ -548,7 +603,7 @@ export class McpHub {
 					status: "connecting",
 					disabled: config.disabled,
 					source,
-					projectPath: source === "project" ? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath : undefined,
+					projectPath,
 				},
 				client,
 				transport,
@@ -569,7 +624,9 @@ export class McpHub {
 			const connection = this.findConnection(name, source)
 			if (connection) {
 				connection.server.status = "disconnected"
-				this.appendErrorMessage(connection, error instanceof Error ? error.message : `${error}`)
+				// Ensure error is converted to string safely
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				this.appendErrorMessage(connection, errorMessage)
 			}
 			throw error
 		}
@@ -577,7 +634,11 @@ export class McpHub {
 
 	private appendErrorMessage(connection: McpConnection, error: string) {
 		const MAX_ERROR_LENGTH = 1000
-		const newError = connection.server.error ? `${connection.server.error}\n${error}` : error
+		// Ensure connection.server.error exists and is a string
+		const currentError = typeof connection.server.error === "string" ? connection.server.error : ""
+		const newError = currentError ? `${currentError}\n${error}` : error
+
+		// Set the error with length check
 		connection.server.error =
 			newError.length > MAX_ERROR_LENGTH
 				? `${newError.substring(0, MAX_ERROR_LENGTH)}...(error message truncated)`
@@ -622,26 +683,57 @@ export class McpHub {
 
 			// Determine the actual source of the server
 			const actualSource = connection.server.source || "global"
-			let configPath: string
 			let alwaysAllowConfig: string[] = []
+
+			// Define a type for the expected config structure
+			type ConfigType = {
+				mcpServers?: {
+					[key: string]: {
+						alwaysAllow?: string[]
+					}
+				}
+			}
 
 			// Read from the appropriate config file based on the actual source
 			try {
+				let configPath: string | null = null
+
 				if (actualSource === "project") {
 					// Get project MCP config path
-					const projectMcpPath = await this.getProjectMcpPath()
-					if (projectMcpPath) {
-						configPath = projectMcpPath
-						const content = await fs.readFile(configPath, "utf-8")
-						const config = JSON.parse(content)
-						alwaysAllowConfig = config.mcpServers?.[serverName]?.alwaysAllow || []
-					}
+					configPath = await this.getProjectMcpPath()
 				} else {
 					// Get global MCP settings path
 					configPath = await this.getMcpSettingsFilePath()
+				}
+
+				if (configPath) {
 					const content = await fs.readFile(configPath, "utf-8")
-					const config = JSON.parse(content)
-					alwaysAllowConfig = config.mcpServers?.[serverName]?.alwaysAllow || []
+
+					try {
+						// Parse with type assertion to the expected structure
+						const parsedConfig = JSON.parse(content) as unknown
+
+						// Verify it's an object with the expected structure
+						if (parsedConfig && typeof parsedConfig === "object" && !Array.isArray(parsedConfig)) {
+							const config = parsedConfig as ConfigType
+
+							// Safely access nested properties
+							if (
+								config.mcpServers &&
+								typeof config.mcpServers === "object" &&
+								serverName in config.mcpServers &&
+								config.mcpServers[serverName]
+							) {
+								const serverConfig = config.mcpServers[serverName]
+
+								if (serverConfig.alwaysAllow && Array.isArray(serverConfig.alwaysAllow)) {
+									alwaysAllowConfig = serverConfig.alwaysAllow
+								}
+							}
+						}
+					} catch (parseError) {
+						console.error(`Failed to parse config for ${serverName}:`, parseError)
+					}
 				}
 			} catch (error) {
 				console.error(`Failed to read alwaysAllow config for ${serverName}:`, error)
@@ -651,7 +743,7 @@ export class McpHub {
 			// Mark tools as always allowed based on settings
 			const tools = (response?.tools || []).map((tool) => ({
 				...tool,
-				alwaysAllow: alwaysAllowConfig.includes(tool.name),
+				alwaysAllow: tool.name && alwaysAllowConfig.includes(tool.name),
 			}))
 
 			return tools
@@ -669,7 +761,7 @@ export class McpHub {
 			}
 			const response = await connection.client.request({ method: "resources/list" }, ListResourcesResultSchema)
 			return response?.resources || []
-		} catch (error) {
+		} catch {
 			// console.error(`Failed to fetch resources for ${serverName}:`, error)
 			return []
 		}
@@ -689,7 +781,7 @@ export class McpHub {
 				ListResourceTemplatesResultSchema,
 			)
 			return response?.resourceTemplates || []
-		} catch (error) {
+		} catch {
 			// console.error(`Failed to fetch resource templates for ${serverName}:`, error)
 			return []
 		}
@@ -719,7 +811,7 @@ export class McpHub {
 	}
 
 	async updateServerConnections(
-		newServers: Record<string, any>,
+		newServers: Record<string, unknown>,
 		source: "global" | "project" = "global",
 	): Promise<void> {
 		this.isConnecting = true
@@ -743,10 +835,19 @@ export class McpHub {
 			// Only consider connections that match the current source
 			const currentConnection = this.findConnection(name, source)
 
+			// Validate that config is an object
+			if (typeof config !== "object" || config === null) {
+				this.showErrorMessage(
+					`Invalid configuration for MCP server "${name}"`,
+					new Error("Configuration must be an object"),
+				)
+				continue
+			}
+
 			// Validate and transform the config
 			let validatedConfig: z.infer<typeof ServerConfigSchema>
 			try {
-				validatedConfig = this.validateServerConfig(config, name)
+				validatedConfig = this.validateServerConfig(config as Record<string, unknown>, name)
 			} catch (error) {
 				this.showErrorMessage(`Invalid configuration for MCP server "${name}"`, error)
 				continue

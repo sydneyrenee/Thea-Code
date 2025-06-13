@@ -6,11 +6,11 @@ import type { IVSCodeTheme } from "monaco-vscode-textmate-theme-converter/lib/cj
 import { EXTENSION_ID } from "../../../dist/thea-config" // Import branded constant
 
 interface StandaloneThemeData {
-        inherit: boolean
-        base: string
-        colors: Record<string, string>
-        rules: unknown[]
-        encodedTokensColors?: unknown[]
+	inherit: boolean
+	base: string
+	colors: Record<string, string>
+	rules: unknown[]
+	encodedTokensColors?: unknown[]
 }
 
 const defaultThemes: Record<string, string> = {
@@ -33,51 +33,49 @@ const defaultThemes: Record<string, string> = {
 type JsonObject = Record<string, unknown>
 
 function parseThemeString(themeString: string | undefined): JsonObject {
-        const sanitized = themeString
-                ?.split("\n")
-                .filter((line) => !line.trim().startsWith("//"))
-                .join("\n")
+	const sanitized = themeString
+		?.split("\n")
+		.filter((line) => !line.trim().startsWith("//"))
+		.join("\n")
 
-        return JSON.parse(sanitized ?? "{}") as JsonObject
+	return JSON.parse(sanitized ?? "{}") as JsonObject
 }
 
 export async function getTheme(): Promise<StandaloneThemeData | undefined> {
-        let currentTheme: string | undefined
-        const colorTheme =
-                vscode.workspace.getConfiguration("workbench").get<string>("colorTheme") ||
-                "Default Dark Modern"
+	let currentTheme: string | undefined
+	const colorTheme = vscode.workspace.getConfiguration("workbench").get<string>("colorTheme") || "Default Dark Modern"
 
 	try {
-                for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
-                        if (currentTheme) {
-                                break
-                        }
-                        const extension = vscode.extensions.all[i]
-                        const pkg = extension.packageJSON as {
-                                contributes?: { themes?: Array<{ label: string; path: string }> }
-                        }
-                        if (pkg.contributes?.themes?.length) {
-                                for (const theme of pkg.contributes.themes) {
-                                        if (theme.label === colorTheme) {
-                                                const themePath = path.join(extension.extensionPath, theme.path)
-                                                currentTheme = await fs.readFile(themePath, "utf-8")
-                                                break
-                                        }
-                                }
-                        }
-                }
+		for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
+			if (currentTheme) {
+				break
+			}
+			const extension = vscode.extensions.all[i]
+			const pkg = extension.packageJSON as {
+				contributes?: { themes?: Array<{ label: string; path: string }> }
+			}
+			if (pkg.contributes?.themes?.length) {
+				for (const theme of pkg.contributes.themes) {
+					if (theme.label === colorTheme) {
+						const themePath = path.join(extension.extensionPath, theme.path)
+						currentTheme = await fs.readFile(themePath, "utf-8")
+						break
+					}
+				}
+			}
+		}
 
-                if (currentTheme === undefined && defaultThemes[colorTheme]) {
-                        const filename = `${defaultThemes[colorTheme]}.json`
-                        currentTheme = await fs.readFile(
-                                path.join(getExtensionUri().fsPath, "src", "integrations", "theme", "default-themes", filename),
-                                "utf-8",
-                        )
-                }
+		if (currentTheme === undefined && defaultThemes[colorTheme]) {
+			const filename = `${defaultThemes[colorTheme]}.json`
+			currentTheme = await fs.readFile(
+				path.join(getExtensionUri().fsPath, "src", "integrations", "theme", "default-themes", filename),
+				"utf-8",
+			)
+		}
 
-                if (!currentTheme) {
-                        return undefined
-                }
+		if (!currentTheme) {
+			return undefined
+		}
 
 		// Strip comments from theme
 		let parsed = parseThemeString(currentTheme)
@@ -91,13 +89,13 @@ export async function getTheme(): Promise<StandaloneThemeData | undefined> {
 			parsed = mergeJson(parsed, includeTheme)
 		}
 
-                const converted = convertTheme(parsed as IVSCodeTheme) as StandaloneThemeData
+		const converted = convertTheme(parsed as IVSCodeTheme) as StandaloneThemeData
 
-                converted.base = ["vs", "hc-black"].includes(converted.base)
-                        ? converted.base
-                        : colorTheme.includes("Light")
-                                ? "vs"
-                                : "vs-dark"
+		converted.base = ["vs", "hc-black"].includes(converted.base)
+			? converted.base
+			: colorTheme.includes("Light")
+				? "vs"
+				: "vs-dark"
 
 		return converted
 	} catch (e) {
@@ -107,16 +105,16 @@ export async function getTheme(): Promise<StandaloneThemeData | undefined> {
 }
 
 export function mergeJson(
-        first: JsonObject,
-        second: JsonObject,
-        mergeBehavior: "merge" | "overwrite" = "merge",
-        mergeKeys?: Record<string, (a: unknown, b: unknown) => boolean>,
+	first: JsonObject,
+	second: JsonObject,
+	mergeBehavior: "merge" | "overwrite" = "merge",
+	mergeKeys?: Record<string, (a: unknown, b: unknown) => boolean>,
 ): JsonObject {
-        const copyOfFirst: JsonObject = JSON.parse(JSON.stringify(first)) as JsonObject
+	const copyOfFirst: JsonObject = JSON.parse(JSON.stringify(first)) as JsonObject
 
 	try {
 		for (const key in second) {
-                        const secondValue = second[key]
+			const secondValue = second[key]
 
 			if (!(key in copyOfFirst) || mergeBehavior === "overwrite") {
 				// New value
@@ -127,21 +125,21 @@ export function mergeJson(
 			const firstValue = copyOfFirst[key]
 			if (Array.isArray(secondValue) && Array.isArray(firstValue)) {
 				// Array
-                                const mergeFn = mergeKeys?.[key]
-                                if (typeof mergeFn === "function") {
-                                        // Merge keys are used to determine whether an item from the second object should override one from the first
-                                        const keptFromFirst: unknown[] = []
-                                        const firstArr = firstValue as unknown[]
-                                        const secondArr = secondValue as unknown[]
-                                        firstArr.forEach((item: unknown) => {
-                                                if (!secondArr.some((item2: unknown) => mergeFn(item, item2))) {
-                                                        keptFromFirst.push(item)
-                                                }
-                                        })
-                                        copyOfFirst[key] = [...keptFromFirst, ...secondArr]
-                                } else {
-                                        copyOfFirst[key] = [...(firstValue as unknown[]), ...(secondValue as unknown[])]
-                                }
+				const mergeFn = mergeKeys?.[key]
+				if (typeof mergeFn === "function") {
+					// Merge keys are used to determine whether an item from the second object should override one from the first
+					const keptFromFirst: unknown[] = []
+					const firstArr = firstValue as unknown[]
+					const secondArr = secondValue as unknown[]
+					firstArr.forEach((item: unknown) => {
+						if (!secondArr.some((item2: unknown) => mergeFn(item, item2))) {
+							keptFromFirst.push(item)
+						}
+					})
+					copyOfFirst[key] = [...keptFromFirst, ...secondArr]
+				} else {
+					copyOfFirst[key] = [...(firstValue as unknown[]), ...(secondValue as unknown[])]
+				}
 			} else if (typeof secondValue === "object" && typeof firstValue === "object") {
 				// Object
 				copyOfFirst[key] = mergeJson(firstValue, secondValue, mergeBehavior)
@@ -161,5 +159,5 @@ export function mergeJson(
 }
 
 function getExtensionUri(): vscode.Uri {
-        return vscode.extensions.getExtension(EXTENSION_ID as string)!.extensionUri
+	return vscode.extensions.getExtension(EXTENSION_ID as string)!.extensionUri
 }

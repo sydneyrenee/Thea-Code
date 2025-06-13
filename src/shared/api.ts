@@ -1,11 +1,11 @@
-import { ModelInfo, ProviderName, ProviderSettings } from "../schemas";
-import type { NeutralMessage, NeutralConversationHistory } from "./neutral-history"; // Import the comprehensive types
+import { ModelInfo, ProviderName, ProviderSettings } from "../schemas"
+import type { NeutralMessage, NeutralConversationHistory } from "./neutral-history" // Import the comprehensive types
 
-export type { ModelInfo, ProviderName as ApiProvider, NeutralMessage, NeutralConversationHistory }; // Re-export
+export type { ModelInfo, ProviderName as ApiProvider, NeutralMessage, NeutralConversationHistory } // Re-export
 
-export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">;
+export type ApiHandlerOptions = Omit<ProviderSettings, "apiProvider" | "id">
 
-export type ApiConfiguration = ProviderSettings;
+export type ApiConfiguration = ProviderSettings
 
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
@@ -98,8 +98,8 @@ export interface MessageContent {
 	// Tool use and result fields
 	toolUseId?: string
 	name?: string
-        input?: Record<string, unknown>
-        output?: unknown // Used for tool_result type
+	input?: Record<string, unknown>
+	output?: unknown // Used for tool_result type
 }
 
 export type BedrockModelId = keyof typeof bedrockModels

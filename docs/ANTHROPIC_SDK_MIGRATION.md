@@ -11,34 +11,38 @@ The codebase has been migrated to use a neutral client pattern instead of import
 ### Core Module Updates
 
 1. **`src/api/index.ts`**
-   - Removed `BetaThinkingConfigParam` import from `@anthropic-ai/sdk`
-   - Replaced with neutral `NeutralThinkingConfig` interface
-   - All thinking parameter handling now uses neutral types
+
+    - Removed `BetaThinkingConfigParam` import from `@anthropic-ai/sdk`
+    - Replaced with neutral `NeutralThinkingConfig` interface
+    - All thinking parameter handling now uses neutral types
 
 2. **`src/core/webview/history/TheaTaskHistory.ts`**
-   - Removed `Anthropic` import from `@anthropic-ai/sdk`
-   - Updated `apiConversationHistory` type from `Anthropic.MessageParam[]` to `NeutralConversationHistory`
-   - All conversation history now uses neutral format
+
+    - Removed `Anthropic` import from `@anthropic-ai/sdk`
+    - Updated `apiConversationHistory` type from `Anthropic.MessageParam[]` to `NeutralConversationHistory`
+    - All conversation history now uses neutral format
 
 3. **`src/core/tools/attemptCompletionTool.ts`**
-   - Removed `Anthropic` import from `@anthropic-ai/sdk`
-   - Updated content block types from `Anthropic.TextBlockParam | Anthropic.ImageBlockParam` to neutral equivalents
-   - Tool results now use neutral content format
+    - Removed `Anthropic` import from `@anthropic-ai/sdk`
+    - Updated content block types from `Anthropic.TextBlockParam | Anthropic.ImageBlockParam` to neutral equivalents
+    - Tool results now use neutral content format
 
 ### Test Updates
 
 1. **`src/api/providers/__tests__/anthropic.test.ts`**
-   - Updated to mock `NeutralAnthropicClient` instead of direct Anthropic SDK
-   - Tests now verify neutral client method calls instead of SDK calls
-   - Maintains same test coverage with neutral interface
+
+    - Updated to mock `NeutralAnthropicClient` instead of direct Anthropic SDK
+    - Tests now verify neutral client method calls instead of SDK calls
+    - Maintains same test coverage with neutral interface
 
 2. **Other test files**
-   - Updated various test files to use neutral types instead of Anthropic SDK types
-   - Removed or updated SDK-specific mocks
+    - Updated various test files to use neutral types instead of Anthropic SDK types
+    - Removed or updated SDK-specific mocks
 
 ### Dependency Cleanup
 
 Removed the following dependencies from `package.json`:
+
 - `@anthropic-ai/sdk`
 - `@anthropic-ai/bedrock-sdk`
 - `@anthropic-ai/vertex-sdk`
@@ -59,30 +63,33 @@ Removed the following dependencies from `package.json`:
 ## Usage Examples
 
 ### Before (Direct SDK)
-```typescript
-import { Anthropic } from "@anthropic-ai/sdk";
-import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs";
 
-const client = new Anthropic({ apiKey: "..." });
-const thinking: BetaThinkingConfigParam = { type: "enabled", budget_tokens: 1024 };
+```typescript
+import { Anthropic } from "@anthropic-ai/sdk"
+import { BetaThinkingConfigParam } from "@anthropic-ai/sdk/resources/beta/messages/index.mjs"
+
+const client = new Anthropic({ apiKey: "..." })
+const thinking: BetaThinkingConfigParam = { type: "enabled", budget_tokens: 1024 }
 ```
 
 ### After (Neutral Client)
+
 ```typescript
-import { NeutralAnthropicClient } from "../services/anthropic";
+import { NeutralAnthropicClient } from "../services/anthropic"
 
 interface NeutralThinkingConfig {
-    type: "enabled";
-    budget_tokens: number;
+	type: "enabled"
+	budget_tokens: number
 }
 
-const client = new NeutralAnthropicClient("...");
-const thinking: NeutralThinkingConfig = { type: "enabled", budget_tokens: 1024 };
+const client = new NeutralAnthropicClient("...")
+const thinking: NeutralThinkingConfig = { type: "enabled", budget_tokens: 1024 }
 ```
 
 ## Architecture
 
 The `NeutralAnthropicClient` acts as an adapter that:
+
 1. Accepts neutral format inputs
 2. Converts to Anthropic SDK format internally
 3. Calls the Anthropic SDK

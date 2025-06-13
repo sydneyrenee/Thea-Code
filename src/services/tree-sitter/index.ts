@@ -73,7 +73,7 @@ export async function parseSourceCodeForDefinitionsTopLevel(
 	}
 
 	// Get all files at top level (not gitignored)
-        const [allFiles] = await listFiles(dirPath, false, 200)
+	const [allFiles] = await listFiles(dirPath, false, 200)
 
 	let result = ""
 
@@ -170,86 +170,84 @@ async function parseFile(
 		// Parse the file content into an Abstract Syntax Tree (AST)
 		const tree = parser.parse(fileContent)
 
-			// Ensure tree is not null before accessing properties
-			if (tree && tree.rootNode) {
-				const captures = query.captures(tree.rootNode)
-				// No definitions found
-				if (captures.length === 0) {
-					return null
-				}
-
-				// Sort captures by their start position
-				captures.sort((a, b) => a.node.startPosition.row - b.node.startPosition.row)
-
-				// Split the file content into individual lines
-				const lines = fileContent.split("\n")
-
-
-				// Track already processed lines to avoid duplicates
-				const processedLines = new Set<string>()
-
-				// Track definition types for better categorization
-
-				// First pass - categorize captures by type
-				captures.forEach((capture) => {
-					const { node, name } = capture
-
-					// Skip captures that don't represent definitions
-					if (!name.includes("definition") && !name.includes("name")) {
-						return
-					}
-
-					// Get the parent node that contains the full definition
-					const definitionNode = name.includes("name") ? node.parent : node
-					if (!definitionNode) return
-
-					// Get the start and end lines of the full definition and also the node's own line
-					const startLine = definitionNode.startPosition.row
-					const endLine = definitionNode.endPosition.row
-					const nodeLine = node.startPosition.row
-
-					// Create unique keys for definition lines
-					const lineKey = `${startLine}-${lines[startLine]}`
-					const nodeLineKey = `${nodeLine}-${lines[nodeLine]}`
-
-					// Always show the class definition line
-					if (name.includes("class") || (name.includes("name") && name.includes("class"))) {
-						if (!processedLines.has(lineKey)) {
-							formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
-							processedLines.add(lineKey)
-						}
-					}
-
-					// Always show method/function definitions
-					// This is crucial for the test case that checks for "testMethod()"
-					if (name.includes("function") || name.includes("method")) {
-						// For function definitions, we need to show the actual line with the function/method name
-						// This handles the test case mocks where nodeLine is 2 (for "testMethod()")
-						if (!processedLines.has(nodeLineKey) && lines[nodeLine]) {
-							formattedOutput += `${nodeLine}--${node.endPosition.row} | ${lines[nodeLine]}\n`
-							processedLines.add(nodeLineKey)
-						}
-					}
-
-					// Handle variable and other named definitions
-					if (
-						name.includes("name") &&
-						!name.includes("class") &&
-						!name.includes("function") &&
-						!name.includes("method")
-					) {
-						if (!processedLines.has(lineKey)) {
-							formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
-							processedLines.add(lineKey)
-						}
-					}
-
-				})
-			} else {
-				// Handle the case where tree or rootNode is null, e.g., log an error or return empty results
-				console.error("Tree or rootNode is null for file:", filePath)
+		// Ensure tree is not null before accessing properties
+		if (tree && tree.rootNode) {
+			const captures = query.captures(tree.rootNode)
+			// No definitions found
+			if (captures.length === 0) {
 				return null
 			}
+
+			// Sort captures by their start position
+			captures.sort((a, b) => a.node.startPosition.row - b.node.startPosition.row)
+
+			// Split the file content into individual lines
+			const lines = fileContent.split("\n")
+
+			// Track already processed lines to avoid duplicates
+			const processedLines = new Set<string>()
+
+			// Track definition types for better categorization
+
+			// First pass - categorize captures by type
+			captures.forEach((capture) => {
+				const { node, name } = capture
+
+				// Skip captures that don't represent definitions
+				if (!name.includes("definition") && !name.includes("name")) {
+					return
+				}
+
+				// Get the parent node that contains the full definition
+				const definitionNode = name.includes("name") ? node.parent : node
+				if (!definitionNode) return
+
+				// Get the start and end lines of the full definition and also the node's own line
+				const startLine = definitionNode.startPosition.row
+				const endLine = definitionNode.endPosition.row
+				const nodeLine = node.startPosition.row
+
+				// Create unique keys for definition lines
+				const lineKey = `${startLine}-${lines[startLine]}`
+				const nodeLineKey = `${nodeLine}-${lines[nodeLine]}`
+
+				// Always show the class definition line
+				if (name.includes("class") || (name.includes("name") && name.includes("class"))) {
+					if (!processedLines.has(lineKey)) {
+						formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
+						processedLines.add(lineKey)
+					}
+				}
+
+				// Always show method/function definitions
+				// This is crucial for the test case that checks for "testMethod()"
+				if (name.includes("function") || name.includes("method")) {
+					// For function definitions, we need to show the actual line with the function/method name
+					// This handles the test case mocks where nodeLine is 2 (for "testMethod()")
+					if (!processedLines.has(nodeLineKey) && lines[nodeLine]) {
+						formattedOutput += `${nodeLine}--${node.endPosition.row} | ${lines[nodeLine]}\n`
+						processedLines.add(nodeLineKey)
+					}
+				}
+
+				// Handle variable and other named definitions
+				if (
+					name.includes("name") &&
+					!name.includes("class") &&
+					!name.includes("function") &&
+					!name.includes("method")
+				) {
+					if (!processedLines.has(lineKey)) {
+						formattedOutput += `${startLine}--${endLine} | ${lines[startLine]}\n`
+						processedLines.add(lineKey)
+					}
+				}
+			})
+		} else {
+			// Handle the case where tree or rootNode is null, e.g., log an error or return empty results
+			console.error("Tree or rootNode is null for file:", filePath)
+			return null
+		}
 	} catch (error) {
 		console.log(`Error parsing file: ${error}\n`)
 		// Return null on parsing error to avoid showing error messages in the output

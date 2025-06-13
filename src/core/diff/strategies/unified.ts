@@ -111,15 +111,15 @@ Your diff here
 </apply_diff>`
 	}
 
-        applyDiff(originalContent: string, diffContent: string): DiffResult {
-                try {
-                        let cleanDiff = diffContent.replace(/^\s+/gm, "")
-                        cleanDiff = cleanDiff.replace(/^(?![+\-@])/gm, " $&")
-                        if (!cleanDiff.endsWith("\n")) {
-                                cleanDiff += "\n"
-                        }
+	applyDiff(originalContent: string, diffContent: string): DiffResult {
+		try {
+			let cleanDiff = diffContent.replace(/^\s+/gm, "")
+			cleanDiff = cleanDiff.replace(/^(?![+\-@])/gm, " $&")
+			if (!cleanDiff.endsWith("\n")) {
+				cleanDiff += "\n"
+			}
 
-                        const result = applyPatch(originalContent, cleanDiff)
+			const result = applyPatch(originalContent, cleanDiff)
 			if (result === false) {
 				return {
 					success: false,
@@ -134,7 +134,7 @@ Your diff here
 				content: result,
 			}
 		} catch (error: unknown) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
+			const errorMessage = error instanceof Error ? error.message : String(error)
 			return {
 				success: false,
 				error: `Error applying unified diff: ${errorMessage}`,

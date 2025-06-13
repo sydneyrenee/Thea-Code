@@ -62,17 +62,22 @@ export const AutoApproveSettings = ({
 	const { t } = useAppTranslation()
 	const [commandInput, setCommandInput] = useState("")
 
-	const handleCheckboxChange = (field: keyof Pick<AutoApproveSettingsProps, 
-		| "alwaysAllowReadOnly"
-		| "alwaysAllowReadOnlyOutsideWorkspace"
-		| "alwaysAllowWrite"
-		| "alwaysAllowWriteOutsideWorkspace"
-		| "alwaysAllowBrowser"
-		| "alwaysApproveResubmit"
-		| "alwaysAllowMcp"
-		| "alwaysAllowModeSwitch"
-		| "alwaysAllowSubtasks"
-		| "alwaysAllowExecute">) => 
+	const handleCheckboxChange =
+		(
+			field: keyof Pick<
+				AutoApproveSettingsProps,
+				| "alwaysAllowReadOnly"
+				| "alwaysAllowReadOnlyOutsideWorkspace"
+				| "alwaysAllowWrite"
+				| "alwaysAllowWriteOutsideWorkspace"
+				| "alwaysAllowBrowser"
+				| "alwaysApproveResubmit"
+				| "alwaysAllowMcp"
+				| "alwaysAllowModeSwitch"
+				| "alwaysAllowSubtasks"
+				| "alwaysAllowExecute"
+			>,
+		) =>
 		(checked: boolean) => {
 			setCachedStateField(field, checked)
 		}

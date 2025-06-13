@@ -16,20 +16,22 @@ jest.mock("@/components/ui/vscode-components", () => ({
 		</div>
 	),
 	VSCodeLink: ({ children, href }: { [key: string]: unknown }) => <a href={href}>{children}</a>,
-	VSCodeRadio: ({ children, value, checked }: { [key: string]: unknown }) => <input type="radio" value={value} checked={checked} />,
+	VSCodeRadio: ({ children, value, checked }: { [key: string]: unknown }) => (
+		<input type="radio" value={value} checked={checked} />
+	),
 	VSCodeRadioGroup: ({ children }: { [key: string]: unknown }) => <div>{children}</div>,
 	VSCodeButton: ({ children }: { [key: string]: unknown }) => <div>{children}</div>,
 }))
 
 // Mock other components
 jest.mock("vscrui", () => ({
-        Checkbox: ({ children, checked, onChange }: { [key: string]: unknown }) => (
-                <label>
-                        <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-                        {children}
-                </label>
-        ),
-        Button: ({ children, onClick }: { [key: string]: unknown }) => <button onClick={onClick}>{children}</button>,
+	Checkbox: ({ children, checked, onChange }: { [key: string]: unknown }) => (
+		<label>
+			<input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+			{children}
+		</label>
+	),
+	Button: ({ children, onClick }: { [key: string]: unknown }) => <button onClick={onClick}>{children}</button>,
 }))
 
 // Mock @shadcn/ui components
@@ -49,7 +51,9 @@ jest.mock("@/components/ui", () => ({
 			{children}
 		</option>
 	),
-	SelectSeparator: ({ children }: { [key: string]: unknown }) => <div className="select-separator-mock">{children}</div>,
+	SelectSeparator: ({ children }: { [key: string]: unknown }) => (
+		<div className="select-separator-mock">{children}</div>
+	),
 	Button: ({ children, onClick }: { [key: string]: unknown }) => (
 		<button onClick={onClick} className="button-mock">
 			{children}
@@ -74,7 +78,14 @@ jest.mock("../TemperatureControl", () => ({
 
 // Mock ThinkingBudget component
 jest.mock("../ThinkingBudget", () => ({
-	ThinkingBudget: ({ apiConfiguration, setApiConfigurationField, modelInfo, provider }: { [key: string]: unknown }) =>
+	ThinkingBudget: ({
+		apiConfiguration,
+		setApiConfigurationField,
+		modelInfo,
+		provider,
+	}: {
+		[key: string]: unknown
+	}) =>
 		modelInfo?.thinking ? (
 			<div data-testid="thinking-budget" data-provider={provider}>
 				<input data-testid="thinking-tokens" value={apiConfiguration?.modelMaxThinkingTokens} />

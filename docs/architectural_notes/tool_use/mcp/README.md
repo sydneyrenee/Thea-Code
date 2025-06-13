@@ -21,15 +21,18 @@ The MCP system has been fully implemented and integrated:
 ## Current Documentation
 
 ### Core Documentation
+
 1. **[MCP Comprehensive Guide](./mcp_comprehensive_guide.md)** - Complete implementation guide with practical examples
 2. **[MCP Component Guide](../../MCP_COMPONENT_GUIDE.md)** - Developer guide for working with MCP components
 3. **[Migration Guide](../../MIGRATION_GUIDE.md)** - Guide for developers transitioning to the new architecture
 
 ### Architecture Documentation
+
 4. **[Unified Architecture](../../api_handlers/unified_architecture.md)** - Overall system architecture with MCP integration
 5. **[Provider Handler Architecture](../../api_handlers/provider_handler_architecture.md)** - Provider-specific architecture details
 
 ### Specialized Integration Guides
+
 6. **[Ollama-OpenAI-MCP Integration](./ollama_openai_mcp_integration.md)** - How Ollama leverages OpenAI handler for tool use
 7. **[OpenAI Function Format Integration](./openai_function_format_integration.md)** - Function calling format support
 8. **[Provider MCP Integration](./provider_mcp_integration.md)** - Provider integration patterns
@@ -37,16 +40,19 @@ The MCP system has been fully implemented and integrated:
 ## Key Features Implemented
 
 ### Unified Tool System
+
 - **Automatic Registration**: All providers inherit tool support from BaseProvider
 - **Format Flexibility**: Support for XML (`<tool_name>`), JSON (`{"type": "tool_use"}`), and OpenAI function calls
 - **Transparent Execution**: Format conversion and routing handled automatically
 
 ### Protocol Support
+
 - **Multi-Format Detection**: Automatic detection of tool use format
 - **Protocol Inheritance**: Providers can extend protocol handlers (e.g., Ollama extends OpenAI)
 - **Consistent Interface**: All providers use `NeutralConversationHistory`
 
 ### Developer Experience
+
 - **Simple Integration**: Extend BaseProvider and get MCP integration automatically
 - **Easy Tool Addition**: Register custom tools via `registerTool()` method
 - **Comprehensive Testing**: Full test suite including e2e and performance tests
@@ -54,18 +60,20 @@ The MCP system has been fully implemented and integrated:
 ## Quick Start for Developers
 
 ### Using MCP in Providers
+
 ```typescript
 // All providers automatically have MCP integration
 export class MyProvider extends BaseProvider {
-  // Tools are automatically available - no additional setup needed
+	// Tools are automatically available - no additional setup needed
 }
 ```
 
 ### Adding Custom Tools
+
 ```typescript
 protected registerTools(): void {
   super.registerTools(); // Get standard tools
-  
+
   this.mcpIntegration.registerTool({
     name: 'my_custom_tool',
     description: 'Does something useful',
@@ -75,7 +83,9 @@ protected registerTools(): void {
 ```
 
 ### Tool Usage (Automatic)
+
 Tools work automatically across all formats:
+
 - **XML**: `<read_file><path>example.ts</path></read_file>`
 - **JSON**: `{"type": "tool_use", "name": "read_file", "input": {"path": "example.ts"}}`
 - **OpenAI**: Function calls in OpenAI's schema

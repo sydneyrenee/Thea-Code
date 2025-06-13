@@ -1,6 +1,6 @@
 import { TokenUsage } from "../schemas"
 
-import type { NeutralConversationHistory, NeutralMessage } from "./neutral-history"; // Import neutral types
+import type { NeutralConversationHistory, NeutralMessage } from "./neutral-history" // Import neutral types
 
 /**
  * Calculates API metrics from a NeutralConversationHistory.
@@ -21,57 +21,61 @@ export function getApiMetrics(messages: NeutralConversationHistory): TokenUsage 
 		totalCacheReads: undefined,
 		totalCost: 0,
 		contextTokens: 0,
-	};
+	}
 
-	let lastMessageWithMetrics: NeutralMessage | undefined = undefined;
+	let lastMessageWithMetrics: NeutralMessage | undefined = undefined
 
 	for (const message of messages) {
 		// Check if metadata and apiMetrics exist and apiMetrics is an object
-		if (message.metadata && typeof message.metadata.apiMetrics === 'object' && message.metadata.apiMetrics !== null) {
+		if (
+			message.metadata &&
+			typeof message.metadata.apiMetrics === "object" &&
+			message.metadata.apiMetrics !== null
+		) {
 			const metrics = message.metadata.apiMetrics as {
-				tokensIn?: number;
-				tokensOut?: number;
-				cacheWrites?: number;
-				cacheReads?: number;
-				cost?: number;
-			};
+				tokensIn?: number
+				tokensOut?: number
+				cacheWrites?: number
+				cacheReads?: number
+				cost?: number
+			}
 
 			if (typeof metrics.tokensIn === "number") {
-				result.totalTokensIn += metrics.tokensIn;
+				result.totalTokensIn += metrics.tokensIn
 			}
 			if (typeof metrics.tokensOut === "number") {
-				result.totalTokensOut += metrics.tokensOut;
+				result.totalTokensOut += metrics.tokensOut
 			}
 			if (typeof metrics.cacheWrites === "number") {
-				result.totalCacheWrites = (result.totalCacheWrites ?? 0) + metrics.cacheWrites;
+				result.totalCacheWrites = (result.totalCacheWrites ?? 0) + metrics.cacheWrites
 			}
 			if (typeof metrics.cacheReads === "number") {
-				result.totalCacheReads = (result.totalCacheReads ?? 0) + metrics.cacheReads;
+				result.totalCacheReads = (result.totalCacheReads ?? 0) + metrics.cacheReads
 			}
 			if (typeof metrics.cost === "number") {
-				result.totalCost += metrics.cost;
+				result.totalCost += metrics.cost
 			}
 			// Update lastMessageWithMetrics if the current message has apiMetrics
-			lastMessageWithMetrics = message;
+			lastMessageWithMetrics = message
 		}
 	}
 
 	// Calculate contextTokens from the last message that had API metrics
 	if (lastMessageWithMetrics?.metadata?.apiMetrics) {
 		const metrics = lastMessageWithMetrics.metadata.apiMetrics as {
-			tokensIn?: number;
-			tokensOut?: number;
-			cacheWrites?: number;
-			cacheReads?: number;
-		};
-		let currentContextTokens = 0;
-		if (typeof metrics.tokensIn === "number") currentContextTokens += metrics.tokensIn;
-		if (typeof metrics.tokensOut === "number") currentContextTokens += metrics.tokensOut;
+			tokensIn?: number
+			tokensOut?: number
+			cacheWrites?: number
+			cacheReads?: number
+		}
+		let currentContextTokens = 0
+		if (typeof metrics.tokensIn === "number") currentContextTokens += metrics.tokensIn
+		if (typeof metrics.tokensOut === "number") currentContextTokens += metrics.tokensOut
 		// Per original logic, context tokens seemed to include cache R/W as well.
-		if (typeof metrics.cacheWrites === "number") currentContextTokens += metrics.cacheWrites;
-		if (typeof metrics.cacheReads === "number") currentContextTokens += metrics.cacheReads;
-		result.contextTokens = currentContextTokens;
+		if (typeof metrics.cacheWrites === "number") currentContextTokens += metrics.cacheWrites
+		if (typeof metrics.cacheReads === "number") currentContextTokens += metrics.cacheReads
+		result.contextTokens = currentContextTokens
 	}
 
-	return result;
+	return result
 }

@@ -40,51 +40,56 @@ This document outlines the testing strategy for the integration of provider hand
 Unit tests focus on testing individual components in isolation:
 
 1. **BaseProvider Tests**
-   - Test the `processToolUse` method
-   - Test the `registerTools` method
-   - Test initialization of MCP integration
+
+    - Test the `processToolUse` method
+    - Test the `registerTools` method
+    - Test initialization of MCP integration
 
 2. **OpenAI Handler Tests**
-   - Test the `extractToolCalls` method
-   - Test the `hasToolCalls` method
-   - Test tool use detection and processing
+
+    - Test the `extractToolCalls` method
+    - Test the `hasToolCalls` method
+    - Test tool use detection and processing
 
 3. **Ollama Handler Tests**
-   - Test integration with OpenAI handler
-   - Test tool use detection and processing
-   - Test handling of different tool use formats
+
+    - Test integration with OpenAI handler
+    - Test tool use detection and processing
+    - Test handling of different tool use formats
 
 4. **MCP Integration Tests**
-   - Test the `routeToolUse` method
-   - Test format detection
-   - Test conversion between formats
+    - Test the `routeToolUse` method
+    - Test format detection
+    - Test conversion between formats
 
 ### 4.2 Integration Tests
 
 Integration tests focus on testing the interaction between components:
 
 1. **Provider-MCP Integration Tests**
-   - Test end-to-end flow from provider handler to MCP integration
-   - Test with different tool use formats
-   - Test with different tools
+
+    - Test end-to-end flow from provider handler to MCP integration
+    - Test with different tool use formats
+    - Test with different tools
 
 2. **Cross-Provider Tests**
-   - Test consistency of tool use processing across providers
-   - Test with the same tool use request in different formats
+    - Test consistency of tool use processing across providers
+    - Test with the same tool use request in different formats
 
 ### 4.3 End-to-End Tests
 
 End-to-end tests focus on testing the entire system with real AI models:
 
 1. **Real Model Tests**
-   - Test with actual OpenAI models
-   - Test with actual Anthropic models
-   - Test with actual Ollama models
+
+    - Test with actual OpenAI models
+    - Test with actual Anthropic models
+    - Test with actual Ollama models
 
 2. **Tool Execution Tests**
-   - Test execution of various tools
-   - Test handling of tool results
-   - Test error handling
+    - Test execution of various tools
+    - Test handling of tool results
+    - Test error handling
 
 ## 5. Test Cases
 
@@ -92,68 +97,68 @@ End-to-end tests focus on testing the entire system with real AI models:
 
 #### 5.1.1 BaseProvider Tests
 
-| Test ID | Test Name | Description | Expected Result |
-|---------|-----------|-------------|-----------------|
-| BP-01 | Process Tool Use | Test the `processToolUse` method with various inputs | Tool use is processed correctly |
-| BP-02 | Register Tools | Test the `registerTools` method | Tools are registered correctly |
-| BP-03 | Initialize MCP | Test initialization of MCP integration | MCP integration is initialized correctly |
+| Test ID | Test Name        | Description                                          | Expected Result                          |
+| ------- | ---------------- | ---------------------------------------------------- | ---------------------------------------- |
+| BP-01   | Process Tool Use | Test the `processToolUse` method with various inputs | Tool use is processed correctly          |
+| BP-02   | Register Tools   | Test the `registerTools` method                      | Tools are registered correctly           |
+| BP-03   | Initialize MCP   | Test initialization of MCP integration               | MCP integration is initialized correctly |
 
 #### 5.1.2 OpenAI Handler Tests
 
-| Test ID | Test Name | Description | Expected Result |
-|---------|-----------|-------------|-----------------|
-| OAI-01 | Extract Tool Calls | Test the `extractToolCalls` method with various inputs | Tool calls are extracted correctly |
-| OAI-02 | Has Tool Calls | Test the `hasToolCalls` method with various inputs | Tool calls are detected correctly |
-| OAI-03 | Process Tool Use | Test tool use detection and processing | Tool use is processed correctly |
+| Test ID | Test Name          | Description                                            | Expected Result                    |
+| ------- | ------------------ | ------------------------------------------------------ | ---------------------------------- |
+| OAI-01  | Extract Tool Calls | Test the `extractToolCalls` method with various inputs | Tool calls are extracted correctly |
+| OAI-02  | Has Tool Calls     | Test the `hasToolCalls` method with various inputs     | Tool calls are detected correctly  |
+| OAI-03  | Process Tool Use   | Test tool use detection and processing                 | Tool use is processed correctly    |
 
 #### 5.1.3 Ollama Handler Tests
 
-| Test ID | Test Name | Description | Expected Result |
-|---------|-----------|-------------|-----------------|
-| OLL-01 | OpenAI Integration | Test integration with OpenAI handler | OpenAI handler is used correctly |
-| OLL-02 | Process Tool Use | Test tool use detection and processing | Tool use is processed correctly |
-| OLL-03 | Handle XML Format | Test handling of XML tool use format for reasoning models and other models | XML tool use is processed correctly |
-| OLL-04 | Handle JSON Format | Test handling of JSON tool use format | JSON tool use is processed correctly |
+| Test ID | Test Name          | Description                                                                | Expected Result                      |
+| ------- | ------------------ | -------------------------------------------------------------------------- | ------------------------------------ |
+| OLL-01  | OpenAI Integration | Test integration with OpenAI handler                                       | OpenAI handler is used correctly     |
+| OLL-02  | Process Tool Use   | Test tool use detection and processing                                     | Tool use is processed correctly      |
+| OLL-03  | Handle XML Format  | Test handling of XML tool use format for reasoning models and other models | XML tool use is processed correctly  |
+| OLL-04  | Handle JSON Format | Test handling of JSON tool use format                                      | JSON tool use is processed correctly |
 
 Note: Prompting the model to select the "mode" should be part of the ollama code, not the test. (for now) Later we may have it as a user selectable option.
 
 #### 5.1.4 MCP Integration Tests
 
-| Test ID | Test Name | Description | Expected Result |
-|---------|-----------|-------------|-----------------|
-| MCP-01 | Route Tool Use | Test the `routeToolUse` method with various inputs | Tool use is routed correctly |
-| MCP-02 | Detect Format | Test format detection with various inputs | Format is detected correctly |
-| MCP-03 | Convert Formats | Test conversion between formats | Formats are converted correctly |
+| Test ID | Test Name       | Description                                        | Expected Result                 |
+| ------- | --------------- | -------------------------------------------------- | ------------------------------- |
+| MCP-01  | Route Tool Use  | Test the `routeToolUse` method with various inputs | Tool use is routed correctly    |
+| MCP-02  | Detect Format   | Test format detection with various inputs          | Format is detected correctly    |
+| MCP-03  | Convert Formats | Test conversion between formats                    | Formats are converted correctly |
 
 ### 5.2 Integration Test Cases
 
 #### 5.2.1 Provider-MCP Integration Tests
 
-| Test ID | Test Name | Description | Expected Result |
-|---------|-----------|-------------|-----------------|
-| INT-01 | OpenAI to MCP | Test end-to-end flow from OpenAI handler to MCP integration | Tool use is processed correctly |
-| INT-02 | Anthropic to MCP | Test end-to-end flow from Anthropic handler to MCP integration | Tool use is processed correctly |
-| INT-03 | Ollama to MCP | Test end-to-end flow from Ollama handler to MCP integration | Tool use is processed correctly |
-| INT-04 | XML Format | Test with XML tool use format | XML tool use is processed correctly |
-| INT-05 | JSON Format | Test with JSON tool use format | JSON tool use is processed correctly |
-| INT-06 | OpenAI Format | Test with OpenAI function call format | OpenAI function call is processed correctly |
+| Test ID | Test Name        | Description                                                    | Expected Result                             |
+| ------- | ---------------- | -------------------------------------------------------------- | ------------------------------------------- |
+| INT-01  | OpenAI to MCP    | Test end-to-end flow from OpenAI handler to MCP integration    | Tool use is processed correctly             |
+| INT-02  | Anthropic to MCP | Test end-to-end flow from Anthropic handler to MCP integration | Tool use is processed correctly             |
+| INT-03  | Ollama to MCP    | Test end-to-end flow from Ollama handler to MCP integration    | Tool use is processed correctly             |
+| INT-04  | XML Format       | Test with XML tool use format                                  | XML tool use is processed correctly         |
+| INT-05  | JSON Format      | Test with JSON tool use format                                 | JSON tool use is processed correctly        |
+| INT-06  | OpenAI Format    | Test with OpenAI function call format                          | OpenAI function call is processed correctly |
 
 Also add response testing to make sure messages are returned to the model and understood correctly.
 
 #### 5.2.2 Cross-Provider Tests
 
-| Test ID | Test Name | Description | Expected Result |
-|---------|-----------|-------------|-----------------|
+| Test ID  | Test Name                     | Description                                 | Expected Result                    |
+| -------- | ----------------------------- | ------------------------------------------- | ---------------------------------- |
 | CROSS-01 | Same Tool Different Providers | Test the same tool with different providers | Tool use is processed consistently |
-| CROSS-02 | Same Tool Different Formats | Test the same tool with different formats | Tool use is processed consistently |
+| CROSS-02 | Same Tool Different Formats   | Test the same tool with different formats   | Tool use is processed consistently |
 
 ### 5.3 End-to-End Test Cases
 
 #### 5.3.1 Real Model Tests
 
-| Test ID | Test Name | Description | Expected Result |
-|---------|-----------|-------------|-----------------|
-| E2E-03 | Ollama Model | Test with actual Ollama model | Tool use is processed correctly |
+| Test ID | Test Name    | Description                   | Expected Result                 |
+| ------- | ------------ | ----------------------------- | ------------------------------- |
+| E2E-03  | Ollama Model | Test with actual Ollama model | Tool use is processed correctly |
 
 Anything else is future.
 
@@ -184,14 +189,14 @@ This requires making sure the tools from Thea Code are integrated into the MCP i
 
 ```json
 {
-  "type": "tool_use",
-  "name": "calculator",
-  "id": "calculator-123",
-  "input": {
-    "a": 5,
-    "b": 10,
-    "operation": "add"
-  }
+	"type": "tool_use",
+	"name": "calculator",
+	"id": "calculator-123",
+	"input": {
+		"a": 5,
+		"b": 10,
+		"operation": "add"
+	}
 }
 ```
 
@@ -199,15 +204,15 @@ This requires making sure the tools from Thea Code are integrated into the MCP i
 
 ```json
 {
-  "tool_calls": [
-    {
-      "id": "call_123",
-      "function": {
-        "name": "calculator",
-        "arguments": "{\"a\":5,\"b\":10,\"operation\":\"add\"}"
-      }
-    }
-  ]
+	"tool_calls": [
+		{
+			"id": "call_123",
+			"function": {
+				"name": "calculator",
+				"arguments": "{\"a\":5,\"b\":10,\"operation\":\"add\"}"
+			}
+		}
+	]
 }
 ```
 
@@ -225,15 +230,15 @@ This requires making sure the tools from Thea Code are integrated into the MCP i
 
 ```json
 {
-  "type": "tool_result",
-  "tool_use_id": "calculator-123",
-  "content": [
-    {
-      "type": "text",
-      "text": "15"
-    }
-  ],
-  "status": "success"
+	"type": "tool_result",
+	"tool_use_id": "calculator-123",
+	"content": [
+		{
+			"type": "text",
+			"text": "15"
+		}
+	],
+	"status": "success"
 }
 ```
 
@@ -241,9 +246,9 @@ This requires making sure the tools from Thea Code are integrated into the MCP i
 
 ```json
 {
-  "role": "tool",
-  "tool_call_id": "call_123",
-  "content": "15"
+	"role": "tool",
+	"tool_call_id": "call_123",
+	"content": "15"
 }
 ```
 
@@ -257,25 +262,25 @@ Example unit test for the OpenAI handler's `extractToolCalls` method:
 
 ```typescript
 // src/api/providers/__tests__/openai.test.ts
-describe('Tool Use Detection', () => {
-  it('should extract tool calls from delta', () => {
-    const delta = {
-      tool_calls: [
-        {
-          id: 'call_123',
-          function: {
-            name: 'test_tool',
-            arguments: '{"param":"value"}'
-          }
-        }
-      ]
-    };
-    
-    const toolCalls = handler.extractToolCalls(delta);
-    
-    expect(toolCalls).toEqual(delta.tool_calls);
-  });
-});
+describe("Tool Use Detection", () => {
+	it("should extract tool calls from delta", () => {
+		const delta = {
+			tool_calls: [
+				{
+					id: "call_123",
+					function: {
+						name: "test_tool",
+						arguments: '{"param":"value"}',
+					},
+				},
+			],
+		}
+
+		const toolCalls = handler.extractToolCalls(delta)
+
+		expect(toolCalls).toEqual(delta.tool_calls)
+	})
+})
 ```
 
 ### 7.2 Integration Tests
@@ -286,27 +291,27 @@ Example integration test for the Ollama handler's integration with the OpenAI ha
 
 ```typescript
 // src/api/providers/__tests__/ollama-mcp-integration.test.ts
-it('should use OpenAI handler for tool use detection', async () => {
-  // Mock the OpenAI handler's extractToolCalls method
-  const extractToolCallsSpy = jest.spyOn(handler['openAiHandler'], 'extractToolCalls');
-  
-  // Create neutral history
-  const neutralHistory: NeutralConversationHistory = [
-    { role: 'user', content: [{ type: 'text', text: 'Use a tool' }] }
-  ];
-  
-  // Call createMessage
-  const stream = handler.createMessage('You are helpful.', neutralHistory);
-  
-  // Collect stream chunks
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  
-  // Verify OpenAI handler's extractToolCalls method was called
-  expect(extractToolCallsSpy).toHaveBeenCalled();
-});
+it("should use OpenAI handler for tool use detection", async () => {
+	// Mock the OpenAI handler's extractToolCalls method
+	const extractToolCallsSpy = jest.spyOn(handler["openAiHandler"], "extractToolCalls")
+
+	// Create neutral history
+	const neutralHistory: NeutralConversationHistory = [
+		{ role: "user", content: [{ type: "text", text: "Use a tool" }] },
+	]
+
+	// Call createMessage
+	const stream = handler.createMessage("You are helpful.", neutralHistory)
+
+	// Collect stream chunks
+	const chunks = []
+	for await (const chunk of stream) {
+		chunks.push(chunk)
+	}
+
+	// Verify OpenAI handler's extractToolCalls method was called
+	expect(extractToolCallsSpy).toHaveBeenCalled()
+})
 ```
 
 ### 7.3 End-to-End Tests
@@ -317,37 +322,37 @@ Example end-to-end test for the Ollama handler with a real model:
 
 ```typescript
 // src/api/providers/__tests__/ollama-e2e.test.ts
-it('should process tool use with real Ollama model', async () => {
-  // Skip if no API key is provided
-  if (!process.env.OLLAMA_API_URL) {
-    console.log('Skipping test: No Ollama API URL provided');
-    return;
-  }
-  
-  // Create handler with real API URL
-  const handler = new OllamaHandler({
-    ollamaBaseUrl: process.env.OLLAMA_API_URL,
-    ollamaModelId: 'llama2'
-  });
-  
-  // Create neutral history
-  const neutralHistory: NeutralConversationHistory = [
-    { role: 'user', content: [{ type: 'text', text: 'Calculate 5 + 10' }] }
-  ];
-  
-  // Call createMessage
-  const stream = handler.createMessage('You are helpful and can use tools.', neutralHistory);
-  
-  // Collect stream chunks
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  
-  // Verify tool result was yielded
-  const toolResultChunks = chunks.filter(chunk => chunk.type === 'tool_result');
-  expect(toolResultChunks.length).toBeGreaterThan(0);
-});
+it("should process tool use with real Ollama model", async () => {
+	// Skip if no API key is provided
+	if (!process.env.OLLAMA_API_URL) {
+		console.log("Skipping test: No Ollama API URL provided")
+		return
+	}
+
+	// Create handler with real API URL
+	const handler = new OllamaHandler({
+		ollamaBaseUrl: process.env.OLLAMA_API_URL,
+		ollamaModelId: "llama2",
+	})
+
+	// Create neutral history
+	const neutralHistory: NeutralConversationHistory = [
+		{ role: "user", content: [{ type: "text", text: "Calculate 5 + 10" }] },
+	]
+
+	// Call createMessage
+	const stream = handler.createMessage("You are helpful and can use tools.", neutralHistory)
+
+	// Collect stream chunks
+	const chunks = []
+	for await (const chunk of stream) {
+		chunks.push(chunk)
+	}
+
+	// Verify tool result was yielded
+	const toolResultChunks = chunks.filter((chunk) => chunk.type === "tool_result")
+	expect(toolResultChunks.length).toBeGreaterThan(0)
+})
 ```
 
 ## 8. Test Execution

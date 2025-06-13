@@ -32,13 +32,13 @@ describe("addCustomInstructions", () => {
 describe("getCapabilitiesSection", () => {
 	const cwd = "/test/path"
 	const mcpHub = undefined
-        const mockDiffStrategy: DiffStrategy = {
-                getName: () => "MockStrategy",
-                getToolDescription: () => "apply_diff tool description",
-            		applyDiff: (): Promise<DiffResult> => {
-                        return Promise.resolve({ success: true, content: "mock result" })
-                },
-        }
+	const mockDiffStrategy: DiffStrategy = {
+		getName: () => "MockStrategy",
+		getToolDescription: () => "apply_diff tool description",
+		applyDiff: (): Promise<DiffResult> => {
+			return Promise.resolve({ success: true, content: "mock result" })
+		},
+	}
 
 	test("includes apply_diff in capabilities when diffStrategy is provided", () => {
 		const result = getCapabilitiesSection(cwd, false, mcpHub, mockDiffStrategy)

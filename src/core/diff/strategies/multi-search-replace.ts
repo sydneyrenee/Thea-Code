@@ -220,10 +220,7 @@ Only use a single line of '=======' between search and replacement content, beca
 				}
 	}
 
-	applyDiff(
-		originalContent: string,
-		diffContent: string,
-	): DiffResult {
+	applyDiff(originalContent: string, diffContent: string): DiffResult {
 		const validseq = this.validateMarkerSequencing(diffContent)
 		if (!validseq.success) {
 			return {

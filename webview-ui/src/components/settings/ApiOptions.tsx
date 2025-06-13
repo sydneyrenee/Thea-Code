@@ -14,7 +14,10 @@ const VSCodeRadio: React.FC<{ value: string; children: React.ReactNode }> = ({ v
 		<span style={{ marginLeft: "4px" }}>{children}</span>
 	</label>
 )
-const VSCodeRadioGroup: React.FC<{ onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; children: React.ReactNode }> = ({ onChange, children, ...props }) => (
+const VSCodeRadioGroup: React.FC<{
+	onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+	children: React.ReactNode
+}> = ({ onChange, children, ...props }) => (
 	<div role="radiogroup" onChange={onChange} {...props}>
 		{children}
 	</div>
@@ -346,9 +349,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.openRouterApiKey && (
-						<VSCodeButtonLink
-							href={getOpenRouterAuthUrl(uriScheme)}
-							style={{ width: "100%" }}>
+						<VSCodeButtonLink href={getOpenRouterAuthUrl(uriScheme)} style={{ width: "100%" }}>
 							{t("settings:providers.getOpenRouterApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -382,7 +383,13 @@ const ApiOptions = ({
 								<Trans
 									i18nKey="settings:providers.openRouterTransformsText"
 									components={{
-										a: <a href="https://openrouter.ai/docs/transforms" target="_blank" rel="noopener noreferrer" />,
+										a: (
+											<a
+												href="https://openrouter.ai/docs/transforms"
+												target="_blank"
+												rel="noopener noreferrer"
+											/>
+										),
 									}}
 								/>
 							</Checkbox>
@@ -448,9 +455,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.glamaApiKey && (
-						<VSCodeButtonLink
-							href={getGlamaAuthUrl(uriScheme)}
-							style={{ width: "100%" }}>
+						<VSCodeButtonLink href={getGlamaAuthUrl(uriScheme)} style={{ width: "100%" }}>
 							{t("settings:providers.getGlamaApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -476,9 +481,7 @@ const ApiOptions = ({
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
 					{!apiConfiguration?.requestyApiKey && (
-						<VSCodeButtonLink
-							href={getRequestyAuthUrl(uriScheme)}
-							style={{ width: "100%" }}>
+						<VSCodeButtonLink href={getRequestyAuthUrl(uriScheme)} style={{ width: "100%" }}>
 							{t("settings:providers.getRequestyApiKey")}
 						</VSCodeButtonLink>
 					)}
@@ -546,14 +549,16 @@ const ApiOptions = ({
 			)}
 
 			{selectedProvider === "bedrock" && (
-				<>				<VSCodeRadioGroup
-					onChange={handleInputChange(
-						"awsUseProfile",
-						(e) => (e.target as HTMLInputElement).value === "profile",
-					)}>
-					<VSCodeRadio value="credentials">{t("settings:providers.awsCredentials")}</VSCodeRadio>
-					<VSCodeRadio value="profile">{t("settings:providers.awsProfile")}</VSCodeRadio>
-				</VSCodeRadioGroup>
+				<>
+					{" "}
+					<VSCodeRadioGroup
+						onChange={handleInputChange(
+							"awsUseProfile",
+							(e) => (e.target as HTMLInputElement).value === "profile",
+						)}>
+						<VSCodeRadio value="credentials">{t("settings:providers.awsCredentials")}</VSCodeRadio>
+						<VSCodeRadio value="profile">{t("settings:providers.awsProfile")}</VSCodeRadio>
+					</VSCodeRadioGroup>
 					<div className="text-sm text-vscode-descriptionForeground -mt-3">
 						{t("settings:providers.apiKeyStorageNotice")}
 					</div>
@@ -1179,12 +1184,9 @@ const ApiOptions = ({
 						<label className="block font-medium mb-1">{t("settings:providers.lmStudio.modelId")}</label>
 					</VSCodeTextField>
 					{lmStudioModels.length > 0 && (
-						<VSCodeRadioGroup
-							onChange={handleInputChange("lmStudioModelId")}>
+						<VSCodeRadioGroup onChange={handleInputChange("lmStudioModelId")}>
 							{lmStudioModels.map((model) => (
-								<VSCodeRadio
-									key={model}
-									value={model}>
+								<VSCodeRadio key={model} value={model}>
 									{model}
 								</VSCodeRadio>
 							))}
@@ -1218,8 +1220,7 @@ const ApiOptions = ({
 									<div className="font-medium">
 										{t("settings:providers.lmStudio.selectDraftModel")}
 									</div>
-									<VSCodeRadioGroup
-										onChange={handleInputChange("lmStudioDraftModelId")}>
+									<VSCodeRadioGroup onChange={handleInputChange("lmStudioDraftModelId")}>
 										{lmStudioModels.map((model) => (
 											<VSCodeRadio key={`draft-${model}`} value={model}>
 												{model}
@@ -1335,12 +1336,9 @@ const ApiOptions = ({
 						<label className="block font-medium mb-1">{t("settings:providers.ollama.modelId")}</label>
 					</VSCodeTextField>
 					{ollamaModels.length > 0 && (
-						<VSCodeRadioGroup
-							onChange={handleInputChange("ollamaModelId")}>
+						<VSCodeRadioGroup onChange={handleInputChange("ollamaModelId")}>
 							{ollamaModels.map((model) => (
-								<VSCodeRadio
-									key={model}
-									value={model}>
+								<VSCodeRadio key={model} value={model}>
 									{model}
 								</VSCodeRadio>
 							))}

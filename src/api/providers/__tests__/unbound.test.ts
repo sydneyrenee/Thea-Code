@@ -1,9 +1,9 @@
 import { UnboundHandler } from "../unbound"
 import { ApiHandlerOptions } from "../../../shared/api"
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
-import type OpenAI from "openai"; // Added for types
+import type OpenAI from "openai" // Added for types
 import { EXTENSION_NAME } from "../../../../dist/thea-config" // Import branded constant
-import type { ApiStreamChunk } from "../../transform/stream"; // Added for chunk typing
+import type { ApiStreamChunk } from "../../transform/stream" // Added for chunk typing
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -15,9 +15,12 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: (options: OpenAI.Chat.Completions.ChatCompletionCreateParams, requestOptions?: OpenAI.RequestOptions) => {
+					create: (
+						options: OpenAI.Chat.Completions.ChatCompletionCreateParams,
+						requestOptions?: OpenAI.RequestOptions,
+					) => {
 						const stream = {
-							[Symbol.asyncIterator]: function* () {  
+							[Symbol.asyncIterator]: function* () {
 								// First chunk with content
 								yield {
 									choices: [
@@ -181,7 +184,7 @@ describe("UnboundHandler", () => {
 				}
 				fail("Expected error to be thrown")
 			} catch (e) {
-				const error = e as Error;
+				const error = e as Error
 				expect(error).toBeInstanceOf(Error)
 				expect(error.message).toBe("API Error")
 			}
@@ -200,7 +203,8 @@ describe("UnboundHandler", () => {
 					max_tokens: 8192,
 				}),
 				expect.objectContaining({
-					headers: expect.objectContaining({ // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+					headers: expect.objectContaining({
+						// eslint-disable-line @typescript-eslint/no-unsafe-assignment
 						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 					}),
 				}),
@@ -246,7 +250,8 @@ describe("UnboundHandler", () => {
 					temperature: 0,
 				}),
 				expect.objectContaining({
-					headers: expect.objectContaining({ // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+					headers: expect.objectContaining({
+						// eslint-disable-line @typescript-eslint/no-unsafe-assignment
 						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 					}),
 				}),
@@ -278,7 +283,8 @@ describe("UnboundHandler", () => {
 					messages: [{ role: "user", content: "Test prompt" }],
 				}),
 				expect.objectContaining({
-					headers: expect.objectContaining({ // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+					headers: expect.objectContaining({
+						// eslint-disable-line @typescript-eslint/no-unsafe-assignment
 						"X-Unbound-Metadata": expect.stringContaining(EXTENSION_NAME), // eslint-disable-line @typescript-eslint/no-unsafe-assignment
 					}),
 				}),

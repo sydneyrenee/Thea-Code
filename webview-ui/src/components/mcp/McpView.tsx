@@ -1,5 +1,12 @@
 import React, { useState } from "react"
-import { VSCodeButton, VSCodeCheckbox, VSCodeLink, VSCodePanels, VSCodePanelTab, VSCodePanelView } from "@/components/ui/vscode-components"
+import {
+	VSCodeButton,
+	VSCodeCheckbox,
+	VSCodeLink,
+	VSCodePanels,
+	VSCodePanelTab,
+	VSCodePanelView,
+} from "@/components/ui/vscode-components"
 
 import { McpServer } from "../../../../src/shared/mcp"
 

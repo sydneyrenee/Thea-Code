@@ -162,7 +162,7 @@ type ProviderSettings = {
 	modelMaxTokens?: number | undefined
 	modelMaxThinkingTokens?: number | undefined
 	includeMaxTokens?: boolean | undefined
-        fakeAi?: unknown
+	fakeAi?: unknown
 }
 
 type GlobalSettings = {

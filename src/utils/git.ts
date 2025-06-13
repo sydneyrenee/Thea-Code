@@ -35,12 +35,12 @@ export async function searchCommits(query: string, cwd: string): Promise<GitComm
 	try {
 		const isInstalled = await checkGitInstalled()
 		if (!isInstalled) {
-			throw new Error("Git is not installed.");
+			throw new Error("Git is not installed.")
 		}
 
 		const isRepo = await checkGitRepo(cwd)
 		if (!isRepo) {
-			throw new Error("Not a git repository.");
+			throw new Error("Not a git repository.")
 		}
 
 		// Search commits by hash or message, limiting to 10 results
@@ -57,11 +57,14 @@ export async function searchCommits(query: string, cwd: string): Promise<GitComm
 				{ cwd },
 			).catch((error) => {
 				// If the error indicates no such revision, return empty stdout
-				if ((error as Error).message.includes("unknown revision") || (error as Error).message.includes("bad object")) {
-					return { stdout: "" };
+				if (
+					(error as Error).message.includes("unknown revision") ||
+					(error as Error).message.includes("bad object")
+				) {
+					return { stdout: "" }
 				}
-				throw error; // Re-throw other errors
-			});
+				throw error // Re-throw other errors
+			})
 
 			if (!hashStdout.trim()) {
 				return []
@@ -88,8 +91,8 @@ export async function searchCommits(query: string, cwd: string): Promise<GitComm
 
 		return commits
 	} catch (error) {
-		console.error("Error searching commits:", error);
-		throw error;
+		console.error("Error searching commits:", error)
+		throw error
 	}
 }
 
@@ -97,12 +100,12 @@ export async function getCommitInfo(hash: string, cwd: string): Promise<string> 
 	try {
 		const isInstalled = await checkGitInstalled()
 		if (!isInstalled) {
-			throw new Error("Git is not installed.");
+			throw new Error("Git is not installed.")
 		}
 
 		const isRepo = await checkGitRepo(cwd)
 		if (!isRepo) {
-			throw new Error("Not a git repository.");
+			throw new Error("Not a git repository.")
 		}
 
 		// Get commit info, stats, and diff separately
@@ -115,19 +118,20 @@ export async function getCommitInfo(hash: string, cwd: string): Promise<string> 
 
 		const { stdout: diff } = await execAsync(`git show --format="" ${hash}`, { cwd })
 
-		const summary = `Commit: ${shortHash} (${fullHash})\n` +
+		const summary =
+			`Commit: ${shortHash} (${fullHash})\n` +
 			`Author: ${author}\n` +
 			`Date: ${date}\n\n` +
 			`Message: ${subject}\n` +
 			(body ? `\nDescription:\n${body}\n` : "") +
 			`\nFiles Changed:\n${stats.trim()}\n` +
-			`\nFull Changes:`;
+			`\nFull Changes:`
 
 		const output = summary + "\n\n" + diff.trim()
 		return truncateOutput(output, GIT_OUTPUT_LINE_LIMIT)
 	} catch (error) {
-		console.error("Error getting commit info:", error);
-		throw error;
+		console.error("Error getting commit info:", error)
+		throw error
 	}
 }
 
@@ -135,12 +139,12 @@ export async function getWorkingState(cwd: string): Promise<string> {
 	try {
 		const isInstalled = await checkGitInstalled()
 		if (!isInstalled) {
-			throw new Error("Git is not installed.");
+			throw new Error("Git is not installed.")
 		}
 
 		const isRepo = await checkGitRepo(cwd)
 		if (!isRepo) {
-			throw new Error("Not a git repository.");
+			throw new Error("Not a git repository.")
 		}
 
 		// Get status of working directory
@@ -155,7 +159,7 @@ export async function getWorkingState(cwd: string): Promise<string> {
 		const output = `Working directory changes:\n\n${status}\n\n${diff}`.trim()
 		return truncateOutput(output, lineLimit)
 	} catch (error) {
-		console.error("Error getting working state:", error);
-		throw error;
+		console.error("Error getting working state:", error)
+		throw error
 	}
 }

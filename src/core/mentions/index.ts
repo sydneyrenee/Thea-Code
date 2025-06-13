@@ -83,10 +83,11 @@ export async function getFileOrFolderContent(mentionPath: string, cwd: string): 
 		if (stats.isFile()) {
 			try {
 				const content = await extractTextFromFile(absPath)
-				return content		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error)
-			return `(Failed to read contents of ${mentionPath}): ${errorMessage}`
-		}
+				return content
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : String(error)
+				return `(Failed to read contents of ${mentionPath}): ${errorMessage}`
+			}
 		} else if (stats.isDirectory()) {
 			const entries = await fs.readdir(absPath, { withFileTypes: true })
 			let folderContent = ""

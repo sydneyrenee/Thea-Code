@@ -7,7 +7,15 @@ import ApiConfigManager from "../ApiConfigManager"
 
 // Mock VSCode components
 jest.mock("@/components/ui/vscode-components", () => ({
-	VSCodeTextField: ({ value, onInput, placeholder, onKeyDown, "data-testid": dataTestId }: { [key: string]: unknown }) => (
+	VSCodeTextField: ({
+		value,
+		onInput,
+		placeholder,
+		onKeyDown,
+		"data-testid": dataTestId,
+	}: {
+		[key: string]: unknown
+	}) => (
 		<input
 			value={value}
 			onChange={(e) => onInput(e)}

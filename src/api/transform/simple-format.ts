@@ -1,11 +1,11 @@
-import type { 
-	NeutralMessage, 
+import type {
+	NeutralMessage,
 	NeutralConversationHistory,
 	NeutralTextContentBlock,
 	NeutralImageContentBlock,
 	NeutralToolUseContentBlock,
 	NeutralToolResultContentBlock,
-	NeutralContentBlock
+	NeutralContentBlock,
 } from "../../shared/neutral-history"
 
 /**
@@ -19,8 +19,7 @@ function isTextBlock(block: NeutralContentBlock): block is NeutralTextContentBlo
  * Type guard to check if a block is an image content block
  */
 function isImageBlock(block: NeutralContentBlock): block is NeutralImageContentBlock {
-	return (block.type === "image" || block.type === "image_url" || block.type === "image_base64") && 
-		   "source" in block
+	return (block.type === "image" || block.type === "image_url" || block.type === "image_base64") && "source" in block
 }
 
 /**
@@ -39,9 +38,9 @@ function isToolResultBlock(block: NeutralContentBlock): block is NeutralToolResu
 
 /**
  * Convert complex content blocks to simple string content.
- * This function flattens complex message content (images, tool calls, etc.) 
+ * This function flattens complex message content (images, tool calls, etc.)
  * into a single string representation suitable for APIs that only support text.
- * 
+ *
  * @param content - The content to convert, can be a string or array of content blocks
  * @returns A string representation of the content
  */
@@ -93,23 +92,23 @@ export function convertToSimpleContent(content: NeutralMessage["content"]): stri
  * Simple message format for APIs that only support string content
  */
 export type SimpleMessage = {
-	readonly role: "user" | "assistant" | "system" | "tool";
-	readonly content: string;
+	readonly role: "user" | "assistant" | "system" | "tool"
+	readonly content: string
 }
 
 /**
  * Convert Neutral conversation history to simple format with string content.
  * This function is useful for APIs that only support simple text messages
  * and cannot handle complex content types like images or tool calls.
- * 
+ *
  * @param messages - The conversation history to convert
  * @returns An array of simple messages with string content only
  */
-export function convertToSimpleMessages(
-	messages: NeutralConversationHistory,
-): SimpleMessage[] {
-	return messages.map((message): SimpleMessage => ({
-		role: message.role,
-		content: convertToSimpleContent(message.content),
-	}))
+export function convertToSimpleMessages(messages: NeutralConversationHistory): SimpleMessage[] {
+	return messages.map(
+		(message): SimpleMessage => ({
+			role: message.role,
+			content: convertToSimpleContent(message.content),
+		}),
+	)
 }

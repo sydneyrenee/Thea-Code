@@ -208,9 +208,7 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 										}}>
 										<VSCodeCheckbox
 											checked={selectedTaskIds.includes(item.id)}
-											onChange={(checked) =>
-												toggleTaskSelection(item.id, checked)
-											}
+											onChange={(checked) => toggleTaskSelection(item.id, checked)}
 										/>
 									</div>
 								)}

@@ -108,7 +108,9 @@ export const BrowserSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={browserToolEnabled}
-						onChange={(e: Event & { target: { checked: boolean; value: string } }) => setCachedStateField("browserToolEnabled", e.target.checked)}>
+						onChange={(e: Event & { target: { checked: boolean; value: string } }) =>
+							setCachedStateField("browserToolEnabled", e.target.checked)
+						}>
 						<span className="font-medium">{t("settings:browser.enable.label")}</span>
 					</VSCodeCheckbox>
 					<div className="text-vscode-descriptionForeground text-sm mt-1">

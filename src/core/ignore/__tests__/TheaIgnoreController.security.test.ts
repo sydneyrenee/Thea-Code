@@ -20,10 +20,10 @@ jest.mock("vscode", () => {
 				dispose: jest.fn(),
 			})),
 		},
-               RelativePattern: jest.fn().mockImplementation((base: string, pattern: string) => ({
-                       base,
-                       pattern,
-               })),
+		RelativePattern: jest.fn().mockImplementation((base: string, pattern: string) => ({
+			base,
+			pattern,
+		})),
 	}
 })
 

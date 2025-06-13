@@ -296,13 +296,13 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			let stream: AsyncIterable<string>
 			try {
 				stream = await streamAvailable
-                        } catch (error) {
-                                // Stream timeout or other error occurred
-                                if (error instanceof Error) {
-                                        console.error("[Terminal Process] Stream error:", error.message)
-                                } else {
-                                        console.error("[Terminal Process] Stream error", error)
-                                }
+			} catch (error) {
+				// Stream timeout or other error occurred
+				if (error instanceof Error) {
+					console.error("[Terminal Process] Stream error:", error.message)
+				} else {
+					console.error("[Terminal Process] Stream error", error)
+				}
 
 				// Emit completed event with error message
 				this.emit(
@@ -400,8 +400,8 @@ export class TerminalProcess extends EventEmitter<TerminalProcessEvents> {
 			}
 
 			// Wait for shell execution to complete and handle exit details
-                        await shellExecutionComplete
-                        this.isHot = false
+			await shellExecutionComplete
+			this.isHot = false
 
 			if (commandOutputStarted) {
 				// Emit any remaining output before completing
@@ -676,15 +676,15 @@ export type TerminalProcessResultPromise = TerminalProcess & Promise<void>
 
 // Similar to execa's ResultPromise, this lets us create a mixin of both a TerminalProcess and a Promise: https://github.com/sindresorhus/execa/blob/main/lib/methods/promise.js
 export function mergePromise(process: TerminalProcess, promise: Promise<void>): TerminalProcessResultPromise {
-        const nativePromisePrototype = Object.getPrototypeOf(Promise.resolve()) as Record<string, unknown>
-        const descriptors = (['then', 'catch', 'finally'] as const).map(
-                (property) => [property, Object.getOwnPropertyDescriptor(nativePromisePrototype, property)] as const,
-        )
-        for (const [property, descriptor] of descriptors) {
-                if (descriptor?.value && typeof descriptor.value === 'function') {
-                        const value = (descriptor.value as (...args: unknown[]) => unknown).bind(promise)
-                        Reflect.defineProperty(process, property, { ...descriptor, value })
-                }
-        }
-        return process as TerminalProcessResultPromise
+	const nativePromisePrototype = Object.getPrototypeOf(Promise.resolve()) as Record<string, unknown>
+	const descriptors = (["then", "catch", "finally"] as const).map(
+		(property) => [property, Object.getOwnPropertyDescriptor(nativePromisePrototype, property)] as const,
+	)
+	for (const [property, descriptor] of descriptors) {
+		if (descriptor?.value && typeof descriptor.value === "function") {
+			const value = (descriptor.value as (...args: unknown[]) => unknown).bind(promise)
+			Reflect.defineProperty(process, property, { ...descriptor, value })
+		}
+	}
+	return process as TerminalProcessResultPromise
 }

@@ -20,7 +20,9 @@ export const ExperimentalFeature = ({ enabled, onChange, experimentKey }: Experi
 		<div>
 			<div className="flex items-center gap-2">
 				<span className="text-vscode-errorForeground">{t("settings:experimental.warning")}</span>
-				<VSCodeCheckbox checked={enabled} onChange={(e: Event & { target: { checked: boolean } }) => onChange(e.target.checked)}>
+				<VSCodeCheckbox
+					checked={enabled}
+					onChange={(e: Event & { target: { checked: boolean } }) => onChange(e.target.checked)}>
 					<span className="font-medium">{t(nameKey)}</span>
 				</VSCodeCheckbox>
 			</div>

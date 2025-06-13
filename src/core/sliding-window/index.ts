@@ -1,5 +1,5 @@
-import type { ApiHandler } from "../../api";
-import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history";
+import type { ApiHandler } from "../../api"
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 
 /**
  * Default percentage of the context window to use as a buffer when deciding when to truncate
@@ -13,35 +13,32 @@ export const TOKEN_BUFFER_PERCENTAGE = 0.1
  * @param {ApiHandler} apiHandler - The API handler to use for token counting
  * @returns {Promise<number>} A promise resolving to the token count
  */
-export async function estimateTokenCount(
-	content: NeutralMessageContent,
-	apiHandler: ApiHandler,
-): Promise<number> {
-	if (!content || content.length === 0) return 0;
+export async function estimateTokenCount(content: NeutralMessageContent, apiHandler: ApiHandler): Promise<number> {
+	if (!content || content.length === 0) return 0
 
 	// content is already an array of blocks (NeutralMessageContent)
-	let total = 0;
+	let total = 0
 	for (const block of content) {
-		if (block.type === 'text') {
+		if (block.type === "text") {
 			// apiHandler.countTokens might expect Anthropic's format.
 			// For now, we'll assume it can handle a neutral text block or we'll need a conversion.
 			// This part might need further adjustment based on ApiHandler's capabilities.
-			total += await apiHandler.countTokens([{ type: 'text', text: block.text }]);
-		} else if (block.type === 'image' && block.source) {
-			if (block.source.type === 'base64') {
-				const data = String(block.source.data || '');
-				total += Math.ceil(Math.sqrt(data.length)) * 1.5; // Approximation for image tokens
-			} else if (block.source.type === 'image_url') {
+			total += await apiHandler.countTokens([{ type: "text", text: block.text }])
+		} else if (block.type === "image" && block.source) {
+			if (block.source.type === "base64") {
+				const data = String(block.source.data || "")
+				total += Math.ceil(Math.sqrt(data.length)) * 1.5 // Approximation for image tokens
+			} else if (block.source.type === "image_url") {
 				// Placeholder for URL-based image token counting, might be a fixed value or require fetching
-				total += 1000; // Arbitrary placeholder
+				total += 1000 // Arbitrary placeholder
 			}
 		} else {
 			// For other block types (tool_use, tool_result), convert to JSON string for rough estimation
-			const jsonStr = JSON.stringify(block);
-			total += await apiHandler.countTokens([{ type: 'text', text: jsonStr }]);
+			const jsonStr = JSON.stringify(block)
+			total += await apiHandler.countTokens([{ type: "text", text: jsonStr }])
 		}
 	}
-	return Math.ceil(total);
+	return Math.ceil(total)
 }
 
 /**
@@ -55,11 +52,11 @@ export async function estimateTokenCount(
  * @returns {NeutralConversationHistory} The truncated conversation messages.
  */
 export function truncateConversation(
- messages: NeutralConversationHistory,
- fracToRemove: number,
+	messages: NeutralConversationHistory,
+	fracToRemove: number,
 ): NeutralConversationHistory {
- if (messages.length === 0) return [];
- const truncatedMessages = [messages[0]];
+	if (messages.length === 0) return []
+	const truncatedMessages = [messages[0]]
 	const rawMessagesToRemove = Math.floor((messages.length - 1) * fracToRemove)
 	const messagesToRemove = rawMessagesToRemove - (rawMessagesToRemove % 2)
 	const remainingMessages = messages.slice(messagesToRemove + 1)
@@ -81,9 +78,9 @@ export function truncateConversation(
  */
 
 type TruncateOptions = {
- messages: NeutralConversationHistory;
- totalTokens: number;
- contextWindow: number;
+	messages: NeutralConversationHistory
+	totalTokens: number
+	contextWindow: number
 	maxTokens?: number | null
 	apiHandler: ApiHandler
 }
@@ -96,22 +93,22 @@ type TruncateOptions = {
  * @returns {Promise<NeutralConversationHistory>} The original or truncated conversation messages.
  */
 export async function truncateConversationIfNeeded({
- messages,
- totalTokens,
- contextWindow,
- maxTokens,
- apiHandler,
+	messages,
+	totalTokens,
+	contextWindow,
+	maxTokens,
+	apiHandler,
 }: TruncateOptions): Promise<NeutralConversationHistory> {
- if (messages.length === 0) return [];
- // Calculate the maximum tokens reserved for response
+	if (messages.length === 0) return []
+	// Calculate the maximum tokens reserved for response
 	const reservedTokens = maxTokens || contextWindow * 0.2
 
 	// Estimate tokens for the last message (which is always a user message)
 	const lastMessage = messages[messages.length - 1]
-	const lastMessageContent = lastMessage.content;
+	const lastMessageContent = lastMessage.content
 	const lastMessageTokens = Array.isArray(lastMessageContent)
 		? await estimateTokenCount(lastMessageContent, apiHandler)
-		: await estimateTokenCount([{ type: "text", text: lastMessageContent }], apiHandler); // Cast to string if not array
+		: await estimateTokenCount([{ type: "text", text: lastMessageContent }], apiHandler) // Cast to string if not array
 
 	// Calculate total effective tokens (totalTokens never includes the last message)
 	const effectiveTokens = totalTokens + lastMessageTokens

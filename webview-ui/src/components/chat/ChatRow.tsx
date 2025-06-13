@@ -139,9 +139,9 @@ export const ChatRowContent = ({
 					),
 					<span style={{ color: normalColor, fontWeight: "bold" }}>{t("chat:runCommand.title")}:</span>,
 				]
-		case "use_mcp_server": {
-			const mcpServerUse = JSON.parse(message.text || "{}") as TheaAskUseMcpServer // Renamed type
-			return [
+			case "use_mcp_server": {
+				const mcpServerUse = JSON.parse(message.text || "{}") as TheaAskUseMcpServer // Renamed type
+				return [
 					isMcpServerResponding ? (
 						<ProgressIndicator />
 					) : (
@@ -155,8 +155,8 @@ export const ChatRowContent = ({
 							: t("chat:mcp.wantsToAccessResource", { serverName: mcpServerUse.serverName })}
 					</span>,
 				]
-		}
-		case "completion_result":
+			}
+			case "completion_result":
 				return [
 					<span
 						className="codicon codicon-check"
@@ -581,8 +581,7 @@ export const ChatRowContent = ({
 								<div style={{ display: "flex", alignItems: "center", gap: "10px", flexGrow: 1 }}>
 									{icon}
 									{title}
-									<Badge
-										style={{ opacity: cost !== null && cost !== undefined && cost > 0 ? 1 : 0 }}>
+									<Badge style={{ opacity: cost !== null && cost !== undefined && cost > 0 ? 1 : 0 }}>
 										${Number(cost || 0)?.toFixed(4)}
 									</Badge>
 								</div>

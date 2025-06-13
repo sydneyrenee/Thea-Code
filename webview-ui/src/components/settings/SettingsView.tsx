@@ -61,9 +61,9 @@ export interface SettingsViewRef {
 	checkUnsaveChanges: (then: () => void) => void
 }
 
-type SectionName = 
+type SectionName =
 	| "providers"
-	| "autoApprove" 
+	| "autoApprove"
 	| "browser"
 	| "checkpoints"
 	| "notifications"

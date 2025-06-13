@@ -51,11 +51,11 @@ sequenceDiagram
     participant Server as EmbeddedMcpProvider
 
     Model->>OH: Stream with tool use
-    
+
     Note over OH: Primary Path (OpenAI Format)
     OH->>OAH: extractToolCalls(delta)
     OAH-->>OH: toolCalls[]
-    
+
     alt OpenAI Format Detected
         OH->>MCP: processToolUse(toolCall)
         MCP->>Router: routeToolUse(content)
@@ -128,61 +128,67 @@ The Ollama handler integrates with the MCP system in the following ways:
 ### 5.1 Test Categories
 
 1. **OpenAI Handler Integration Tests**
-   - Verify that the Ollama handler creates and initializes an OpenAI handler
-   - Verify that the correct options are passed to the OpenAI handler
+
+    - Verify that the Ollama handler creates and initializes an OpenAI handler
+    - Verify that the correct options are passed to the OpenAI handler
 
 2. **Tool Use Detection Integration Tests**
-   - Verify that the Ollama handler uses the OpenAI handler's `extractToolCalls` method
-   - Verify that OpenAI format tool calls are correctly processed
-   - Verify fallback to XML detection when OpenAI format isn't detected
-   - Verify fallback to JSON detection when neither OpenAI nor XML formats are detected
-   - Verify error handling for tool use processing
+    - Verify that the Ollama handler uses the OpenAI handler's `extractToolCalls` method
+    - Verify that OpenAI format tool calls are correctly processed
+    - Verify fallback to XML detection when OpenAI format isn't detected
+    - Verify fallback to JSON detection when neither OpenAI nor XML formats are detected
+    - Verify error handling for tool use processing
 
 ### 5.2 Specific Test Cases
 
 #### 5.2.1 OpenAI Handler Integration Tests
 
 1. **Test: should create an OpenAI handler in constructor**
-   - Verify that the OpenAI handler is created and accessible
+
+    - Verify that the OpenAI handler is created and accessible
 
 2. **Test: should pass correct options to OpenAI handler**
-   - Verify that the options passed to the OpenAI handler match the expected values
+    - Verify that the options passed to the OpenAI handler match the expected values
 
 #### 5.2.2 Tool Use Detection Integration Tests
 
 1. **Test: should use OpenAI handler for tool use detection**
-   - Create a spy on the OpenAI handler's `extractToolCalls` method
-   - Call `createMessage` with a neutral history
-   - Verify that the spy was called
+
+    - Create a spy on the OpenAI handler's `extractToolCalls` method
+    - Call `createMessage` with a neutral history
+    - Verify that the spy was called
 
 2. **Test: should process OpenAI format tool calls using OpenAI handler**
-   - Mock the OpenAI client to return a tool call in OpenAI format
-   - Create a spy on the `processToolUse` method
-   - Call `createMessage` with a neutral history
-   - Verify that `processToolUse` was called with the correct arguments
-   - Verify that a tool result was yielded
+
+    - Mock the OpenAI client to return a tool call in OpenAI format
+    - Create a spy on the `processToolUse` method
+    - Call `createMessage` with a neutral history
+    - Verify that `processToolUse` was called with the correct arguments
+    - Verify that a tool result was yielded
 
 3. **Test: should fall back to XML detection if OpenAI format is not detected**
-   - Mock the OpenAI handler to not detect any tool calls
-   - Mock the OpenAI client to return XML content
-   - Create a spy on the `processToolUse` method
-   - Call `createMessage` with a neutral history
-   - Verify that `processToolUse` was called with the correct arguments
-   - Verify that a tool result was yielded
+
+    - Mock the OpenAI handler to not detect any tool calls
+    - Mock the OpenAI client to return XML content
+    - Create a spy on the `processToolUse` method
+    - Call `createMessage` with a neutral history
+    - Verify that `processToolUse` was called with the correct arguments
+    - Verify that a tool result was yielded
 
 4. **Test: should fall back to JSON detection if neither OpenAI nor XML formats are detected**
-   - Mock the OpenAI handler to not detect any tool calls
-   - Mock the OpenAI client to return JSON content
-   - Create a spy on the `processToolUse` method
-   - Call `createMessage` with a neutral history
-   - Verify that `processToolUse` was called with the correct arguments
-   - Verify that a tool result was yielded
+
+    - Mock the OpenAI handler to not detect any tool calls
+    - Mock the OpenAI client to return JSON content
+    - Create a spy on the `processToolUse` method
+    - Call `createMessage` with a neutral history
+    - Verify that `processToolUse` was called with the correct arguments
+    - Verify that a tool result was yielded
 
 5. **Test: should handle errors in OpenAI tool use processing**
-   - Mock the OpenAI client to return a tool call in OpenAI format
-   - Mock `processToolUse` to throw an error
-   - Call `createMessage` with a neutral history
-   - Verify that the error is handled correctly
+    - Mock the OpenAI client to return a tool call in OpenAI format
+    - Mock `processToolUse` to throw an error
+    - Call `createMessage` with a neutral history
+    - Verify that the error is handled correctly
 
 ## 6. Implementation Details
 
@@ -192,67 +198,67 @@ The Ollama handler has been updated to use the OpenAI handler's tool use detecti
 
 ```typescript
 // src/api/providers/ollama.ts
-import { OpenAiHandler } from './openai';
+import { OpenAiHandler } from "./openai"
 
 export class OllamaHandler extends BaseProvider implements SingleCompletionHandler {
-  protected options: ApiHandlerOptions;
-  private client: OpenAI;
-  private openAiHandler: OpenAiHandler;
+	protected options: ApiHandlerOptions
+	private client: OpenAI
+	private openAiHandler: OpenAiHandler
 
-  constructor(options: ApiHandlerOptions) {
-    super();
-    this.options = options;
-    this.client = new OpenAI({
-      baseURL: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
-      apiKey: "ollama", // Ollama uses a dummy key via OpenAI client
-    });
-    
-    // Create an OpenAI handler for tool use detection and processing
-    this.openAiHandler = new OpenAiHandler({
-      ...options,
-      // Override any OpenAI-specific options as needed
-      openAiApiKey: "ollama", // Use the same dummy key
-      openAiBaseUrl: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
-      openAiModelId: this.options.ollamaModelId || ""
-    });
-  }
-  
-  override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-    // ... existing code ...
-    
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta ?? {};
+	constructor(options: ApiHandlerOptions) {
+		super()
+		this.options = options
+		this.client = new OpenAI({
+			baseURL: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
+			apiKey: "ollama", // Ollama uses a dummy key via OpenAI client
+		})
 
-      if (delta.content) {
-        // First, check for OpenAI-style tool calls using the OpenAI handler
-        const toolCalls = this.openAiHandler.extractToolCalls(delta);
-        
-        if (toolCalls.length > 0) {
-          // Process tool calls using OpenAI handler's logic
-          for (const toolCall of toolCalls) {
-            if (toolCall.function) {
-              // Process tool use using MCP integration
-              const toolResult = await this.processToolUse({
-                id: toolCall.id,
-                name: toolCall.function.name,
-                input: JSON.parse(toolCall.function.arguments || '{}')
-              });
-              
-              // Yield tool result
-              yield {
-                type: 'tool_result',
-                id: toolCall.id,
-                content: toolResult
-              };
-            }
-          }
-        } else {
-          // Fallback to XML/JSON detection if OpenAI format isn't detected
-          // ... existing fallback code ...
-        }
-      }
-    }
-  }
+		// Create an OpenAI handler for tool use detection and processing
+		this.openAiHandler = new OpenAiHandler({
+			...options,
+			// Override any OpenAI-specific options as needed
+			openAiApiKey: "ollama", // Use the same dummy key
+			openAiBaseUrl: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
+			openAiModelId: this.options.ollamaModelId || "",
+		})
+	}
+
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// ... existing code ...
+
+		for await (const chunk of stream) {
+			const delta = chunk.choices[0]?.delta ?? {}
+
+			if (delta.content) {
+				// First, check for OpenAI-style tool calls using the OpenAI handler
+				const toolCalls = this.openAiHandler.extractToolCalls(delta)
+
+				if (toolCalls.length > 0) {
+					// Process tool calls using OpenAI handler's logic
+					for (const toolCall of toolCalls) {
+						if (toolCall.function) {
+							// Process tool use using MCP integration
+							const toolResult = await this.processToolUse({
+								id: toolCall.id,
+								name: toolCall.function.name,
+								input: JSON.parse(toolCall.function.arguments || "{}"),
+							})
+
+							// Yield tool result
+							yield {
+								type: "tool_result",
+								id: toolCall.id,
+								content: toolResult,
+							}
+						}
+					}
+				} else {
+					// Fallback to XML/JSON detection if OpenAI format isn't detected
+					// ... existing fallback code ...
+				}
+			}
+		}
+	}
 }
 ```
 

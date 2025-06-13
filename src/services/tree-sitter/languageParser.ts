@@ -30,10 +30,10 @@ async function loadLanguage(langName: string) {
 let isParserInitialized = false
 
 function initializeParser(): void {
-        if (!isParserInitialized) {
-                // Parser.init(); // Removed as may not be required
-                isParserInitialized = true
-        }
+	if (!isParserInitialized) {
+		// Parser.init(); // Removed as may not be required
+		isParserInitialized = true
+	}
 }
 
 /*
@@ -59,7 +59,7 @@ Sources:
 - https://github.com/tree-sitter/tree-sitter/blob/master/lib/binding_web/test/query-test.js
 */
 export async function loadRequiredLanguageParsers(filesToParse: string[]): Promise<LanguageParser> {
-        initializeParser()
+	initializeParser()
 	const extensionsToLoad = new Set(filesToParse.map((file) => path.extname(file).toLowerCase().slice(1)))
 	const parsers: LanguageParser = {}
 	for (const ext of extensionsToLoad) {

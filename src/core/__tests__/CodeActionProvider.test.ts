@@ -26,15 +26,18 @@ jest.mock("vscode", () => {
 	// Mock static methods of Uri directly on the actual Uri class
 	actualVscode.Uri.file = jest.fn((path: string) => actualVscode.Uri.file(path))
 	actualVscode.Uri.parse = jest.fn((value: string) => actualVscode.Uri.parse(value))
-	actualVscode.Uri.joinPath = jest.fn((uri: vscode.Uri, ...paths: string[]) => actualVscode.Uri.joinPath(uri, ...paths))
-	actualVscode.Uri.from = jest.fn((components: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }) =>
-		actualVscode.Uri.from({
-			scheme: components.scheme || "",
-			authority: components.authority,
-			path: components.path,
-			query: components.query,
-			fragment: components.fragment,
-		}),
+	actualVscode.Uri.joinPath = jest.fn((uri: vscode.Uri, ...paths: string[]) =>
+		actualVscode.Uri.joinPath(uri, ...paths),
+	)
+	actualVscode.Uri.from = jest.fn(
+		(components: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }) =>
+			actualVscode.Uri.from({
+				scheme: components.scheme || "",
+				authority: components.authority,
+				path: components.path,
+				query: components.query,
+				fragment: components.fragment,
+			}),
 	)
 
 	return {
@@ -45,10 +48,12 @@ jest.mock("vscode", () => {
 			command: undefined,
 		})),
 		CodeActionKind: actualVscode.CodeActionKind, // Return the actual CodeActionKind class
-		Range: jest.fn().mockImplementation((startLine: number, startChar: number, endLine: number, endChar: number) => ({
-			start: { line: startLine, character: startChar } satisfies MockPosition,
-			end: { line: endLine, character: endChar } satisfies MockPosition,
-		})),
+		Range: jest
+			.fn()
+			.mockImplementation((startLine: number, startChar: number, endLine: number, endChar: number) => ({
+				start: { line: startLine, character: startChar } satisfies MockPosition,
+				end: { line: endLine, character: endChar } satisfies MockPosition,
+			})),
 		DiagnosticSeverity: {
 			Error: 0,
 			Warning: 1,
@@ -96,7 +101,7 @@ describe("CodeActionProvider", () => {
 			lineCount: 10,
 			getText: jest.fn(() => "mocked text"), // Removed unused 'range' parameter
 			lineAt: jest.fn((line: number | vscode.Position) => {
-				const lineNumber = typeof line === "number" ? line : line.line;
+				const lineNumber = typeof line === "number" ? line : line.line
 				return {
 					text: `mocked line ${lineNumber}`,
 					lineNumber: lineNumber,
@@ -104,7 +109,7 @@ describe("CodeActionProvider", () => {
 					rangeIncludingLineBreak: new vscode.Range(lineNumber, 0, lineNumber, 0),
 					firstNonWhitespaceCharacterIndex: 0,
 					isEmptyOrWhitespace: false,
-				} as vscode.TextLine;
+				} as vscode.TextLine
 			}),
 			offsetAt: jest.fn(),
 			positionAt: jest.fn(),
@@ -131,7 +136,7 @@ describe("CodeActionProvider", () => {
 		} satisfies { range: vscode.Range; text: string })
 		;(EditorUtils.getFilePath as jest.Mock).mockReturnValue("/test/file.ts")
 		;(EditorUtils.hasIntersectingRange as jest.Mock).mockReturnValue(true)
-  ;(EditorUtils.createDiagnosticData as jest.Mock).mockImplementation((d: vscode.Diagnostic) => d)
+		;(EditorUtils.createDiagnosticData as jest.Mock).mockImplementation((d: vscode.Diagnostic) => d)
 	})
 
 	describe("provideCodeActions", () => {

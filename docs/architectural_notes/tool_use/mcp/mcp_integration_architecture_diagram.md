@@ -24,12 +24,12 @@ graph TD
         ET[extension_ts]
         TP[TheaProvider]
     end
-    
+
     subgraph "Message Flow"
         TP --> WMH[WebviewMessageHandler]
         WMH --> TP
     end
-    
+
     subgraph "API Handlers"
         AH[ApiHandler Interface]
         ANT[AnthropicHandler]
@@ -37,55 +37,55 @@ graph TD
         OLL[OllamaHandler]
         OTH[Other Handlers]
     end
-    
+
     subgraph "MCP Integration"
         MI[McpIntegration]
         MTR[McpToolRouter]
         UMTS[McpToolExecutor]
         MC[McpConverters]
     end
-    
+
     subgraph "MCP Server"
         EMCP[EmbeddedMcpProvider]
         MTReg[McpToolRegistry]
     end
-    
+
     subgraph "Tool Execution"
         TE[Tool Executor]
         TR[Tool Result]
     end
-    
+
     subgraph "Webview App"
         WA[Webview App]
         CTX[Context]
         IDX[index_tsx]
         OVS[Other Views]
     end
-    
+
     ET --> TP
     TP --> AH
-    
+
     AH --> ANT
     AH --> OAI
     AH --> OLL
     AH --> OTH
-    
+
     ANT --> MI
     OAI --> MI
     OLL --> MI
     OTH --> MI
-    
+
     MI --> MTR
     MTR --> MC
     MTR --> UMTS
-    
+
     UMTS --> EMCP
     UMTS --> MTReg
-    
+
     EMCP --> TE
     TE --> TR
     TR --> EMCP
-    
+
     TP --> WA
     WA --> CTX
     CTX --> IDX
@@ -135,24 +135,24 @@ sequenceDiagram
     participant MI as McpIntegration
     participant EMCP as EmbeddedMcpProvider
     participant TE as Tool Executor
-    
+
     User->>WA: User input
     WA->>TP: Send message
     TP->>PH: Create message
-    
+
     PH->>MI: Process tool use
     MI->>EMCP: Execute tool
     EMCP->>TE: Execute tool
-    
+
     alt Tool requires user approval
         TE->>User: Request approval
         User->>TE: Approve tool use
     end
-    
+
     TE->>EMCP: Return result
     EMCP->>MI: Return result
     MI->>PH: Return result
-    
+
     PH->>TP: Return message
     TP->>WA: Update UI
     WA->>User: Display result

@@ -1,14 +1,14 @@
-import { AnthropicVertex } from "@anthropic-ai/vertex-sdk";
-import Messages from "@anthropic-ai/sdk";
+import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
+import Messages from "@anthropic-ai/sdk"
 import { VertexAI } from "@google-cloud/vertexai"
 
 import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
 import {
-    convertToVertexGeminiHistory,
-    convertToVertexClaudeHistory,
-    formatMessageForCache
+	convertToVertexGeminiHistory,
+	convertToVertexClaudeHistory,
+	formatMessageForCache,
 } from "../transform/neutral-vertex-format"
 import { BaseProvider } from "./base-provider"
 
@@ -83,13 +83,13 @@ interface VertexMessageStreamEvent {
 // https://docs.anthropic.com/en/api/claude-on-vertex-ai
 /**
  * Vertex AI Handler implementing the unified, neutral format approach.
- * 
+ *
  * This handler supports both Claude and Gemini models on Vertex AI using:
  * - Neutral conversation history format for provider-agnostic message handling
  * - MCP (Model Context Protocol) integration for unified tool use across all models
  * - Format conversion utilities for model-specific API calls
  * - Consistent streaming and token counting interfaces
- * 
+ *
  * The handler automatically detects the model type (Claude vs Gemini) and uses
  * the appropriate conversion functions and API clients while maintaining the
  * same neutral interface for all consumer code.
@@ -198,10 +198,11 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 							id: `${part.functionCall.name}-${Date.now()}`,
 						})
 
-						const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult)
+						const toolResultString =
+							typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 						yield {
-							type: 'tool_result',
+							type: "tool_result",
 							id: `${part.functionCall.name}-${Date.now()}`,
 							content: toolResultString,
 						}
@@ -251,16 +252,18 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 						},
 					]
 				: systemPrompt,
-			messages: vertexMessages.map((message, index) => {
-				// Only cache the last two user messages
-				const shouldCache = useCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
-				return formatMessageForCache(message, shouldCache)
-			}).filter((m) => m.role === "user" || m.role === "assistant") as Messages.MessageParam[],
+			messages: vertexMessages
+				.map((message, index) => {
+					// Only cache the last two user messages
+					const shouldCache = useCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
+					return formatMessageForCache(message, shouldCache)
+				})
+				.filter((m) => m.role === "user" || m.role === "assistant") as Messages.MessageParam[],
 			stream: true,
 		}
 
 		const stream = (await this.anthropicClient.messages.create(
-			params
+			params,
 		)) as unknown as AsyncIterable<VertexMessageStreamEvent>
 
 		// Process the stream chunks
@@ -309,11 +312,11 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 							}
 							// Define a type for the thinking content block
 							interface ThinkingContentBlock {
-								type: "thinking";
-								thinking: string;
+								type: "thinking"
+								thinking: string
 							}
 							// Type assertion with a specific interface
-							const thinkingBlock = chunk.content_block as ThinkingContentBlock;
+							const thinkingBlock = chunk.content_block as ThinkingContentBlock
 							yield {
 								type: "reasoning",
 								text: thinkingBlock.thinking,
@@ -323,17 +326,18 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 						case "tool_use": {
 							// Handle tool use blocks using MCP integration
 							if (chunk.content_block?.type === "tool_use") {
-								const toolUseBlock = chunk.content_block;
+								const toolUseBlock = chunk.content_block
 								const toolResult = await this.processToolUse({
 									id: toolUseBlock.id,
 									name: toolUseBlock.name,
 									input: toolUseBlock.input,
 								})
 
-								const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult)
+								const toolResultString =
+									typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 								yield {
-									type: 'tool_result',
+									type: "tool_result",
 									id: toolUseBlock.id,
 									content: toolResultString,
 								}
@@ -355,11 +359,11 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 						case "thinking_delta": {
 							// Define a type for the thinking delta
 							interface ThinkingDelta {
-								type: "thinking_delta";
-								thinking: string;
+								type: "thinking_delta"
+								thinking: string
 							}
 							// Type assertion with a specific interface
-							const thinkingDelta = chunk.delta as ThinkingDelta;
+							const thinkingDelta = chunk.delta as ThinkingDelta
 							yield {
 								type: "reasoning",
 								text: thinkingDelta.thinking,
@@ -414,13 +418,15 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			})
 
 			// Create a neutral history with a single message
-			const neutralHistory = [{
-				role: "user" as const,
-				content: prompt
-			}];
+			const neutralHistory = [
+				{
+					role: "user" as const,
+					content: prompt,
+				},
+			]
 
 			// Convert the neutral history to Vertex Gemini format
-			const geminiMessages = convertToVertexGeminiHistory(neutralHistory);
+			const geminiMessages = convertToVertexGeminiHistory(neutralHistory)
 
 			const result = await model.generateContent({
 				contents: geminiMessages,
@@ -451,25 +457,29 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			const useCache = info.supportsPromptCache
 
 			// Create a neutral history with a single message
-			const neutralHistory = [{
-				role: "user" as const,
-				content: prompt
-			}];
+			const neutralHistory = [
+				{
+					role: "user" as const,
+					content: prompt,
+				},
+			]
 
 			// Convert the neutral history to Vertex Claude format
-			const claudeMessages = convertToVertexClaudeHistory(neutralHistory);
+			const claudeMessages = convertToVertexClaudeHistory(neutralHistory)
 
 			// Apply cache control if needed
-			const messagesWithCache = claudeMessages.map(message =>
-				useCache ? formatMessageForCache(message, true) : message
-			);
+			const messagesWithCache = claudeMessages.map((message) =>
+				useCache ? formatMessageForCache(message, true) : message,
+			)
 
 			const params: Messages.MessageCreateParamsNonStreaming = {
 				model: id,
 				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 				temperature,
 				system: "", // No system prompt needed for single completions
-				messages: messagesWithCache.filter((m) => m.role === "user" || m.role === "assistant") as Messages.MessageParam[],
+				messages: messagesWithCache.filter(
+					(m) => m.role === "user" || m.role === "assistant",
+				) as Messages.MessageParam[],
 				stream: false,
 			}
 
@@ -500,10 +510,10 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		try {
 			// For both Claude and Gemini models, use the base provider's token counting
 			// as Vertex doesn't have a native token counting API for either model type
-			return super.countTokens(content);
+			return super.countTokens(content)
 		} catch (error) {
-			console.warn("Vertex token counting error, using fallback", error);
-			return super.countTokens(content);
+			console.warn("Vertex token counting error, using fallback", error)
+			return super.countTokens(content)
 		}
 	}
 

@@ -6,7 +6,6 @@ import simpleGit, { SimpleGit } from "simple-git"
 import * as tmp from "tmp"
 import * as fs from "fs"
 
-
 // Context matching edit strategy
 export function applyContextMatching(hunk: Hunk, content: string[], matchPosition: number): EditResult {
 	if (matchPosition === -1) {
@@ -181,9 +180,9 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 					result: newLines,
 					strategy: "git-fallback",
 				}
-                        } catch {
-                                console.error("Strategy 1 failed with merge conflict")
-                        }
+			} catch {
+				console.error("Strategy 1 failed with merge conflict")
+			}
 		} catch (error) {
 			console.error("Strategy 1 failed:", error)
 		}
@@ -223,9 +222,9 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 					result: newLines,
 					strategy: "git-fallback",
 				}
-                        } catch {
-                                console.error("Strategy 2 failed with merge conflict")
-                        }
+			} catch {
+				console.error("Strategy 2 failed with merge conflict")
+			}
 		} catch (error) {
 			console.error("Strategy 2 failed:", error)
 		}

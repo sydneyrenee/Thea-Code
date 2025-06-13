@@ -3,8 +3,8 @@ import axios from "axios"
 
 import { SingleCompletionHandler } from "../"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
-import { NeutralConversationHistory } from "../../shared/neutral-history"; // Import NeutralConversationHistory
-import { convertToOpenAiHistory } from "../transform/neutral-openai-format"; // Use neutral format conversion
+import { NeutralConversationHistory } from "../../shared/neutral-history" // Import NeutralConversationHistory
+import { convertToOpenAiHistory } from "../transform/neutral-openai-format" // Use neutral format conversion
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 
@@ -23,15 +23,15 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 		})
 	}
 
-       override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-               // Convert neutral history to OpenAI format
-               const openAiMessages = convertToOpenAiHistory(messages);
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// Convert neutral history to OpenAI format
+		const openAiMessages = convertToOpenAiHistory(messages)
 
-               // Add system prompt if not already included
-               const hasSystemMessage = openAiMessages.some(msg => msg.role === 'system');
-               if (systemPrompt && systemPrompt.trim() !== '' && !hasSystemMessage) {
-                       openAiMessages.unshift({ role: 'system', content: systemPrompt });
-               }
+		// Add system prompt if not already included
+		const hasSystemMessage = openAiMessages.some((msg) => msg.role === "system")
+		if (systemPrompt && systemPrompt.trim() !== "" && !hasSystemMessage) {
+			openAiMessages.unshift({ role: "system", content: systemPrompt })
+		}
 
 		try {
 			// Create params object with optional draft model
@@ -45,14 +45,14 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			// Add draft model if speculative decoding is enabled and a draft model is specified
 			if (this.options.lmStudioSpeculativeDecodingEnabled && this.options.lmStudioDraftModelId) {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-				(params as any).draft_model = this.options.lmStudioDraftModelId // Accommodate custom param
+				;(params as any).draft_model = this.options.lmStudioDraftModelId // Accommodate custom param
 			}
 
-			const stream = await this.client.chat.completions.create(params);
+			const stream = await this.client.chat.completions.create(params)
 
 			// Stream handling with MCP integration for tool use
 			for await (const chunk of stream) {
-				const delta = chunk.choices[0]?.delta;
+				const delta = chunk.choices[0]?.delta
 				if (delta?.content) {
 					yield {
 						type: "text",
@@ -68,23 +68,24 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 								const toolUseInput = {
 									name: toolCall.function.name,
 									arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
-								};
+								}
 
-								const toolResult = await this.processToolUse(toolUseInput);
-								const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+								const toolResult = await this.processToolUse(toolUseInput)
+								const toolResultString =
+									typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 								yield {
-									type: 'tool_result',
+									type: "tool_result",
 									id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 									content: toolResultString,
-								};
+								}
 							} catch (error) {
-								console.warn('LMStudio tool use error:', error);
+								console.warn("LMStudio tool use error:", error)
 								yield {
-									type: 'tool_result',
+									type: "tool_result",
 									id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 									content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-								};
+								}
 							}
 						}
 					}
@@ -119,10 +120,10 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 			// Add draft model if speculative decoding is enabled and a draft model is specified
 			if (this.options.lmStudioSpeculativeDecodingEnabled && this.options.lmStudioDraftModelId) {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-				(params as any).draft_model = this.options.lmStudioDraftModelId // Accommodate custom param
+				;(params as any).draft_model = this.options.lmStudioDraftModelId // Accommodate custom param
 			}
 
-			const response = await this.client.chat.completions.create(params);
+			const response = await this.client.chat.completions.create(params)
 			return response.choices[0]?.message.content || ""
 		} catch {
 			// const error = e as Error; // Unused
@@ -141,8 +142,8 @@ export async function getLmStudioModels(baseUrl = "http://localhost:1234") {
 
 		const response = await axios.get(`${baseUrl}/v1/models`)
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-		const modelsArray = response.data?.data?.map((model: { id: string }) => model.id) || []  // Type 'model'
-		return [...new Set<string>(modelsArray as string[])]; // Assert modelsArray is string[]
+		const modelsArray = response.data?.data?.map((model: { id: string }) => model.id) || [] // Type 'model'
+		return [...new Set<string>(modelsArray as string[])] // Assert modelsArray is string[]
 	} catch {
 		// const error = _e as Error; // Unused
 		return []

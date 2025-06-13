@@ -12,8 +12,8 @@ export async function countFileLines(filePath: string): Promise<number> {
 	// Check if file exists
 	try {
 		await fs.promises.access(filePath, fs.constants.F_OK)
-        } catch {
-                throw new Error(`File not found: ${filePath}`)
+	} catch {
+		throw new Error(`File not found: ${filePath}`)
 	}
 
 	return new Promise((resolve, reject) => {
@@ -33,12 +33,12 @@ export async function countFileLines(filePath: string): Promise<number> {
 			resolve(lineCount)
 		})
 
-                rl.on("error", (err) => {
-                        reject(err instanceof Error ? err : new Error(String(err)))
-                })
+		rl.on("error", (err) => {
+			reject(err instanceof Error ? err : new Error(String(err)))
+		})
 
-                readStream.on("error", (err) => {
-                        reject(err instanceof Error ? err : new Error(String(err)))
-                })
+		readStream.on("error", (err) => {
+			reject(err instanceof Error ? err : new Error(String(err)))
+		})
 	})
 }

@@ -7,6 +7,7 @@
 This document provides a detailed guide for integrating the Model Context Protocol (MCP) tool system with OpenAI-compatible models like Ollama. It focuses on converting MCP tool definitions to OpenAI function format and exposing them to models that support function calling.
 
 The integration enables:
+
 - Exposing MCP-registered tools to OpenAI-compatible models
 - Converting tool definitions to OpenAI function format
 - Processing function calls from models and routing them through the MCP system
@@ -35,7 +36,7 @@ sequenceDiagram
     participant OH as OllamaHandler
     participant MC as McpConverters
     participant MTR as McpToolRegistry
-    
+
     OH->>MTR: getAllTools()
     MTR-->>OH: Map<string, ToolDefinition>
     OH->>MC: toolDefinitionsToOpenAiFunctions(tools)
@@ -54,7 +55,7 @@ sequenceDiagram
     participant Router as McpToolRouter
     participant System as McpToolExecutor
     participant Server as EmbeddedMcpProvider
-    
+
     Model->>OH: Stream with function call
     OH->>OAH: extractToolCalls(delta)
     OAH-->>OH: toolCalls[]
@@ -85,7 +86,7 @@ The `McpConverters` class needs to be updated to convert MCP tool definitions to
  */
 public static toolDefinitionsToOpenAiFunctions(tools: Map<string, ToolDefinition>): any[] {
   const functions = [];
-  
+
   for (const [name, definition] of tools.entries()) {
     functions.push({
       name: definition.name,
@@ -97,7 +98,7 @@ public static toolDefinitionsToOpenAiFunctions(tools: Map<string, ToolDefinition
       }
     });
   }
-  
+
   return functions;
 }
 ```
@@ -145,19 +146,19 @@ override async *createMessage(systemPrompt: string, messages: NeutralConversatio
   // Get all available tools from the MCP registry
   const toolRegistry = this.mcpIntegration.getToolRegistry();
   const availableTools = toolRegistry.getAllTools();
-  
+
   // Convert tool definitions to OpenAI function definitions
   const functions = McpConverters.toolDefinitionsToOpenAiFunctions(availableTools);
-  
+
   // Convert neutral history to Ollama format
   const openAiMessages = convertToOllamaHistory(messages);
-  
+
   // Add system prompt if not already included
   const hasSystemMessage = openAiMessages.some(msg => msg.role === 'system');
   if (systemPrompt && systemPrompt.trim() !== "" && !hasSystemMessage) {
     openAiMessages.unshift({ role: "system", content: systemPrompt });
   }
-  
+
   // Create stream with functions included
   const stream = await this.client.chat.completions.create({
     model: this.getModel().id,
@@ -167,11 +168,11 @@ override async *createMessage(systemPrompt: string, messages: NeutralConversatio
     functions: functions,  // Include available functions
     function_call: 'auto'  // Allow the model to decide when to call functions
   });
-  
+
   // Process stream
   for await (const chunk of stream) {
     const delta = chunk.choices[0]?.delta ?? {};
-    
+
     // Check for function calls
     if (delta.function_call) {
       // Process function call
@@ -180,10 +181,10 @@ override async *createMessage(systemPrompt: string, messages: NeutralConversatio
         name: delta.function_call.name,
         arguments: delta.function_call.arguments
       };
-      
+
       // Process tool use using MCP integration
       const result = await this.processToolUse(functionCall);
-      
+
       // Yield tool result
       yield {
         type: 'tool_result',
@@ -210,7 +211,7 @@ The `BaseProvider` class should be updated to register common tools with the MCP
 
 protected registerTools(): void {
   // Register common tools
-  
+
   // Register read_file tool
   this.mcpIntegration.registerTool({
     name: 'read_file',
@@ -241,7 +242,7 @@ protected registerTools(): void {
       };
     }
   });
-  
+
   // Register write_to_file tool
   this.mcpIntegration.registerTool({
     name: 'write_to_file',
@@ -271,7 +272,7 @@ protected registerTools(): void {
       };
     }
   });
-  
+
   // Register other common tools...
 }
 ```
@@ -285,66 +286,66 @@ Create unit tests for OpenAI function format conversion:
 ```typescript
 // src/services/mcp/__tests__/McpConverters.test.ts
 
-test('should convert tool definitions to OpenAI function definitions', () => {
-  const tools = new Map();
-  
-  tools.set('test_tool', {
-    name: 'test_tool',
-    description: 'A test tool',
-    paramSchema: {
-      type: 'object',
-      properties: {
-        param: {
-          type: 'string',
-          description: 'A test parameter'
-        }
-      },
-      required: ['param']
-    },
-    handler: async () => ({ content: [] })
-  });
-  
-  const functions = McpConverters.toolDefinitionsToOpenAiFunctions(tools);
-  
-  expect(functions).toHaveLength(1);
-  expect(functions[0]).toEqual({
-    name: 'test_tool',
-    description: 'A test tool',
-    parameters: {
-      type: 'object',
-      properties: {
-        param: {
-          type: 'string',
-          description: 'A test parameter'
-        }
-      },
-      required: ['param']
-    }
-  });
-});
+test("should convert tool definitions to OpenAI function definitions", () => {
+	const tools = new Map()
 
-test('should handle tool definitions without schemas', () => {
-  const tools = new Map();
-  
-  tools.set('simple_tool', {
-    name: 'simple_tool',
-    description: 'A simple tool without schema',
-    handler: async () => ({ content: [] })
-  });
-  
-  const functions = McpConverters.toolDefinitionsToOpenAiFunctions(tools);
-  
-  expect(functions).toHaveLength(1);
-  expect(functions[0]).toEqual({
-    name: 'simple_tool',
-    description: 'A simple tool without schema',
-    parameters: {
-      type: 'object',
-      properties: {},
-      required: []
-    }
-  });
-});
+	tools.set("test_tool", {
+		name: "test_tool",
+		description: "A test tool",
+		paramSchema: {
+			type: "object",
+			properties: {
+				param: {
+					type: "string",
+					description: "A test parameter",
+				},
+			},
+			required: ["param"],
+		},
+		handler: async () => ({ content: [] }),
+	})
+
+	const functions = McpConverters.toolDefinitionsToOpenAiFunctions(tools)
+
+	expect(functions).toHaveLength(1)
+	expect(functions[0]).toEqual({
+		name: "test_tool",
+		description: "A test tool",
+		parameters: {
+			type: "object",
+			properties: {
+				param: {
+					type: "string",
+					description: "A test parameter",
+				},
+			},
+			required: ["param"],
+		},
+	})
+})
+
+test("should handle tool definitions without schemas", () => {
+	const tools = new Map()
+
+	tools.set("simple_tool", {
+		name: "simple_tool",
+		description: "A simple tool without schema",
+		handler: async () => ({ content: [] }),
+	})
+
+	const functions = McpConverters.toolDefinitionsToOpenAiFunctions(tools)
+
+	expect(functions).toHaveLength(1)
+	expect(functions[0]).toEqual({
+		name: "simple_tool",
+		description: "A simple tool without schema",
+		parameters: {
+			type: "object",
+			properties: {},
+			required: [],
+		},
+	})
+})
 ```
 
 ### 4.2 Integration Tests for Ollama Handler
@@ -354,124 +355,132 @@ Create integration tests for the Ollama handler:
 ```typescript
 // src/api/providers/__tests__/ollama-mcp-integration.test.ts
 
-test('should include available tools in the prompt', async () => {
-  // Mock the tool registry
-  const mockTools = new Map();
-  mockTools.set('test_tool', {
-    name: 'test_tool',
-    description: 'A test tool',
-    paramSchema: {
-      type: 'object',
-      properties: {
-        param: {
-          type: 'string',
-          description: 'A test parameter'
-        }
-      },
-      required: ['param']
-    },
-    handler: async () => ({ content: [] })
-  });
-  
-  // Mock the McpIntegration to return the mock tool registry
-  handler['mcpIntegration'].getToolRegistry = jest.fn().mockReturnValue({
-    getAllTools: jest.fn().mockReturnValue(mockTools)
-  });
-  
-  // Create a spy on the client.chat.completions.create method
-  const createSpy = jest.spyOn(handler['client'].chat.completions, 'create');
-  
-  // Create neutral history
-  const neutralHistory: NeutralConversationHistory = [
-    { role: 'user', content: [{ type: 'text', text: 'Use a tool' }] }
-  ];
-  
-  // Call createMessage
-  const stream = handler.createMessage('You are helpful.', neutralHistory);
-  
-  // Collect stream chunks
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  
-  // Verify that the client.chat.completions.create method was called with functions
-  expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
-    functions: expect.arrayContaining([
-      expect.objectContaining({
-        name: 'test_tool',
-        description: 'A test tool',
-        parameters: expect.objectContaining({
-          type: 'object',
-          properties: expect.objectContaining({
-            param: expect.objectContaining({
-              type: 'string',
-              description: 'A test parameter'
-            })
-          }),
-          required: ['param']
-        })
-      })
-    ]),
-    function_call: 'auto'
-  }));
-});
+test("should include available tools in the prompt", async () => {
+	// Mock the tool registry
+	const mockTools = new Map()
+	mockTools.set("test_tool", {
+		name: "test_tool",
+		description: "A test tool",
+		paramSchema: {
+			type: "object",
+			properties: {
+				param: {
+					type: "string",
+					description: "A test parameter",
+				},
+			},
+			required: ["param"],
+		},
+		handler: async () => ({ content: [] }),
+	})
 
-test('should process function calls from the model', async () => {
-  // Mock the client to return a function call
-  const mockClient = {
-    chat: {
-      completions: {
-        create: jest.fn().mockReturnValue({
-          [Symbol.asyncIterator]: async function* () {
-            yield {
-              choices: [{
-                delta: {
-                  function_call: {
-                    name: 'test_tool',
-                    arguments: '{"param":"test value"}'
-                  }
-                }
-              }]
-            };
-          }
-        })
-      }
-    }
-  };
-  
-  // Replace the handler's client with the mock client
-  handler['client'] = mockClient;
-  
-  // Mock the processToolUse method
-  handler['processToolUse'] = jest.fn().mockResolvedValue('Tool result');
-  
-  // Create neutral history
-  const neutralHistory: NeutralConversationHistory = [
-    { role: 'user', content: [{ type: 'text', text: 'Use a tool' }] }
-  ];
-  
-  // Call createMessage
-  const stream = handler.createMessage('You are helpful.', neutralHistory);
-  
-  // Collect stream chunks
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  
-  // Verify that processToolUse was called with the function call
-  expect(handler['processToolUse']).toHaveBeenCalledWith(expect.objectContaining({
-    name: 'test_tool',
-    arguments: '{"param":"test value"}'
-  }));
-  
-  // Verify that a tool result was yielded
-  expect(chunks).toContainEqual(expect.objectContaining({
-    type: 'tool_result',
-    content: 'Tool result'
-  }));
-});
+	// Mock the McpIntegration to return the mock tool registry
+	handler["mcpIntegration"].getToolRegistry = jest.fn().mockReturnValue({
+		getAllTools: jest.fn().mockReturnValue(mockTools),
+	})
+
+	// Create a spy on the client.chat.completions.create method
+	const createSpy = jest.spyOn(handler["client"].chat.completions, "create")
+
+	// Create neutral history
+	const neutralHistory: NeutralConversationHistory = [
+		{ role: "user", content: [{ type: "text", text: "Use a tool" }] },
+	]
+
+	// Call createMessage
+	const stream = handler.createMessage("You are helpful.", neutralHistory)
+
+	// Collect stream chunks
+	const chunks = []
+	for await (const chunk of stream) {
+		chunks.push(chunk)
+	}
+
+	// Verify that the client.chat.completions.create method was called with functions
+	expect(createSpy).toHaveBeenCalledWith(
+		expect.objectContaining({
+			functions: expect.arrayContaining([
+				expect.objectContaining({
+					name: "test_tool",
+					description: "A test tool",
+					parameters: expect.objectContaining({
+						type: "object",
+						properties: expect.objectContaining({
+							param: expect.objectContaining({
+								type: "string",
+								description: "A test parameter",
+							}),
+						}),
+						required: ["param"],
+					}),
+				}),
+			]),
+			function_call: "auto",
+		}),
+	)
+})
+
+test("should process function calls from the model", async () => {
+	// Mock the client to return a function call
+	const mockClient = {
+		chat: {
+			completions: {
+				create: jest.fn().mockReturnValue({
+					[Symbol.asyncIterator]: async function* () {
+						yield {
+							choices: [
+								{
+									delta: {
+										function_call: {
+											name: "test_tool",
+											arguments: '{"param":"test value"}',
+										},
+									},
+								},
+							],
+						}
+					},
+				}),
+			},
+		},
+	}
+
+	// Replace the handler's client with the mock client
+	handler["client"] = mockClient
+
+	// Mock the processToolUse method
+	handler["processToolUse"] = jest.fn().mockResolvedValue("Tool result")
+
+	// Create neutral history
+	const neutralHistory: NeutralConversationHistory = [
+		{ role: "user", content: [{ type: "text", text: "Use a tool" }] },
+	]
+
+	// Call createMessage
+	const stream = handler.createMessage("You are helpful.", neutralHistory)
+
+	// Collect stream chunks
+	const chunks = []
+	for await (const chunk of stream) {
+		chunks.push(chunk)
+	}
+
+	// Verify that processToolUse was called with the function call
+	expect(handler["processToolUse"]).toHaveBeenCalledWith(
+		expect.objectContaining({
+			name: "test_tool",
+			arguments: '{"param":"test value"}',
+		}),
+	)
+
+	// Verify that a tool result was yielded
+	expect(chunks).toContainEqual(
+		expect.objectContaining({
+			type: "tool_result",
+			content: "Tool result",
+		}),
+	)
+})
 ```
 
 ## 5. Implementation Considerations
@@ -485,6 +494,7 @@ Tools should be registered during the initialization of the provider handlers, w
 The parameter schema for tools should be compatible with both the MCP protocol and the OpenAI function calling format. The OpenAI function calling format uses JSON Schema, which is also used by the MCP protocol.
 
 Key considerations:
+
 - Use standard JSON Schema types (string, number, boolean, object, array)
 - Include descriptions for parameters to help the model understand their purpose
 - Specify required parameters to ensure the model provides them

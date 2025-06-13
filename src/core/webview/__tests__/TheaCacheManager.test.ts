@@ -11,10 +11,10 @@ jest.mock("fs/promises")
 jest.mock("../../../utils/fs")
 jest.mock("../../../shared/storagePathManager", () => {
 	return {
-                getCacheDirectoryPath: jest.fn().mockImplementation((storagePath: string) => {
+		getCacheDirectoryPath: jest.fn().mockImplementation((storagePath: string) => {
 			return path.join(storagePath, "cache")
 		}),
-                getSettingsDirectoryPath: jest.fn().mockImplementation((storagePath: string) => {
+		getSettingsDirectoryPath: jest.fn().mockImplementation((storagePath: string) => {
 			return path.join(storagePath, "settings")
 		}),
 	}

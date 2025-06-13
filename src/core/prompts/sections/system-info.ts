@@ -4,9 +4,9 @@ import { Mode, ModeConfig } from "../../../shared/modes"
 import { getShell } from "../../../utils/shell"
 
 export function getSystemInfoSection(cwd: string, currentMode: Mode, customModes?: ModeConfig[]): string {
-        // mark parameters as used to satisfy lint rules
-        void currentMode
-        void customModes
+	// mark parameters as used to satisfy lint rules
+	void currentMode
+	void customModes
 
 	let details = `====
 

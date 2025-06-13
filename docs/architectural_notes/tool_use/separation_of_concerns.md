@@ -23,13 +23,13 @@ graph TD
     A[Application] --> B[Message Handler Layer]
     B --> C[Provider Communication Layer]
     C --> D[Provider APIs]
-    
+
     subgraph "Message Handler Layer"
         B1[Format Conversion]
         B2[Role & Prompt Management]
         B3[Content Processing]
     end
-    
+
     subgraph "Provider Communication Layer"
         C1[API Communication]
         C2[Token Tracking]
@@ -40,32 +40,36 @@ graph TD
 ### Key Separations
 
 1. **Format Conversion vs. API Communication**
-   - Format conversion is about transforming data structures
-   - API communication is about HTTP requests, authentication, etc.
+
+    - Format conversion is about transforming data structures
+    - API communication is about HTTP requests, authentication, etc.
 
 2. **Provider-Specific vs. Provider-Agnostic Logic**
-   - Provider-specific logic should be isolated in dedicated modules
-   - Provider-agnostic logic should be shared across handlers
+
+    - Provider-specific logic should be isolated in dedicated modules
+    - Provider-agnostic logic should be shared across handlers
 
 3. **Message Content vs. Message Metadata**
-   - Content (text, images, tools) should be handled separately from
-   - Metadata (timestamps, usage metrics, etc.)
+    - Content (text, images, tools) should be handled separately from
+    - Metadata (timestamps, usage metrics, etc.)
 
 ## Practical Implementation Steps
 
 For the current task of updating local model handlers, we can take these steps:
 
 1. **Create Transform Files**
-   - Separate format conversion logic into dedicated files
-   - Example: `neutral-ollama-format.ts`, `neutral-lmstudio-format.ts`
+
+    - Separate format conversion logic into dedicated files
+    - Example: `neutral-ollama-format.ts`, `neutral-lmstudio-format.ts`
 
 2. **Update Handlers to Use Transform Files**
-   - Modify handlers to use the transform files for conversion
-   - Keep API communication logic in the handlers for now
+
+    - Modify handlers to use the transform files for conversion
+    - Keep API communication logic in the handlers for now
 
 3. **Standardize Error Handling**
-   - Implement consistent error handling across handlers
-   - Map provider-specific errors to standard error types
+    - Implement consistent error handling across handlers
+    - Map provider-specific errors to standard error types
 
 ## Benefits
 

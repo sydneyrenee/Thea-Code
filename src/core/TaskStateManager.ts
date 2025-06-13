@@ -12,7 +12,7 @@ import { fileExistsAtPath } from "../utils/fs"
 import { findLastIndex } from "../shared/array"
 import { getApiMetrics } from "../shared/getApiMetrics"
 import { TokenUsage } from "../schemas"
-import type { NeutralMessage, NeutralConversationHistory } from "../shared/neutral-history"; // Import neutral history types
+import type { NeutralMessage, NeutralConversationHistory } from "../shared/neutral-history" // Import neutral history types
 
 // TODO: Rename types if necessary
 
@@ -87,46 +87,49 @@ export class TaskStateManager {
 		if (fileExists) {
 			try {
 				// Read the raw data (which should now be in Neutral format)
-				const rawHistory = JSON.parse(await fs.readFile(filePath, "utf8")) as NeutralConversationHistory;
-				this.apiConversationHistory = rawHistory;
-				this.log(`Loaded ${this.apiConversationHistory.length} items from API history.`);
-				this.onHistoryUpdate?.(this.apiConversationHistory);
+				const rawHistory = JSON.parse(await fs.readFile(filePath, "utf8")) as NeutralConversationHistory
+				this.apiConversationHistory = rawHistory
+				this.log(`Loaded ${this.apiConversationHistory.length} items from API history.`)
+				this.onHistoryUpdate?.(this.apiConversationHistory)
 			} catch (error) {
-				this.log(`Error loading API conversation history: ${error instanceof Error ? error.message : String(error)}`);
+				this.log(
+					`Error loading API conversation history: ${error instanceof Error ? error.message : String(error)}`,
+				)
 				// If loading or conversion fails, initialize with an empty neutral history
-				this.apiConversationHistory = [];
-				this.onHistoryUpdate?.(this.apiConversationHistory);
+				this.apiConversationHistory = []
+				this.onHistoryUpdate?.(this.apiConversationHistory)
 			}
 		} else {
-			this.log("No saved API conversation history found.");
+			this.log("No saved API conversation history found.")
 			// If no file exists, initialize with an empty neutral history
-			this.apiConversationHistory = [];
-			this.onHistoryUpdate?.(this.apiConversationHistory);
+			this.apiConversationHistory = []
+			this.onHistoryUpdate?.(this.apiConversationHistory)
 		}
 	}
 	public async addToApiConversationHistory(message: NeutralMessage) {
-		const messageWithTs = { ...message, ts: Date.now() };
-		this.apiConversationHistory.push(messageWithTs);
-		this.onHistoryUpdate?.(this.apiConversationHistory);
-		await this.saveApiConversationHistory();
+		const messageWithTs = { ...message, ts: Date.now() }
+		this.apiConversationHistory.push(messageWithTs)
+		this.onHistoryUpdate?.(this.apiConversationHistory)
+		await this.saveApiConversationHistory()
 	}
 
 	public async overwriteApiConversationHistory(newHistory: NeutralConversationHistory) {
-		this.apiConversationHistory = newHistory;
-		this.onHistoryUpdate?.(this.apiConversationHistory);
-		await this.saveApiConversationHistory();
+		this.apiConversationHistory = newHistory
+		this.onHistoryUpdate?.(this.apiConversationHistory)
+		await this.saveApiConversationHistory()
 	}
-
 
 	private async saveApiConversationHistory() {
 		try {
-			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory);
+			const filePath = path.join(await this.ensureTaskDirectoryExists(), GlobalFileNames.apiConversationHistory)
 			// Save the neutral history directly
-			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory));
-			this.log(`Saved ${this.apiConversationHistory.length} items to API history.`);
+			await fs.writeFile(filePath, JSON.stringify(this.apiConversationHistory))
+			this.log(`Saved ${this.apiConversationHistory.length} items to API history.`)
 		} catch (error) {
-			this.log(`Failed to save API conversation history: ${error instanceof Error ? error.message : String(error)}`);
-			console.error("Failed to save API conversation history:", error);
+			this.log(
+				`Failed to save API conversation history: ${error instanceof Error ? error.message : String(error)}`,
+			)
+			console.error("Failed to save API conversation history:", error)
 		}
 	}
 

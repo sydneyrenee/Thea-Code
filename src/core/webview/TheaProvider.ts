@@ -459,7 +459,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		}
 		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
 		this.log(
-			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated` // Use renamed variable
+			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
 		return theaTask // Return renamed variable
 	}
@@ -502,11 +502,13 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 				})
 
 				this.log(
-					`[TheaProvider#initWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}` // TODO: Rename
+					`[TheaProvider#initWithHistoryItem] Using ${checkpoints.checkpointStorage} storage for ${taskId}`, // TODO: Rename
 				)
 			} catch (error) {
 				checkpoints.enableCheckpoints = false
-				this.log(`[TheaProvider#initWithHistoryItem] Error getting task storage: ${error instanceof Error ? error.message : String(error)}`) // TODO: Rename
+				this.log(
+					`[TheaProvider#initWithHistoryItem] Error getting task storage: ${error instanceof Error ? error.message : String(error)}`,
+				) // TODO: Rename
 			}
 		}
 
@@ -532,7 +534,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		}
 		await this.theaTaskStackManager.addTheaTask(theaTask) // Renamed property
 		this.log(
-			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated` // Use renamed variable
+			`[subtasks] ${theaTask.parentTask ? "child" : "parent"} task ${theaTask.taskId}.${theaTask.instanceId} instantiated`, // Use renamed variable
 		)
 		return theaTask // Return renamed variable
 	}
@@ -828,7 +830,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 			(historyItem) =>
 				this.initWithHistoryItem(historyItem as HistoryItem & { rootTask?: TheaTask; parentTask?: TheaTask }),
 			// Pass provider method with proper typing
-			(action: string) => this.postMessageToWebview({ type: "action", action: action as ExtensionMessage['action'] }), // Fixed type safety issue
+			(action: string) =>
+				this.postMessageToWebview({ type: "action", action: action as ExtensionMessage["action"] }), // Fixed type safety issue
 		)
 		// Note: postStateToWebview might be needed here or is handled by initWithHistoryItem implicitly
 	}
@@ -922,7 +925,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		const cwd = this.cwd
 
 		// Safely access packageJSON version with proper type checking
-		const packageJSON = this.context.extension?.packageJSON as { version?: string } | undefined;
+		const packageJSON = this.context.extension?.packageJSON as { version?: string } | undefined
 		return {
 			version: packageJSON?.version ?? "",
 			osInfo: os.platform() === "win32" ? "win32" : "unix",
@@ -1068,8 +1071,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 	public async getTelemetryProperties(): Promise<Record<string, string | number | boolean | undefined>> {
 		const { mode, apiConfiguration, language } = await this.theaStateManager.getState() // Use manager
 		// Safely access packageJSON version with proper type checking
-		const packageJSON = this.context.extension?.packageJSON as { version?: string } | undefined;
-		const appVersion = packageJSON?.version;
+		const packageJSON = this.context.extension?.packageJSON as { version?: string } | undefined
+		const appVersion = packageJSON?.version
 		const vscodeVersion = vscode.version
 		const platform = process.platform
 

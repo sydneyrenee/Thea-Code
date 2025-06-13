@@ -40,12 +40,12 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 
 	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		// Convert neutral history to OpenAI format
-               const convertedMessages = convertToOpenAiHistory(messages);
-               
-               const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-                       { role: "system", content: systemPrompt },
-                       ...convertedMessages,
-               ]
+		const convertedMessages = convertToOpenAiHistory(messages)
+
+		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+			{ role: "system", content: systemPrompt },
+			...convertedMessages,
+		]
 
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
 		if (this.getModel().id.startsWith("anthropic/claude-3")) {
@@ -80,7 +80,7 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 						msg.content.push(lastTextPart)
 					}
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					(lastTextPart as Record<string, any>)["cache_control"] = { type: "ephemeral" }
+					;(lastTextPart as Record<string, any>)["cache_control"] = { type: "ephemeral" }
 				}
 			})
 		}
@@ -139,23 +139,24 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 							const toolUseInput = {
 								name: toolCall.function.name,
 								arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
-							};
+							}
 
-							const toolResult = await this.processToolUse(toolUseInput);
-							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+							const toolResult = await this.processToolUse(toolUseInput)
+							const toolResultString =
+								typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 							yield {
-								type: 'tool_result',
+								type: "tool_result",
 								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 								content: toolResultString,
-							};
+							}
 						} catch (error) {
-							console.warn('Glama tool use error:', error);
+							console.warn("Glama tool use error:", error)
 							yield {
-								type: 'tool_result',
+								type: "tool_result",
 								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-							};
+							}
 						}
 					}
 				}
@@ -179,7 +180,15 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 					},
 				)
 
-				const completionRequest = response.data as { tokenUsage?: { cacheCreationInputTokens?: number; cacheReadInputTokens?: number; promptTokens?: number; completionTokens?: number; }; totalCostUsd?: string | number; }
+				const completionRequest = response.data as {
+					tokenUsage?: {
+						cacheCreationInputTokens?: number
+						cacheReadInputTokens?: number
+						promptTokens?: number
+						completionTokens?: number
+					}
+					totalCostUsd?: string | number
+				}
 
 				if (completionRequest?.tokenUsage && completionRequest?.totalCostUsd) {
 					yield {
@@ -232,7 +241,18 @@ export async function getGlamaModels() {
 
 	try {
 		const response = await axios.get("https://glama.ai/api/gateway/v1/models")
-		const rawModels = response.data as { id: string; maxTokensOutput?: number; maxTokensInput?: number; capabilities?: string[]; pricePerToken?: { input?: string | number; output?: string | number; cacheWrite?: string | number; cacheRead?: string | number; } }[]
+		const rawModels = response.data as {
+			id: string
+			maxTokensOutput?: number
+			maxTokensInput?: number
+			capabilities?: string[]
+			pricePerToken?: {
+				input?: string | number
+				output?: string | number
+				cacheWrite?: string | number
+				cacheRead?: string | number
+			}
+		}[]
 
 		for (const rawModel of rawModels) {
 			const modelInfo: ModelInfo = {
@@ -248,7 +268,6 @@ export async function getGlamaModels() {
 				cacheReadsPrice: parseApiPrice(rawModel.pricePerToken?.cacheRead),
 			}
 
-			 
 			if (rawModel.id.startsWith("anthropic/")) {
 				modelInfo.maxTokens = 8192
 			}
@@ -263,4 +282,3 @@ export async function getGlamaModels() {
 }
 
 // Note: countTokens will use the default implementation in BaseProvider which expects NeutralMessageContent
-

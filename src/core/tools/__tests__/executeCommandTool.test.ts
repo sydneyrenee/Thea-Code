@@ -265,7 +265,7 @@ describe("executeCommandTool", () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			mockTheaTask.theaIgnoreController = {
 				validateCommand: validateCommandMock, // Simplified mock
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			} as any // Use 'as any' to bypass strict type check for mock
 
 			const mockTheaIgnoreError = "TheaIgnore error"

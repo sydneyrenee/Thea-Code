@@ -27,12 +27,12 @@ describe("TheaTaskStack", () => {
 
 	test("addCline adds a TheaTask instance to the stack", async () => {
 		// Setup
-                const mockTheaTask = {
-                        taskId: "test-task-id-1",
-                        instanceId: "instance-1",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask = {
+			taskId: "test-task-id-1",
+			instanceId: "instance-1",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 
 		// Execute
 		await theaTaskStack.addTheaTask(mockTheaTask)
@@ -44,18 +44,18 @@ describe("TheaTaskStack", () => {
 
 	test("addCline adds multiple instances correctly", async () => {
 		// Setup
-                const mockTheaTask1 = {
-                        taskId: "test-task-id-1",
-                        instanceId: "instance-1",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
-                const mockTheaTask2 = {
-                        taskId: "test-task-id-2",
-                        instanceId: "instance-2",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask1 = {
+			taskId: "test-task-id-1",
+			instanceId: "instance-1",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask2 = {
+			taskId: "test-task-id-2",
+			instanceId: "instance-2",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 
 		// Execute
 		await theaTaskStack.addTheaTask(mockTheaTask1)
@@ -69,12 +69,12 @@ describe("TheaTaskStack", () => {
 
 	test("removeCurrentCline removes and aborts the top TheaTask instance", async () => {
 		// Setup
-                const mockTheaTask = {
-                        taskId: "test-task-id",
-                        instanceId: "instance-1",
-                        abortTask: jest.fn().mockResolvedValue(undefined),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask = {
+			taskId: "test-task-id",
+			instanceId: "instance-1",
+			abortTask: jest.fn().mockResolvedValue(undefined),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 		await theaTaskStack.addTheaTask(mockTheaTask)
 
 		// Execute
@@ -96,12 +96,12 @@ describe("TheaTaskStack", () => {
 
 	test("removeCurrentCline handles abort errors gracefully", async () => {
 		// Setup
-                const mockTheaTask = {
-                        taskId: "test-task-id",
-                        instanceId: "instance-1",
-                        abortTask: jest.fn().mockRejectedValue(new Error("Abort error")),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask = {
+			taskId: "test-task-id",
+			instanceId: "instance-1",
+			abortTask: jest.fn().mockRejectedValue(new Error("Abort error")),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 		await theaTaskStack.addTheaTask(mockTheaTask)
 
 		// Execute
@@ -116,16 +116,16 @@ describe("TheaTaskStack", () => {
 
 	test("getCurrentCline returns the top instance", async () => {
 		// Setup
-                const mockTheaTask1 = {
-                        taskId: "test-task-id-1",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
-                const mockTheaTask2 = {
-                        taskId: "test-task-id-2",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask1 = {
+			taskId: "test-task-id-1",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask2 = {
+			taskId: "test-task-id-2",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 		await theaTaskStack.addTheaTask(mockTheaTask1)
 		await theaTaskStack.addTheaTask(mockTheaTask2)
 
@@ -146,16 +146,16 @@ describe("TheaTaskStack", () => {
 
 	test("getSize returns the number of instances in the stack", async () => {
 		// Setup
-                const mockTheaTask1 = {
-                        taskId: "test-task-id-1",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
-                const mockTheaTask2 = {
-                        taskId: "test-task-id-2",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask1 = {
+			taskId: "test-task-id-1",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask2 = {
+			taskId: "test-task-id-2",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 
 		// Execute & Verify - Empty stack
 		expect(theaTaskStack.getSize()).toBe(0)
@@ -176,16 +176,16 @@ describe("TheaTaskStack", () => {
 
 	test("getTaskStack returns an array of task IDs", async () => {
 		// Setup
-                const mockTheaTask1 = {
-                        taskId: "test-task-id-1",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
-                const mockTheaTask2 = {
-                        taskId: "test-task-id-2",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask1 = {
+			taskId: "test-task-id-1",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
+		const mockTheaTask2 = {
+			taskId: "test-task-id-2",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 		await theaTaskStack.addTheaTask(mockTheaTask1)
 		await theaTaskStack.addTheaTask(mockTheaTask2)
 
@@ -198,17 +198,17 @@ describe("TheaTaskStack", () => {
 
 	test("finishSubTask removes current task and resumes parent task", async () => {
 		// Setup
-                const mockParentTheaTask = {
-                        taskId: "parent-task-id",
-                        abortTask: jest.fn(),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockParentTheaTask = {
+			taskId: "parent-task-id",
+			abortTask: jest.fn(),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 
-                const mockSubTaskTheaTask = {
-                        taskId: "subtask-id",
-                        abortTask: jest.fn().mockResolvedValue(undefined),
-                        resumePausedTask: jest.fn(),
-                } as unknown as jest.Mocked<TheaTask>
+		const mockSubTaskTheaTask = {
+			taskId: "subtask-id",
+			abortTask: jest.fn().mockResolvedValue(undefined),
+			resumePausedTask: jest.fn(),
+		} as unknown as jest.Mocked<TheaTask>
 
 		await theaTaskStack.addTheaTask(mockParentTheaTask)
 		await theaTaskStack.addTheaTask(mockSubTaskTheaTask)

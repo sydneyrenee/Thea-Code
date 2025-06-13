@@ -13,7 +13,7 @@ class MockClient extends McpClient {
 
 	async connect(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		transport: unknown
+		transport: unknown,
 	): Promise<void> {
 		// Parameter is required by interface but not used in this implementation
 		return Promise.resolve()
@@ -30,7 +30,7 @@ class MockClient extends McpClient {
 
 	callTool(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		params: Record<string, unknown>
+		params: Record<string, unknown>,
 	): Promise<unknown> {
 		// Parameter is required by interface but not used in this implementation
 		return Promise.resolve({ content: [] })
@@ -47,10 +47,12 @@ export class SseClientFactory {
 	public static async createClient(serverUrl: URL): Promise<McpClient> {
 		try {
 			// Dynamic imports to handle cases where the SDK might not be available
-			// eslint-disable-next-line @typescript-eslint/no-require-imports
-			const { Client } = await import("@modelcontextprotocol/sdk/client/index.js") as { Client: typeof SdkClient }
-			// eslint-disable-next-line @typescript-eslint/no-require-imports
-			const { SSEClientTransport } = await import("@modelcontextprotocol/sdk/client/sse.js") as { SSEClientTransport: typeof SdkSseTransport }
+			const { Client } = (await import("@modelcontextprotocol/sdk/client/index.js")) as {
+				Client: typeof SdkClient
+			}
+			const { SSEClientTransport } = (await import("@modelcontextprotocol/sdk/client/sse.js")) as {
+				SSEClientTransport: typeof SdkSseTransport
+			}
 
 			class SdkClientWrapper extends McpClient {
 				private client: SdkClient

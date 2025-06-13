@@ -45,30 +45,31 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// Handle function calls (tool use) with MCP integration
-			const functionCalls = chunk.functionCalls();
+			const functionCalls = chunk.functionCalls()
 			if (functionCalls) {
 				for (const functionCall of functionCalls) {
 					try {
 						const toolUseInput = {
 							name: functionCall.name,
 							arguments: functionCall.args || {},
-						};
+						}
 
-						const toolResult = await this.processToolUse(toolUseInput);
-						const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+						const toolResult = await this.processToolUse(toolUseInput)
+						const toolResultString =
+							typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 						yield {
-							type: 'tool_result',
+							type: "tool_result",
 							id: `${functionCall.name}-${Date.now()}`,
 							content: toolResultString,
-						};
+						}
 					} catch (error) {
-						console.warn('Gemini tool use error:', error);
+						console.warn("Gemini tool use error:", error)
 						yield {
-							type: 'tool_result',
+							type: "tool_result",
 							id: `${functionCall.name}-${Date.now()}`,
 							content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-						};
+						}
 					}
 				}
 			}
@@ -128,39 +129,40 @@ export class GeminiHandler extends BaseProvider implements SingleCompletionHandl
 	override async countTokens(content: NeutralMessageContent): Promise<number> {
 		try {
 			// For simple text content, use the base provider's implementation
-			if (Array.isArray(content) && content.every(block => block.type === 'text')) {
-				return super.countTokens(content);
+			if (Array.isArray(content) && content.every((block) => block.type === "text")) {
+				return super.countTokens(content)
 			}
-			
+
 			// For mixed content (including images), we need special handling
 			if (Array.isArray(content)) {
-				let totalTokens = 0;
-				
+				let totalTokens = 0
+
 				// Process each block based on its type
 				for (const block of content) {
-					if (block.type === 'text') {
+					if (block.type === "text") {
 						// Use base implementation for text blocks
-						totalTokens += await super.countTokens([block]);
-					} else if (block.type === 'image_url' || block.type === 'image_base64') { // Changed from 'image' to 'image_url' || 'image_base64'
+						totalTokens += await super.countTokens([block])
+					} else if (block.type === "image_url" || block.type === "image_base64") {
+						// Changed from 'image' to 'image_url' || 'image_base64'
 						// Gemini charges approximately 258 tokens for a 512x512 image
 						// This is a rough estimate and may need adjustment
-						totalTokens += 258;
-					} else if (block.type === 'tool_use' || block.type === 'tool_result') {
+						totalTokens += 258
+					} else if (block.type === "tool_use" || block.type === "tool_result") {
 						// For tool use/result, count the JSON representation
-						const jsonStr = JSON.stringify(block);
+						const jsonStr = JSON.stringify(block)
 						// Create a text content block to pass to super.countTokens
-						totalTokens += await super.countTokens([{ type: 'text', text: jsonStr }]);
+						totalTokens += await super.countTokens([{ type: "text", text: jsonStr }])
 					}
 				}
-				
-				return totalTokens;
+
+				return totalTokens
 			}
-			
+
 			// Fallback to base implementation for any other cases
-			return super.countTokens(content);
+			return super.countTokens(content)
 		} catch (error) {
-			console.warn("Gemini token counting error, using fallback", error);
-			return super.countTokens(content);
+			console.warn("Gemini token counting error, using fallback", error)
+			return super.countTokens(content)
 		}
 	}
 }

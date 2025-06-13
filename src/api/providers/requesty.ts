@@ -59,22 +59,22 @@ export class RequestyHandler extends OpenAiHandler {
 }
 
 interface RequestyRawModel {
-  id: string;
-  max_output_tokens?: number | null;
-  context_window?: number | null;
-  supports_caching?: boolean | null;
-  supports_vision?: boolean | null;
-  supports_computer_use?: boolean | null;
-  input_price?: string | number | null;
-  output_price?: string | number | null;
-  description?: string | null;
-  caching_price?: string | number | null;
-  cached_price?: string | number | null;
-  [key: string]: unknown;
+	id: string
+	max_output_tokens?: number | null
+	context_window?: number | null
+	supports_caching?: boolean | null
+	supports_vision?: boolean | null
+	supports_computer_use?: boolean | null
+	input_price?: string | number | null
+	output_price?: string | number | null
+	description?: string | null
+	caching_price?: string | number | null
+	cached_price?: string | number | null
+	[key: string]: unknown
 }
 
 interface RequestyModelsResponse {
-  data: RequestyRawModel[];
+	data: RequestyRawModel[]
 }
 
 export async function getRequestyModels() {

@@ -133,9 +133,7 @@ describe("estimateTokenCount", () => {
 	})
 
 	it("should estimate tokens for text blocks", async () => {
-		const content: NeutralMessageContent = [
-			{ type: "text", text: "This is a text block with 36 characters" },
-		]
+		const content: NeutralMessageContent = [{ type: "text", text: "This is a text block with 36 characters" }]
 
 		// With tiktoken, the exact token count may differ from character-based estimation
 		// Instead of expecting an exact number, we verify it's a reasonable positive number

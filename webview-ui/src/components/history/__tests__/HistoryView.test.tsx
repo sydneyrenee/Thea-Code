@@ -10,7 +10,13 @@ jest.mock("../../../context/ExtensionStateContext")
 jest.mock("../../../utils/vscode")
 jest.mock("../../../i18n/TranslationContext")
 jest.mock("react-virtuoso", () => ({
-	Virtuoso: ({ data, itemContent }: { data: Array<Record<string, unknown>>; itemContent: (index: number, item: Record<string, unknown>) => React.ReactNode }) => (
+	Virtuoso: ({
+		data,
+		itemContent,
+	}: {
+		data: Array<Record<string, unknown>>
+		itemContent: (index: number, item: Record<string, unknown>) => React.ReactNode
+	}) => (
 		<div data-testid="virtuoso-container">
 			{data.map((item: Record<string, unknown>, index: number) => (
 				<div key={item.id as string} data-testid={`virtuoso-item-${item.id as string}`}>

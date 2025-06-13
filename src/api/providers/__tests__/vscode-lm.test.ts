@@ -19,44 +19,45 @@ jest.mock("vscode", () => {
 		) {}
 	}
 
-type MockLanguageModelPart = MockLanguageModelTextPart | MockLanguageModelToolCallPart;
+	type MockLanguageModelPart = MockLanguageModelTextPart | MockLanguageModelToolCallPart
 
-return {
-	workspace: {
-		onDidChangeConfiguration: jest.fn((_callback: (e: vscode.ConfigurationChangeEvent) => void) => ({ // eslint-disable-line @typescript-eslint/no-unused-vars
+	return {
+		workspace: {
+			onDidChangeConfiguration: jest.fn((_callback: (e: vscode.ConfigurationChangeEvent) => void) => ({
+				// eslint-disable-line @typescript-eslint/no-unused-vars
+				dispose: jest.fn(),
+			})),
+		},
+		CancellationTokenSource: jest.fn(() => ({
+			token: {
+				isCancellationRequested: false,
+				onCancellationRequested: jest.fn(),
+			},
+			cancel: jest.fn(),
 			dispose: jest.fn(),
 		})),
-	},
-	CancellationTokenSource: jest.fn(() => ({
-		token: {
-			isCancellationRequested: false,
-			onCancellationRequested: jest.fn(),
+		CancellationError: class CancellationError extends Error {
+			constructor() {
+				super("Operation cancelled")
+				this.name = "CancellationError"
+			}
 		},
-		cancel: jest.fn(),
-		dispose: jest.fn(),
-	})),
-	CancellationError: class CancellationError extends Error {
-		constructor() {
-			super("Operation cancelled")
-			this.name = "CancellationError"
-		}
-	},
-	LanguageModelChatMessage: {
-		Assistant: jest.fn((content: string | MockLanguageModelPart[]) => ({
-			role: "assistant",
-			content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content as string)], // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion
-		})),
-		User: jest.fn((content: string | MockLanguageModelPart[]) => ({
-			role: "user",
-			content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content as string)], // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion
-		})),
-	},
-	LanguageModelTextPart: MockLanguageModelTextPart,
-	LanguageModelToolCallPart: MockLanguageModelToolCallPart,
-	lm: {
-		selectChatModels: jest.fn(),
-	},
-}
+		LanguageModelChatMessage: {
+			Assistant: jest.fn((content: string | MockLanguageModelPart[]) => ({
+				role: "assistant",
+				content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content as string)], // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion
+			})),
+			User: jest.fn((content: string | MockLanguageModelPart[]) => ({
+				role: "user",
+				content: Array.isArray(content) ? content : [new MockLanguageModelTextPart(content as string)], // eslint-disable-line @typescript-eslint/no-unnecessary-type-assertion
+			})),
+		},
+		LanguageModelTextPart: MockLanguageModelTextPart,
+		LanguageModelToolCallPart: MockLanguageModelToolCallPart,
+		lm: {
+			selectChatModels: jest.fn(),
+		},
+	}
 })
 
 const mockLanguageModelChat = {
@@ -96,8 +97,10 @@ describe("VsCodeLmHandler", () => {
 
 		it("should handle configuration changes", () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-			const callback: (config: { affectsConfiguration: (section: string) => boolean }) => void = (vscode.workspace.onDidChangeConfiguration as jest.Mock).mock.calls[0][0];
-			callback({ affectsConfiguration: () => true });
+			const callback: (config: { affectsConfiguration: (section: string) => boolean }) => void = (
+				vscode.workspace.onDidChangeConfiguration as jest.Mock
+			).mock.calls[0][0]
+			callback({ affectsConfiguration: () => true })
 			// Should reset client when config changes
 			expect(handler["client"]).toBeNull()
 		})
@@ -155,13 +158,14 @@ describe("VsCodeLmHandler", () => {
 
 			const responseText = "Hello! How can I help you?"
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () { // eslint-disable-line @typescript-eslint/require-await
-					yield new vscode.LanguageModelTextPart(responseText);
+				stream: (async function* () {
+					// eslint-disable-line @typescript-eslint/require-await
+					yield new vscode.LanguageModelTextPart(responseText)
 				})(),
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = [];
+			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
@@ -199,19 +203,20 @@ describe("VsCodeLmHandler", () => {
 			}
 
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () { // eslint-disable-line @typescript-eslint/require-await
+				stream: (async function* () {
+					// eslint-disable-line @typescript-eslint/require-await
 					yield new vscode.LanguageModelToolCallPart(
 						toolCallData.callId,
 						toolCallData.name,
 						toolCallData.arguments,
-					);
+					)
 				})(),
 			})
 
 			const stream = handler.createMessage(systemPrompt, messages)
-			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = [];
+			const chunks: Array<{ type: string; text?: string; inputTokens?: number; outputTokens?: number }> = []
 			for await (const chunk of stream) {
-				chunks.push(chunk);
+				chunks.push(chunk)
 			}
 
 			expect(chunks).toHaveLength(2) // Tool call chunk + usage chunk
@@ -243,7 +248,7 @@ describe("VsCodeLmHandler", () => {
 				const stream = handler.createMessage(systemPrompt, messages)
 				for await (const chunk of stream) {
 					// consume stream
-					void chunk;
+					void chunk
 				}
 			}).rejects.toThrow("API Error")
 		})
@@ -277,8 +282,9 @@ describe("VsCodeLmHandler", () => {
 
 			const responseText = "Completed text"
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () { // eslint-disable-line @typescript-eslint/require-await
-					yield new vscode.LanguageModelTextPart(responseText);
+				stream: (async function* () {
+					// eslint-disable-line @typescript-eslint/require-await
+					yield new vscode.LanguageModelTextPart(responseText)
 				})(),
 			})
 

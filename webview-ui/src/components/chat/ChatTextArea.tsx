@@ -115,13 +115,21 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 					setIsEnhancingPrompt(false)
 				} else if (message.type === "commitSearchResults") {
-					const commits = message.commits.map((commit: { hash: string; subject: string; shortHash: string; author: string; date: string }) => ({
-						type: ContextMenuOptionType.Git,
-						value: commit.hash,
-						label: commit.subject,
-						description: `${commit.shortHash} by ${commit.author} on ${commit.date}`,
-						icon: "$(git-commit)",
-					}))
+					const commits = message.commits.map(
+						(commit: {
+							hash: string
+							subject: string
+							shortHash: string
+							author: string
+							date: string
+						}) => ({
+							type: ContextMenuOptionType.Git,
+							value: commit.hash,
+							label: commit.subject,
+							description: `${commit.shortHash} by ${commit.author} on ${commit.date}`,
+							icon: "$(git-commit)",
+						}),
+					)
 
 					setGitCommits(commits)
 				} else if (message.type === "fileSearchResults") {

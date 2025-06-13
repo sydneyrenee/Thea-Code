@@ -28,10 +28,10 @@ export class DeepSeekHandler extends OpenAiHandler {
 
 	// Override to handle DeepSeek's usage metrics, including caching.
 	protected override processUsageMetrics(usage: {
-		prompt_tokens?: number;
-		completion_tokens?: number;
+		prompt_tokens?: number
+		completion_tokens?: number
 		prompt_tokens_details?: {
-			cached_tokens?: number;
+			cached_tokens?: number
 			cache_miss_tokens?: number
 		}
 	}): ApiStreamUsageChunk {

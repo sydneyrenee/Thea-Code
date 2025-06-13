@@ -6,15 +6,21 @@ import * as path from "path"
 import * as vscode from "vscode"
 
 import { GlobalState } from "../../schemas"
-import { NeutralMessage, NeutralConversationHistory, NeutralMessageContent, NeutralTextContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history";
-import { convertToNeutralHistory } from "../../api/transform/neutral-anthropic-format";
+import {
+	NeutralMessage,
+	NeutralConversationHistory,
+	NeutralMessageContent,
+	NeutralTextContentBlock,
+	NeutralToolResultContentBlock,
+} from "../../shared/neutral-history"
+import { convertToNeutralHistory } from "../../api/transform/neutral-anthropic-format"
 import { TheaTask } from "../TheaTask" // Renamed import
 import { TheaProvider } from "../webview/TheaProvider" // Renamed import and path
 import { ApiConfiguration } from "../../shared/api"
 import { ApiStreamChunk } from "../../api/transform/stream"
-import delay from "delay";
-import { parseMentions as parseMentionsActual } from "../../core/mentions";
-import * as DiffStrategyModule from "../diff/DiffStrategy";
+import delay from "delay"
+import { parseMentions as parseMentionsActual } from "../../core/mentions"
+import * as DiffStrategyModule from "../diff/DiffStrategy"
 
 jest.setTimeout(20000)
 
@@ -385,18 +391,25 @@ describe("TheaTask", () => {
 					timeZone: "America/Los_Angeles",
 				}),
 				format: () => "1/1/2024, 5:00:00 AM",
-			};
+			}
 
 			type IntlDateTimeFormatConstructorMock = jest.Mock<typeof mockDateTimeFormatInstanceMethods, []> & {
-				supportedLocalesOf: jest.Mock<string[], [string | string[] | undefined, Intl.DateTimeFormatOptions | undefined]>;
-			};
-			const MockDateTimeFormatConstructor: IntlDateTimeFormatConstructorMock = jest.fn(() => mockDateTimeFormatInstanceMethods) as IntlDateTimeFormatConstructorMock;
-			MockDateTimeFormatConstructor.supportedLocalesOf = jest.fn<string[], [string | string[] | undefined, Intl.DateTimeFormatOptions | undefined]>().mockReturnValue(["en-US"]);
+				supportedLocalesOf: jest.Mock<
+					string[],
+					[string | string[] | undefined, Intl.DateTimeFormatOptions | undefined]
+				>
+			}
+			const MockDateTimeFormatConstructor: IntlDateTimeFormatConstructorMock = jest.fn(
+				() => mockDateTimeFormatInstanceMethods,
+			) as IntlDateTimeFormatConstructorMock
+			MockDateTimeFormatConstructor.supportedLocalesOf = jest
+				.fn<string[], [string | string[] | undefined, Intl.DateTimeFormatOptions | undefined]>()
+				.mockReturnValue(["en-US"])
 			// Note: We don't assign to .prototype directly when using jest.fn() for constructor mocks.
 			// The instance methods are returned by the mock constructor itself.
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-			global.Intl.DateTimeFormat = MockDateTimeFormatConstructor as any;
+			global.Intl.DateTimeFormat = MockDateTimeFormatConstructor as any
 		})
 
 		afterEach(() => {
@@ -445,11 +458,13 @@ describe("TheaTask", () => {
 				// Set up mock stream.
 				// eslint-disable-next-line @typescript-eslint/require-await
 				const mockStreamForClean = (async function* (): AsyncGenerator<ApiStreamChunk, void, unknown> {
-					yield { type: "text", text: "test response" };
-				})();
+					yield { type: "text", text: "test response" }
+				})()
 
 				// Set up spy.
-				const cleanMessageSpy = jest.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>().mockReturnValue(mockStreamForClean);
+				const cleanMessageSpy = jest
+					.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>()
+					.mockReturnValue(mockStreamForClean)
 				jest.spyOn(theaTask.api, "createMessage").mockImplementation(cleanMessageSpy)
 
 				// Mock getEnvironmentDetails to return empty details.
@@ -457,7 +472,14 @@ describe("TheaTask", () => {
 
 				// Mock loadContext to return unmodified content.
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				jest.spyOn(theaTask, "loadContext").mockImplementation(async (_userContent: NeutralMessageContent, _includeFileDetails?: boolean): Promise<[NeutralMessageContent, string]> => { return Promise.resolve([[{ type: "text", text: "mocked" }], ""]); })
+				jest.spyOn(theaTask, "loadContext").mockImplementation(
+					async (
+						_userContent: NeutralMessageContent,
+						_includeFileDetails?: boolean,
+					): Promise<[NeutralMessageContent, string]> => {
+						return Promise.resolve([[{ type: "text", text: "mocked" }], ""])
+					},
+				)
 
 				// Add test message to conversation history.
 				theaTask.taskStateManager.apiConversationHistory = [
@@ -490,23 +512,28 @@ describe("TheaTask", () => {
 				await theaTask.recursivelyMakeTheaRequests([{ type: "text", text: "test request" }], false) // Renamed variable and method
 
 				// Get the conversation history from the first API call
-				const history: NeutralConversationHistory = cleanMessageSpy.mock.calls[0][1];
+				const history: NeutralConversationHistory = cleanMessageSpy.mock.calls[0][1]
 				expect(history).toBeDefined()
 				expect(history.length).toBeGreaterThan(0)
 
 				// Find our test message
-				const cleanedMessage = history.find((msg: NeutralMessage) =>
-					Array.isArray(msg.content) && msg.content.some(contentBlock => contentBlock.type === "text" && contentBlock.text === "test message")
-				);
-				expect(cleanedMessage).toBeDefined();
-				if (cleanedMessage) { // Ensure cleanedMessage is not undefined
+				const cleanedMessage = history.find(
+					(msg: NeutralMessage) =>
+						Array.isArray(msg.content) &&
+						msg.content.some(
+							(contentBlock) => contentBlock.type === "text" && contentBlock.text === "test message",
+						),
+				)
+				expect(cleanedMessage).toBeDefined()
+				if (cleanedMessage) {
+					// Ensure cleanedMessage is not undefined
 					expect(cleanedMessage).toEqual({
 						role: "user",
 						content: [{ type: "text", text: "test message" }],
-					});
+					})
 
 					// Verify extra properties were removed
-					expect(Object.keys(cleanedMessage)).toEqual(["role", "content"]);
+					expect(Object.keys(cleanedMessage)).toEqual(["role", "content"])
 				}
 			})
 
@@ -570,7 +597,8 @@ describe("TheaTask", () => {
 				// Mock the model info to indicate image support
 				// jest.spyOn(theaTaskWithImages.api, "getModel").mockReturnValue(...) // Mock setup handled above
 
-				theaTaskWithImages.taskStateManager.apiConversationHistory = convertToNeutralHistory(conversationHistory) // Correct variable
+				theaTaskWithImages.taskStateManager.apiConversationHistory =
+					convertToNeutralHistory(conversationHistory) // Correct variable
 
 				// Test with model that doesn't support images
 				const [theaTaskWithoutImages, taskWithoutImages] = TheaTask.create({
@@ -593,7 +621,8 @@ describe("TheaTask", () => {
 					},
 				})
 
-				theaTaskWithoutImages.taskStateManager.apiConversationHistory = convertToNeutralHistory(conversationHistory) // Use correct variable and state manager
+				theaTaskWithoutImages.taskStateManager.apiConversationHistory =
+					convertToNeutralHistory(conversationHistory) // Use correct variable and state manager
 
 				// Mock abort state for both instances
 				Object.defineProperty(theaTaskWithImages, "abort", {
@@ -614,13 +643,23 @@ describe("TheaTask", () => {
 				jest.spyOn(theaTaskWithImages, "getEnvironmentDetails").mockResolvedValue("")
 				jest.spyOn(theaTaskWithoutImages, "getEnvironmentDetails").mockResolvedValue("") // Use correct variable
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				jest.spyOn(theaTaskWithImages, "loadContext").mockImplementation(async (_userContent: NeutralMessageContent, _includeFileDetails?: boolean): Promise<[NeutralMessageContent, string]> => {
-					return Promise.resolve([[{ type: "text", text: "mocked" }], ""]);
-				})
+				jest.spyOn(theaTaskWithImages, "loadContext").mockImplementation(
+					async (
+						_userContent: NeutralMessageContent,
+						_includeFileDetails?: boolean,
+					): Promise<[NeutralMessageContent, string]> => {
+						return Promise.resolve([[{ type: "text", text: "mocked" }], ""])
+					},
+				)
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				jest.spyOn(theaTaskWithoutImages, "loadContext").mockImplementation(async (_userContent: NeutralMessageContent, _includeFileDetails?: boolean): Promise<[NeutralMessageContent, string]> => {
-					return Promise.resolve([[{ type: "text", text: "mocked" }], ""]);
-				})
+				jest.spyOn(theaTaskWithoutImages, "loadContext").mockImplementation(
+					async (
+						_userContent: NeutralMessageContent,
+						_includeFileDetails?: boolean,
+					): Promise<[NeutralMessageContent, string]> => {
+						return Promise.resolve([[{ type: "text", text: "mocked" }], ""])
+					},
+				)
 
 				// Mock token counting to avoid Anthropic API calls
 				jest.spyOn(theaTaskWithImages.api, "countTokens").mockResolvedValue(100)
@@ -633,17 +672,21 @@ describe("TheaTask", () => {
 				// Set up mock streams
 				// eslint-disable-next-line @typescript-eslint/require-await
 				const mockStreamWithImages = (async function* (): AsyncGenerator<ApiStreamChunk, void, unknown> {
-					yield { type: "text", text: "test response" };
-				})();
+					yield { type: "text", text: "test response" }
+				})()
 
 				// eslint-disable-next-line @typescript-eslint/require-await
 				const mockStreamWithoutImages = (async function* (): AsyncGenerator<ApiStreamChunk, void, unknown> {
-					yield { type: "text", text: "test response" };
-				})();
+					yield { type: "text", text: "test response" }
+				})()
 
 				// Set up spies
-				const imagesSpy = jest.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>().mockReturnValue(mockStreamWithImages);
-				const noImagesSpy = jest.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>().mockReturnValue(mockStreamWithoutImages);
+				const imagesSpy = jest
+					.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>()
+					.mockReturnValue(mockStreamWithImages)
+				const noImagesSpy = jest
+					.fn<AsyncGenerator<ApiStreamChunk, void, unknown>, [string, NeutralConversationHistory]>()
+					.mockReturnValue(mockStreamWithoutImages)
 
 				jest.spyOn(theaTaskWithImages.api, "createMessage").mockImplementation(imagesSpy)
 				jest.spyOn(theaTaskWithoutImages.api, "createMessage").mockImplementation(noImagesSpy) // Use correct variable
@@ -674,7 +717,9 @@ describe("TheaTask", () => {
 				jest.spyOn(theaTaskWithoutImages.taskStateManager as any, "log").mockImplementation(async () => {})
 
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				jest.spyOn(theaTaskWithImages.taskStateManager as any, "saveClineMessages").mockImplementation( async () => {} )
+				jest.spyOn(theaTaskWithImages.taskStateManager as any, "saveClineMessages").mockImplementation(
+					async () => {},
+				)
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				jest.spyOn(theaTaskWithoutImages.taskStateManager as any, "saveClineMessages").mockImplementation(
 					async () => {},
@@ -684,7 +729,7 @@ describe("TheaTask", () => {
 					async () => {},
 				)
 				jest.spyOn(
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					theaTaskWithoutImages.taskStateManager as any,
 					"saveApiConversationHistory",
 				).mockImplementation(async () => {})
@@ -1003,7 +1048,9 @@ describe("TheaTask", () => {
 
 					// Mock parseMentions to track calls
 					const mockParseMentions = jest.fn().mockImplementation((text) => `processed: ${text}`)
-					jest.spyOn({ parseMentions: parseMentionsActual }, "parseMentions").mockImplementation(mockParseMentions)
+					jest.spyOn({ parseMentions: parseMentionsActual }, "parseMentions").mockImplementation(
+						mockParseMentions,
+					)
 
 					const userContent: NeutralMessageContent = [
 						{
@@ -1017,7 +1064,7 @@ describe("TheaTask", () => {
 						{
 							type: "tool_result",
 							tool_use_id: "test-id",
-status: "success",
+							status: "success",
 							content: [
 								{
 									type: "text",

@@ -1,12 +1,6 @@
 import { Mistral } from "@mistralai/mistralai"
 import { SingleCompletionHandler } from "../"
-import {
-	ApiHandlerOptions,
-	mistralDefaultModelId,
-	MistralModelId,
-	mistralModels,
-	ModelInfo,
-} from "../../shared/api"
+import { ApiHandlerOptions, mistralDefaultModelId, MistralModelId, mistralModels, ModelInfo } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { convertToMistralMessages } from "../transform/neutral-mistral-format"
 import { ApiStream } from "../transform/stream"
@@ -75,30 +69,32 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 				for (const toolCall of delta.toolCalls) {
 					if (toolCall.function?.name && toolCall.function?.arguments) {
 						try {
-							const args = typeof toolCall.function.arguments === 'string' 
-								? JSON.parse(toolCall.function.arguments) as Record<string, unknown>
-								: toolCall.function.arguments as Record<string, unknown>;
+							const args =
+								typeof toolCall.function.arguments === "string"
+									? (JSON.parse(toolCall.function.arguments) as Record<string, unknown>)
+									: (toolCall.function.arguments as Record<string, unknown>)
 
 							const toolUseInput = {
 								name: toolCall.function.name,
 								arguments: args,
-							};
+							}
 
-							const toolResult = await this.processToolUse(toolUseInput);
-							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+							const toolResult = await this.processToolUse(toolUseInput)
+							const toolResultString =
+								typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 							yield {
-								type: 'tool_result',
+								type: "tool_result",
 								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 								content: toolResultString,
-							};
+							}
 						} catch (error) {
-							console.warn('Mistral tool use error:', error);
+							console.warn("Mistral tool use error:", error)
 							yield {
-								type: 'tool_result',
+								type: "tool_result",
 								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-							};
+							}
 						}
 					}
 				}
@@ -136,10 +132,10 @@ export class MistralHandler extends BaseProvider implements SingleCompletionHand
 		try {
 			// For now, use the base provider's implementation
 			// Mistral doesn't have a native token counting API
-			return super.countTokens(content);
+			return super.countTokens(content)
 		} catch (error) {
-			console.warn("Mistral token counting error, using fallback", error);
-			return super.countTokens(content);
+			console.warn("Mistral token counting error, using fallback", error)
+			return super.countTokens(content)
 		}
 	}
 

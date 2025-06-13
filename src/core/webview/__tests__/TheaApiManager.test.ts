@@ -84,7 +84,7 @@ describe("ClineApiManager", () => {
 	test("updateApiConfiguration updates mode config association", async () => {
 		// Setup
 		const mockApiConfig = { apiProvider: "openrouter" as const }
-                mockContextProxy.getValue.mockImplementation((key) => {
+		mockContextProxy.getValue.mockImplementation((key) => {
 			if (key === "mode") return "code"
 			if (key === "currentApiConfigName") return "test-config"
 			return undefined
@@ -128,7 +128,7 @@ describe("ClineApiManager", () => {
 		mockProviderSettingsManager.listConfig.mockResolvedValue([
 			{ name: "current-config", id: "current-id", apiProvider: "anthropic" },
 		])
-                mockContextProxy.getValue.mockImplementation(() => "current-config")
+		mockContextProxy.getValue.mockImplementation(() => "current-config")
 		mockProviderSettingsManager.loadConfig.mockResolvedValue(mockApiConfig)
 
 		// Execute

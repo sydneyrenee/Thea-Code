@@ -62,26 +62,26 @@ describe("read_file tool with maxReadFileLine setting", () => {
 
 	// Define interfaces for mock objects to avoid 'any' type issues
 	interface MockProvider {
-		getState: jest.Mock;
-		deref: jest.Mock;
+		getState: jest.Mock
+		deref: jest.Mock
 	}
 
 	interface MockThea {
-		cwd: string;
-		task: string;
-		providerRef: MockProvider;
+		cwd: string
+		task: string
+		providerRef: MockProvider
 		theaIgnoreController: {
-			validateAccess: jest.Mock;
-		};
-		say: jest.Mock;
-		ask: jest.Mock;
-		presentAssistantMessage: jest.Mock;
+			validateAccess: jest.Mock
+		}
+		say: jest.Mock
+		ask: jest.Mock
+		presentAssistantMessage: jest.Mock
 	}
 
 	// Mock instances
-	const mockThea = {} as MockThea;
-	let mockProvider: MockProvider;
-	let toolResult: string | undefined;
+	const mockThea = {} as MockThea
+	let mockProvider: MockProvider
+	let toolResult: string | undefined
 
 	beforeEach(() => {
 		jest.clearAllMocks()

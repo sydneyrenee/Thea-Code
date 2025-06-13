@@ -18,7 +18,7 @@ This document provides detailed implementation steps for the MCP architecture re
 
 ### McpToolTypes.ts
 
-```typescript
+````typescript
 // src/services/mcp/types/McpToolTypes.ts
 
 /**
@@ -130,11 +130,11 @@ export interface IMcpProvider {
   getServerUrl(): URL | undefined;
   isRunning(): boolean;
 }
-```
+````
 
 ### McpTransportTypes.ts
 
-```typescript
+````typescript
 // src/services/mcp/types/McpTransportTypes.ts
 
 /**
@@ -145,22 +145,22 @@ export interface SseTransportConfig {
    * The port to listen on (default: 0 for random available port)
    */
   port?: number;
-  
+
   /**
    * The hostname to bind to (default: localhost)
    */
   hostname?: string;
-  
+
   /**
    * Whether to allow connections from other hosts (default: false)
    */
   allowExternalConnections?: boolean;
-  
+
   /**
    * The path to serve the SSE endpoint on (default: /mcp/events)
    */
   eventsPath?: string;
-  
+
   /**
    * The path to accept POST requests on (default: /mcp/api)
    */
@@ -270,17 +270,17 @@ export class McpToolRegistry extends EventEmitter {
     }
   }
 }
-```
+````
 
 ### McpToolExecutor.ts
 
-```typescript
+````typescript
 // src/services/mcp/core/McpToolExecutor.ts
 
 import { EventEmitter } from "events";
-import { 
-  jsonToolUseToXml, 
-  xmlToolUseToJson, 
+import {
+  jsonToolUseToXml,
+  xmlToolUseToJson,
   openAiFunctionCallToNeutralToolUse,
   neutralToolUseToOpenAiFunctionCall
 } from "../../../utils/json-xml-bridge";
@@ -326,7 +326,7 @@ export class McpToolExecutor extends EventEmitter {
     this.sseConfig = config;
     this.mcpProvider = provider;
     this.toolRegistry = McpToolRegistry.getInstance();
-    
+
     // Forward events from the MCP provider
     if (this.mcpProvider instanceof EventEmitter) {
       this.mcpProvider.on('tool-registered', (name) => this.emit('tool-registered', name));
@@ -381,7 +381,7 @@ export class McpToolExecutor extends EventEmitter {
     // Unregister from both the MCP provider and the tool registry
     const mcpResult = this.mcpProvider.unregisterTool(name);
     const registryResult = this.toolRegistry.unregisterTool(name);
-    
+
     return mcpResult && registryResult;
   }
 
@@ -395,10 +395,10 @@ export class McpToolExecutor extends EventEmitter {
 // src/services/mcp/providers/EmbeddedMcpProvider.ts
 
 import { EventEmitter } from "events";
-import { 
-  ToolCallResult, 
-  ToolDefinition, 
-  ResourceDefinition, 
+import {
+  ToolCallResult,
+  ToolDefinition,
+  ResourceDefinition,
   ResourceTemplateDefinition,
   IMcpProvider
 } from "../types/McpProviderTypes";
@@ -410,7 +410,7 @@ import { StdioTransport } from "../transport/StdioTransport";
 /**
  * EmbeddedMcpProvider provides a local MCP server implementation that hosts tools
  * from various sources including XML and JSON tool definitions.
- * 
+ *
  * This provider acts as a unified tool system that can be used by models
  * regardless of whether they use XML or JSON formats for tool calls.
  */
@@ -430,9 +430,9 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
    */
   constructor(config?: SseTransportConfig) {
     super();
-    
+
     this.sseConfig = { ...DEFAULT_SSE_CONFIG, ...config };
-    
+
     try {
       // Try to import the MCP SDK dynamically
       const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
@@ -483,7 +483,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     // Register resource handlers as tools
     for (const [uri, definition] of this.resources.entries()) {
       const resourceName = `resource:${uri}`;
-      
+
       try {
         this.server.tool(
           resourceName,
@@ -517,11 +517,11 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     // Register resource template handlers
     for (const [uriTemplate, definition] of this.resourceTemplates.entries()) {
       const templateName = `template:${uriTemplate}`;
-      
+
       // Create a schema for the template parameters
       const paramNames = this.extractParamNames(uriTemplate);
       const paramSchema: Record<string, any> = {};
-      
+
       for (const param of paramNames) {
         paramSchema[param] = { type: "string" };
       }
@@ -566,11 +566,11 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     const paramRegex = /{([^}]+)}/g;
     const params: string[] = [];
     let match;
-    
+
     while ((match = paramRegex.exec(template)) !== null) {
       params.push(match[1]);
     }
-    
+
     return params;
   }
 
@@ -584,12 +584,12 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     // Convert template to regex by replacing {param} with named capture groups
     const regexStr = template.replace(/{([^}]+)}/g, '(?<$1>[^/]+)');
     const regex = new RegExp(`^${regexStr}$`);
-    
+
     const match = regex.exec(uri);
     if (!match || !match.groups) {
       return null;
     }
-    
+
     return match.groups;
   }
 
@@ -640,10 +640,10 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     if (this.isStarted) {
       return;
     }
-    
+
     // Register all handlers
     this.registerHandlers();
-    
+
     try {
       // Create the appropriate transport
       if (this.sseConfig.allowExternalConnections) {
@@ -665,32 +665,32 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
           apiPath: this.sseConfig.apiPath
         });
       }
-      
+
       // Set up error handling
       this.transport.onerror = (error) => {
         console.error("Transport error:", error);
         this.emit('error', error);
       };
-      
+
       this.transport.onclose = () => {
         this.isStarted = false;
         this.serverUrl = undefined;
         this.emit('stopped');
       };
-      
+
       // Connect the server to the transport
       await this.server.connect(this.transport);
-      
+
       // Store the server URL for clients to connect to
       const port = this.transport.getPort ? this.transport.getPort() : 0;
       this.serverUrl = new URL(`http://${this.sseConfig.hostname}:${port}`);
-      
+
       this.isStarted = true;
       this.emit('started', { url: this.serverUrl.toString() });
       console.log(`MCP server started at ${this.serverUrl.toString()}`);
     } catch (error) {
       console.error("Failed to start MCP server:", error);
-      
+
       // Fall back to mock transport in case of error
       this.serverUrl = new URL(`http://localhost:0`);
       this.isStarted = true;
@@ -705,7 +705,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
     if (!this.isStarted) {
       return;
     }
-    
+
     try {
       // Close the server connection
       if (this.transport) {
@@ -746,7 +746,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
    */
   async executeTool(name: string, args: Record<string, unknown>): Promise<ToolCallResult> {
     const tool = this.tools.get(name);
-    
+
     if (!tool) {
       return {
         content: [{
@@ -777,15 +777,16 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
  */
 class MockMcpServer {
   constructor(_options: any) {}
-  
+
   tool(_name: string, _description: string, _schema: any, _handler: any) {}
-  
+
   connect(_transport: any): Promise<void> {
     return Promise.resolve();
   }
 }
-```
-```
+````
+
+````
 /**
 ### MockMcpProvider.ts
 
@@ -793,10 +794,10 @@ class MockMcpServer {
 // src/services/mcp/providers/MockMcpProvider.ts
 
 import { EventEmitter } from "events";
-import { 
-  ToolCallResult, 
-  ToolDefinition, 
-  IMcpProvider 
+import {
+  ToolCallResult,
+  ToolDefinition,
+  IMcpProvider
 } from "../types/McpProviderTypes";
 
 /**
@@ -815,7 +816,7 @@ export class MockMcpProvider extends EventEmitter implements IMcpProvider {
     if (this.isStarted) {
       return;
     }
-    
+
     this.isStarted = true;
     this.serverUrl = new URL('http://localhost:0');
     this.emit('started', { url: this.serverUrl.toString() });
@@ -825,7 +826,7 @@ export class MockMcpProvider extends EventEmitter implements IMcpProvider {
     if (!this.isStarted) {
       return;
     }
-    
+
     this.isStarted = false;
     this.serverUrl = undefined;
     this.emit('stopped');
@@ -846,7 +847,7 @@ export class MockMcpProvider extends EventEmitter implements IMcpProvider {
 
   async executeTool(name: string, args: Record<string, unknown>): Promise<ToolCallResult> {
     const tool = this.tools.get(name);
-    
+
     if (!tool) {
       return {
         content: [{
@@ -878,113 +879,113 @@ export class MockMcpProvider extends EventEmitter implements IMcpProvider {
     return this.isStarted;
   }
 }
-```
+````
 
 ### RemoteMcpProvider.ts
 
 ```typescript
 // src/services/mcp/providers/RemoteMcpProvider.ts
 
-import { EventEmitter } from "events";
-import { 
-  ToolCallResult, 
-  ToolDefinition, 
-  IMcpProvider 
-} from "../types/McpProviderTypes";
-import { SseClientFactory } from "../client/SseClientFactory";
+import { EventEmitter } from "events"
+import { ToolCallResult, ToolDefinition, IMcpProvider } from "../types/McpProviderTypes"
+import { SseClientFactory } from "../client/SseClientFactory"
 
 /**
  * RemoteMcpProvider provides a provider for connecting to external MCP servers.
  */
 export class RemoteMcpProvider extends EventEmitter implements IMcpProvider {
-  private tools: Map<string, ToolDefinition> = new Map();
-  private isStarted: boolean = false;
-  private serverUrl?: URL;
-  private client?: any;
+	private tools: Map<string, ToolDefinition> = new Map()
+	private isStarted: boolean = false
+	private serverUrl?: URL
+	private client?: any
 
-  constructor(private readonly url: URL) {
-    super();
-    this.serverUrl = url;
-  }
+	constructor(private readonly url: URL) {
+		super()
+		this.serverUrl = url
+	}
 
-  async start(): Promise<void> {
-    if (this.isStarted) {
-      return;
-    }
-    
-    try {
-      this.client = await SseClientFactory.createClient(this.serverUrl!);
-      this.isStarted = true;
-      this.emit('started', { url: this.serverUrl!.toString() });
-    } catch (error) {
-      throw new Error(`Failed to connect to remote MCP server: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
+	async start(): Promise<void> {
+		if (this.isStarted) {
+			return
+		}
 
-  async stop(): Promise<void> {
-    if (!this.isStarted) {
-      return;
-    }
-    
-    try {
-      if (this.client) {
-        await this.client.close();
-      }
-    } catch (error) {
-      console.error("Error stopping remote MCP client:", error);
-    } finally {
-      this.client = undefined;
-      this.isStarted = false;
-      this.emit('stopped');
-    }
-  }
+		try {
+			this.client = await SseClientFactory.createClient(this.serverUrl!)
+			this.isStarted = true
+			this.emit("started", { url: this.serverUrl!.toString() })
+		} catch (error) {
+			throw new Error(
+				`Failed to connect to remote MCP server: ${error instanceof Error ? error.message : String(error)}`,
+			)
+		}
+	}
 
-  registerToolDefinition(definition: ToolDefinition): void {
-    this.tools.set(definition.name, definition);
-    this.emit('tool-registered', definition.name);
-  }
+	async stop(): Promise<void> {
+		if (!this.isStarted) {
+			return
+		}
 
-  unregisterTool(name: string): boolean {
-    const result = this.tools.delete(name);
-    if (result) {
-      this.emit('tool-unregistered', name);
-    }
-    return result;
-  }
+		try {
+			if (this.client) {
+				await this.client.close()
+			}
+		} catch (error) {
+			console.error("Error stopping remote MCP client:", error)
+		} finally {
+			this.client = undefined
+			this.isStarted = false
+			this.emit("stopped")
+		}
+	}
 
-  async executeTool(name: string, args: Record<string, unknown>): Promise<ToolCallResult> {
-    if (!this.isStarted || !this.client) {
-      throw new Error('Remote MCP provider not started');
-    }
+	registerToolDefinition(definition: ToolDefinition): void {
+		this.tools.set(definition.name, definition)
+		this.emit("tool-registered", definition.name)
+	}
 
-    try {
-      const result = await this.client.callTool({
-        name,
-        arguments: args
-      });
-      
-      return {
-        content: result.content,
-        isError: result.status === 'error'
-      };
-    } catch (error) {
-      return {
-        content: [{
-          type: "text",
-          text: `Error executing tool '${name}': ${error instanceof Error ? error.message : String(error)}`
-        }],
-        isError: true
-      };
-    }
-  }
+	unregisterTool(name: string): boolean {
+		const result = this.tools.delete(name)
+		if (result) {
+			this.emit("tool-unregistered", name)
+		}
+		return result
+	}
 
-  getServerUrl(): URL | undefined {
-    return this.serverUrl;
-  }
+	async executeTool(name: string, args: Record<string, unknown>): Promise<ToolCallResult> {
+		if (!this.isStarted || !this.client) {
+			throw new Error("Remote MCP provider not started")
+		}
 
-  isRunning(): boolean {
-    return this.isStarted;
-  }
+		try {
+			const result = await this.client.callTool({
+				name,
+				arguments: args,
+			})
+
+			return {
+				content: result.content,
+				isError: result.status === "error",
+			}
+		} catch (error) {
+			return {
+				content: [
+					{
+						type: "text",
+						text: `Error executing tool '${name}': ${error instanceof Error ? error.message : String(error)}`,
+					},
+				],
+				isError: true,
+			}
+		}
+	}
+
+	getServerUrl(): URL | undefined {
+		return this.serverUrl
+	}
+
+	isRunning(): boolean {
+		return this.isStarted
+	}
 }
 ```
 
@@ -992,7 +993,7 @@ export class RemoteMcpProvider extends EventEmitter implements IMcpProvider {
 
 ### SseTransport.ts
 
-```typescript
+````typescript
 // src/services/mcp/transport/SseTransport.ts
 
 import { IMcpTransport } from "../types/McpTransportTypes";
@@ -1004,10 +1005,10 @@ import { SseTransportConfig, DEFAULT_SSE_CONFIG } from "./config/SseTransportCon
 export class SseTransport implements IMcpTransport {
   private transport: any;
   private config: SseTransportConfig;
-  
+
   constructor(config?: SseTransportConfig) {
     this.config = { ...DEFAULT_SSE_CONFIG, ...config };
-    
+
     try {
       // Try to import the MCP SDK dynamically
       const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js");
@@ -1024,28 +1025,28 @@ export class SseTransport implements IMcpTransport {
       this.transport = new MockSseServerTransport();
     }
   }
-  
+
   async start(): Promise<void> {
     // No explicit start method for SSE transport
     return Promise.resolve();
   }
-  
+
   async close(): Promise<void> {
     if (this.transport && typeof this.transport.close === 'function') {
       await this.transport.close();
     }
   }
-  
+
   getPort(): number {
     return this.transport.getPort();
   }
-  
+
   set onerror(handler: (error: Error) => void) {
     if (this.transport && typeof this.transport.onerror === 'function') {
       this.transport.onerror = handler;
     }
   }
-  
+
   set onclose(handler: () => void) {
 ### StdioTransport.ts
 
@@ -1060,7 +1061,7 @@ import { IMcpTransport } from "../types/McpTransportTypes";
 export class StdioTransport implements IMcpTransport {
   private transport: any;
   private _stderr?: any;
-  
+
   constructor(options: {
     command: string;
     args?: string[];
@@ -1084,30 +1085,30 @@ export class StdioTransport implements IMcpTransport {
       this.transport = new MockStdioServerTransport();
     }
   }
-  
+
   async start(): Promise<void> {
     if (this.transport && typeof this.transport.start === 'function') {
       await this.transport.start();
       this._stderr = this.transport.stderr;
     }
   }
-  
+
   async close(): Promise<void> {
     if (this.transport && typeof this.transport.close === 'function') {
       await this.transport.close();
     }
   }
-  
+
   get stderr(): any {
     return this._stderr;
   }
-  
+
   set onerror(handler: (error: Error) => void) {
     if (this.transport && typeof this.transport.onerror === 'function') {
       this.transport.onerror = handler;
     }
   }
-  
+
   set onclose(handler: () => void) {
     if (this.transport && typeof this.transport.onclose === 'function') {
       this.transport.onclose = handler;
@@ -1121,20 +1122,20 @@ export class StdioTransport implements IMcpTransport {
  */
 class MockStdioServerTransport {
   constructor() {}
-  
+
   start(): Promise<void> {
     return Promise.resolve();
   }
-  
+
   close(): Promise<void> {
     return Promise.resolve();
   }
-  
+
   get stderr(): any {
     return undefined;
   }
 }
-```
+````
 
 ## Client Components
 
@@ -1147,15 +1148,15 @@ class MockStdioServerTransport {
  * Base client class for MCP
  */
 export abstract class McpClient {
-  constructor(protected readonly clientInfo: any) {}
-  
-  abstract connect(transport: any): Promise<void>;
-  
-  abstract close(): Promise<void>;
-  
-  abstract listTools(): Promise<any>;
-  
-  abstract callTool(params: any): Promise<any>;
+	constructor(protected readonly clientInfo: any) {}
+
+	abstract connect(transport: any): Promise<void>
+
+	abstract close(): Promise<void>
+
+	abstract listTools(): Promise<any>
+
+	abstract callTool(params: any): Promise<any>
 }
 ```
 
@@ -1164,130 +1165,130 @@ export abstract class McpClient {
 ```typescript
 // src/services/mcp/client/SseClientFactory.ts
 
-import { McpClient } from "./McpClient";
+import { McpClient } from "./McpClient"
 
 /**
  * SseClient implementation
  */
 class SseClient extends McpClient {
-  private client: any;
-  
-  constructor(clientInfo: any) {
-    super(clientInfo);
-  }
-  
-  async connect(transport: any): Promise<void> {
-    this.client = new Client(this.clientInfo);
-    await this.client.connect(transport);
-  }
-  
-  async close(): Promise<void> {
-    if (this.client) {
-      await this.client.close();
-    }
-  }
-  
-  async listTools(): Promise<any> {
-    if (!this.client) {
-      throw new Error("Client not connected");
-    }
-    return this.client.listTools();
-  }
-  
-  async callTool(params: any): Promise<any> {
-    if (!this.client) {
-      throw new Error("Client not connected");
-    }
-    return this.client.callTool(params);
-  }
+	private client: any
+
+	constructor(clientInfo: any) {
+		super(clientInfo)
+	}
+
+	async connect(transport: any): Promise<void> {
+		this.client = new Client(this.clientInfo)
+		await this.client.connect(transport)
+	}
+
+	async close(): Promise<void> {
+		if (this.client) {
+			await this.client.close()
+		}
+	}
+
+	async listTools(): Promise<any> {
+		if (!this.client) {
+			throw new Error("Client not connected")
+		}
+		return this.client.listTools()
+	}
+
+	async callTool(params: any): Promise<any> {
+		if (!this.client) {
+			throw new Error("Client not connected")
+		}
+		return this.client.callTool(params)
+	}
 }
 
 /**
  * Factory for creating MCP clients that connect to an SSE server
  */
 export class SseClientFactory {
-  /**
-   * Create a new MCP client that connects to the specified server URL
-   * @param serverUrl The URL of the MCP server to connect to
-   * @returns A new MCP client
-   */
-  public static async createClient(serverUrl: URL): Promise<McpClient> {
-    try {
-      // Try to import the MCP SDK dynamically
-      const { Client } = require('@modelcontextprotocol/sdk/client');
-      const { SSEClientTransport } = require('@modelcontextprotocol/sdk/client/sse');
-      
-      // Create the client
-      const client = new SseClient({
-        name: 'TheaCodeMcpClient',
-        version: '1.0.0'
-      });
-      
-      // Create the transport
-      const transport = new SSEClientTransport(serverUrl);
-      
-      // Connect the client to the transport
-      await client.connect(transport);
-      
-      return client;
-    } catch (error) {
-      console.warn('MCP SDK not found, using mock client');
-      
-      // Create a mock client
-      const client = new MockClient({
-        name: 'TheaCodeMcpClient',
-        version: '1.0.0'
-      });
-      
-      return client;
-    }
-  }
+	/**
+	 * Create a new MCP client that connects to the specified server URL
+	 * @param serverUrl The URL of the MCP server to connect to
+	 * @returns A new MCP client
+	 */
+	public static async createClient(serverUrl: URL): Promise<McpClient> {
+		try {
+			// Try to import the MCP SDK dynamically
+			const { Client } = require("@modelcontextprotocol/sdk/client")
+			const { SSEClientTransport } = require("@modelcontextprotocol/sdk/client/sse")
+
+			// Create the client
+			const client = new SseClient({
+				name: "TheaCodeMcpClient",
+				version: "1.0.0",
+			})
+
+			// Create the transport
+			const transport = new SSEClientTransport(serverUrl)
+
+			// Connect the client to the transport
+			await client.connect(transport)
+
+			return client
+		} catch (error) {
+			console.warn("MCP SDK not found, using mock client")
+
+			// Create a mock client
+			const client = new MockClient({
+				name: "TheaCodeMcpClient",
+				version: "1.0.0",
+			})
+
+			return client
+		}
+	}
 }
 
 /**
  * Mock implementation of the Client class
  */
 class MockClient extends McpClient {
-  constructor(clientInfo: any) {
-    super(clientInfo);
-  }
-  
-  async connect(transport: any): Promise<void> {
-    return Promise.resolve();
-  }
-  
-  async close(): Promise<void> {
-    return Promise.resolve();
-  }
-  
-  async listTools(): Promise<any> {
-    return { tools: [] };
-  }
-  
-  async callTool(params: any): Promise<any> {
-    return { content: [] };
-  }
+	constructor(clientInfo: any) {
+		super(clientInfo)
+	}
+
+	async connect(transport: any): Promise<void> {
+		return Promise.resolve()
+	}
+
+	async close(): Promise<void> {
+		return Promise.resolve()
+	}
+
+	async listTools(): Promise<any> {
+		return { tools: [] }
+	}
+
+	async callTool(params: any): Promise<any> {
+		return { content: [] }
+	}
 }
 
 // For type compatibility
 class Client {
-  constructor(private clientInfo: any) {}
-  
-  async connect(transport: any): Promise<void> {
-    return Promise.resolve();
-  }
-  
-  async close(): Promise<void> {
-    return Promise.resolve();
-  }
-  
-  async listTools(): Promise<any> {
-    return { tools: [] };
-  }
-  
-  async callTool(params: any): Promise<any> {
-    return { content: [] };
-  }
+	constructor(private clientInfo: any) {}
+
+	async connect(transport: any): Promise<void> {
+		return Promise.resolve()
+	}
+
+	async close(): Promise<void> {
+		return Promise.resolve()
+	}
+
+	async listTools(): Promise<any> {
+		return { tools: [] }
+	}
+
+	async callTool(params: any): Promise<any> {
+		return { content: [] }
+	}
 }
 ```
 
@@ -1295,7 +1296,7 @@ class Client {
 
 ### McpIntegration.ts
 
-```typescript
+````typescript
 // src/services/mcp/integration/McpIntegration.ts
 
 import { EventEmitter } from "events";
@@ -1317,7 +1318,7 @@ export class McpIntegration extends EventEmitter {
   private mcpProvider: EmbeddedMcpProvider;
   private isInitialized: boolean = false;
   private sseConfig?: SseTransportConfig;
-  
+
   /**
    * Get the singleton instance of the McpIntegration
    * @param config Optional SSE transport configuration
@@ -1331,7 +1332,7 @@ export class McpIntegration extends EventEmitter {
     }
     return McpIntegration.instance;
   }
-  
+
   /**
    * Private constructor to enforce singleton pattern
    * @param config Optional SSE transport configuration
@@ -1342,14 +1343,14 @@ export class McpIntegration extends EventEmitter {
     this.mcpProvider = new EmbeddedMcpProvider(config);
     this.mcpToolExecutor = McpToolExecutor.getInstance(this.mcpProvider, config);
     this.mcpToolRouter = McpToolRouter.getInstance(config);
-    
+
     // Forward events from the MCP tool router
     this.mcpToolRouter.on('tool-registered', (name) => this.emit('tool-registered', name));
     this.mcpToolRouter.on('tool-unregistered', (name) => this.emit('tool-unregistered', name));
     this.mcpToolRouter.on('started', (info) => this.emit('started', info));
     this.mcpToolRouter.on('stopped', () => this.emit('stopped'));
   }
-  
+
   /**
    * Initialize the MCP integration
    */
@@ -1357,12 +1358,12 @@ export class McpIntegration extends EventEmitter {
     if (this.isInitialized) {
       return;
     }
-    
+
     // Initialize the MCP tool router
     await this.mcpToolRouter.initialize();
     this.isInitialized = true;
   }
-  
+
   /**
    * Shutdown the MCP integration
    */
@@ -1370,12 +1371,12 @@ export class McpIntegration extends EventEmitter {
     if (!this.isInitialized) {
       return;
     }
-    
+
     // Shutdown the MCP tool router
     await this.mcpToolRouter.shutdown();
     this.isInitialized = false;
   }
-  
+
   /**
    * Register a tool with the MCP integration
    * @param definition The tool definition
@@ -1383,7 +1384,7 @@ export class McpIntegration extends EventEmitter {
   public registerTool(definition: ToolDefinition): void {
     this.mcpToolExecutor.registerTool(definition);
   }
-  
+
   /**
    * Unregister a tool from the MCP integration
    * @param name The name of the tool to unregister
@@ -1392,7 +1393,7 @@ export class McpIntegration extends EventEmitter {
   public unregisterTool(name: string): boolean {
     return this.mcpToolExecutor.unregisterTool(name);
   }
-  
+
   /**
    * Process a tool use request in XML format
    * @param xmlContent The XML content containing the tool use request
@@ -1401,7 +1402,7 @@ export class McpIntegration extends EventEmitter {
   public async processXmlToolUse(xmlContent: string): Promise<string> {
     return this.mcpToolExecutor.processXmlToolUse(xmlContent);
   }
-  
+
   /**
    * Process a tool use request in JSON format
    * @param jsonContent The JSON content containing the tool use request
@@ -1410,7 +1411,7 @@ export class McpIntegration extends EventEmitter {
   public async processJsonToolUse(jsonContent: string | Record<string, unknown>): Promise<string> {
     return this.mcpToolExecutor.processJsonToolUse(jsonContent);
   }
-  
+
   /**
    * Process a tool use request in OpenAI function call format
    * @param functionCall The OpenAI function call object
@@ -1419,7 +1420,7 @@ export class McpIntegration extends EventEmitter {
   public async processOpenAiFunctionCall(functionCall: Record<string, unknown>): Promise<Record<string, unknown>> {
     return this.mcpToolExecutor.processOpenAiFunctionCall(functionCall);
   }
-  
+
   /**
    * Route a tool use request based on its format
    * @param content The tool use request content
@@ -1428,13 +1429,13 @@ export class McpIntegration extends EventEmitter {
   public async routeToolUse(content: string | Record<string, unknown>): Promise<string | Record<string, unknown>> {
     // Detect the format
     const format = this.mcpToolRouter.detectFormat(content);
-    
+
     // Route the request
     const result = await this.mcpToolRouter.routeToolUse({
       format,
       content
     });
-    
+
     // Return the result
     return result.content;
   }
@@ -1466,7 +1467,7 @@ export class ProviderIntegration extends EventEmitter {
   private mcpToolExecutors: Map<string, McpToolExecutor> = new Map();
   private isInitialized: boolean = false;
   private sseConfig?: SseTransportConfig;
-  
+
   /**
    * Get the singleton instance of the ProviderIntegration
    * @param config Optional SSE transport configuration
@@ -1480,7 +1481,7 @@ export class ProviderIntegration extends EventEmitter {
     }
     return ProviderIntegration.instance;
   }
-  
+
   /**
    * Private constructor to enforce singleton pattern
    * @param config Optional SSE transport configuration
@@ -1489,7 +1490,7 @@ export class ProviderIntegration extends EventEmitter {
     super();
     this.sseConfig = config;
   }
-  
+
   /**
    * Initialize the provider integration
    */
@@ -1497,21 +1498,21 @@ export class ProviderIntegration extends EventEmitter {
     if (this.isInitialized) {
       return;
     }
-    
+
     // Initialize all providers
     for (const [name, provider] of this.providers.entries()) {
       await provider.start();
-      
+
       // Create a tool executor for the provider if it doesn't exist
       if (!this.mcpToolExecutors.has(name)) {
         const executor = McpToolExecutor.getInstance(provider, this.sseConfig);
         this.mcpToolExecutors.set(name, executor);
       }
     }
-    
+
     this.isInitialized = true;
   }
-  
+
   /**
    * Shutdown the provider integration
    */
@@ -1519,15 +1520,15 @@ export class ProviderIntegration extends EventEmitter {
     if (!this.isInitialized) {
       return;
     }
-    
+
     // Shutdown all providers
     for (const provider of this.providers.values()) {
       await provider.stop();
     }
-    
+
     this.isInitialized = false;
   }
-  
+
   /**
    * Register a provider with the integration
    * @param name The name of the provider
@@ -1535,7 +1536,7 @@ export class ProviderIntegration extends EventEmitter {
    */
   public registerProvider(name: string, provider: IMcpProvider): void {
     this.providers.set(name, provider);
-    
+
     // Forward events from the provider
     if (provider instanceof EventEmitter) {
       provider.on('tool-registered', (toolName) => this.emit('tool-registered', name, toolName));
@@ -1543,18 +1544,18 @@ export class ProviderIntegration extends EventEmitter {
       provider.on('started', (info) => this.emit('provider-started', name, info));
       provider.on('stopped', () => this.emit('provider-stopped', name));
     }
-    
+
     // Create a tool executor for the provider if it doesn't exist
     if (!this.mcpToolExecutors.has(name) && provider) {
       const executor = McpToolExecutor.getInstance(provider, this.sseConfig);
       this.mcpToolExecutors.set(name, executor);
-      
+
       // Forward events from the tool executor
       executor.on('tool-registered', (toolName) => this.emit('tool-registered', name, toolName));
       executor.on('tool-unregistered', (toolName) => this.emit('tool-unregistered', name, toolName));
     }
   }
-  
+
   /**
    * Unregister a provider from the integration
    * @param name The name of the provider to unregister
@@ -1565,23 +1566,23 @@ export class ProviderIntegration extends EventEmitter {
     if (!provider) {
       return false;
     }
-    
+
     // Stop the provider if it's running
     if (provider.isRunning()) {
       provider.stop().catch((error) => {
         console.error(`Error stopping provider ${name}:`, error);
       });
     }
-    
+
     // Remove the provider from the map
     this.providers.delete(name);
-    
+
     // Remove the tool executor from the map
     this.mcpToolExecutors.delete(name);
-    
+
     return true;
   }
-  
+
   /**
    * Get a provider by name
    * @param name The name of the provider to get
@@ -1590,7 +1591,7 @@ export class ProviderIntegration extends EventEmitter {
   public getProvider(name: string): IMcpProvider | undefined {
     return this.providers.get(name);
   }
-  
+
   /**
    * Get all registered providers
    * @returns A map of provider names to providers
@@ -1598,7 +1599,7 @@ export class ProviderIntegration extends EventEmitter {
   public getAllProviders(): Map<string, IMcpProvider> {
     return new Map(this.providers);
   }
-  
+
   /**
    * Get a tool executor by provider name
    * @param name The name of the provider
@@ -1608,119 +1609,119 @@ export class ProviderIntegration extends EventEmitter {
     return this.mcpToolExecutors.get(name);
   }
 }
-```
+````
 
 ### WebviewIntegration.ts
 
 ```typescript
 // src/services/mcp/integration/WebviewIntegration.ts
 
-import { EventEmitter } from "events";
-import { McpHub } from "../management/McpHub";
+import { EventEmitter } from "events"
+import { McpHub } from "../management/McpHub"
 
 /**
  * WebviewIntegration provides an integration layer for webview.
  */
 export class WebviewIntegration extends EventEmitter {
-  private static instance: WebviewIntegration;
-  private mcpHub?: McpHub;
-  
-  /**
-   * Get the singleton instance of the WebviewIntegration
-   */
-  public static getInstance(): WebviewIntegration {
-    if (!WebviewIntegration.instance) {
-      WebviewIntegration.instance = new WebviewIntegration();
-    }
-    return WebviewIntegration.instance;
-  }
-  
-  /**
-   * Private constructor to enforce singleton pattern
-   */
-  private constructor() {
-    super();
-  }
-  
-  /**
-   * Set the McpHub instance
-   * @param hub The McpHub instance
-   */
-  public setMcpHub(hub: McpHub): void {
-    this.mcpHub = hub;
-    
-    // Forward events from the McpHub
-    hub.on('tool-registered', (name) => this.emit('tool-registered', name));
-    hub.on('tool-unregistered', (name) => this.emit('tool-unregistered', name));
-    hub.on('started', (info) => this.emit('started', info));
-    hub.on('stopped', () => this.emit('stopped'));
-  }
-  
-  /**
-   * Get the McpHub instance
-   * @returns The McpHub instance
-   */
-  public getMcpHub(): McpHub | undefined {
-    return this.mcpHub;
-  }
-  
-  /**
-   * Get all servers
-   * @returns An array of server objects
-   */
-  public getAllServers(): any[] {
-    return this.mcpHub?.getAllServers() || [];
-  }
-  
-  /**
-   * Update server timeout
-   * @param serverName The name of the server
-   * @param timeout The timeout in seconds
-   */
-  public async updateServerTimeout(serverName: string, timeout: number): Promise<void> {
-    if (this.mcpHub) {
-      await this.mcpHub.updateServerTimeout(serverName, timeout);
-    } else {
-      throw new Error('McpHub not available');
-    }
-  }
-  
-  /**
-   * Delete a server
-   * @param serverName The name of the server
-   */
-  public async deleteServer(serverName: string): Promise<void> {
-    if (this.mcpHub) {
-      await this.mcpHub.deleteServer(serverName);
-    } else {
-      throw new Error('McpHub not available');
-    }
-  }
-  
-  /**
-   * Toggle server disabled state
-   * @param serverName The name of the server
-   * @param disabled Whether the server should be disabled
-   */
-  public async toggleServerDisabled(serverName: string, disabled: boolean): Promise<void> {
-    if (this.mcpHub) {
-      await this.mcpHub.toggleServerDisabled(serverName, disabled);
-    } else {
-      throw new Error('McpHub not available');
-    }
-  }
-  
-  /**
-   * Restart a server connection
-   * @param serverName The name of the server
-   */
-  public async restartConnection(serverName: string): Promise<void> {
-    if (this.mcpHub) {
-      await this.mcpHub.restartConnection(serverName);
-    } else {
-      throw new Error('McpHub not available');
-    }
-  }
+	private static instance: WebviewIntegration
+	private mcpHub?: McpHub
+
+	/**
+	 * Get the singleton instance of the WebviewIntegration
+	 */
+	public static getInstance(): WebviewIntegration {
+		if (!WebviewIntegration.instance) {
+			WebviewIntegration.instance = new WebviewIntegration()
+		}
+		return WebviewIntegration.instance
+	}
+
+	/**
+	 * Private constructor to enforce singleton pattern
+	 */
+	private constructor() {
+		super()
+	}
+
+	/**
+	 * Set the McpHub instance
+	 * @param hub The McpHub instance
+	 */
+	public setMcpHub(hub: McpHub): void {
+		this.mcpHub = hub
+
+		// Forward events from the McpHub
+		hub.on("tool-registered", (name) => this.emit("tool-registered", name))
+		hub.on("tool-unregistered", (name) => this.emit("tool-unregistered", name))
+		hub.on("started", (info) => this.emit("started", info))
+		hub.on("stopped", () => this.emit("stopped"))
+	}
+
+	/**
+	 * Get the McpHub instance
+	 * @returns The McpHub instance
+	 */
+	public getMcpHub(): McpHub | undefined {
+		return this.mcpHub
+	}
+
+	/**
+	 * Get all servers
+	 * @returns An array of server objects
+	 */
+	public getAllServers(): any[] {
+		return this.mcpHub?.getAllServers() || []
+	}
+
+	/**
+	 * Update server timeout
+	 * @param serverName The name of the server
+	 * @param timeout The timeout in seconds
+	 */
+	public async updateServerTimeout(serverName: string, timeout: number): Promise<void> {
+		if (this.mcpHub) {
+			await this.mcpHub.updateServerTimeout(serverName, timeout)
+		} else {
+			throw new Error("McpHub not available")
+		}
+	}
+
+	/**
+	 * Delete a server
+	 * @param serverName The name of the server
+	 */
+	public async deleteServer(serverName: string): Promise<void> {
+		if (this.mcpHub) {
+			await this.mcpHub.deleteServer(serverName)
+		} else {
+			throw new Error("McpHub not available")
+		}
+	}
+
+	/**
+	 * Toggle server disabled state
+	 * @param serverName The name of the server
+	 * @param disabled Whether the server should be disabled
+	 */
+	public async toggleServerDisabled(serverName: string, disabled: boolean): Promise<void> {
+		if (this.mcpHub) {
+			await this.mcpHub.toggleServerDisabled(serverName, disabled)
+		} else {
+			throw new Error("McpHub not available")
+		}
+	}
+
+	/**
+	 * Restart a server connection
+	 * @param serverName The name of the server
+	 */
+	public async restartConnection(serverName: string): Promise<void> {
+		if (this.mcpHub) {
+			await this.mcpHub.restartConnection(serverName)
+		} else {
+			throw new Error("McpHub not available")
+		}
+	}
 }
 ```
 
@@ -1733,24 +1734,24 @@ The McpHub class is quite large and complex. Here's a simplified version with th
 ```typescript
 // src/services/mcp/management/McpHub.ts
 
-import { EventEmitter } from "events";
-import { McpConnection, ServerConfigSchema } from "../types/McpManagementTypes";
-import { SseClientFactory } from "../client/SseClientFactory";
+import { EventEmitter } from "events"
+import { McpConnection, ServerConfigSchema } from "../types/McpManagementTypes"
+import { SseClientFactory } from "../client/SseClientFactory"
 
 /**
  * McpHub manages MCP server connections.
  */
 export class McpHub extends EventEmitter {
-  private providerRef: WeakRef<any>;
-  private disposables: any[] = [];
-  private settingsWatcher?: any;
-  private fileWatchers: Map<string, any[]> = new Map();
-  private projectMcpWatcher?: any;
-  private isDisposed: boolean = false;
-  connections: McpConnection[] = [];
-  isConnecting: boolean = false;
+	private providerRef: WeakRef<any>
+	private disposables: any[] = []
+	private settingsWatcher?: any
+	private fileWatchers: Map<string, any[]> = new Map()
+	private projectMcpWatcher?: any
+	private isDisposed: boolean = false
+	connections: McpConnection[] = []
+	isConnecting: boolean = false
 
-  // ... rest of the implementation with updated references
+	// ... rest of the implementation with updated references
 }
 ```
 
@@ -1759,87 +1760,87 @@ export class McpHub extends EventEmitter {
 ```typescript
 // src/services/mcp/management/McpServerManager.ts
 
-import * as vscode from "vscode";
-import { McpHub } from "./McpHub";
+import * as vscode from "vscode"
+import { McpHub } from "./McpHub"
 
 /**
  * Singleton manager for MCP server instances.
  * Ensures only one set of MCP servers runs across all webviews.
  */
 export class McpServerManager {
-  private static instance: McpHub | null = null;
-  private static readonly GLOBAL_STATE_KEY = "mcpHubInstanceId";
-  private static providers: Set<any> = new Set();
-  private static initializationPromise: Promise<McpHub> | null = null;
+	private static instance: McpHub | null = null
+	private static readonly GLOBAL_STATE_KEY = "mcpHubInstanceId"
+	private static providers: Set<any> = new Set()
+	private static initializationPromise: Promise<McpHub> | null = null
 
-  /**
-   * Get the singleton McpHub instance.
-   * Creates a new instance if one doesn't exist.
-   * Thread-safe implementation using a promise-based lock.
-   */
-  static async getInstance(context: vscode.ExtensionContext, provider: any): Promise<McpHub> {
-    // Register the provider
-    this.providers.add(provider);
+	/**
+	 * Get the singleton McpHub instance.
+	 * Creates a new instance if one doesn't exist.
+	 * Thread-safe implementation using a promise-based lock.
+	 */
+	static async getInstance(context: vscode.ExtensionContext, provider: any): Promise<McpHub> {
+		// Register the provider
+		this.providers.add(provider)
 
-    // If we already have an instance, return it
-    if (this.instance) {
-      return this.instance;
-    }
+		// If we already have an instance, return it
+		if (this.instance) {
+			return this.instance
+		}
 
-    // If initialization is in progress, wait for it
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
+		// If initialization is in progress, wait for it
+		if (this.initializationPromise) {
+			return this.initializationPromise
+		}
 
-    // Create a new initialization promise
-    this.initializationPromise = (async () => {
-      try {
-        // Double-check instance in case it was created while we were waiting
-        if (!this.instance) {
-          this.instance = new McpHub(provider);
-          // Store a unique identifier in global state to track the primary instance
-          await context.globalState.update(this.GLOBAL_STATE_KEY, Date.now().toString());
-        }
-        return this.instance;
-      } finally {
-        // Clear the initialization promise after completion or error
-        this.initializationPromise = null;
-      }
-    })();
+		// Create a new initialization promise
+		this.initializationPromise = (async () => {
+			try {
+				// Double-check instance in case it was created while we were waiting
+				if (!this.instance) {
+					this.instance = new McpHub(provider)
+					// Store a unique identifier in global state to track the primary instance
+					await context.globalState.update(this.GLOBAL_STATE_KEY, Date.now().toString())
+				}
+				return this.instance
+			} finally {
+				// Clear the initialization promise after completion or error
+				this.initializationPromise = null
+			}
+		})()
 
-    return this.initializationPromise;
-  }
+		return this.initializationPromise
+	}
 
-  /**
-   * Remove a provider from the tracked set.
-   * This is called when a webview is disposed.
-   */
-  static unregisterProvider(provider: any): void {
-    this.providers.delete(provider);
-  }
+	/**
+	 * Remove a provider from the tracked set.
+	 * This is called when a webview is disposed.
+	 */
+	static unregisterProvider(provider: any): void {
+		this.providers.delete(provider)
+	}
 
-  /**
-   * Notify all registered providers of server state changes.
-   */
-  static notifyProviders(message: any): void {
-    this.providers.forEach((provider) => {
-      provider.postMessageToWebview(message).catch((error: any) => {
-        console.error("Failed to notify provider:", error);
-      });
-    });
-  }
+	/**
+	 * Notify all registered providers of server state changes.
+	 */
+	static notifyProviders(message: any): void {
+		this.providers.forEach((provider) => {
+			provider.postMessageToWebview(message).catch((error: any) => {
+				console.error("Failed to notify provider:", error)
+			})
+		})
+	}
 
-  /**
-   * Clean up the singleton instance and all its resources.
-   */
-  static async cleanup(context: vscode.ExtensionContext): Promise<void> {
-    if (this.instance) {
-      await this.instance.dispose();
-      this.instance = null;
-      await context.globalState.update(this.GLOBAL_STATE_KEY, undefined);
-    }
-    this.providers.clear();
-  }
+	/**
+	 * Clean up the singleton instance and all its resources.
+	 */
+	static async cleanup(context: vscode.ExtensionContext): Promise<void> {
+		if (this.instance) {
+			await this.instance.dispose()
+			this.instance = null
+			await context.globalState.update(this.GLOBAL_STATE_KEY, undefined)
+		}
+		this.providers.clear()
+	}
 }
 ```
 
@@ -1850,43 +1851,41 @@ export class McpServerManager {
 ```typescript
 // src/core/webview/mcp/TheaMcpManager.ts
 
-import * as vscode from "vscode";
-import * as path from "path";
-import * as os from "os";
-import fs from "fs/promises";
+import * as vscode from "vscode"
+import * as path from "path"
+import * as os from "os"
+import fs from "fs/promises"
 
-import { McpHub } from "../../../services/mcp/management/McpHub";
-import { WebviewIntegration } from "../../../services/mcp/integration/WebviewIntegration";
+import { McpHub } from "../../../services/mcp/management/McpHub"
+import { WebviewIntegration } from "../../../services/mcp/integration/WebviewIntegration"
 
 /**
  * Manages interactions with the McpHub for Model Control Protocol services.
  */
 export class TheaMcpManager {
-  private webviewIntegration: WebviewIntegration;
+	private webviewIntegration: WebviewIntegration
 
-  constructor(
-    private readonly context: vscode.ExtensionContext,
-  ) {
-    this.webviewIntegration = WebviewIntegration.getInstance();
-  }
+	constructor(private readonly context: vscode.ExtensionContext) {
+		this.webviewIntegration = WebviewIntegration.getInstance()
+	}
 
-  /**
-   * Sets the shared McpHub instance. Called by TheaProvider.
-   */
-  setMcpHub(hub: McpHub | undefined): void {
-    if (hub) {
-      this.webviewIntegration.setMcpHub(hub);
-    }
-  }
+	/**
+	 * Sets the shared McpHub instance. Called by TheaProvider.
+	 */
+	setMcpHub(hub: McpHub | undefined): void {
+		if (hub) {
+			this.webviewIntegration.setMcpHub(hub)
+		}
+	}
 
-  /**
-   * Gets the McpHub instance.
-   */
-  getMcpHub(): McpHub | undefined {
-    return this.webviewIntegration.getMcpHub();
-  }
+	/**
+	 * Gets the McpHub instance.
+	 */
+	getMcpHub(): McpHub | undefined {
+		return this.webviewIntegration.getMcpHub()
+	}
 
-  // ... rest of the implementation with updated references
+	// ... rest of the implementation with updated references
 }
 ```
 
@@ -1897,20 +1896,20 @@ export class TheaMcpManager {
 ```typescript
 // src/services/mcp/__tests__/McpToolExecutor.test.ts
 
-import { McpToolExecutor } from "../core/McpToolExecutor";
-import { MockMcpProvider } from "../providers/MockMcpProvider";
+import { McpToolExecutor } from "../core/McpToolExecutor"
+import { MockMcpProvider } from "../providers/MockMcpProvider"
 
-describe('McpToolExecutor', () => {
-  let mcpToolExecutor: McpToolExecutor;
-  let mockProvider: MockMcpProvider;
+describe("McpToolExecutor", () => {
+	let mcpToolExecutor: McpToolExecutor
+	let mockProvider: MockMcpProvider
 
-  beforeEach(() => {
-    mockProvider = new MockMcpProvider();
-    mcpToolExecutor = McpToolExecutor.getInstance(mockProvider);
-  });
+	beforeEach(() => {
+		mockProvider = new MockMcpProvider()
+		mcpToolExecutor = McpToolExecutor.getInstance(mockProvider)
+	})
 
-  // ... test implementations
-});
+	// ... test implementations
+})
 ```
 
 ### EmbeddedMcpProvider.test.ts
@@ -1918,17 +1917,17 @@ describe('McpToolExecutor', () => {
 ```typescript
 // src/services/mcp/__tests__/EmbeddedMcpProvider.test.ts
 
-import { EmbeddedMcpProvider } from "../providers/EmbeddedMcpProvider";
+import { EmbeddedMcpProvider } from "../providers/EmbeddedMcpProvider"
 
-describe('EmbeddedMcpProvider', () => {
-  let provider: EmbeddedMcpProvider;
+describe("EmbeddedMcpProvider", () => {
+	let provider: EmbeddedMcpProvider
 
-  beforeEach(() => {
-    provider = new EmbeddedMcpProvider();
-  });
+	beforeEach(() => {
+		provider = new EmbeddedMcpProvider()
+	})
 
-  // ... test implementations
-});
+	// ... test implementations
+})
 ```
 
 ### McpIntegration.test.ts
@@ -1936,26 +1935,29 @@ describe('EmbeddedMcpProvider', () => {
 ```typescript
 // src/services/mcp/__tests__/McpIntegration.test.ts
 
-import { McpIntegration } from "../integration/McpIntegration";
+import { McpIntegration } from "../integration/McpIntegration"
 
-describe('McpIntegration', () => {
-  let mcpIntegration: McpIntegration;
+describe("McpIntegration", () => {
+	let mcpIntegration: McpIntegration
 
-  beforeEach(() => {
-    mcpIntegration = McpIntegration.getInstance();
-  });
+	beforeEach(() => {
+		mcpIntegration = McpIntegration.getInstance()
+	})
 
-  // ... test implementations
-});
+	// ... test implementations
+})
 ```
-  /**
-   * Get the server URL if the MCP server is running
-   * @returns The URL of the server, or undefined if not started
-   */
+
+/\*\*
+
+- Get the server URL if the MCP server is running
+- @returns The URL of the server, or undefined if not started
+  \*/
   public getServerUrl(): URL | undefined {
-    return this.mcpToolExecutor.getServerUrl();
+  return this.mcpToolExecutor.getServerUrl();
   }
-}
+  }
+
 ```
     if (this.transport && typeof this.transport.onclose === 'function') {
       this.transport.onclose = handler;
@@ -1969,25 +1971,27 @@ describe('McpIntegration', () => {
  */
 class MockSseServerTransport {
   constructor(_options?: any) {}
-  
+
   getPort(): number {
     return 0;
   }
-  
+
   close(): Promise<void> {
     return Promise.resolve();
   }
 }
 ```
- * Interface for transport
- */
-export interface IMcpTransport {
+
+- Interface for transport
+  \*/
+  export interface IMcpTransport {
   start(): Promise<void>;
   close(): Promise<void>;
   getPort?(): number;
   onerror?: (error: Error) => void;
   onclose?: () => void;
-}
+  }
+
 ```
 /**
  * Interface for tool result with format information
@@ -1996,3 +2000,4 @@ export interface ToolResultWithFormat {
   format: ToolUseFormat;
   content: string | Record<string, unknown>;
 }
+```

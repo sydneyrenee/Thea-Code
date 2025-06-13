@@ -174,9 +174,9 @@ describe("truncateOutput", () => {
 
 describe("applyRunLengthEncoding", () => {
 	it("should handle empty input", () => {
-                expect(applyRunLengthEncoding("")).toBe("")
-                expect(applyRunLengthEncoding(null as unknown as string)).toBe(null as unknown as string)
-                expect(applyRunLengthEncoding(undefined as unknown as string)).toBe(undefined as unknown as string)
+		expect(applyRunLengthEncoding("")).toBe("")
+		expect(applyRunLengthEncoding(null as unknown as string)).toBe(null as unknown as string)
+		expect(applyRunLengthEncoding(undefined as unknown as string)).toBe(undefined as unknown as string)
 	})
 
 	it("should compress repeated single lines when beneficial", () => {

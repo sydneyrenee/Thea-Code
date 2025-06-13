@@ -161,25 +161,25 @@ const ApiConfigManager = ({
 			{isRenaming ? (
 				<div data-testid="rename-form">
 					<div className="flex items-center gap-1">
-                                                <VSCodeTextField
-                                                        ref={inputRef}
-                                                        value={inputValue}
-                                                        onInput={(e: unknown) => {
-                                                                const target = e as { target: { value: string } }
-                                                                setInputValue(target.target.value)
-                                                                setError(null)
-                                                        }}
-                                                        onKeyDown={(e: unknown) => {
-                                                                const event = e as { key: string }
-                                                                if (event.key === "Enter" && inputValue.trim()) {
-                                                                        handleSave()
-                                                                } else if (event.key === "Escape") {
-                                                                        handleCancel()
-                                                                }
-                                                        }}
-                                                        placeholder={t("settings:providers.enterNewName")}
-                                                        className="grow"
-                                                />
+						<VSCodeTextField
+							ref={inputRef}
+							value={inputValue}
+							onInput={(e: unknown) => {
+								const target = e as { target: { value: string } }
+								setInputValue(target.target.value)
+								setError(null)
+							}}
+							onKeyDown={(e: unknown) => {
+								const event = e as { key: string }
+								if (event.key === "Enter" && inputValue.trim()) {
+									handleSave()
+								} else if (event.key === "Escape") {
+									handleCancel()
+								}
+							}}
+							placeholder={t("settings:providers.enterNewName")}
+							className="grow"
+						/>
 						<Button
 							variant="ghost"
 							size="icon"

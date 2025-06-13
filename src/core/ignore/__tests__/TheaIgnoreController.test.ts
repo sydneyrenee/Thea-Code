@@ -44,14 +44,14 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 	let controller: TheaIgnoreController // Use renamed class
 	let mockFileExists: jest.MockedFunction<typeof fileExistsAtPath>
 	let mockReadFile: jest.MockedFunction<typeof fs.readFile>
-	
+
 	interface MockFileWatcher {
 		onDidCreate: jest.MockedFunction<(callback: () => Promise<void> | void) => { dispose: () => void }>
 		onDidChange: jest.MockedFunction<(callback: () => Promise<void> | void) => { dispose: () => void }>
 		onDidDelete: jest.MockedFunction<(callback: () => Promise<void> | void) => { dispose: () => void }>
 		dispose: jest.MockedFunction<() => void>
 	}
-	
+
 	let mockWatcher: MockFileWatcher
 
 	beforeEach(() => {
@@ -125,7 +125,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		/**
 		 * Tests the file watcher setup
 		 */
-               it(`should set up file watcher for ${GLOBAL_FILENAMES.IGNORE_FILENAME} changes`, () => {
+		it(`should set up file watcher for ${GLOBAL_FILENAMES.IGNORE_FILENAME} changes`, () => {
 			// Check that watcher was created with correct pattern
 			expect(vscode.workspace.createFileSystemWatcher).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -349,7 +349,10 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			expect(result).toEqual([])
 
 			// Verify error was logged
-			expect(consoleSpy).toHaveBeenCalledWith("Error filtering paths:", expect.objectContaining({ name: "Error" }))
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Error filtering paths:",
+				expect.objectContaining({ name: "Error" }),
+			)
 
 			// Cleanup
 			consoleSpy.mockRestore()

@@ -12,5 +12,5 @@ export type MistralMessage =
 	| (ToolMessage & { role: "tool" })
 
 export function convertToMistralMessages(neutralHistory: NeutralConversationHistory): MistralMessage[] {
-        return convertFromNeutral(neutralHistory)
+	return convertFromNeutral(neutralHistory)
 }

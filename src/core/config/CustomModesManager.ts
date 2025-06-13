@@ -87,7 +87,7 @@ export class CustomModesManager {
 
 	private async mergeCustomModes(projectModes: ModeConfig[], globalModes: ModeConfig[]): Promise<ModeConfig[]> {
 		// Add a dummy await to satisfy the require-await rule
-		await Promise.resolve();
+		await Promise.resolve()
 		const slugs = new Set<string>()
 		const merged: ModeConfig[] = []
 
@@ -269,7 +269,7 @@ export class CustomModesManager {
 		let content = "{}"
 		try {
 			content = await fs.readFile(filePath, "utf-8")
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		} catch (error) {
 			// File might not exist yet, ignore the error
 			content = JSON.stringify({ customModes: [] })

@@ -8,10 +8,10 @@ import { TerminalRegistry } from "../TerminalRegistry"
 // Mock the vscode module
 jest.mock("vscode", () => {
 	// Store event handlers so we can trigger them in tests
-        const eventHandlers = {
-                startTerminalShellExecution: null as ((e: unknown) => void) | null,
-                endTerminalShellExecution: null as ((e: unknown) => void) | null,
-        }
+	const eventHandlers = {
+		startTerminalShellExecution: null as ((e: unknown) => void) | null,
+		endTerminalShellExecution: null as ((e: unknown) => void) | null,
+	}
 
 	return {
 		workspace: {
@@ -21,14 +21,14 @@ jest.mock("vscode", () => {
 		},
 		window: {
 			createTerminal: jest.fn(),
-                        onDidStartTerminalShellExecution: jest.fn().mockImplementation((handler) => {
-                                eventHandlers.startTerminalShellExecution = handler as (e: unknown) => void
-                                return { dispose: jest.fn() }
-                        }),
-                        onDidEndTerminalShellExecution: jest.fn().mockImplementation((handler) => {
-                                eventHandlers.endTerminalShellExecution = handler as (e: unknown) => void
-                                return { dispose: jest.fn() }
-                        }),
+			onDidStartTerminalShellExecution: jest.fn().mockImplementation((handler) => {
+				eventHandlers.startTerminalShellExecution = handler as (e: unknown) => void
+				return { dispose: jest.fn() }
+			}),
+			onDidEndTerminalShellExecution: jest.fn().mockImplementation((handler) => {
+				eventHandlers.endTerminalShellExecution = handler as (e: unknown) => void
+				return { dispose: jest.fn() }
+			}),
 		},
 		ThemeIcon: class ThemeIcon {
 			constructor(id: string) {
@@ -56,10 +56,10 @@ function createRealCommandStream(command: string): { stream: AsyncIterable<strin
 			maxBuffer: 100 * 1024 * 1024, // Increase buffer size to 100MB
 		})
 		exitCode = 0 // Command succeeded
-        } catch (err: unknown) {
-                // Command failed - get output and exit code from error
-                const error = err as { stdout?: Buffer | string; signal?: string; status?: number }
-                realOutput = typeof error.stdout === "string" ? error.stdout : error.stdout?.toString() || ""
+	} catch (err: unknown) {
+		// Command failed - get output and exit code from error
+		const error = err as { stdout?: Buffer | string; signal?: string; status?: number }
+		realOutput = typeof error.stdout === "string" ? error.stdout : error.stdout?.toString() || ""
 
 		// Handle signal termination
 		if (error.signal) {
@@ -85,9 +85,9 @@ function createRealCommandStream(command: string): { stream: AsyncIterable<strin
 	// Create an async iterator that yields the command output with proper markers
 	// and realistic chunking (not guaranteed to split on newlines)
 	const stream = {
-                async *[Symbol.asyncIterator]() {
-                        await Promise.resolve()
-                        // First yield the command start marker
+		async *[Symbol.asyncIterator]() {
+			await Promise.resolve()
+			// First yield the command start marker
 			yield "\x1b]633;C\x07"
 
 			// Yield the real output in potentially arbitrary chunks
@@ -184,12 +184,14 @@ async function testTerminalCommand(
 		// We've already created the process, so we'll trigger the events manually
 
 		// Get the event handlers from the mock
-                const eventHandlers = (vscode as unknown as {
-                        __eventHandlers: {
-                                startTerminalShellExecution: ((e: unknown) => void) | null
-                                endTerminalShellExecution: ((e: unknown) => void) | null
-                        }
-                }).__eventHandlers
+		const eventHandlers = (
+			vscode as unknown as {
+				__eventHandlers: {
+					startTerminalShellExecution: ((e: unknown) => void) | null
+					endTerminalShellExecution: ((e: unknown) => void) | null
+				}
+			}
+		).__eventHandlers
 
 		// Execute the command first to set up the process
 		await terminalProcess.run(command)
@@ -260,16 +262,16 @@ describe("TerminalProcess with Real Command Output", () => {
 		jest.clearAllMocks()
 	})
 
-        it("should execute 'echo a' and return exactly 'a\\n' with execution time", async () => {
-                await testTerminalCommand("echo a", "a\n")
-        })
+	it("should execute 'echo a' and return exactly 'a\\n' with execution time", async () => {
+		await testTerminalCommand("echo a", "a\n")
+	})
 
-        it("should execute 'echo -n a' and return exactly 'a'", async () => {
-                const { executionTimeUs } = await testTerminalCommand("/bin/echo -n a", "a")
-                console.log(
-                        `'echo -n a' execution time: ${executionTimeUs} microseconds (${executionTimeUs / 1000} milliseconds)`,
-                )
-        })
+	it("should execute 'echo -n a' and return exactly 'a'", async () => {
+		const { executionTimeUs } = await testTerminalCommand("/bin/echo -n a", "a")
+		console.log(
+			`'echo -n a' execution time: ${executionTimeUs} microseconds (${executionTimeUs / 1000} milliseconds)`,
+		)
+	})
 
 	it("should execute 'printf \"a\\nb\\n\"' and return 'a\\nb\\n'", async () => {
 		const { executionTimeUs } = await testTerminalCommand('printf "a\\nb\\n"', "a\nb\n")

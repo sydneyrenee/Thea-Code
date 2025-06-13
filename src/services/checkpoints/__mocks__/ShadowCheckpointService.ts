@@ -3,12 +3,9 @@ import EventEmitter from "events"
 import { CheckpointStorage } from "../../../shared/checkpoints"
 
 export abstract class ShadowCheckpointService extends EventEmitter {
-        public static getTaskStorage = jest
-                .fn()
-                .mockImplementation(
-                        (): Promise<CheckpointStorage | undefined> =>
-                                Promise.resolve("task"),
-                )
+	public static getTaskStorage = jest
+		.fn()
+		.mockImplementation((): Promise<CheckpointStorage | undefined> => Promise.resolve("task"))
 
 	// Use Jest mock functions for these methods
 	public static deleteTask = jest.fn().mockResolvedValue(undefined)

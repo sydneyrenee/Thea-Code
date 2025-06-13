@@ -1,6 +1,6 @@
 // import type { Anthropic } from "@anthropic-ai/sdk" // Unused
-import type { NeutralConversationHistory } from '../../../shared/neutral-history'; // NeutralMessageContent was unused
-import type { ApiStreamChunk } from '../../transform/stream';
+import type { NeutralConversationHistory } from "../../../shared/neutral-history" // NeutralMessageContent was unused
+import type { ApiStreamChunk } from "../../transform/stream"
 import OpenAI from "openai"
 import { ApiHandlerOptions } from "../../../shared/api" // ModelInfo, requestyDefaultModelInfo were unused
 import { RequestyHandler } from "../requesty"
@@ -83,7 +83,7 @@ describe("RequestyHandler", () => {
 		describe("with streaming enabled", () => {
 			beforeEach(() => {
 				const stream = {
-					[Symbol.asyncIterator]: function* () {  
+					[Symbol.asyncIterator]: function* () {
 						yield {
 							choices: [{ delta: { content: "Hello" } }],
 						}
@@ -151,7 +151,6 @@ describe("RequestyHandler", () => {
 					}),
 				)
 			})
-
 		})
 
 		describe("with streaming disabled", () => {
@@ -234,8 +233,7 @@ describe("RequestyHandler", () => {
 		it("should complete prompt successfully", async () => {
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Completed response")
-			 
-			 
+
 			expect(mockCreate).toHaveBeenCalledWith({
 				model: defaultOptions.requestyModelId,
 				messages: [{ role: "user", content: "Test prompt" }],

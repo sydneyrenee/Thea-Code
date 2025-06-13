@@ -15,30 +15,30 @@ The BaseProvider class already includes the MCP integration:
 ```typescript
 // src/api/providers/base-provider.ts
 export abstract class BaseProvider implements ApiHandler {
-  protected mcpIntegration: McpIntegration;
-  
-  constructor() {
-    // Get the MCP integration singleton instance
-    this.mcpIntegration = McpIntegration.getInstance();
-    
-    // Initialize MCP integration
-    this.mcpIntegration.initialize();
+	protected mcpIntegration: McpIntegration
 
-    // Register tools
-    this.registerTools();
-  }
-  
-  protected registerTools(): void {
-    // Register common tools
-    // Specific tools will be registered by individual providers
-  }
-  
-  protected async processToolUse(content: string | Record<string, unknown>): Promise<string> {
-    // Process tool use using MCP integration
-    const result = await this.mcpIntegration.routeToolUse(content);
-    // Ensure we return a string
-    return typeof result === 'string' ? result : JSON.stringify(result);
-  }
+	constructor() {
+		// Get the MCP integration singleton instance
+		this.mcpIntegration = McpIntegration.getInstance()
+
+		// Initialize MCP integration
+		this.mcpIntegration.initialize()
+
+		// Register tools
+		this.registerTools()
+	}
+
+	protected registerTools(): void {
+		// Register common tools
+		// Specific tools will be registered by individual providers
+	}
+
+	protected async processToolUse(content: string | Record<string, unknown>): Promise<string> {
+		// Process tool use using MCP integration
+		const result = await this.mcpIntegration.routeToolUse(content)
+		// Ensure we return a string
+		return typeof result === "string" ? result : JSON.stringify(result)
+	}
 }
 ```
 
@@ -62,7 +62,7 @@ case "content_block_start":
       name: toolUseBlock.name,
       input: toolUseBlock.input
     });
-    
+
     // Yield tool result
     yield {
       type: 'tool_result',
@@ -89,7 +89,7 @@ if (delta.tool_calls) {
         name: toolCall.function.name,
         input: JSON.parse(toolCall.function.arguments || '{}')
       });
-      
+
       // Yield tool result
       yield {
         type: 'tool_result',
@@ -117,29 +117,29 @@ while ((match = xmlToolUseRegex.exec(content)) !== null) {
   // Skip known non-tool tags
   if (tagName !== 'think' && tagName !== 'tool_result' && tagName !== 'tool_use') {
     const toolUseXml = match[0];
-    
+
     try {
       // Extract parameters
       const params: Record<string, any> = {};
       // ... parameter extraction logic ...
-      
+
       // Create tool use object
       const toolUseObj = {
         id: `${tagName}-${Date.now()}`,
         name: tagName,
         input: params
       };
-      
+
       // Process tool use using MCP integration
       const toolResult = await this.processToolUse(toolUseObj);
-      
+
       // Yield tool result
       yield {
         type: 'tool_result',
         id: toolUseObj.id,
         content: toolResult
       };
-      
+
       processedToolUse = true;
     } catch (error) {
       console.warn("Error processing XML tool use:", error);
@@ -151,18 +151,18 @@ while ((match = xmlToolUseRegex.exec(content)) !== null) {
 if (!processedToolUse && content.includes('"type":"tool_use"')) {
   try {
     // ... JSON parsing logic ...
-    
+
     if (jsonObj.type === 'tool_use' && jsonObj.name) {
       // Process tool use using MCP integration
       const toolResult = await this.processToolUse(jsonObj);
-      
+
       // Yield tool result
       yield {
         type: 'tool_result',
         id: jsonObj.id || `${jsonObj.name}-${Date.now()}`,
         content: toolResult
       };
-      
+
       processedToolUse = true;
     }
   } catch (error) {
@@ -178,33 +178,33 @@ The neutral format converters currently don't fully handle tool use and tool res
 ```typescript
 // src/api/transform/neutral-ollama-format.ts
 export function convertToOllamaHistory(
-  neutralHistory: NeutralConversationHistory
+	neutralHistory: NeutralConversationHistory,
 ): OpenAI.Chat.ChatCompletionMessageParam[] {
-  return neutralHistory.map(neutralMessage => {
-    // ... existing code ...
-    
-    // Handle content based on its type
-    if (typeof neutralMessage.content === 'string') {
-      // If content is a simple string, use it directly
-      ollamaMessage.content = neutralMessage.content;
-    } else if (Array.isArray(neutralMessage.content)) {
-      // For Ollama, we need to convert all content blocks to a single string
-      // since it doesn't support complex content types
-      const textBlocks = neutralMessage.content
-        .filter(block => block.type === 'text')
-        .map(block => (block as NeutralTextContentBlock).text);
-      
-      // Join all text blocks with newlines
-      ollamaMessage.content = textBlocks.join('\n\n');
-      
-      // If there are non-text blocks, log a warning
-      if (neutralMessage.content.some(block => block.type !== 'text')) {
-        console.warn('Ollama does not support non-text content. Some content may be lost.');
-      }
-    }
-    
-    return ollamaMessage;
-  });
+	return neutralHistory.map((neutralMessage) => {
+		// ... existing code ...
+
+		// Handle content based on its type
+		if (typeof neutralMessage.content === "string") {
+			// If content is a simple string, use it directly
+			ollamaMessage.content = neutralMessage.content
+		} else if (Array.isArray(neutralMessage.content)) {
+			// For Ollama, we need to convert all content blocks to a single string
+			// since it doesn't support complex content types
+			const textBlocks = neutralMessage.content
+				.filter((block) => block.type === "text")
+				.map((block) => (block as NeutralTextContentBlock).text)
+
+			// Join all text blocks with newlines
+			ollamaMessage.content = textBlocks.join("\n\n")
+
+			// If there are non-text blocks, log a warning
+			if (neutralMessage.content.some((block) => block.type !== "text")) {
+				console.warn("Ollama does not support non-text content. Some content may be lost.")
+			}
+		}
+
+		return ollamaMessage
+	})
 }
 ```
 
@@ -230,6 +230,7 @@ The key insight is that **MCP should be invoked from the OpenAI handler, not fro
 Providers that use the same underlying protocol (OpenAI, Anthropic, etc.) should leverage the corresponding handler's tool use detection and processing logic rather than implementing their own.
 
 For example:
+
 - Ollama uses the OpenAI protocol, so it should leverage the OpenAI handler's tool use logic
 - Claude uses the Anthropic protocol, so it should leverage the Anthropic handler's tool use logic
 
@@ -267,60 +268,60 @@ Implement a protocol-specific adapter pattern where providers can inherit or com
 ```typescript
 // Example for Ollama handler
 export class OllamaHandler extends BaseProvider implements SingleCompletionHandler {
-  private openAiHandler: OpenAiHandler;
-  
-  constructor(options: ApiHandlerOptions) {
-    super();
-    this.options = options;
-    
-    // Create an OpenAI handler for tool use detection and processing
-    this.openAiHandler = new OpenAiHandler({
-      ...options,
-      // Override any OpenAI-specific options as needed
-    });
-    
-    // Initialize the client
-    this.client = new OpenAI({
-      baseURL: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
-      apiKey: "ollama", // Ollama uses a dummy key via OpenAI client
-    });
-  }
-  
-  override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-    // ... existing code ...
-    
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta ?? {};
-      
-      if (delta.content) {
-        // Use the OpenAI handler's tool use detection logic
-        const toolCalls = this.openAiHandler.extractToolCalls(delta);
-        
-        if (toolCalls.length > 0) {
-          // Process tool calls using the OpenAI handler's logic
-          for (const toolCall of toolCalls) {
-            const toolResult = await this.processToolUse({
-              id: toolCall.id,
-              name: toolCall.function.name,
-              input: JSON.parse(toolCall.function.arguments || '{}')
-            });
-            
-            // Yield tool result
-            yield {
-              type: 'tool_result',
-              id: toolCall.id,
-              content: toolResult
-            };
-          }
-        } else {
-          // Regular content handling
-          for (const chunk of matcher.update(delta.content)) {
-            yield chunk;
-          }
-        }
-      }
-    }
-  }
+	private openAiHandler: OpenAiHandler
+
+	constructor(options: ApiHandlerOptions) {
+		super()
+		this.options = options
+
+		// Create an OpenAI handler for tool use detection and processing
+		this.openAiHandler = new OpenAiHandler({
+			...options,
+			// Override any OpenAI-specific options as needed
+		})
+
+		// Initialize the client
+		this.client = new OpenAI({
+			baseURL: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
+			apiKey: "ollama", // Ollama uses a dummy key via OpenAI client
+		})
+	}
+
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// ... existing code ...
+
+		for await (const chunk of stream) {
+			const delta = chunk.choices[0]?.delta ?? {}
+
+			if (delta.content) {
+				// Use the OpenAI handler's tool use detection logic
+				const toolCalls = this.openAiHandler.extractToolCalls(delta)
+
+				if (toolCalls.length > 0) {
+					// Process tool calls using the OpenAI handler's logic
+					for (const toolCall of toolCalls) {
+						const toolResult = await this.processToolUse({
+							id: toolCall.id,
+							name: toolCall.function.name,
+							input: JSON.parse(toolCall.function.arguments || "{}"),
+						})
+
+						// Yield tool result
+						yield {
+							type: "tool_result",
+							id: toolCall.id,
+							content: toolResult,
+						}
+					}
+				} else {
+					// Regular content handling
+					for (const chunk of matcher.update(delta.content)) {
+						yield chunk
+					}
+				}
+			}
+		}
+	}
 }
 ```
 
@@ -337,7 +338,7 @@ sequenceDiagram
     participant MTR as McpToolRouter
     participant UMTS as McpToolExecutor
     participant EMCP as EmbeddedMcpProvider
-    
+
     PH->>PSH: Detect tool use in model response
     PSH->>BP: processToolUse(toolUseObj)
     BP->>MI: routeToolUse(content)
@@ -367,25 +368,25 @@ describe('Provider Handlers with MCP Integration', () => {
   let anthropicHandler: AnthropicHandler;
   let openAiHandler: OpenAiHandler;
   let ollamaHandler: OllamaHandler;
-  
+
   beforeEach(() => {
     // Initialize handlers
     anthropicHandler = new AnthropicHandler({...});
     openAiHandler = new OpenAiHandler({...});
     ollamaHandler = new OllamaHandler({...});
   });
-  
+
   test('Ollama handler should use OpenAI handler for tool use detection', async () => {
     // Mock OpenAI handler's extractToolCalls method
     const extractToolCallsSpy = jest.spyOn(ollamaHandler['openAiHandler'], 'extractToolCalls');
-    
+
     // Create a message with tool use
     // ...
-    
+
     // Verify extractToolCalls was called
     expect(extractToolCallsSpy).toHaveBeenCalled();
   });
-  
+
   // Similar tests for other handlers
 });
 ```
@@ -396,20 +397,18 @@ Create integration tests to verify the end-to-end flow of tool use processing:
 
 ```typescript
 // src/services/mcp/__tests__/provider-integration.test.ts
-describe('Provider Integration with MCP', () => {
-  test('End-to-end tool use processing with Ollama', async () => {
-    // Set up test environment
-    // ...
-    
-    // Create a message with tool use
-    // ...
-    
-    // Verify tool use is processed correctly
-    // ...
-  });
-  
-  // Similar tests for other providers
-});
+describe("Provider Integration with MCP", () => {
+	test("End-to-end tool use processing with Ollama", async () => {
+		// Set up test environment
+		// ...
+		// Create a message with tool use
+		// ...
+		// Verify tool use is processed correctly
+		// ...
+	})
+
+	// Similar tests for other providers
+})
 ```
 
 ## 7. Benefits of Integration

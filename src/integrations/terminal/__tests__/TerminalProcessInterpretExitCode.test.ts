@@ -89,11 +89,11 @@ describe("TerminalProcess.interpretExitCode with real commands", () => {
 			// If we get here, the command succeeded with exit code 0
 			const result = TerminalProcess.interpretExitCode(0)
 			expect(result).toEqual({ exitCode: 0 })
-                } catch (error: unknown) {
-                        // This should not happen for a successful command
-                        const err = error as { message?: string }
-                        fail("Command should have succeeded: " + (err.message ?? ""))
-                }
+		} catch (error: unknown) {
+			// This should not happen for a successful command
+			const err = error as { message?: string }
+			fail("Command should have succeeded: " + (err.message ?? ""))
+		}
 	})
 
 	it("should correctly interpret exit code 1 from failed command", () => {
@@ -101,28 +101,28 @@ describe("TerminalProcess.interpretExitCode with real commands", () => {
 			// Run a command that should fail with exit code 1 or 2
 			execSync("ls /nonexistent_directory", { stdio: "ignore" })
 			fail("Command should have failed")
-                } catch (error: unknown) {
-                        // Verify the exit code is what we expect (can be 1 or 2 depending on the system)
-                        const err = error as { status?: number }
-                        expect(err.status).toBeGreaterThan(0)
-                        expect(err.status).toBeLessThan(128) // Not a signal
-                        const result = TerminalProcess.interpretExitCode(err.status)
-                        expect(result).toEqual({ exitCode: err.status })
-                }
-        })
+		} catch (error: unknown) {
+			// Verify the exit code is what we expect (can be 1 or 2 depending on the system)
+			const err = error as { status?: number }
+			expect(err.status).toBeGreaterThan(0)
+			expect(err.status).toBeLessThan(128) // Not a signal
+			const result = TerminalProcess.interpretExitCode(err.status)
+			expect(result).toEqual({ exitCode: err.status })
+		}
+	})
 
 	it("should correctly interpret exit code from command with custom exit code", () => {
 		try {
 			// Run a command that exits with a specific code
 			execSync("exit 42", { stdio: "ignore" })
 			fail("Command should have exited with code 42")
-                } catch (error: unknown) {
-                        const err = error as { status?: number }
-                        expect(err.status).toBe(42)
-                        const result = TerminalProcess.interpretExitCode(err.status)
-                        expect(result).toEqual({ exitCode: 42 })
-                }
-        })
+		} catch (error: unknown) {
+			const err = error as { status?: number }
+			expect(err.status).toBe(42)
+			const result = TerminalProcess.interpretExitCode(err.status)
+			expect(result).toEqual({ exitCode: 42 })
+		}
+	})
 
 	// Test signal interpretation directly without relying on actual process termination
 	it("should correctly interpret signal termination codes", () => {

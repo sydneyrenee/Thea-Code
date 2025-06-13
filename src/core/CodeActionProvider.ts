@@ -25,10 +25,10 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 	]
 
 	private createAction(
-		title: string, 
-		kind: vscode.CodeActionKind, 
-		command: string, 
-		args: Array<string | number | readonly vscode.Diagnostic[]>
+		title: string,
+		kind: vscode.CodeActionKind,
+		command: string,
+		args: Array<string | number | readonly vscode.Diagnostic[]>,
 	): vscode.CodeAction {
 		const action = new vscode.CodeAction(title, kind)
 		action.command = { command, title, arguments: args }
@@ -90,7 +90,7 @@ export class CodeActionProvider implements vscode.CodeActionProvider {
 				)
 
 				if (relevantDiagnostics.length > 0) {
-					const diagnosticMessages = relevantDiagnostics.map(d => EditorUtils.createDiagnosticData(d))
+					const diagnosticMessages = relevantDiagnostics.map((d) => EditorUtils.createDiagnosticData(d))
 					actions.push(
 						...this.createActionPair(ACTION_NAMES.FIX, vscode.CodeActionKind.QuickFix, COMMAND_IDS.FIX, [
 							filePath,

@@ -3,106 +3,106 @@ name: "Copilot Setup Steps"
 # Automatically run the setup steps when they are changed to allow for easy validation, and
 # allow manual testing through the repository's "Actions" tab
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - .github/workflows/copilot-setup-steps.yml
-  pull_request:
-    paths:
-      - .github/workflows/copilot-setup-steps.yml
+    workflow_dispatch:
+    push:
+        paths:
+            - .github/workflows/copilot-setup-steps.yml
+    pull_request:
+        paths:
+            - .github/workflows/copilot-setup-steps.yml
 
 jobs:
-  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
-  copilot-setup-steps:
-    runs-on: ubuntu-latest
+    # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+    copilot-setup-steps:
+        runs-on: ubuntu-latest
 
-    # Set the permissions to the lowest permissions possible needed for your steps.
-    # Copilot will be given its own token for its operations.
-    permissions:
-      # If you want to clone the repository as part of your setup steps, for example to install dependencies, you'll need the `contents: read` permission. If you don't clone the repository in your setup steps, Copilot will do this for you automatically after the steps complete.
-      contents: write
+        # Set the permissions to the lowest permissions possible needed for your steps.
+        # Copilot will be given its own token for its operations.
+        permissions:
+            # If you want to clone the repository as part of your setup steps, for example to install dependencies, you'll need the `contents: read` permission. If you don't clone the repository in your setup steps, Copilot will do this for you automatically after the steps complete.
+            contents: write
 
-    # You can define any steps you want, and they will run before the agent starts.
-    # If you do not check out your code, Copilot will do this for you.
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        # You can define any steps you want, and they will run before the agent starts.
+        # If you do not check out your code, Copilot will do this for you.
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22.16.0"
-          cache: "npm"
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22.16.0"
+                  cache: "npm"
 
-      - name: Create .env from .env.example if needed
-        run: |
-          if [ ! -f ".env" ] && [ -f ".env.example" ]; then
-            echo "⚙️  Creating .env from .env.example"
-            cp .env.example .env
-          fi
+            - name: Create .env from .env.example if needed
+              run: |
+                  if [ ! -f ".env" ] && [ -f ".env.example" ]; then
+                    echo "⚙️  Creating .env from .env.example"
+                    cp .env.example .env
+                  fi
 
-      - name: Update main project dependencies
-        run: |
-          echo "📦 Installing npm-check-updates for main project..."
-          npm install --no-save --no-audit npm-check-updates
-          echo "🔒 Skipping updates for pinned dependencies (jest and related packages)..."
-          npx npm-check-updates -u --reject jest,jest-environment-jsdom,jest-simple-dot-reporter,ts-jest,@types/jest
-          echo "📥 Installing main project dependencies..."
-          npm install --no-audit
+            - name: Update main project dependencies
+              run: |
+                  echo "📦 Installing npm-check-updates for main project..."
+                  npm install --no-save --no-audit npm-check-updates
+                  echo "🔒 Skipping updates for pinned dependencies (jest and related packages)..."
+                  npx npm-check-updates -u --reject jest,jest-environment-jsdom,jest-simple-dot-reporter,ts-jest,@types/jest
+                  echo "📥 Installing main project dependencies..."
+                  npm install --no-audit
 
-      - name: Ensure Jest is available in main project
-        run: |
-          if ! npx jest --version >/dev/null 2>&1; then
-            echo "🧪 Jest missing—adding it now..."
-            npm install --save-dev jest
-          else
-            echo "✔️  Jest is available in main project"
-          fi
+            - name: Ensure Jest is available in main project
+              run: |
+                  if ! npx jest --version >/dev/null 2>&1; then
+                    echo "🧪 Jest missing—adding it now..."
+                    npm install --save-dev jest
+                  else
+                    echo "✔️  Jest is available in main project"
+                  fi
 
-      - name: Update webview-ui dependencies
-        run: |
-          if [ -d "webview-ui" ]; then
-            echo "📂 Found webview-ui directory, entering..."
-            cd webview-ui
-            if [ ! -f ".env" ] && [ -f ".env.example" ]; then
-              echo "⚙️  Creating .env from .env.example in webview-ui"
-              cp .env.example .env
-            fi
-            echo "📦 Installing npm-check-updates for webview-ui..."
-            npm install --no-save --no-audit --legacy-peer-deps npm-check-updates
-            echo "🔒 Skipping updates for pinned dependencies (jest and related packages)..."
-            npx npm-check-updates -u --reject jest,jest-environment-jsdom,jest-simple-dot-reporter,ts-jest,@types/jest,@testing-library/jest-dom
-            echo "📥 Installing webview-ui dependencies..."
-            npm install --no-audit --legacy-peer-deps
-            if ! npx jest --version >/dev/null 2>&1; then
-              echo "🧪 Jest missing in webview-ui—adding it now..."
-              npm install --save-dev --legacy-peer-deps jest
-            else
-              echo "✔️  Jest is available in webview-ui"
-            fi
-          else
-            echo "⚠️  No webview-ui folder found"
-          fi
+            - name: Update webview-ui dependencies
+              run: |
+                  if [ -d "webview-ui" ]; then
+                    echo "📂 Found webview-ui directory, entering..."
+                    cd webview-ui
+                    if [ ! -f ".env" ] && [ -f ".env.example" ]; then
+                      echo "⚙️  Creating .env from .env.example in webview-ui"
+                      cp .env.example .env
+                    fi
+                    echo "📦 Installing npm-check-updates for webview-ui..."
+                    npm install --no-save --no-audit --legacy-peer-deps npm-check-updates
+                    echo "🔒 Skipping updates for pinned dependencies (jest and related packages)..."
+                    npx npm-check-updates -u --reject jest,jest-environment-jsdom,jest-simple-dot-reporter,ts-jest,@types/jest,@testing-library/jest-dom
+                    echo "📥 Installing webview-ui dependencies..."
+                    npm install --no-audit --legacy-peer-deps
+                    if ! npx jest --version >/dev/null 2>&1; then
+                      echo "🧪 Jest missing in webview-ui—adding it now..."
+                      npm install --save-dev --legacy-peer-deps jest
+                    else
+                      echo "✔️  Jest is available in webview-ui"
+                    fi
+                  else
+                    echo "⚠️  No webview-ui folder found"
+                  fi
 
-      - name: Install benchmark dependencies (if exists)
-        run: |
-          if [ -d "benchmark" ]; then
-            cd benchmark
-            echo "📥 Installing benchmark dependencies..."
-            npm ci --no-audit
-          else
-            echo "⚠️  No benchmark folder found"
-          fi
+            - name: Install benchmark dependencies (if exists)
+              run: |
+                  if [ -d "benchmark" ]; then
+                    cd benchmark
+                    echo "📥 Installing benchmark dependencies..."
+                    npm ci --no-audit
+                  else
+                    echo "⚠️  No benchmark folder found"
+                  fi
 
-      - name: Install e2e test dependencies (if exists)
-        run: |
-          if [ -d "e2e" ]; then
-            cd e2e
-            echo "📥 Installing e2e test dependencies..."
-            npm ci --no-audit
-          else
-            echo "⚠️  No e2e folder found"
-          fi
+            - name: Install e2e test dependencies (if exists)
+              run: |
+                  if [ -d "e2e" ]; then
+                    cd e2e
+                    echo "📥 Installing e2e test dependencies..."
+                    npm ci --no-audit
+                  else
+                    echo "⚠️  No e2e folder found"
+                  fi
 
-      - name: Setup complete
-        run: echo "🎉 All deps are in place—network can go dark now. Happy coding!"
+            - name: Setup complete
+              run: echo "🎉 All deps are in place—network can go dark now. Happy coding!"

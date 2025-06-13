@@ -137,7 +137,7 @@ export interface WebviewMessage {
 	promptMode?: PromptMode
 	customPrompt?: PromptComponent
 	dataUrls?: string[]
-        values?: Record<string, unknown>
+	values?: Record<string, unknown>
 	query?: string
 	slug?: string
 	modeConfig?: ModeConfig

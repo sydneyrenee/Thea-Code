@@ -83,7 +83,7 @@ export async function applyDiffTool(
 				success: false,
 				error: "No diff strategy available",
 			}
-			
+
 			if (!diffResult.success) {
 				theaTask.consecutiveMistakeCount++
 				const currentCount = (theaTask.consecutiveMistakeCountForApplyDiff.get(relPath) || 0) + 1

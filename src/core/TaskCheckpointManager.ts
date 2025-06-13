@@ -125,7 +125,9 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 						this.save() // Save initial checkpoint
 					}
 				} catch (err) {
-					this.log(`Error during 'initialize' event: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
+					this.log(
+						`Error during 'initialize' event: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`,
+					)
 					this._isEnabled = false
 					this.service = undefined // Clear service on error
 					this._isInitialized = false
@@ -140,7 +142,9 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 					this.emit("checkpointSaved", to)
 					// The 'say' call is now handled by TheaTask listening to 'checkpointSaved'
 				} catch (err) {
-					this.log(`Error during 'checkpoint' event: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
+					this.log(
+						`Error during 'checkpoint' event: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`,
+					)
 					this._isEnabled = false
 					this.service = undefined
 					this._isInitialized = false
@@ -149,7 +153,9 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 			})
 
 			serviceInstance.initShadowGit().catch((err) => {
-				this.log(`Error initializing shadow Git: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
+				this.log(
+					`Error initializing shadow Git: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`,
+				)
 				console.error(err)
 				this._isEnabled = false
 				this.service = undefined
@@ -157,7 +163,9 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 				this.emit("checkpointsDisabled")
 			})
 		} catch (err) {
-			this.log(`Unexpected error during initialization: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
+			this.log(
+				`Unexpected error during initialization: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`,
+			)
 			console.error(err)
 			this._isEnabled = false
 			this.service = undefined
@@ -255,7 +263,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 				]),
 			)
 		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
+			const errorMessage = err instanceof Error ? err.message : String(err)
 			this.log(`Error during diff operation: ${errorMessage}. Disabling checkpoints.`)
 			console.error(err)
 			this._isEnabled = false
@@ -286,7 +294,9 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 
 		// Start the checkpoint process in the background.
 		this.service.saveCheckpoint(`Task: ${this.taskId}, Time: ${Date.now()}`).catch((err) => {
-			this.log(`Error saving checkpoint: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`)
+			this.log(
+				`Error saving checkpoint: ${err instanceof Error ? err.message : String(err)}. Disabling checkpoints.`,
+			)
 			console.error(err)
 			this._isEnabled = false
 			this.service = undefined
@@ -323,7 +333,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 			// Message truncation and task re-init are handled by TheaTask after restore succeeds
 			return true
 		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : String(err);
+			const errorMessage = err instanceof Error ? err.message : String(err)
 			this.log(`Error restoring checkpoint ${commitHash}: ${errorMessage}. Disabling checkpoints.`)
 			console.error(err)
 			this._isEnabled = false

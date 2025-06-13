@@ -10,15 +10,17 @@ The provider handler architecture has been successfully refactored to use a unif
 ### Key Components
 
 1. **BaseProvider Class**: All providers now extend `BaseProvider` which provides:
-   - MCP integration via `McpIntegration` singleton
-   - Automatic tool registration
-   - Common token counting functionality
-   - Neutral format interface (`NeutralConversationHistory`)
+
+    - MCP integration via `McpIntegration` singleton
+    - Automatic tool registration
+    - Common token counting functionality
+    - Neutral format interface (`NeutralConversationHistory`)
 
 2. **Protocol-Specific Inheritance**: Providers leverage protocol inheritance to reduce duplication:
-   - `OllamaHandler` extends `OpenAiHandler` (uses OpenAI protocol)
-   - `DeepSeekHandler` extends `OpenAiHandler` with custom usage metrics
-   - `RequestyHandler` extends `OpenAiHandler` with caching support
+
+    - `OllamaHandler` extends `OpenAiHandler` (uses OpenAI protocol)
+    - `DeepSeekHandler` extends `OpenAiHandler` with custom usage metrics
+    - `RequestyHandler` extends `OpenAiHandler` with caching support
 
 3. **MCP Integration**: All providers have seamless tool use capabilities through the MCP system
 
@@ -37,31 +39,33 @@ The provider handler architecture has been successfully refactored to use a unif
 ```typescript
 // src/api/providers/base-provider.ts
 export abstract class BaseProvider implements ApiHandler {
-  protected mcpIntegration: McpIntegration;
+	protected mcpIntegration: McpIntegration
 
-  constructor() {
-    // Get the MCP integration singleton instance
-    this.mcpIntegration = McpIntegration.getInstance();
-    
-    // Initialize MCP integration
-    void this.mcpIntegration.initialize();
+	constructor() {
+		// Get the MCP integration singleton instance
+		this.mcpIntegration = McpIntegration.getInstance()
 
-    // Register tools
-    this.registerTools();
-  }
+		// Initialize MCP integration
+		void this.mcpIntegration.initialize()
 
-  protected registerTools(): void {
-    // Register common tools like read_file, write_file, etc.
-    this.mcpIntegration.registerTool({
-      name: 'read_file',
-      description: 'Read the contents of a file',
-      paramSchema: { /* JSONSchema */ }
-    });
-  }
+		// Register tools
+		this.registerTools()
+	}
 
-  // Abstract methods that providers must implement
-  abstract createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream
-  abstract getModel(): { id: string; info: ModelInfo }
+	protected registerTools(): void {
+		// Register common tools like read_file, write_file, etc.
+		this.mcpIntegration.registerTool({
+			name: "read_file",
+			description: "Read the contents of a file",
+			paramSchema: {
+				/* JSONSchema */
+			},
+		})
+	}
+
+	// Abstract methods that providers must implement
+	abstract createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream
+	abstract getModel(): { id: string; info: ModelInfo }
 }
 ```
 
@@ -70,11 +74,11 @@ export abstract class BaseProvider implements ApiHandler {
 ```typescript
 // src/api/providers/ollama.ts
 export class OllamaHandler extends OpenAiHandler {
-  // Inherits OpenAI protocol handling including tool use detection
-  // Only needs to override connection details and specific behavior
-  protected getBaseUrl(): string {
-    return this.options.baseUrl || 'http://localhost:11434'
-  }
+	// Inherits OpenAI protocol handling including tool use detection
+	// Only needs to override connection details and specific behavior
+	protected getBaseUrl(): string {
+		return this.options.baseUrl || "http://localhost:11434"
+	}
 }
 ```
 
@@ -83,9 +87,9 @@ export class OllamaHandler extends OpenAiHandler {
 ```typescript
 // Tool use is automatically handled by BaseProvider through MCP
 const toolResult = await this.mcpIntegration.routeToolUse({
-  format: ToolUseFormat.XML, // or JSON
-  content: xmlContent
-});
+	format: ToolUseFormat.XML, // or JSON
+	content: xmlContent,
+})
 ```
 
 ## Future Architectural Improvements
@@ -103,11 +107,11 @@ class DeepSeekHandler extends OpenAiHandler { ... }
 // Consider:
 class DeepSeekHandler implements ApiHandler {
   private openAiProvider: OpenAiProvider;
-  
+
   constructor(options) {
     this.openAiProvider = new OpenAiProvider(options);
   }
-  
+
   // Use this.openAiProvider internally
 }
 ```
@@ -118,19 +122,19 @@ Create a more sophisticated factory that can instantiate the appropriate handler
 
 ```typescript
 function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
-  const { apiProvider, modelId, ...options } = configuration;
-  
-  // First determine the actual provider needed
-  const actualProvider = determineActualProvider(apiProvider, modelId);
-  
-  // Then create the appropriate handler
-  switch (actualProvider) {
-    case "anthropic-direct":
-      return new AnthropicHandler(options);
-    case "anthropic-vertex":
-      return new VertexHandler(options);
-    // etc.
-  }
+	const { apiProvider, modelId, ...options } = configuration
+
+	// First determine the actual provider needed
+	const actualProvider = determineActualProvider(apiProvider, modelId)
+
+	// Then create the appropriate handler
+	switch (actualProvider) {
+		case "anthropic-direct":
+			return new AnthropicHandler(options)
+		case "anthropic-vertex":
+			return new VertexHandler(options)
+		// etc.
+	}
 }
 ```
 
@@ -161,27 +165,27 @@ Maintain a registry of provider capabilities that handlers can query:
 
 ```typescript
 const providerCapabilities = {
-  "anthropic": {
-    supportsImages: true,
-    supportsTools: true,
-    maxTokens: 200000
-  },
-  "openai": {
-    supportsImages: true,
-    supportsTools: true,
-    maxTokens: 128000
-  },
-  "ollama": {
-    supportsImages: false,
-    supportsTools: false,
-    maxTokens: 32000
-  }
-};
+	anthropic: {
+		supportsImages: true,
+		supportsTools: true,
+		maxTokens: 200000,
+	},
+	openai: {
+		supportsImages: true,
+		supportsTools: true,
+		maxTokens: 128000,
+	},
+	ollama: {
+		supportsImages: false,
+		supportsTools: false,
+		maxTokens: 32000,
+	},
+}
 
 class BaseHandler {
-  protected getCapabilities(provider: string): ProviderCapabilities {
-    return providerCapabilities[provider] || defaultCapabilities;
-  }
+	protected getCapabilities(provider: string): ProviderCapabilities {
+		return providerCapabilities[provider] || defaultCapabilities
+	}
 }
 ```
 
@@ -196,14 +200,14 @@ graph TD
     subgraph "Application Layer"
         A[TheaTask] --> B[ApiHandler Interface]
     end
-    
+
     subgraph "Message Handling Layer"
         B --> C[Message Handler]
         C --> D[Neutral Format Converter]
         C --> E[Role & Prompt Management]
         C --> F[Content Processing]
     end
-    
+
     subgraph "Provider Communication Layer"
         D --> G[Provider Client]
         G --> H[Token Tracking]
@@ -211,7 +215,7 @@ graph TD
         G --> J[Rate Limiting]
         G --> K[Error Handling]
     end
-    
+
     subgraph "Provider APIs"
         G --> L[Anthropic API]
         G --> M[OpenAI API]
@@ -223,12 +227,14 @@ graph TD
 ### Component Responsibilities
 
 #### Message Handling Layer
+
 - **Message Handler**: Orchestrates the overall message processing flow
 - **Neutral Format Converter**: Converts between neutral format and provider-specific formats
 - **Role & Prompt Management**: Handles system prompts, user/assistant roles, and message history
 - **Content Processing**: Processes different content types (text, images, tools)
 
 #### Provider Communication Layer
+
 - **Provider Client**: Manages the actual API communication with providers
 - **Token Tracking**: Counts and tracks token usage across requests
 - **Pricing Calculation**: Calculates costs based on token usage and provider rates
@@ -240,50 +246,50 @@ graph TD
 ```typescript
 // Provider Communication Layer
 interface ProviderClient {
-  sendRequest(request: ProviderRequest): Promise<ProviderResponse>;
-  countTokens(content: any): Promise<number>;
-  getUsageMetrics(): UsageMetrics;
+	sendRequest(request: ProviderRequest): Promise<ProviderResponse>
+	countTokens(content: any): Promise<number>
+	getUsageMetrics(): UsageMetrics
 }
 
 class AnthropicClient implements ProviderClient {
-  private tokenTracker: TokenTracker;
-  private pricingCalculator: PricingCalculator;
-  
-  constructor(options: ClientOptions) {
-    this.tokenTracker = new TokenTracker(options.model);
-    this.pricingCalculator = new PricingCalculator(options.model);
-  }
-  
-  async sendRequest(request: ProviderRequest): Promise<ProviderResponse> {
-    // Handle actual API communication
-    // Track tokens and pricing
-    // Handle rate limiting and errors
-  }
+	private tokenTracker: TokenTracker
+	private pricingCalculator: PricingCalculator
+
+	constructor(options: ClientOptions) {
+		this.tokenTracker = new TokenTracker(options.model)
+		this.pricingCalculator = new PricingCalculator(options.model)
+	}
+
+	async sendRequest(request: ProviderRequest): Promise<ProviderResponse> {
+		// Handle actual API communication
+		// Track tokens and pricing
+		// Handle rate limiting and errors
+	}
 }
 
 // Message Handling Layer
 class MessageHandler {
-  private providerClient: ProviderClient;
-  private formatConverter: FormatConverter;
-  
-  constructor(providerClient: ProviderClient, formatConverter: FormatConverter) {
-    this.providerClient = providerClient;
-    this.formatConverter = formatConverter;
-  }
-  
-  async createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-    // Convert to provider format
-    const providerMessages = this.formatConverter.toProviderFormat(messages);
-    
-    // Send request through provider client
-    const response = await this.providerClient.sendRequest({
-      systemPrompt,
-      messages: providerMessages
-    });
-    
-    // Process and return response
-    return this.processResponse(response);
-  }
+	private providerClient: ProviderClient
+	private formatConverter: FormatConverter
+
+	constructor(providerClient: ProviderClient, formatConverter: FormatConverter) {
+		this.providerClient = providerClient
+		this.formatConverter = formatConverter
+	}
+
+	async createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// Convert to provider format
+		const providerMessages = this.formatConverter.toProviderFormat(messages)
+
+		// Send request through provider client
+		const response = await this.providerClient.sendRequest({
+			systemPrompt,
+			messages: providerMessages,
+		})
+
+		// Process and return response
+		return this.processResponse(response)
+	}
 }
 ```
 
@@ -313,6 +319,7 @@ graph TD
 ```
 
 For example:
+
 - `ollama.ts` (main handler)
 - `ollama-format.ts` (format conversion)
 - `ollama-prompt.ts` (role & prompt management)
@@ -326,18 +333,18 @@ Define standard interfaces for each of the separated concerns:
 
 ```typescript
 interface FormatConverter {
-  toProviderFormat(neutralHistory: NeutralConversationHistory): ProviderSpecificFormat;
-  fromProviderFormat(providerResponse: ProviderSpecificResponse): NeutralResponse;
+	toProviderFormat(neutralHistory: NeutralConversationHistory): ProviderSpecificFormat
+	fromProviderFormat(providerResponse: ProviderSpecificResponse): NeutralResponse
 }
 
 interface PromptManager {
-  prepareSystemPrompt(systemPrompt: string): ProviderSystemPrompt;
-  prepareRoles(messages: NeutralConversationHistory): ProviderRoles;
+	prepareSystemPrompt(systemPrompt: string): ProviderSystemPrompt
+	prepareRoles(messages: NeutralConversationHistory): ProviderRoles
 }
 
 interface ContentProcessor {
-  processContent(content: NeutralMessageContent): ProviderContent;
-  processResponse(response: ProviderResponse): ApiStream;
+	processContent(content: NeutralMessageContent): ProviderContent
+	processResponse(response: ProviderResponse): ApiStream
 }
 ```
 
@@ -359,22 +366,22 @@ The neutral format could include an extension mechanism that allows for provider
 
 ```typescript
 interface NeutralMessage {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string | NeutralMessageContent;
-  extensions?: {
-    // Provider-specific extensions
-    ollama?: {
-      mirostat?: number;
-      mirostatEta?: number;
-      // Other Ollama-specific parameters
-    };
-    lmstudio?: {
-      draftModel?: string;
-      speculativeDecoding?: boolean;
-      // Other LM Studio-specific parameters
-    };
-    // Other provider extensions
-  };
+	role: "user" | "assistant" | "system" | "tool"
+	content: string | NeutralMessageContent
+	extensions?: {
+		// Provider-specific extensions
+		ollama?: {
+			mirostat?: number
+			mirostatEta?: number
+			// Other Ollama-specific parameters
+		}
+		lmstudio?: {
+			draftModel?: string
+			speculativeDecoding?: boolean
+			// Other LM Studio-specific parameters
+		}
+		// Other provider extensions
+	}
 }
 ```
 
@@ -387,39 +394,39 @@ Instead of trying to map features directly between providers, map them based on 
 ```typescript
 // Define capability interfaces
 interface TemperatureControl {
-  setTemperature(value: number): void;
+	setTemperature(value: number): void
 }
 
 interface DraftModelSupport {
-  setDraftModel(modelId: string): void;
+	setDraftModel(modelId: string): void
 }
 
 // Implement capabilities for each provider
 class OllamaHandler implements TemperatureControl {
-  setTemperature(value: number) {
-    this.options.temperature = value;
-  }
+	setTemperature(value: number) {
+		this.options.temperature = value
+	}
 }
 
 class LmStudioHandler implements TemperatureControl, DraftModelSupport {
-  setTemperature(value: number) {
-    this.options.temperature = value;
-  }
-  
-  setDraftModel(modelId: string) {
-    this.options.draftModel = modelId;
-  }
+	setTemperature(value: number) {
+		this.options.temperature = value
+	}
+
+	setDraftModel(modelId: string) {
+		this.options.draftModel = modelId
+	}
 }
 
 // Use capabilities when available
 function configureHandler(handler: ApiHandler, config: any) {
-  if ('temperature' in config && isTemperatureControl(handler)) {
-    handler.setTemperature(config.temperature);
-  }
-  
-  if ('draftModel' in config && isDraftModelSupport(handler)) {
-    handler.setDraftModel(config.draftModel);
-  }
+	if ("temperature" in config && isTemperatureControl(handler)) {
+		handler.setTemperature(config.temperature)
+	}
+
+	if ("draftModel" in config && isDraftModelSupport(handler)) {
+		handler.setDraftModel(config.draftModel)
+	}
 }
 ```
 
@@ -431,31 +438,31 @@ Implement a negotiation mechanism where the core application can query what feat
 
 ```typescript
 interface FeatureNegotiation {
-  supportsFeature(feature: string): boolean;
-  getFeatureOptions(feature: string): any;
+	supportsFeature(feature: string): boolean
+	getFeatureOptions(feature: string): any
 }
 
 class OllamaHandler implements FeatureNegotiation {
-  supportsFeature(feature: string): boolean {
-    switch (feature) {
-      case 'temperature':
-      case 'mirostat':
-        return true;
-      default:
-        return false;
-    }
-  }
-  
-  getFeatureOptions(feature: string): any {
-    switch (feature) {
-      case 'temperature':
-        return { min: 0, max: 1, default: 0.7 };
-      case 'mirostat':
-        return { values: [0, 1, 2] };
-      default:
-        return null;
-    }
-  }
+	supportsFeature(feature: string): boolean {
+		switch (feature) {
+			case "temperature":
+			case "mirostat":
+				return true
+			default:
+				return false
+		}
+	}
+
+	getFeatureOptions(feature: string): any {
+		switch (feature) {
+			case "temperature":
+				return { min: 0, max: 1, default: 0.7 }
+			case "mirostat":
+				return { values: [0, 1, 2] }
+			default:
+				return null
+		}
+	}
 }
 ```
 
@@ -467,20 +474,20 @@ Define fallback behaviors when specific features aren't available:
 
 ```typescript
 function applyFeature(handler: ApiHandler, feature: string, value: any) {
-  if (handler.supportsFeature(feature)) {
-    handler.applyFeature(feature, value);
-  } else {
-    // Apply fallback behavior
-    switch (feature) {
-      case 'draftModel':
-        // If draft model isn't supported, maybe increase temperature slightly
-        if (handler.supportsFeature('temperature')) {
-          handler.applyFeature('temperature', Math.min(handler.getFeature('temperature') * 1.1, 1.0));
-        }
-        break;
-      // Other fallbacks
-    }
-  }
+	if (handler.supportsFeature(feature)) {
+		handler.applyFeature(feature, value)
+	} else {
+		// Apply fallback behavior
+		switch (feature) {
+			case "draftModel":
+				// If draft model isn't supported, maybe increase temperature slightly
+				if (handler.supportsFeature("temperature")) {
+					handler.applyFeature("temperature", Math.min(handler.getFeature("temperature") * 1.1, 1.0))
+				}
+				break
+			// Other fallbacks
+		}
+	}
 }
 ```
 
@@ -492,22 +499,22 @@ Include provider-specific sections in the configuration:
 
 ```typescript
 interface ApiConfiguration {
-  apiProvider: string;
-  apiModelId: string;
-  // Common configuration
-  modelTemperature?: number;
-  modelMaxTokens?: number;
-  
-  // Provider-specific sections
-  ollama?: {
-    mirostat?: number;
-    mirostatEta?: number;
-  };
-  lmstudio?: {
-    draftModel?: string;
-    speculativeDecoding?: boolean;
-  };
-  // Other provider-specific sections
+	apiProvider: string
+	apiModelId: string
+	// Common configuration
+	modelTemperature?: number
+	modelMaxTokens?: number
+
+	// Provider-specific sections
+	ollama?: {
+		mirostat?: number
+		mirostatEta?: number
+	}
+	lmstudio?: {
+		draftModel?: string
+		speculativeDecoding?: boolean
+	}
+	// Other provider-specific sections
 }
 ```
 

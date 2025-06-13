@@ -44,18 +44,19 @@ const registerTerminalAction = (
 			}
 
 			if (!content) {
-				void vscode.window.showWarningMessage(t("common:warnings.no_terminal_content"));
-				return;
+				void vscode.window.showWarningMessage(t("common:warnings.no_terminal_content"))
+				return
 			}
 
 			const params: Record<string, string> = {
 				terminalContent: content,
-			};
+			}
 
 			if (inputPrompt) {
-				params.userInput = (await vscode.window.showInputBox({
-					prompt: inputPrompt,
-				})) ?? "";
+				params.userInput =
+					(await vscode.window.showInputBox({
+						prompt: inputPrompt,
+					})) ?? ""
 			}
 
 			await TheaProvider.handleTerminalAction(command, promptType, params) // Renamed static method call

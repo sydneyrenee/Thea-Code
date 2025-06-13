@@ -1,1 +1,1 @@
-export { convertToBedrockConverseMessages } from './neutral-bedrock-format'
+export { convertToBedrockConverseMessages } from "./neutral-bedrock-format"

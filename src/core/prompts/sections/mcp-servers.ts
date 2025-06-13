@@ -2,9 +2,9 @@ import { DiffStrategy } from "../../diff/DiffStrategy"
 import { McpHub } from "../../../services/mcp/management/McpHub"
 
 export function getMcpServersSection(
-        mcpHub?: McpHub,
-        diffStrategy?: DiffStrategy,
-        enableMcpServerCreation?: boolean,
+	mcpHub?: McpHub,
+	diffStrategy?: DiffStrategy,
+	enableMcpServerCreation?: boolean,
 ): string {
 	if (!mcpHub) {
 		return ""

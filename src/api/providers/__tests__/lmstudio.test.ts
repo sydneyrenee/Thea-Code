@@ -2,10 +2,10 @@ import { LmStudioHandler } from "../lmstudio"
 import { ApiHandlerOptions } from "../../../shared/api"
 // Unused OpenAI import removed
 // Unused Anthropic import removed
-import type OpenAI from "openai"; // Added for types
-import type { ApiStreamChunk } from '../../transform/stream'; // Added for types
+import type OpenAI from "openai" // Added for types
+import type { ApiStreamChunk } from "../../transform/stream" // Added for types
 // import type { Anthropic } from "@anthropic-ai/sdk"; // No longer needed directly in this test file for messages
-import type { NeutralConversationHistory } from "../../../shared/neutral-history"; // Import for messages type
+import type { NeutralConversationHistory } from "../../../shared/neutral-history" // Import for messages type
 
 // Mock OpenAI client
 const mockCreate = jest.fn()
@@ -15,40 +15,15 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: mockCreate.mockImplementation((options: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
-						if (!options.stream) {
-							return {
-								id: "test-completion",
-								choices: [
-									{
-										message: { role: "assistant", content: "Test response" },
-										finish_reason: "stop",
-										index: 0,
-									},
-								],
-								usage: {
-									prompt_tokens: 10,
-									completion_tokens: 5,
-									total_tokens: 15,
-								},
-							}
-						}
-
-						return {
-							[Symbol.asyncIterator]: function* () {
-								yield {
+					create: mockCreate.mockImplementation(
+						(options: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
+							if (!options.stream) {
+								return {
+									id: "test-completion",
 									choices: [
 										{
-											delta: { content: "Test response" },
-											index: 0,
-										},
-									],
-									usage: null,
-								}
-								yield {
-									choices: [
-										{
-											delta: {},
+											message: { role: "assistant", content: "Test response" },
+											finish_reason: "stop",
 											index: 0,
 										},
 									],
@@ -58,9 +33,36 @@ jest.mock("openai", () => {
 										total_tokens: 15,
 									},
 								}
-							},
-						}
-					}),
+							}
+
+							return {
+								[Symbol.asyncIterator]: function* () {
+									yield {
+										choices: [
+											{
+												delta: { content: "Test response" },
+												index: 0,
+											},
+										],
+										usage: null,
+									}
+									yield {
+										choices: [
+											{
+												delta: {},
+												index: 0,
+											},
+										],
+										usage: {
+											prompt_tokens: 10,
+											completion_tokens: 5,
+											total_tokens: 15,
+										},
+									}
+								},
+							}
+						},
+					),
 				},
 			},
 		})),

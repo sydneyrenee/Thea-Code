@@ -1,5 +1,11 @@
 import * as vscode from "vscode"
-import type { NeutralConversationHistory, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history"
+import type {
+	NeutralConversationHistory,
+	NeutralTextContentBlock,
+	NeutralImageContentBlock,
+	NeutralToolUseContentBlock,
+	NeutralToolResultContentBlock,
+} from "../../shared/neutral-history"
 
 /**
  * Safely converts a value into a plain object.
@@ -29,11 +35,11 @@ function asObjectSafe(value: unknown): object {
 }
 
 export function convertToVsCodeLmMessages(
-        neutralHistory: NeutralConversationHistory,
+	neutralHistory: NeutralConversationHistory,
 ): vscode.LanguageModelChatMessage[] {
-        const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = []
+	const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = []
 
-        for (const anthropicMessage of neutralHistory) {
+	for (const anthropicMessage of neutralHistory) {
 		// Handle simple string messages
 		if (typeof anthropicMessage.content === "string") {
 			vsCodeLmMessages.push(
@@ -47,10 +53,10 @@ export function convertToVsCodeLmMessages(
 		// Handle complex message structures
 		switch (anthropicMessage.role) {
 			case "user": {
-                                const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
-                                        nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
-                                        toolMessages: NeutralToolResultContentBlock[]
-                                }>(
+				const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
+					nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
+					toolMessages: NeutralToolResultContentBlock[]
+				}>(
 					(acc, part) => {
 						if (part.type === "tool_result") {
 							acc.toolMessages.push(part)
@@ -73,7 +79,7 @@ export function convertToVsCodeLmMessages(
 								: (toolMessage.content?.map((part) => {
 										if (part.type === "image") {
 											return new vscode.LanguageModelTextPart(
-												`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === 'base64' ? part.source.media_type : 'media-type not applicable for URL source'} not supported by VSCode LM API]`,
+												`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === "base64" ? part.source.media_type : "media-type not applicable for URL source"} not supported by VSCode LM API]`,
 											)
 										}
 										if (part.type === "text") {
@@ -89,7 +95,7 @@ export function convertToVsCodeLmMessages(
 					...nonToolMessages.map((part) => {
 						if (part.type === "image") {
 							return new vscode.LanguageModelTextPart(
-								`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === 'base64' ? part.source.media_type : 'media-type not applicable for URL source'} not supported by VSCode LM API]`,
+								`[Image (${part.source?.type || "Unknown source-type"}): ${part.source?.type === "base64" ? part.source.media_type : "media-type not applicable for URL source"} not supported by VSCode LM API]`,
 							)
 						}
 						if (part.type === "text") {
@@ -105,10 +111,10 @@ export function convertToVsCodeLmMessages(
 			}
 
 			case "assistant": {
-                                const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
-                                        nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
-                                        toolMessages: NeutralToolUseContentBlock[]
-                                }>(
+				const { nonToolMessages, toolMessages } = anthropicMessage.content.reduce<{
+					nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
+					toolMessages: NeutralToolUseContentBlock[]
+				}>(
 					(acc, part) => {
 						if (part.type === "tool_use") {
 							acc.toolMessages.push(part)

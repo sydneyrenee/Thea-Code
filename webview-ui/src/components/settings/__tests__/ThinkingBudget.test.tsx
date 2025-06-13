@@ -3,7 +3,17 @@ import { ThinkingBudget } from "../ThinkingBudget"
 import { ModelInfo } from "../../../../../src/shared/api"
 
 jest.mock("@/components/ui", () => ({
-	Slider: ({ value, onValueChange, min, max }: { value: number[]; onValueChange: (value: number[]) => void; min: number; max: number }) => (
+	Slider: ({
+		value,
+		onValueChange,
+		min,
+		max,
+	}: {
+		value: number[]
+		onValueChange: (value: number[]) => void
+		min: number
+		max: number
+	}) => (
 		<input
 			type="range"
 			data-testid="slider"

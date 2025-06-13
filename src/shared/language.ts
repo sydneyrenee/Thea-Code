@@ -37,6 +37,6 @@ export function formatLanguage(vscodeLocale: string): Language {
 		return "en"
 	}
 
-        const formattedLocale = vscodeLocale.replace(/-(\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)
+	const formattedLocale = vscodeLocale.replace(/-(\w+)$/, (_, region: string) => `-${region.toUpperCase()}`)
 	return isLanguage(formattedLocale) ? formattedLocale : "en"
 }

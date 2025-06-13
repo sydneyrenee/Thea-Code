@@ -2,7 +2,7 @@ import { DeepSeekHandler } from "../deepseek"
 import { ApiHandlerOptions, deepSeekDefaultModelId } from "../../../shared/api"
 import OpenAI from "openai"
 import { NeutralConversationHistory } from "../../../shared/neutral-history"
-import type { ApiStreamChunk } from '../../transform/stream';
+import type { ApiStreamChunk } from "../../transform/stream"
 // Mock OpenAI client
 const mockCreate = jest.fn()
 jest.mock("openai", () => {
@@ -11,45 +11,15 @@ jest.mock("openai", () => {
 		default: jest.fn().mockImplementation(() => ({
 			chat: {
 				completions: {
-					create: mockCreate.mockImplementation((options: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
-						if (!options.stream) {
-							return {
-								id: "test-completion",
-								choices: [
-									{
-										message: { role: "assistant", content: "Test response", refusal: null },
-										finish_reason: "stop",
-										index: 0,
-									},
-								],
-								usage: {
-									prompt_tokens: 10,
-									completion_tokens: 5,
-									total_tokens: 15,
-									prompt_tokens_details: {
-										cache_miss_tokens: 8,
-										cached_tokens: 2,
-									},
-								},
-							}
-						}
-
-						// Return async iterator for streaming
-						return {
-							[Symbol.asyncIterator]: function* () {
-								yield {
+					create: mockCreate.mockImplementation(
+						(options: OpenAI.Chat.Completions.ChatCompletionCreateParams) => {
+							if (!options.stream) {
+								return {
+									id: "test-completion",
 									choices: [
 										{
-											delta: { content: "Test response" },
-											index: 0,
-										},
-									],
-									usage: null,
-								}
-								yield {
-									choices: [
-										{
-											delta: {},
+											message: { role: "assistant", content: "Test response", refusal: null },
+											finish_reason: "stop",
 											index: 0,
 										},
 									],
@@ -63,9 +33,41 @@ jest.mock("openai", () => {
 										},
 									},
 								}
-							},
-						}
-					}),
+							}
+
+							// Return async iterator for streaming
+							return {
+								[Symbol.asyncIterator]: function* () {
+									yield {
+										choices: [
+											{
+												delta: { content: "Test response" },
+												index: 0,
+											},
+										],
+										usage: null,
+									}
+									yield {
+										choices: [
+											{
+												delta: {},
+												index: 0,
+											},
+										],
+										usage: {
+											prompt_tokens: 10,
+											completion_tokens: 5,
+											total_tokens: 15,
+											prompt_tokens_details: {
+												cache_miss_tokens: 8,
+												cached_tokens: 2,
+											},
+										},
+									}
+								},
+							}
+						},
+					),
 				},
 			},
 		})),
@@ -196,7 +198,8 @@ describe("DeepSeekHandler", () => {
 
 	describe("createMessage", () => {
 		const systemPrompt = "You are a helpful assistant."
-		const messages: NeutralConversationHistory = [ // Explicitly type as NeutralConversationHistory
+		const messages: NeutralConversationHistory = [
+			// Explicitly type as NeutralConversationHistory
 			{
 				role: "user",
 				content: "Hello!",

@@ -1,5 +1,11 @@
 import os from "os"
-import type { NeutralMessage, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history";
+import type {
+	NeutralMessage,
+	NeutralTextContentBlock,
+	NeutralImageContentBlock,
+	NeutralToolUseContentBlock,
+	NeutralToolResultContentBlock,
+} from "../../shared/neutral-history"
 import * as path from "path"
 import * as vscode from "vscode"
 
@@ -22,7 +28,17 @@ export async function downloadTask(dateTs: number, conversationHistory: NeutralM
 		.map((message) => {
 			const role = message.role === "user" ? "**User:**" : "**Assistant:**"
 			const content = Array.isArray(message.content)
-				? message.content.map((block: NeutralTextContentBlock | NeutralImageContentBlock | NeutralToolUseContentBlock | NeutralToolResultContentBlock) => formatContentBlockToMarkdown(block)).join("\n")
+				? message.content
+						.map(
+							(
+								block:
+									| NeutralTextContentBlock
+									| NeutralImageContentBlock
+									| NeutralToolUseContentBlock
+									| NeutralToolResultContentBlock,
+							) => formatContentBlockToMarkdown(block),
+						)
+						.join("\n")
 				: message.content
 			return `${role}\n\n${content}\n\n`
 		})
@@ -41,7 +57,13 @@ export async function downloadTask(dateTs: number, conversationHistory: NeutralM
 	}
 }
 
-export function formatContentBlockToMarkdown(block: NeutralTextContentBlock | NeutralImageContentBlock | NeutralToolUseContentBlock | NeutralToolResultContentBlock): string {
+export function formatContentBlockToMarkdown(
+	block:
+		| NeutralTextContentBlock
+		| NeutralImageContentBlock
+		| NeutralToolUseContentBlock
+		| NeutralToolResultContentBlock,
+): string {
 	switch (block.type) {
 		case "text":
 			return block.text
@@ -61,12 +83,12 @@ export function formatContentBlockToMarkdown(block: NeutralTextContentBlock | Ne
 			// For now we're not doing tool name lookup since we don't use tools anymore
 			// const toolName = findToolName(block.tool_use_id, messages)
 			const toolName = "Tool"
-			const errorSuffix = block.status === 'error' ? " (Error)" : "";
-			const errorMessage = block.status === 'error' && block.error ? `\nError: ${block.error.message}` : "";
+			const errorSuffix = block.status === "error" ? " (Error)" : ""
+			const errorMessage = block.status === "error" && block.error ? `\nError: ${block.error.message}` : ""
 			// For NeutralToolResultContentBlock, block.content is always Array<NeutralTextContentBlock | NeutralImageContentBlock>
 			return `[${toolName}${errorSuffix}]\n${block.content
 				.map((contentBlock) => formatContentBlockToMarkdown(contentBlock))
-				.join("\n")}${errorMessage}`;
+				.join("\n")}${errorMessage}`
 		default:
 			return "[Unexpected content type]"
 	}
@@ -77,10 +99,10 @@ export function findToolName(toolCallId: string, messages: NeutralMessage[]): st
 		if (Array.isArray(message.content)) {
 			for (const block of message.content) {
 				if (block.type === "tool_use" && block.id === toolCallId) {
-					return block.name;
+					return block.name
 				}
 			}
 		}
 	}
-	return "Unknown Tool";
+	return "Unknown Tool"
 }

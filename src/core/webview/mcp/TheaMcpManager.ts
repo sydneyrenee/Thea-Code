@@ -43,24 +43,21 @@ export class TheaMcpManager {
 	async ensureMcpServersDirectoryExists(): Promise<string> {
 		// Logic copied from TheaProvider
 		let mcpServersDir: string
-                if (process.platform === "win32") {
-                        mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", String(EXTENSION_DISPLAY_NAME), "MCP")
-                } else if (process.platform === "darwin") {
-                        mcpServersDir = path.join(os.homedir(), "Documents", String(EXTENSION_DISPLAY_NAME), "MCP")
-                } else {
-                        mcpServersDir = path.join(os.homedir(), ".local", "share", String(EXTENSION_DISPLAY_NAME), "MCP")
-                }
+		if (process.platform === "win32") {
+			mcpServersDir = path.join(os.homedir(), "AppData", "Roaming", String(EXTENSION_DISPLAY_NAME), "MCP")
+		} else if (process.platform === "darwin") {
+			mcpServersDir = path.join(os.homedir(), "Documents", String(EXTENSION_DISPLAY_NAME), "MCP")
+		} else {
+			mcpServersDir = path.join(os.homedir(), ".local", "share", String(EXTENSION_DISPLAY_NAME), "MCP")
+		}
 
-                try {
-                        await fs.mkdir(mcpServersDir, { recursive: true })
-                } catch (error: unknown) {
-                        console.error(
-                                `Failed to create MCP directory ${mcpServersDir}, falling back:`,
-                                error,
-                        )
-                        // Fallback logic copied from TheaProvider
-                        return path.join(os.homedir(), String(EXTENSION_CONFIG_DIR), "mcp")
-                }
+		try {
+			await fs.mkdir(mcpServersDir, { recursive: true })
+		} catch (error: unknown) {
+			console.error(`Failed to create MCP directory ${mcpServersDir}, falling back:`, error)
+			// Fallback logic copied from TheaProvider
+			return path.join(os.homedir(), String(EXTENSION_CONFIG_DIR), "mcp")
+		}
 		return mcpServersDir
 	}
 
@@ -152,9 +149,9 @@ export class TheaMcpManager {
 	/**
 	 * Gets a list of all configured MCP servers via McpHub.
 	 */
-       getAllServers(): McpServer[] {
-               return this.mcpHub?.getAllServers() || []
-       }
+	getAllServers(): McpServer[] {
+		return this.mcpHub?.getAllServers() || []
+	}
 
 	/**
 	 * Registers a new server via McpHub.

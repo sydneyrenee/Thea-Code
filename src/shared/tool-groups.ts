@@ -51,10 +51,7 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 }
 
 // Tools that are always available to all modes
-export const ALWAYS_AVAILABLE_TOOLS = [
-	"ask_followup_question",
-	"attempt_completion",
-] as const
+export const ALWAYS_AVAILABLE_TOOLS = ["ask_followup_question", "attempt_completion"] as const
 
 // Tool name types for type safety
 export type ToolName = keyof typeof TOOL_DISPLAY_NAMES
@@ -63,4 +60,3 @@ export type ToolName = keyof typeof TOOL_DISPLAY_NAMES
 export function getToolName(toolConfig: string | readonly [ToolName, ...unknown[]]): ToolName {
 	return typeof toolConfig === "string" ? (toolConfig as ToolName) : toolConfig[0]
 }
-

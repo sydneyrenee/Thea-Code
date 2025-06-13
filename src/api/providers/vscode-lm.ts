@@ -105,23 +105,23 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				sendRequest: async (_messages, _options, _token) => {
 					// Provide a minimal implementation
-					await Promise.resolve(); // Add await to satisfy require-await rule
+					await Promise.resolve() // Add await to satisfy require-await rule
 					return {
 						stream: (async function* () {
-							await Promise.resolve(); // Add await to satisfy require-await rule
+							await Promise.resolve() // Add await to satisfy require-await rule
 							yield new vscode.LanguageModelTextPart(
 								"Language model functionality is limited. Please check VS Code configuration.",
 							)
 						})(),
 						text: (async function* () {
-							await Promise.resolve(); // Add await to satisfy require-await rule
+							await Promise.resolve() // Add await to satisfy require-await rule
 							yield "Language model functionality is limited. Please check VS Code configuration."
 						})(),
 					}
 				},
 				countTokens: async () => {
-					await Promise.resolve(); // Add await to satisfy require-await rule
-					return 0;
+					await Promise.resolve() // Add await to satisfy require-await rule
+					return 0
 				},
 			}
 		} catch (error) {
@@ -376,31 +376,35 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		// Clean system prompt and messages
 		const cleanedSystemPrompt = this.cleanTerminalOutput(systemPrompt)
 
-                const anthropicMessages = convertToAnthropicHistory(
-                        messages.filter((msg) => msg.role === "user" || msg.role === "assistant"),
-                )
+		const anthropicMessages = convertToAnthropicHistory(
+			messages.filter((msg) => msg.role === "user" || msg.role === "assistant"),
+		)
 
 		// Prepend system prompt to the first user message if it exists
 		if (cleanedSystemPrompt) {
-			const firstUserMessage = anthropicMessages.find(msg => msg.role === 'user');
+			const firstUserMessage = anthropicMessages.find((msg) => msg.role === "user")
 			if (firstUserMessage) {
-				if (typeof firstUserMessage.content === 'string') {
-					firstUserMessage.content = cleanedSystemPrompt + '\n' + firstUserMessage.content;
+				if (typeof firstUserMessage.content === "string") {
+					firstUserMessage.content = cleanedSystemPrompt + "\n" + firstUserMessage.content
 				} else {
-					firstUserMessage.content.unshift({ type: 'text', text: cleanedSystemPrompt });
+					firstUserMessage.content.unshift({ type: "text", text: cleanedSystemPrompt })
 				}
 			} else {
 				// If no user message, add system prompt as a new user message
-				anthropicMessages.unshift({ role: 'user', content: cleanedSystemPrompt });
+				anthropicMessages.unshift({ role: "user", content: cleanedSystemPrompt })
 			}
 		}
 
-		const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = convertToVsCodeLmMessages(anthropicMessages);
+		const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = convertToVsCodeLmMessages(anthropicMessages)
 
 		// If we had any system or tool messages filtered out, log them
-		const filteredMessages = messages.filter((msg) => msg.role !== "user" && msg.role !== "assistant" && msg.role !== "system" && msg.role !== "tool")
+		const filteredMessages = messages.filter(
+			(msg) => msg.role !== "user" && msg.role !== "assistant" && msg.role !== "system" && msg.role !== "tool",
+		)
 		if (filteredMessages.length > 0) {
-			console.debug(`${TEXT_PATTERNS.logPrefix()} Filtered out ${filteredMessages.length} messages with incompatible roles for Anthropic format`)
+			console.debug(
+				`${TEXT_PATTERNS.logPrefix()} Filtered out ${filteredMessages.length} messages with incompatible roles for Anthropic format`,
+			)
 		}
 
 		// Initialize cancellation token for the request
@@ -429,19 +433,19 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 
 			// Consume the stream and handle both text and tool call chunks
 			for await (const chunk of response.stream) {
-			if (chunk instanceof vscode.LanguageModelTextPart) {
-				// Validate text part value
-				if (typeof chunk.value !== "string") {
-					console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid text part value received:`, chunk.value)
-					continue
-				}
+				if (chunk instanceof vscode.LanguageModelTextPart) {
+					// Validate text part value
+					if (typeof chunk.value !== "string") {
+						console.warn(`${TEXT_PATTERNS.logPrefix()} Invalid text part value received:`, chunk.value)
+						continue
+					}
 
-				accumulatedText += chunk.value
-				yield {
-					type: "text",
-					text: chunk.value
-				}
-			} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
+					accumulatedText += chunk.value
+					yield {
+						type: "text",
+						text: chunk.value,
+					}
+				} else if (chunk instanceof vscode.LanguageModelToolCallPart) {
 					try {
 						// Validate tool call parameters
 						if (!chunk.name || typeof chunk.name !== "string") {
@@ -465,7 +469,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 							type: "tool_call",
 							name: chunk.name,
 							arguments: chunk.input,
-							callId: chunk.callId
+							callId: chunk.callId,
 						}
 
 						const toolCallText = JSON.stringify(toolCall)
@@ -475,12 +479,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 						console.debug(`${TEXT_PATTERNS.logPrefix()} Processing tool call:`, {
 							name: chunk.name,
 							callId: chunk.callId,
-							inputSize: JSON.stringify(chunk.input).length
+							inputSize: JSON.stringify(chunk.input).length,
 						})
 
 						yield {
 							type: "text",
-							text: toolCallText
+							text: toolCallText,
 						}
 					} catch (error) {
 						console.error(`${TEXT_PATTERNS.logPrefix()} Failed to process tool call:`, error)
@@ -500,7 +504,7 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				type: "usage",
 				inputTokens: totalInputTokens,
 				outputTokens: totalOutputTokens,
-				totalCost: calculateApiCostAnthropic(this.getModel().info, totalInputTokens, totalOutputTokens)
+				totalCost: calculateApiCostAnthropic(this.getModel().info, totalInputTokens, totalOutputTokens),
 			}
 		} catch (error: unknown) {
 			this.ensureCleanState()
@@ -513,13 +517,13 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				console.error(`${TEXT_PATTERNS.logPrefix()} Stream error details:`, {
 					message: error.message,
 					stack: error.stack,
-					name: error.name
-				});
-				throw error;
+					name: error.name,
+				})
+				throw error
 			} else if (typeof error === "object" && error !== null) {
 				// Use JSON.stringify for object errors to avoid unsafe string conversion
 
-				const errorStr = JSON.stringify(error) || "Unknown object error";
+				const errorStr = JSON.stringify(error) || "Unknown object error"
 				throw new Error(`${TEXT_PATTERNS.logPrefix()} Response stream error: ${errorStr}`)
 			} else {
 				// Fallback for unknown error types
@@ -552,7 +556,6 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			throw error
 		}
 	}
-
 
 	// Return model information based on the current client state
 	override getModel(): { id: string; info: ModelInfo } {
@@ -610,7 +613,6 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 			},
 		}
 	}
-
 }
 
 export async function getVsCodeLmModels() {

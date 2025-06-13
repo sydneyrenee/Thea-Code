@@ -2,18 +2,19 @@ import * as path from "path"
 // @ts-expect-error pdf-parse lacks type definitions
 import pdf from "pdf-parse/lib/pdf-parse"
 
-const pdfParse: (data: Buffer) => Promise<{ text: string }> =
-        pdf as unknown as (data: Buffer) => Promise<{ text: string }>
+const pdfParse: (data: Buffer) => Promise<{ text: string }> = pdf as unknown as (
+	data: Buffer,
+) => Promise<{ text: string }>
 import mammoth from "mammoth"
 import fs from "fs/promises"
 import { isBinaryFile } from "isbinaryfile"
 
 export async function extractTextFromFile(filePath: string): Promise<string> {
-        try {
-                await fs.access(filePath)
-        } catch {
-                throw new Error(`File not found: ${filePath}`)
-        }
+	try {
+		await fs.access(filePath)
+	} catch {
+		throw new Error(`File not found: ${filePath}`)
+	}
 	const fileExtension = path.extname(filePath).toLowerCase()
 	switch (fileExtension) {
 		case ".pdf":
@@ -33,9 +34,9 @@ export async function extractTextFromFile(filePath: string): Promise<string> {
 }
 
 async function extractTextFromPDF(filePath: string): Promise<string> {
-        const dataBuffer = await fs.readFile(filePath)
-        const data = await pdfParse(dataBuffer)
-        return addLineNumbers(data.text)
+	const dataBuffer = await fs.readFile(filePath)
+	const data = await pdfParse(dataBuffer)
+	return addLineNumbers(data.text)
 }
 
 async function extractTextFromDOCX(filePath: string): Promise<string> {
@@ -44,10 +45,10 @@ async function extractTextFromDOCX(filePath: string): Promise<string> {
 }
 
 async function extractTextFromIPYNB(filePath: string): Promise<string> {
-        const data = await fs.readFile(filePath, "utf8")
-        const notebook = JSON.parse(data) as {
-                cells: Array<{ cell_type: string; source?: string[] }>
-        }
+	const data = await fs.readFile(filePath, "utf8")
+	const notebook = JSON.parse(data) as {
+		cells: Array<{ cell_type: string; source?: string[] }>
+	}
 	let extractedText = ""
 
 	for (const cell of notebook.cells) {
@@ -169,8 +170,8 @@ export function applyRunLengthEncoding(content: string): string {
 
 	let result = ""
 	let pos = 0
-        let repeatCount = 0
-        let prevLine: string | null = null
+	let repeatCount = 0
+	let prevLine: string | null = null
 
 	while (pos < content.length) {
 		const nextNewlineIdx = content.indexOf("\n", pos)

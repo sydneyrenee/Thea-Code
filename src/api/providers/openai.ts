@@ -7,9 +7,9 @@ import {
 	ModelInfo,
 	openAiModelInfoSaneDefaults,
 } from "../../shared/api"
-import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"; // Import neutral history types
+import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history" // Import neutral history types
 import { SingleCompletionHandler } from "../index"
-import { convertToOpenAiHistory, convertToOpenAiContentBlocks } from "../transform/neutral-openai-format"; // Import conversion functions
+import { convertToOpenAiHistory, convertToOpenAiContentBlocks } from "../transform/neutral-openai-format" // Import conversion functions
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
@@ -24,7 +24,7 @@ export const defaultHeaders = {
 }
 
 // OpenAiHandlerOptions is just an alias for ApiHandlerOptions
-export type OpenAiHandlerOptions = ApiHandlerOptions;
+export type OpenAiHandlerOptions = ApiHandlerOptions
 
 export class OpenAiHandler extends BaseProvider implements SingleCompletionHandler {
 	protected options: OpenAiHandlerOptions
@@ -68,20 +68,17 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		// Note: ark variable removed as it was unused
 
 		// Convert neutral history to OpenAI format
-		let openAiMessages = convertToOpenAiHistory(messages);
+		let openAiMessages = convertToOpenAiHistory(messages)
 
 		// Add system prompt if not already included
-		const hasSystemMessage = openAiMessages.some(msg => msg.role === 'system');
+		const hasSystemMessage = openAiMessages.some((msg) => msg.role === "system")
 		if (!hasSystemMessage && systemPrompt) {
-			openAiMessages = [
-				{ role: 'system', content: systemPrompt },
-				...openAiMessages
-			];
+			openAiMessages = [{ role: "system", content: systemPrompt }, ...openAiMessages]
 		}
 
 		if (modelId.startsWith("o3-mini")) {
-			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages);
-			return;
+			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
+			return
 		}
 
 		if (this.options.openAiStreamingEnabled ?? true) {
@@ -140,7 +137,6 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			// 	}
 			// }
 
-
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
 				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0), // Keep for now
@@ -181,25 +177,26 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 				}
 
 				// Handle tool use (function calls) using the helper method
-				const toolCalls = this.extractToolCalls(delta);
+				const toolCalls = this.extractToolCalls(delta)
 				for (const toolCall of toolCalls) {
 					if (toolCall.function) {
 						// Process tool use using MCP integration
 						const toolResult = await this.processToolUse({
 							id: toolCall.id,
 							name: toolCall.function.name,
-							input: JSON.parse(toolCall.function.arguments || '{}')
-						});
-						
+							input: JSON.parse(toolCall.function.arguments || "{}"),
+						})
+
 						// Ensure the tool result content is a string
-						const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+						const toolResultString =
+							typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 						// Yield tool result
 						yield {
-							type: 'tool_result',
+							type: "tool_result",
 							id: toolCall.id,
-							content: toolResultString
-						};
+							content: toolResultString,
+						}
 					}
 				}
 
@@ -250,54 +247,50 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	override async countTokens(content: NeutralMessageContent): Promise<number> {
 		try {
 			// Convert neutral content to OpenAI content blocks for API call
-			const openAiContentBlocks = convertToOpenAiContentBlocks(content);
+			const openAiContentBlocks = convertToOpenAiContentBlocks(content)
 
 			// Use the current model
-			const actualModelId = this.getModel().id;
+			const actualModelId = this.getModel().id
 
 			// Create a dummy message with the content for the token counting API
 			const dummyMessage: OpenAI.Chat.ChatCompletionMessageParam = {
 				role: "user", // Token counting is typically done on user input
-				content: "" // Initialize with empty string
-			};
-			
+				content: "", // Initialize with empty string
+			}
+
 			// Set the content based on its type
-			if (typeof content === 'string') {
+			if (typeof content === "string") {
 				// If it's a simple string, use it directly
-				dummyMessage.content = content;
+				dummyMessage.content = content
 			} else {
 				// Otherwise use the array of content blocks
 				// Cast to OpenAI.Chat.ChatCompletionContentPart[] which is the expected type
-				dummyMessage.content = openAiContentBlocks as OpenAI.Chat.ChatCompletionContentPart[];
+				dummyMessage.content = openAiContentBlocks as OpenAI.Chat.ChatCompletionContentPart[]
 			}
 
 			const response = await this.client.chat.completions.create({
 				model: actualModelId,
 				messages: [dummyMessage],
-				stream: false
-			});
+				stream: false,
+			})
 
 			// If usage information is available, return the prompt tokens
 			if (response.usage) {
-				return response.usage.prompt_tokens;
+				return response.usage.prompt_tokens
 			}
-			
+
 			// Fallback to base implementation if no usage information
-			return super.countTokens(content);
+			return super.countTokens(content)
 		} catch (error) {
 			// Log error but fallback to tiktoken estimation
-			console.warn("OpenAI token counting failed, using fallback", error);
+			console.warn("OpenAI token counting failed, using fallback", error)
 
 			// Use the base provider's implementation as fallback
-			return super.countTokens(content);
+			return super.countTokens(content)
 		}
 	}
 
-
-	protected processUsageMetrics(usage: {
-		prompt_tokens?: number;
-		completion_tokens?: number;
-	}): ApiStreamUsageChunk {
+	protected processUsageMetrics(usage: { prompt_tokens?: number; completion_tokens?: number }): ApiStreamUsageChunk {
 		return {
 			type: "usage",
 			inputTokens: usage?.prompt_tokens || 0,
@@ -312,7 +305,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	 */
 	public hasToolCalls(delta: OpenAI.Chat.ChatCompletionChunk.Choice.Delta): boolean {
 		// Use extractToolCalls to maintain consistency and follow DRY principle
-		return this.extractToolCalls(delta).length > 0;
+		return this.extractToolCalls(delta).length > 0
 	}
 
 	/**
@@ -321,155 +314,154 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	 * @returns An array of tool calls
 	 */
 	public extractToolCalls(delta: OpenAI.Chat.ChatCompletionChunk.Choice.Delta | Record<string, unknown>): Array<{
-		id: string;
-		type: string;
+		id: string
+		type: string
 		function: {
-			name: string;
-			arguments: string;
-		};
+			name: string
+			arguments: string
+		}
 	}> {
 		// First, check for standard OpenAI function calls
-		const standardToolCalls = delta?.tool_calls as Array<{
-			id: string;
-			type: string;
-			function: {
-				name: string;
-				arguments: string;
-			};
-		}> ?? [];
-		
+		const standardToolCalls =
+			(delta?.tool_calls as Array<{
+				id: string
+				type: string
+				function: {
+					name: string
+					arguments: string
+				}
+			}>) ?? []
+
 		if (standardToolCalls.length > 0) {
-			return standardToolCalls;
+			return standardToolCalls
 		}
-		
+
 		// If no standard tool calls found, check for content that might contain XML or JSON tool calls
-		const content = delta?.content as string;
-		if (!content || typeof content !== 'string') {
-			return [];
+		const content = delta?.content as string
+		if (!content || typeof content !== "string") {
+			return []
 		}
-		
+
 		const toolCalls: Array<{
-			id: string;
-			type: string;
+			id: string
+			type: string
 			function: {
-				name: string;
-				arguments: string;
-			};
-		}> = [];
-		
+				name: string
+				arguments: string
+			}
+		}> = []
+
 		// Check for XML tool use pattern
-		const xmlToolUseRegex = /<(\w+)>[\s\S]*?<\/\1>/g;
-		let match;
-		
+		const xmlToolUseRegex = /<(\w+)>[\s\S]*?<\/\1>/g
+		let match
+
 		while ((match = xmlToolUseRegex.exec(content)) !== null) {
-			const tagName = match[1];
+			const tagName = match[1]
 			// Skip known non-tool tags
-			if (tagName !== 'think' && tagName !== 'tool_result' && tagName !== 'tool_use') {
-				const toolUseXml = match[0];
-				
+			if (tagName !== "think" && tagName !== "tool_result" && tagName !== "tool_use") {
+				const toolUseXml = match[0]
+
 				try {
 					// Extract parameters
-					const params: Record<string, unknown> = {};
-					
+					const params: Record<string, unknown> = {}
+
 					// First, remove the outer tool tag to simplify parsing
-					let outerContent = toolUseXml;
-					outerContent = outerContent.replace(new RegExp(`<${tagName}>\\s*`), '');
-					outerContent = outerContent.replace(new RegExp(`\\s*</${tagName}>`), '');
-					
+					let outerContent = toolUseXml
+					outerContent = outerContent.replace(new RegExp(`<${tagName}>\\s*`), "")
+					outerContent = outerContent.replace(new RegExp(`\\s*</${tagName}>`), "")
+
 					// Now parse each parameter
-					const paramRegex = /<(\w+)>([\s\S]*?)<\/\1>/g;
-					let paramMatch;
-					
+					const paramRegex = /<(\w+)>([\s\S]*?)<\/\1>/g
+					let paramMatch
+
 					while ((paramMatch = paramRegex.exec(outerContent)) !== null) {
-						const paramName = paramMatch[1];
-						const paramValue = paramMatch[2].trim();
-						
+						const paramName = paramMatch[1]
+						const paramValue = paramMatch[2].trim()
+
 						// Skip if the param name is the same as the tool name (outer tag)
 						if (paramName !== tagName) {
 							// Try to parse as JSON if possible
 							try {
-								params[paramName] = JSON.parse(paramValue);
+								params[paramName] = JSON.parse(paramValue)
 							} catch {
-								params[paramName] = paramValue;
+								params[paramName] = paramValue
 							}
 						}
 					}
-					
+
 					// Create tool call object in OpenAI format
 					toolCalls.push({
 						id: `${tagName}-${Date.now()}`,
-						type: 'function',
+						type: "function",
 						function: {
 							name: tagName,
-							arguments: JSON.stringify(params)
-						}
-					});
+							arguments: JSON.stringify(params),
+						},
+					})
 				} catch (error) {
-					console.warn("Error processing XML tool use:", error);
+					console.warn("Error processing XML tool use:", error)
 				}
 			}
 		}
-		
+
 		// Check for JSON tool use pattern if no XML tool use was found
 		if (toolCalls.length === 0 && content.includes('"type":"tool_use"')) {
 			try {
 				// Try to find and parse JSON object
-				const jsonStart = content.indexOf('{"type":"tool_use"');
+				const jsonStart = content.indexOf('{"type":"tool_use"')
 				if (jsonStart !== -1) {
 					// Find the end of the JSON object
-					let braceCount = 0;
-					let inString = false;
-					let jsonEnd = -1;
-					
+					let braceCount = 0
+					let inString = false
+					let jsonEnd = -1
+
 					for (let i = jsonStart; i < content.length; i++) {
-						const char = content[i];
-						
-						if (char === '"' && content[i-1] !== '\\') {
-							inString = !inString;
+						const char = content[i]
+
+						if (char === '"' && content[i - 1] !== "\\") {
+							inString = !inString
 						} else if (!inString) {
-							if (char === '{') braceCount++;
-							else if (char === '}') {
-								braceCount--;
+							if (char === "{") braceCount++
+							else if (char === "}") {
+								braceCount--
 								if (braceCount === 0) {
-									jsonEnd = i + 1;
-									break;
+									jsonEnd = i + 1
+									break
 								}
 							}
 						}
 					}
-					
+
 					if (jsonEnd !== -1) {
-						const jsonStr = content.substring(jsonStart, jsonEnd);
-						 
-						const jsonObj = JSON.parse(jsonStr) as { type: string; name: string; id?: string; input?: Record<string, unknown> }; // Assert type
-						
-						 
-						 
-						if (jsonObj.type === 'tool_use' && jsonObj.name) {
+						const jsonStr = content.substring(jsonStart, jsonEnd)
+
+						const jsonObj = JSON.parse(jsonStr) as {
+							type: string
+							name: string
+							id?: string
+							input?: Record<string, unknown>
+						} // Assert type
+
+						if (jsonObj.type === "tool_use" && jsonObj.name) {
 							// Create tool call object in OpenAI format
 							toolCalls.push({
-								 
-								 
 								id: jsonObj.id || `${jsonObj.name}-${Date.now()}`,
-								type: 'function',
+								type: "function",
 								function: {
-									 
-									 
 									name: jsonObj.name,
-									 
-									 
-									arguments: JSON.stringify(jsonObj.input || {})
-								}
-							});
+
+									arguments: JSON.stringify(jsonObj.input || {}),
+								},
+							})
 						}
 					}
 				}
 			} catch (error) {
-				console.warn("Error processing JSON tool use:", error);
+				console.warn("Error processing JSON tool use:", error)
 			}
 		}
-		
-		return toolCalls;
+
+		return toolCalls
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {
@@ -479,35 +471,35 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		}
 	}
 
-        async completePrompt(prompt: string): Promise<string> {
-                try {
-                        const modelId = this.getModel().id
-                        const modelTemp = this.options.modelTemperature ?? 0
-                        const message = await this.client.chat.completions.create({
-                                model: modelId,
-                                max_tokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
-                                temperature: modelTemp,
-                                messages: [{ role: 'user', content: prompt }],
-                                stream: false,
-                        })
-                        const content = message.choices[0]?.message.content
-                        return content || ''
-                } catch (error) {
-                        if (error instanceof Error) {
-                                throw new Error(`OpenAI completion error: ${error.message}`)
-                        }
-                        throw error
-                }
-        }
+	async completePrompt(prompt: string): Promise<string> {
+		try {
+			const modelId = this.getModel().id
+			const modelTemp = this.options.modelTemperature ?? 0
+			const message = await this.client.chat.completions.create({
+				model: modelId,
+				max_tokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+				temperature: modelTemp,
+				messages: [{ role: "user", content: prompt }],
+				stream: false,
+			})
+			const content = message.choices[0]?.message.content
+			return content || ""
+		} catch (error) {
+			if (error instanceof Error) {
+				throw new Error(`OpenAI completion error: ${error.message}`)
+			}
+			throw error
+		}
+	}
 
 	private async *handleO3FamilyMessage(
 		modelId: string,
 		systemPrompt: string,
-		messages: NeutralConversationHistory
+		messages: NeutralConversationHistory,
 	): ApiStream {
 		// Convert neutral history to OpenAI format
-		const openAiMessages = convertToOpenAiHistory(messages);
-		
+		const openAiMessages = convertToOpenAiHistory(messages)
+
 		// Add system prompt as a developer message for o3-mini models
 		const stream = await this.client.chat.completions.create({
 			model: "o3-mini",
@@ -516,14 +508,14 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					role: "developer",
 					content: `Formatting re-enabled\n${systemPrompt}`,
 				},
-				...openAiMessages
+				...openAiMessages,
 			],
 			stream: true,
-			stream_options: { include_usage: true }
+			stream_options: { include_usage: true },
 			// Note: reasoning_effort is not included as it's not properly typed
-		});
+		})
 
-		yield* this.handleStreamResponse(stream);
+		yield* this.handleStreamResponse(stream)
 	}
 
 	private async *handleStreamResponse(stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>): ApiStream {
@@ -537,25 +529,25 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 
 			// Handle tool use (function calls) using the helper method
-			const toolCalls = this.extractToolCalls(delta);
+			const toolCalls = this.extractToolCalls(delta)
 			for (const toolCall of toolCalls) {
 				if (toolCall.function) {
 					// Process tool use using MCP integration
 					const toolResult = await this.processToolUse({
 						id: toolCall.id,
 						name: toolCall.function.name,
-						input: JSON.parse(toolCall.function.arguments || '{}')
-					});
-					
+						input: JSON.parse(toolCall.function.arguments || "{}"),
+					})
+
 					// Ensure the tool result content is a string
-					const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+					const toolResultString = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 					// Yield tool result
 					yield {
-						type: 'tool_result',
+						type: "tool_result",
 						id: toolCall.id,
-						content: toolResultString
-					};
+						content: toolResultString,
+					}
 				}
 			}
 
@@ -568,7 +560,6 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			}
 		}
 	}
-
 }
 
 export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
@@ -588,11 +579,10 @@ export async function getOpenAiModels(baseUrl?: string, apiKey?: string) {
 		}
 
 		const response = await axios.get(`${baseUrl}/models`, config)
-		const responseData = response.data as { data: { id: string; [key: string]: unknown }[] } | undefined;
-		 
-		 
+		const responseData = response.data as { data: { id: string; [key: string]: unknown }[] } | undefined
+
 		const modelsArray = responseData?.data?.map((model: { id: string }) => model.id) || []
-		return [...new Set<string>(modelsArray)];
+		return [...new Set<string>(modelsArray)]
 	} catch (error) {
 		console.error("Failed to fetch OpenAI models:", error)
 		return {}

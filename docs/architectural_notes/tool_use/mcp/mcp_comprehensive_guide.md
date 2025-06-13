@@ -8,6 +8,7 @@
 The Model Context Protocol (MCP) integration in Thea Code provides a unified system for tool execution across all AI providers. This guide documents the **completed implementation** and provides examples for using and extending the MCP system.
 
 **Key Achievements:**
+
 - ✅ Full MCP integration in all 16 active providers
 - ✅ Unified tool registration and execution
 - ✅ Support for XML, JSON, and OpenAI function call formats
@@ -22,7 +23,7 @@ All providers automatically have access to MCP tools through the `BaseProvider` 
 
 ```typescript
 // Example: Any provider can use tools seamlessly
-const handler = new OllamaHandler(options);
+const handler = new OllamaHandler(options)
 // Tools are automatically registered and available
 // AI models can call read_file, write_file, execute_command, etc.
 ```
@@ -32,23 +33,23 @@ const handler = new OllamaHandler(options);
 Register custom tools using the `McpIntegration` interface:
 
 ```typescript
-import { McpIntegration } from '../services/mcp/integration/McpIntegration';
+import { McpIntegration } from "../services/mcp/integration/McpIntegration"
 
-const mcpIntegration = McpIntegration.getInstance();
+const mcpIntegration = McpIntegration.getInstance()
 
 // Register a custom tool
 mcpIntegration.registerTool({
-  name: 'custom_analyzer',
-  description: 'Analyze code for patterns',
-  paramSchema: {
-    type: 'object',
-    properties: {
-      file_path: { type: 'string', description: 'Path to analyze' },
-      pattern: { type: 'string', description: 'Pattern to search for' }
-    },
-    required: ['file_path']
-  }
-});
+	name: "custom_analyzer",
+	description: "Analyze code for patterns",
+	paramSchema: {
+		type: "object",
+		properties: {
+			file_path: { type: "string", description: "Path to analyze" },
+			pattern: { type: "string", description: "Pattern to search for" },
+		},
+		required: ["file_path"],
+	},
+})
 ```
 
 ### 2.3 Tool Usage in AI Conversations
@@ -56,6 +57,7 @@ mcpIntegration.registerTool({
 Tools work automatically across all supported formats:
 
 **XML Format (used by Claude):**
+
 ```xml
 <read_file>
 <path>src/example.ts</path>
@@ -63,26 +65,30 @@ Tools work automatically across all supported formats:
 ```
 
 **JSON Format (used by some models):**
+
 ```json
 {
-  "type": "tool_use",
-  "id": "abc123",
-  "name": "read_file", 
-  "input": {"path": "src/example.ts"}
+	"type": "tool_use",
+	"id": "abc123",
+	"name": "read_file",
+	"input": { "path": "src/example.ts" }
 }
 ```
 
 **OpenAI Function Format (used by OpenAI/compatible models):**
+
 ```json
 {
-  "tool_calls": [{
-    "id": "call_abc123",
-    "type": "function",
-    "function": {
-      "name": "read_file",
-      "arguments": "{\"path\":\"src/example.ts\"}"
-    }
-  }]
+	"tool_calls": [
+		{
+			"id": "call_abc123",
+			"type": "function",
+			"function": {
+				"name": "read_file",
+				"arguments": "{\"path\":\"src/example.ts\"}"
+			}
+		}
+	]
 }
 ```
 
@@ -100,29 +106,29 @@ flowchart TB
         MTE[McpToolExecutor<br/>Tool Execution Engine]
         REG[McpToolRegistry<br/>Tool Registration]
     end
-    
+
     subgraph "Provider Integration"
         BP[BaseProvider<br/>Base class for all providers]
         ANT[AnthropicHandler]
-        OAI[OpenAiHandler] 
+        OAI[OpenAiHandler]
         GEM[GeminiHandler]
     end
-    
+
     subgraph "Format Support"
         XML[XML Tool Calls]
         JSON[JSON Tool Calls]
         FUNC[OpenAI Functions]
     end
-    
+
     BP --> MI
     ANT --> BP
     OAI --> BP
     GEM --> BP
-    
+
     MI --> MTR
     MTR --> MTE
     MTE --> REG
-    
+
     XML --> MTR
     JSON --> MTR
     FUNC --> MTR
@@ -131,34 +137,36 @@ flowchart TB
 ### 3.2 Key Classes and Interfaces
 
 #### McpIntegration (Singleton Facade)
+
 ```typescript
 // Primary interface for MCP functionality
 export class McpIntegration extends EventEmitter {
-  // Get singleton instance
-  static getInstance(config?: SseTransportConfig): McpIntegration
-  
-  // Tool registration
-  registerTool(tool: ToolDefinition): void
-  
-  // Tool execution
-  routeToolUse(request: ToolUseRequest): Promise<ToolUseResult>
-  
-  // Server management
-  initialize(): Promise<void>
-  getServerUrl(): URL | undefined
+	// Get singleton instance
+	static getInstance(config?: SseTransportConfig): McpIntegration
+
+	// Tool registration
+	registerTool(tool: ToolDefinition): void
+
+	// Tool execution
+	routeToolUse(request: ToolUseRequest): Promise<ToolUseResult>
+
+	// Server management
+	initialize(): Promise<void>
+	getServerUrl(): URL | undefined
 }
 ```
 
 #### ToolDefinition Interface
+
 ```typescript
 interface ToolDefinition {
-  name: string;
-  description: string;
-  paramSchema: {
-    type: 'object';
-    properties: Record<string, any>;
-    required?: string[];
-  };
+	name: string
+	description: string
+	paramSchema: {
+		type: "object"
+		properties: Record<string, any>
+		required?: string[]
+	}
 }
 ```
 
@@ -174,6 +182,7 @@ MCP is built on JSON-RPC 2.0, a lightweight remote procedure call protocol using
 - Logging
 
 The protocol supports two primary transport mechanisms:
+
 1. **StdioTransport**: Communication via standard input/output streams
 2. **SSETransport**: Communication via HTTP with Server-Sent Events
 
@@ -235,9 +244,10 @@ The `StdioTransport` enables communication between processes using standard inpu
 - **Client**: `StdioClientTransport` spawns a child process and communicates with it via its stdin/stdout
 
 Messages are serialized as JSON strings with a newline delimiter:
+
 ```javascript
 function serializeMessage(message) {
-  return JSON.stringify(message) + "\n";
+	return JSON.stringify(message) + "\n"
 }
 ```
 
@@ -280,10 +290,10 @@ Tools are defined with the following structure:
 
 ```typescript
 interface ToolDefinition {
-  name: string;
-  description?: string;
-  paramSchema?: Record<string, any>;
-  handler: (args: Record<string, unknown>) => Promise<ToolCallResult>;
+	name: string
+	description?: string
+	paramSchema?: Record<string, any>
+	handler: (args: Record<string, unknown>) => Promise<ToolCallResult>
 }
 ```
 
@@ -293,19 +303,19 @@ Tools are registered with the server using the `tool` method:
 
 ```typescript
 server.tool(
-  "tool_name",
-  "Tool description",
-  {
-    param1: { type: "string", description: "Parameter description" },
-    param2: { type: "number", description: "Parameter description" }
-  },
-  async (args) => {
-    // Tool implementation
-    return {
-      content: [{ type: "text", text: "Tool result" }]
-    };
-  }
-);
+	"tool_name",
+	"Tool description",
+	{
+		param1: { type: "string", description: "Parameter description" },
+		param2: { type: "number", description: "Parameter description" },
+	},
+	async (args) => {
+		// Tool implementation
+		return {
+			content: [{ type: "text", text: "Tool result" }],
+		}
+	},
+)
 ```
 
 The server automatically sets up handlers for the `tools/list` and `tools/call` methods.
@@ -352,7 +362,7 @@ sequenceDiagram
     participant UMTS as McpToolExecutor
     participant MTR as McpToolRegistry
     participant EMCP as EmbeddedMcpProvider
-    
+
     BP->>MI: registerTool(definition)
     MI->>UMTS: registerTool(definition)
     UMTS->>MTR: registerTool(definition)
@@ -369,7 +379,7 @@ sequenceDiagram
     participant MC as McpConverters
     participant UMTS as McpToolExecutor
     participant EMCP as EmbeddedMcpProvider
-    
+
     PH->>MI: Process tool use
     MI->>MTR: Route tool use
     MTR->>MTR: Detect format
@@ -403,42 +413,42 @@ To support SSE transport, we need to create a configuration class:
  * Configuration options for the SSE transport
  */
 export interface SseTransportConfig {
-  /**
-   * The port to listen on (default: 0 for random available port)
-   */
-  port?: number;
-  
-  /**
-   * The hostname to bind to (default: localhost)
-   */
-  hostname?: string;
-  
-  /**
-   * Whether to allow connections from other hosts (default: false)
-   */
-  allowExternalConnections?: boolean;
-  
-  /**
-   * The path to serve the SSE endpoint on (default: /mcp/events)
-   */
-  eventsPath?: string;
-  
-  /**
-   * The path to accept POST requests on (default: /mcp/api)
-   */
-  apiPath?: string;
+	/**
+	 * The port to listen on (default: 0 for random available port)
+	 */
+	port?: number
+
+	/**
+	 * The hostname to bind to (default: localhost)
+	 */
+	hostname?: string
+
+	/**
+	 * Whether to allow connections from other hosts (default: false)
+	 */
+	allowExternalConnections?: boolean
+
+	/**
+	 * The path to serve the SSE endpoint on (default: /mcp/events)
+	 */
+	eventsPath?: string
+
+	/**
+	 * The path to accept POST requests on (default: /mcp/api)
+	 */
+	apiPath?: string
 }
 
 /**
  * Default configuration for the SSE transport
  */
 export const DEFAULT_SSE_CONFIG: SseTransportConfig = {
-  port: 0, // Use a random available port
-  hostname: 'localhost',
-  allowExternalConnections: false,
-  eventsPath: '/mcp/events',
-  apiPath: '/mcp/api'
-};
+	port: 0, // Use a random available port
+	hostname: "localhost",
+	allowExternalConnections: false,
+	eventsPath: "/mcp/events",
+	apiPath: "/mcp/api",
+}
 ```
 
 ### 6.3 Updating EmbeddedMcpProvider
@@ -453,14 +463,14 @@ async start(): Promise<void> {
   if (this.isStarted) {
     return;
   }
-  
+
   // Register all handlers
   this.registerHandlers();
-  
+
   try {
     // Try to import the MCP SDK dynamically
     const { SSEServerTransport } = require("@modelcontextprotocol/sdk/server/sse.js");
-    
+
     // Create the SSE transport
     this.transport = new SSEServerTransport({
       port: this.sseConfig.port,
@@ -469,14 +479,14 @@ async start(): Promise<void> {
       eventsPath: this.sseConfig.eventsPath,
       apiPath: this.sseConfig.apiPath
     });
-    
+
     // Connect the server to the transport
     await this.server.connect(this.transport);
-    
+
     // Store the server URL for clients to connect to
     const port = this.transport.getPort();
     this.serverUrl = new URL(`http://${this.sseConfig.hostname}:${port}`);
-    
+
     this.isStarted = true;
     this.emit('started', { url: this.serverUrl.toString() });
     console.log(`MCP server started at ${this.serverUrl.toString()}`);
@@ -499,26 +509,26 @@ To simplify client creation, we can create an SSE client factory:
  * Factory for creating MCP clients that connect to an SSE server
  */
 export class SseClientFactory {
-  /**
-   * Create a new MCP client that connects to the specified server URL
-   * @param serverUrl The URL of the MCP server to connect to
-   * @returns A new MCP client
-   */
-  public static async createClient(serverUrl: URL): Promise<Client> {
-    // Create the client
-    const client = new Client({
-      name: 'TheaCodeMcpClient',
-      version: '1.0.0'
-    });
-    
-    // Create the transport
-    const transport = new SSEClientTransport(serverUrl);
-    
-    // Connect the client to the transport
-    await client.connect(transport);
-    
-    return client;
-  }
+	/**
+	 * Create a new MCP client that connects to the specified server URL
+	 * @param serverUrl The URL of the MCP server to connect to
+	 * @returns A new MCP client
+	 */
+	public static async createClient(serverUrl: URL): Promise<Client> {
+		// Create the client
+		const client = new Client({
+			name: "TheaCodeMcpClient",
+			version: "1.0.0",
+		})
+
+		// Create the transport
+		const transport = new SSEClientTransport(serverUrl)
+
+		// Connect the client to the transport
+		await client.connect(transport)
+
+		return client
+	}
 }
 ```
 
@@ -536,7 +546,7 @@ To expose MCP tools to OpenAI-compatible models like Ollama, we need to convert 
  */
 public static toolDefinitionsToOpenAiFunctions(tools: Map<string, ToolDefinition>): any[] {
   const functions = [];
-  
+
   for (const [name, definition] of tools.entries()) {
     functions.push({
       name: definition.name,
@@ -548,7 +558,7 @@ public static toolDefinitionsToOpenAiFunctions(tools: Map<string, ToolDefinition
       }
     });
   }
-  
+
   return functions;
 }
 ```
@@ -562,19 +572,19 @@ override async *createMessage(systemPrompt: string, messages: NeutralConversatio
   // Get all available tools from the MCP registry
   const toolRegistry = this.mcpIntegration.getToolRegistry();
   const availableTools = toolRegistry.getAllTools();
-  
+
   // Convert tool definitions to OpenAI function definitions
   const functions = McpConverters.toolDefinitionsToOpenAiFunctions(availableTools);
-  
+
   // Convert neutral history to Ollama format
   const openAiMessages = convertToOllamaHistory(messages);
-  
+
   // Add system prompt if not already included
   const hasSystemMessage = openAiMessages.some(msg => msg.role === 'system');
   if (systemPrompt && systemPrompt.trim() !== "" && !hasSystemMessage) {
     openAiMessages.unshift({ role: "system", content: systemPrompt });
   }
-  
+
   // Create stream with functions included
   const stream = await this.client.chat.completions.create({
     model: this.getModel().id,
@@ -584,7 +594,7 @@ override async *createMessage(systemPrompt: string, messages: NeutralConversatio
     functions: functions,  // Include available functions
     function_call: 'auto'  // Allow the model to decide when to call functions
   });
-  
+
   // Rest of the method remains the same...
 }
 ```
@@ -596,7 +606,7 @@ The `BaseProvider` class should be updated to register common tools with the MCP
 ```typescript
 protected registerTools(): void {
   // Register common tools
-  
+
   // Register read_file tool
   this.mcpIntegration.registerTool({
     name: 'read_file',
@@ -627,7 +637,7 @@ protected registerTools(): void {
       };
     }
   });
-  
+
   // Register write_to_file tool
   this.mcpIntegration.registerTool({
     name: 'write_to_file',
@@ -657,7 +667,7 @@ protected registerTools(): void {
       };
     }
   });
-  
+
   // Register other common tools...
 }
 ```
@@ -691,11 +701,11 @@ sequenceDiagram
     participant Server as EmbeddedMcpProvider
 
     Model->>OH: Stream with tool use
-    
+
     Note over OH: Primary Path (OpenAI Format)
     OH->>OAH: extractToolCalls(delta)
     OAH-->>OH: toolCalls[]
-    
+
     alt OpenAI Format Detected
         OH->>MCP: processToolUse(toolCall)
         MCP->>Router: routeToolUse(content)
@@ -727,67 +737,67 @@ The Ollama handler has been updated to use the OpenAI handler's tool use detecti
 
 ```typescript
 // src/api/providers/ollama.ts
-import { OpenAiHandler } from './openai';
+import { OpenAiHandler } from "./openai"
 
 export class OllamaHandler extends BaseProvider implements SingleCompletionHandler {
-  protected options: ApiHandlerOptions;
-  private client: OpenAI;
-  private openAiHandler: OpenAiHandler;
+	protected options: ApiHandlerOptions
+	private client: OpenAI
+	private openAiHandler: OpenAiHandler
 
-  constructor(options: ApiHandlerOptions) {
-    super();
-    this.options = options;
-    this.client = new OpenAI({
-      baseURL: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
-      apiKey: "ollama", // Ollama uses a dummy key via OpenAI client
-    });
-    
-    // Create an OpenAI handler for tool use detection and processing
-    this.openAiHandler = new OpenAiHandler({
-      ...options,
-      // Override any OpenAI-specific options as needed
-      openAiApiKey: "ollama", // Use the same dummy key
-      openAiBaseUrl: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
-      openAiModelId: this.options.ollamaModelId || ""
-    });
-  }
-  
-  override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-    // ... existing code ...
-    
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta ?? {};
+	constructor(options: ApiHandlerOptions) {
+		super()
+		this.options = options
+		this.client = new OpenAI({
+			baseURL: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
+			apiKey: "ollama", // Ollama uses a dummy key via OpenAI client
+		})
 
-      if (delta.content) {
-        // First, check for OpenAI-style tool calls using the OpenAI handler
-        const toolCalls = this.openAiHandler.extractToolCalls(delta);
-        
-        if (toolCalls.length > 0) {
-          // Process tool calls using OpenAI handler's logic
-          for (const toolCall of toolCalls) {
-            if (toolCall.function) {
-              // Process tool use using MCP integration
-              const toolResult = await this.processToolUse({
-                id: toolCall.id,
-                name: toolCall.function.name,
-                input: JSON.parse(toolCall.function.arguments || '{}')
-              });
-              
-              // Yield tool result
-              yield {
-                type: 'tool_result',
-                id: toolCall.id,
-                content: toolResult
-              };
-            }
-          }
-        } else {
-          // Fallback to XML/JSON detection if OpenAI format isn't detected
-          // ... existing fallback code ...
-        }
-      }
-    }
-  }
+		// Create an OpenAI handler for tool use detection and processing
+		this.openAiHandler = new OpenAiHandler({
+			...options,
+			// Override any OpenAI-specific options as needed
+			openAiApiKey: "ollama", // Use the same dummy key
+			openAiBaseUrl: (this.options.ollamaBaseUrl || "http://localhost:10000") + "/v1",
+			openAiModelId: this.options.ollamaModelId || "",
+		})
+	}
+
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// ... existing code ...
+
+		for await (const chunk of stream) {
+			const delta = chunk.choices[0]?.delta ?? {}
+
+			if (delta.content) {
+				// First, check for OpenAI-style tool calls using the OpenAI handler
+				const toolCalls = this.openAiHandler.extractToolCalls(delta)
+
+				if (toolCalls.length > 0) {
+					// Process tool calls using OpenAI handler's logic
+					for (const toolCall of toolCalls) {
+						if (toolCall.function) {
+							// Process tool use using MCP integration
+							const toolResult = await this.processToolUse({
+								id: toolCall.id,
+								name: toolCall.function.name,
+								input: JSON.parse(toolCall.function.arguments || "{}"),
+							})
+
+							// Yield tool result
+							yield {
+								type: "tool_result",
+								id: toolCall.id,
+								content: toolResult,
+							}
+						}
+					}
+				} else {
+					// Fallback to XML/JSON detection if OpenAI format isn't detected
+					// ... existing fallback code ...
+				}
+			}
+		}
+	}
 }
 ```
 
@@ -798,34 +808,34 @@ export class OllamaHandler extends BaseProvider implements SingleCompletionHandl
 ```typescript
 // src/services/mcp/__tests__/McpToolRegistry.test.ts
 
-test('should register a tool with the registry', () => {
-  const registry = new McpToolRegistry();
-  
-  const toolDefinition = {
-    name: 'test_tool',
-    description: 'A test tool',
-    paramSchema: {
-      type: 'object',
-      properties: {
-        param: {
-          type: 'string',
-          description: 'A test parameter'
-        }
-      },
-      required: ['param']
-    },
-    handler: async (args: Record<string, unknown>) => {
-      return {
-        content: [{ type: 'text', text: `Executed test_tool with param: ${args.param}` }]
-      };
-    }
-  };
-  
-  registry.registerTool(toolDefinition);
-  
-  expect(registry.hasTool('test_tool')).toBe(true);
-  expect(registry.getTool('test_tool')).toEqual(toolDefinition);
-});
+test("should register a tool with the registry", () => {
+	const registry = new McpToolRegistry()
+
+	const toolDefinition = {
+		name: "test_tool",
+		description: "A test tool",
+		paramSchema: {
+			type: "object",
+			properties: {
+				param: {
+					type: "string",
+					description: "A test parameter",
+				},
+			},
+			required: ["param"],
+		},
+		handler: async (args: Record<string, unknown>) => {
+			return {
+				content: [{ type: "text", text: `Executed test_tool with param: ${args.param}` }],
+			}
+		},
+	}
+
+	registry.registerTool(toolDefinition)
+
+	expect(registry.hasTool("test_tool")).toBe(true)
+	expect(registry.getTool("test_tool")).toEqual(toolDefinition)
+})
 ```
 
 ### 9.2 Unit Tests for OpenAI Function Format Conversion
@@ -833,43 +843,43 @@ test('should register a tool with the registry', () => {
 ```typescript
 // src/services/mcp/__tests__/McpConverters.test.ts
 
-test('should convert tool definitions to OpenAI function definitions', () => {
-  const tools = new Map();
-  
-  tools.set('test_tool', {
-    name: 'test_tool',
-    description: 'A test tool',
-    paramSchema: {
-      type: 'object',
-      properties: {
-        param: {
-          type: 'string',
-          description: 'A test parameter'
-        }
-      },
-      required: ['param']
-    },
-    handler: async () => ({ content: [] })
-  });
-  
-  const functions = McpConverters.toolDefinitionsToOpenAiFunctions(tools);
-  
-  expect(functions).toHaveLength(1);
-  expect(functions[0]).toEqual({
-    name: 'test_tool',
-    description: 'A test tool',
-    parameters: {
-      type: 'object',
-      properties: {
-        param: {
-          type: 'string',
-          description: 'A test parameter'
-        }
-      },
-      required: ['param']
-    }
-  });
-});
+test("should convert tool definitions to OpenAI function definitions", () => {
+	const tools = new Map()
+
+	tools.set("test_tool", {
+		name: "test_tool",
+		description: "A test tool",
+		paramSchema: {
+			type: "object",
+			properties: {
+				param: {
+					type: "string",
+					description: "A test parameter",
+				},
+			},
+			required: ["param"],
+		},
+		handler: async () => ({ content: [] }),
+	})
+
+	const functions = McpConverters.toolDefinitionsToOpenAiFunctions(tools)
+
+	expect(functions).toHaveLength(1)
+	expect(functions[0]).toEqual({
+		name: "test_tool",
+		description: "A test tool",
+		parameters: {
+			type: "object",
+			properties: {
+				param: {
+					type: "string",
+					description: "A test parameter",
+				},
+			},
+			required: ["param"],
+		},
+	})
+})
 ```
 
 ### 9.3 Integration Tests for SSE Transport
@@ -877,45 +887,45 @@ test('should convert tool definitions to OpenAI function definitions', () => {
 ```typescript
 // src/services/mcp/__tests__/SseTransport.test.ts
 
-test('should connect client to server', async () => {
-  await server.start();
-  
-  const url = server.getServerUrl();
-  expect(url).toBeDefined();
-  
-  // Register a test tool
-  server.registerTool(
-    'test_tool',
-    'A test tool',
-    {
-      message: { type: 'string' }
-    },
-    async (args) => ({
-      content: [{ type: 'text', text: `Received: ${args.message}` }]
-    })
-  );
-  
-  // Create a client and connect to the server
-  const client = await SseClientFactory.createClient(url!);
-  
-  // List available tools
-  const toolsResult = await client.listTools();
-  expect(toolsResult.tools).toHaveLength(1);
-  expect(toolsResult.tools[0].name).toBe('test_tool');
-  
-  // Call the tool
-  const result = await client.callTool({
-    name: 'test_tool',
-    arguments: { message: 'Hello, world!' }
-  });
-  
-  expect(result.content).toHaveLength(1);
-  expect(result.content[0].type).toBe('text');
-  expect(result.content[0].text).toBe('Received: Hello, world!');
-  
-  // Close the client
-  await client.close();
-});
+test("should connect client to server", async () => {
+	await server.start()
+
+	const url = server.getServerUrl()
+	expect(url).toBeDefined()
+
+	// Register a test tool
+	server.registerTool(
+		"test_tool",
+		"A test tool",
+		{
+			message: { type: "string" },
+		},
+		async (args) => ({
+			content: [{ type: "text", text: `Received: ${args.message}` }],
+		}),
+	)
+
+	// Create a client and connect to the server
+	const client = await SseClientFactory.createClient(url!)
+
+	// List available tools
+	const toolsResult = await client.listTools()
+	expect(toolsResult.tools).toHaveLength(1)
+	expect(toolsResult.tools[0].name).toBe("test_tool")
+
+	// Call the tool
+	const result = await client.callTool({
+		name: "test_tool",
+		arguments: { message: "Hello, world!" },
+	})
+
+	expect(result.content).toHaveLength(1)
+	expect(result.content[0].type).toBe("text")
+	expect(result.content[0].text).toBe("Received: Hello, world!")
+
+	// Close the client
+	await client.close()
+})
 ```
 
 ### 9.4 Integration Tests for Ollama Handler
@@ -923,68 +933,70 @@ test('should connect client to server', async () => {
 ```typescript
 // src/api/providers/__tests__/ollama-mcp-integration.test.ts
 
-test('should include available tools in the prompt', async () => {
-  // Mock the tool registry
-  const mockTools = new Map();
-  mockTools.set('test_tool', {
-    name: 'test_tool',
-    description: 'A test tool',
-    paramSchema: {
-      type: 'object',
-      properties: {
-        param: {
-          type: 'string',
-          description: 'A test parameter'
-        }
-      },
-      required: ['param']
-    },
-    handler: async () => ({ content: [] })
-  });
-  
-  // Mock the McpIntegration to return the mock tool registry
-  handler['mcpIntegration'].getToolRegistry = jest.fn().mockReturnValue({
-    getAllTools: jest.fn().mockReturnValue(mockTools)
-  });
-  
-  // Create a spy on the client.chat.completions.create method
-  const createSpy = jest.spyOn(handler['client'].chat.completions, 'create');
-  
-  // Create neutral history
-  const neutralHistory: NeutralConversationHistory = [
-    { role: 'user', content: [{ type: 'text', text: 'Use a tool' }] }
-  ];
-  
-  // Call createMessage
-  const stream = handler.createMessage('You are helpful.', neutralHistory);
-  
-  // Collect stream chunks
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  
-  // Verify that the client.chat.completions.create method was called with functions
-  expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
-    functions: expect.arrayContaining([
-      expect.objectContaining({
-        name: 'test_tool',
-        description: 'A test tool',
-        parameters: expect.objectContaining({
-          type: 'object',
-          properties: expect.objectContaining({
-            param: expect.objectContaining({
-              type: 'string',
-              description: 'A test parameter'
-            })
-          }),
-          required: ['param']
-        })
-      })
-    ]),
-    function_call: 'auto'
-  }));
-});
+test("should include available tools in the prompt", async () => {
+	// Mock the tool registry
+	const mockTools = new Map()
+	mockTools.set("test_tool", {
+		name: "test_tool",
+		description: "A test tool",
+		paramSchema: {
+			type: "object",
+			properties: {
+				param: {
+					type: "string",
+					description: "A test parameter",
+				},
+			},
+			required: ["param"],
+		},
+		handler: async () => ({ content: [] }),
+	})
+
+	// Mock the McpIntegration to return the mock tool registry
+	handler["mcpIntegration"].getToolRegistry = jest.fn().mockReturnValue({
+		getAllTools: jest.fn().mockReturnValue(mockTools),
+	})
+
+	// Create a spy on the client.chat.completions.create method
+	const createSpy = jest.spyOn(handler["client"].chat.completions, "create")
+
+	// Create neutral history
+	const neutralHistory: NeutralConversationHistory = [
+		{ role: "user", content: [{ type: "text", text: "Use a tool" }] },
+	]
+
+	// Call createMessage
+	const stream = handler.createMessage("You are helpful.", neutralHistory)
+
+	// Collect stream chunks
+	const chunks = []
+	for await (const chunk of stream) {
+		chunks.push(chunk)
+	}
+
+	// Verify that the client.chat.completions.create method was called with functions
+	expect(createSpy).toHaveBeenCalledWith(
+		expect.objectContaining({
+			functions: expect.arrayContaining([
+				expect.objectContaining({
+					name: "test_tool",
+					description: "A test tool",
+					parameters: expect.objectContaining({
+						type: "object",
+						properties: expect.objectContaining({
+							param: expect.objectContaining({
+								type: "string",
+								description: "A test parameter",
+							}),
+						}),
+						required: ["param"],
+					}),
+				}),
+			]),
+			function_call: "auto",
+		}),
+	)
+})
 ```
 
 ## 10. Implementation Considerations
@@ -1020,40 +1032,45 @@ Since we're exposing an HTTP server with the SSE transport:
 Implement the MCP integration in phases:
 
 1. **Phase 1: Core MCP Components**
-   - Implement the core MCP components
-   - Create unit tests for each component
-   - Create integration tests for the entire stack
+
+    - Implement the core MCP components
+    - Create unit tests for each component
+    - Create integration tests for the entire stack
 
 2. **Phase 2: Update Base Provider**
-   - Update the `BaseProvider` class to include MCP integration
-   - Create a common tool registration mechanism
-   - Implement the `processToolUse` method
+
+    - Update the `BaseProvider` class to include MCP integration
+    - Create a common tool registration mechanism
+    - Implement the `processToolUse` method
 
 3. **Phase 3: Update Provider Handlers**
-   - Update each provider handler to use the MCP integration
-   - Start with the most commonly used handlers (Anthropic, OpenAI)
-   - Then update the remaining handlers
+
+    - Update each provider handler to use the MCP integration
+    - Start with the most commonly used handlers (Anthropic, OpenAI)
+    - Then update the remaining handlers
 
 4. **Phase 4: Testing and Validation**
-   - Create tests for each updated handler
-   - Validate the integration with real models
-   - Fix any issues that arise
+    - Create tests for each updated handler
+    - Validate the integration with real models
+    - Fix any issues that arise
 
 ### 11.2 Backward Compatibility
 
 Ensure backward compatibility during the migration:
 
 1. **Maintain Existing Interfaces**
-   - Keep the existing `ApiHandler` interface unchanged
-   - Ensure the updated handlers still implement the interface correctly
+
+    - Keep the existing `ApiHandler` interface unchanged
+    - Ensure the updated handlers still implement the interface correctly
 
 2. **Gradual Rollout**
-   - Roll out the MCP integration gradually, one handler at a time
-   - Monitor for any issues and roll back if necessary
+
+    - Roll out the MCP integration gradually, one handler at a time
+    - Monitor for any issues and roll back if necessary
 
 3. **Feature Flags**
-   - Use feature flags to enable/disable the MCP integration
-   - Allow users to opt-in to the new functionality
+    - Use feature flags to enable/disable the MCP integration
+    - Allow users to opt-in to the new functionality
 
 ## 12. Conclusion
 

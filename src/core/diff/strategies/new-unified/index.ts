@@ -258,8 +258,10 @@ Your diff here
 				strategy,
 			} = findBestMatch(contextStr, result, 0, this.confidenceThreshold)
 
-			console.log(`Hunk match attempt: contextStr length=${contextStr.length}, matchPosition=${matchPosition}, confidence=${confidence}, strategy=${strategy}, threshold=${this.confidenceThreshold}`);
-			console.log(`Context string snippet: "${contextStr.substring(0, 100)}..."`);
+			console.log(
+				`Hunk match attempt: contextStr length=${contextStr.length}, matchPosition=${matchPosition}, confidence=${confidence}, strategy=${strategy}, threshold=${this.confidenceThreshold}`,
+			)
+			console.log(`Context string snippet: "${contextStr.substring(0, 100)}..."`)
 
 			if (confidence < this.confidenceThreshold) {
 				console.log("Full hunk application failed, trying sub-hunks strategy")
@@ -272,8 +274,10 @@ Your diff here
 					const subContextStr = prepareSearchString(subHunk.changes)
 					const subSearchResult = findBestMatch(subContextStr, subHunkResult, 0, this.confidenceThreshold)
 
-					console.log(`Sub-hunk match attempt: subContextStr length=${subContextStr.length}, matchPosition=${subSearchResult.index}, confidence=${subSearchResult.confidence}, strategy=${subSearchResult.strategy}, threshold=${this.confidenceThreshold}`);
-					console.log(`Sub-context string snippet: "${subContextStr.substring(0, 100)}..."`);
+					console.log(
+						`Sub-hunk match attempt: subContextStr length=${subContextStr.length}, matchPosition=${subSearchResult.index}, confidence=${subSearchResult.confidence}, strategy=${subSearchResult.strategy}, threshold=${this.confidenceThreshold}`,
+					)
+					console.log(`Sub-context string snippet: "${subContextStr.substring(0, 100)}..."`)
 
 					if (subSearchResult.confidence >= this.confidenceThreshold) {
 						const subEditResult = await applyEdit(

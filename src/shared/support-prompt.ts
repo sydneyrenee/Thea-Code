@@ -3,20 +3,23 @@ import * as vscode from "vscode" // Import vscode for Diagnostic type
 
 // Support prompts
 export type PromptParams = {
-	userInput?: string;
-	filePath?: string;
-	startLine?: string;
-	endLine?: string;
-	selectedText?: string;
-	terminalContent?: string;
-	diagnostics?: vscode.Diagnostic[];
-	[key: string]: string | vscode.Diagnostic[] | undefined;
+	userInput?: string
+	filePath?: string
+	startLine?: string
+	endLine?: string
+	selectedText?: string
+	terminalContent?: string
+	diagnostics?: vscode.Diagnostic[]
+	[key: string]: string | vscode.Diagnostic[] | undefined
 }
 
 const generateDiagnosticText = (diagnostics?: vscode.Diagnostic[]): string => {
 	if (!diagnostics?.length) return ""
 	return `Current problems detected:\n${diagnostics
-		.map((d) => `- [${d.source || "Error"}] ${d.message}${d.code ? ` (${typeof d.code === 'object' ? JSON.stringify(d.code) : String(d.code)})` : ""}`)
+		.map(
+			(d) =>
+				`- [${d.source || "Error"}] ${d.message}${d.code ? ` (${typeof d.code === "object" ? JSON.stringify(d.code) : String(d.code)})` : ""}`,
+		)
 		.join("\n")}`
 }
 
@@ -33,7 +36,7 @@ export const createPrompt = (template: string, params: PromptParams): string => 
 			if (Array.isArray(value)) {
 				result = result.replaceAll("${diagnosticText}", generateDiagnosticText(value))
 			}
-		} else if (typeof value === 'string') {
+		} else if (typeof value === "string") {
 			result = result.replaceAll(`\${${key}}`, value)
 		}
 	}
@@ -146,7 +149,7 @@ export const supportPrompt = {
 	default: Object.fromEntries(Object.entries(supportPromptConfigs).map(([key, config]) => [key, config.template])),
 	get: (customSupportPrompts: Record<string, unknown> | undefined, type: SupportPromptType): string => {
 		const customTemplate = customSupportPrompts?.[type]
-		return typeof customTemplate === 'string' ? customTemplate : supportPromptConfigs[type].template
+		return typeof customTemplate === "string" ? customTemplate : supportPromptConfigs[type].template
 	},
 	create: (type: SupportPromptType, params: PromptParams, customSupportPrompts?: Record<string, unknown>): string => {
 		const template = supportPrompt.get(customSupportPrompts, type)

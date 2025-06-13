@@ -8,28 +8,29 @@ export class UrlContentFetcher {
 	private browser?: Browser
 	private page?: Page
 
-        constructor(context: vscode.ExtensionContext) {
-                this.context = context
-        }
+	constructor(context: vscode.ExtensionContext) {
+		this.context = context
+	}
 
-        // Historically BrowserSession relied on a puppeteer-based helper to
-        // download Chromium if necessary. Playwright bundles a compatible
-        // browser so here we simply expose its executable path alongside the
-        // puppeteer module for backward compatibility.
-        async ensureChromiumExists(): Promise<{
-                puppeteer: typeof import("puppeteer-core")
-                executablePath: string
-        }> {
-                const puppeteer = await import("puppeteer-core")
-                const executablePath = puppeteer.executablePath()
-                return { puppeteer, executablePath }
-        }
+	// Historically BrowserSession relied on a puppeteer-based helper to
+	// download Chromium if necessary. Playwright bundles a compatible
+	// browser so here we simply expose its executable path alongside the
+	// puppeteer module for backward compatibility.
+	async ensureChromiumExists(): Promise<{
+		puppeteer: typeof import("puppeteer-core")
+		executablePath: string
+	}> {
+		const puppeteer = await import("puppeteer-core")
+		const executablePath = puppeteer.executablePath()
+		return { puppeteer, executablePath }
+	}
 
-        async launchBrowser(): Promise<void> {
+	async launchBrowser(): Promise<void> {
 		if (this.browser) {
 			return
 		}
-		this.browser = await chromium.launch({ // Changed to playwright's chromium launch
+		this.browser = await chromium.launch({
+			// Changed to playwright's chromium launch
 			args: [
 				"--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
 			],

@@ -30,14 +30,14 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 		return !this.getModel().id.startsWith("openai/o3-mini")
 	}
 
-       override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-               // Convert neutral history to OpenAI format
-               const convertedMessages = convertToOpenAiHistory(messages);
-               
-               const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-                       { role: "system", content: systemPrompt },
-                       ...convertedMessages,
-               ]
+	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// Convert neutral history to OpenAI format
+		const convertedMessages = convertToOpenAiHistory(messages)
+
+		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+			{ role: "system", content: systemPrompt },
+			...convertedMessages,
+		]
 
 		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
 		if (this.getModel().id.startsWith("anthropic/claude-3")) {
@@ -130,23 +130,24 @@ export class UnboundHandler extends BaseProvider implements SingleCompletionHand
 							const toolUseInput = {
 								name: toolCall.function.name,
 								arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
-							};
+							}
 
-							const toolResult = await this.processToolUse(toolUseInput);
-							const toolResultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+							const toolResult = await this.processToolUse(toolUseInput)
+							const toolResultString =
+								typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
 							yield {
-								type: 'tool_result',
+								type: "tool_result",
 								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 								content: toolResultString,
-							};
+							}
 						} catch (error) {
-							console.warn('Unbound tool use error:', error);
+							console.warn("Unbound tool use error:", error)
 							yield {
-								type: 'tool_result',
-								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,	
+								type: "tool_result",
+								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
 								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-							};
+							}
 						}
 					}
 				}
@@ -228,17 +229,20 @@ export async function getUnboundModels() {
 		const response = await axios.get("https://api.getunbound.ai/models")
 
 		if (response.data) {
-			const rawModels = response.data as Record<string, {
-				maxTokens?: string;
-				contextWindow?: string;
-				supportsImages?: boolean;
-				supportsPromptCaching?: boolean;
-				supportsComputerUse?: boolean;
-				inputTokenPrice?: string;
-				outputTokenPrice?: string;
-				cacheWritePrice?: string;
-				cacheReadPrice?: string;
-			}>
+			const rawModels = response.data as Record<
+				string,
+				{
+					maxTokens?: string
+					contextWindow?: string
+					supportsImages?: boolean
+					supportsPromptCaching?: boolean
+					supportsComputerUse?: boolean
+					inputTokenPrice?: string
+					outputTokenPrice?: string
+					cacheWritePrice?: string
+					cacheReadPrice?: string
+				}
+			>
 
 			for (const [modelId, model] of Object.entries(rawModels)) {
 				const modelInfo: ModelInfo = {

@@ -10,30 +10,30 @@ import { EXPERIMENT_IDS } from "../../../shared/experiments"
 
 // Mock the sections
 jest.mock("../sections/modes", () => ({
-        getModesSection: jest.fn().mockImplementation(() => `====\n\nMODES\n\n- Test modes section`),
+	getModesSection: jest.fn().mockImplementation(() => `====\n\nMODES\n\n- Test modes section`),
 }))
 
 // Mock the custom instructions
 jest.mock("../sections/custom-instructions", () => {
-        const addCustomInstructions = jest.fn()
-        return {
-                addCustomInstructions,
-                __setMockImplementation: (impl: (...args: unknown[]) => unknown) => {
-                        // Cast is safe in test context
-                        addCustomInstructions.mockImplementation(impl as typeof addCustomInstructions)
-                },
-        }
+	const addCustomInstructions = jest.fn()
+	return {
+		addCustomInstructions,
+		__setMockImplementation: (impl: (...args: unknown[]) => unknown) => {
+			// Cast is safe in test context
+			addCustomInstructions.mockImplementation(impl as typeof addCustomInstructions)
+		},
+	}
 })
 
 // Set up default mock implementation
 const { __setMockImplementation } = jest.requireMock("../sections/custom-instructions")
 __setMockImplementation(
-        (
-                modeCustomInstructions: string,
-                globalCustomInstructions: string,
-                cwd: string,
-                mode: string,
-                options?: { language?: string },
+	(
+		modeCustomInstructions: string,
+		globalCustomInstructions: string,
+		cwd: string,
+		mode: string,
+		options?: { language?: string },
 	) => {
 		const sections = []
 
@@ -121,20 +121,20 @@ const mockContext = {
 
 // Instead of extending McpHub, create a mock that implements just what we need
 const createMockMcpHub = (): McpHub =>
-        ({
-                getServers: () => [],
-                getMcpServersPath: () => "/mock/mcp/path",
-                getMcpSettingsFilePath: () => "/mock/settings/path",
-                dispose: () => {},
-                // Add other required public methods with no-op implementations
-                restartConnection: () => {},
-                readResource: () => ({ contents: [] }),
-                callTool: () => ({ content: [] }),
-                toggleServerDisabled: () => {},
-                toggleToolAlwaysAllow: () => {},
-                isConnecting: false,
-                connections: [],
-        }) as unknown as McpHub
+	({
+		getServers: () => [],
+		getMcpServersPath: () => "/mock/mcp/path",
+		getMcpSettingsFilePath: () => "/mock/settings/path",
+		dispose: () => {},
+		// Add other required public methods with no-op implementations
+		restartConnection: () => {},
+		readResource: () => ({ contents: [] }),
+		callTool: () => ({ content: [] }),
+		toggleServerDisabled: () => {},
+		toggleToolAlwaysAllow: () => {},
+		isConnecting: false,
+		connections: [],
+	}) as unknown as McpHub
 
 describe("SYSTEM_PROMPT", () => {
 	let mockMcpHub: McpHub
@@ -677,18 +677,18 @@ describe("SYSTEM_PROMPT", () => {
 })
 
 describe("addCustomInstructions", () => {
-        beforeAll(() => {
-                // Ensure fs mock is properly initialized
-                const mockFs = jest.requireMock("fs/promises")
-                mockFs._setInitialMockData()
-                mockFs.mkdir.mockImplementation(async (path: string) => {
-                        if (path.startsWith("/test")) {
-                                mockFs._mockDirectories.add(path)
-                                return Promise.resolve()
-                        }
-                        throw new Error(`ENOENT: no such file or directory, mkdir '${path}'`)
-                })
-        })
+	beforeAll(() => {
+		// Ensure fs mock is properly initialized
+		const mockFs = jest.requireMock("fs/promises")
+		mockFs._setInitialMockData()
+		mockFs.mkdir.mockImplementation(async (path: string) => {
+			if (path.startsWith("/test")) {
+				mockFs._mockDirectories.add(path)
+				return Promise.resolve()
+			}
+			throw new Error(`ENOENT: no such file or directory, mkdir '${path}'`)
+		})
+	})
 
 	beforeEach(() => {
 		jest.clearAllMocks()

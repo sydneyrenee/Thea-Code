@@ -191,7 +191,7 @@ const extensionConfig = {
 		"chromium-bidi/lib/cjs/bidiMapper/BidiMapper",
 		"chromium-bidi/lib/cjs/cdp/CdpConnection",
 		"playwright",
-		"playwright-core"
+		"playwright-core",
 	],
 }
 

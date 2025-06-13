@@ -203,7 +203,10 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 		],
 		rehypeReactOptions: {
 			components: {
-				pre: ({ children, ...preProps }: React.HTMLAttributes<HTMLPreElement> & { children?: React.ReactNode }) => {
+				pre: ({
+					children,
+					...preProps
+				}: React.HTMLAttributes<HTMLPreElement> & { children?: React.ReactNode }) => {
 					if (Array.isArray(children) && children.length === 1 && React.isValidElement(children[0])) {
 						const child = children[0] as React.ReactElement<{ className?: string }>
 						if (child.props?.className?.includes("language-mermaid")) {
@@ -216,7 +219,9 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 						</StyledPre>
 					)
 				},
-				code: (props: React.HTMLAttributes<HTMLElement> & { className?: string; children?: React.ReactNode }) => {
+				code: (
+					props: React.HTMLAttributes<HTMLElement> & { className?: string; children?: React.ReactNode },
+				) => {
 					const className = props.className || ""
 					if (className.includes("language-mermaid")) {
 						const codeText = String(props.children || "")

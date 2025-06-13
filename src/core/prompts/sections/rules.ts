@@ -55,7 +55,7 @@ export function getRulesSection(
 	cwd: string,
 	supportsComputerUse: boolean,
 	diffStrategy?: DiffStrategy,
-	experiments?: Record<string, boolean>  ,
+	experiments?: Record<string, boolean>,
 ): string {
 	return `====
 

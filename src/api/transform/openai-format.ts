@@ -1,5 +1,12 @@
 import OpenAI from "openai"
-import type { NeutralConversationHistory, NeutralContentBlock, NeutralTextContentBlock, NeutralImageContentBlock, NeutralToolUseContentBlock, NeutralToolResultContentBlock } from "../../shared/neutral-history";
+import type {
+	NeutralConversationHistory,
+	NeutralContentBlock,
+	NeutralTextContentBlock,
+	NeutralImageContentBlock,
+	NeutralToolUseContentBlock,
+	NeutralToolResultContentBlock,
+} from "../../shared/neutral-history"
 
 export function convertToOpenAiMessages(
 	neutralHistory: NeutralConversationHistory,
@@ -8,16 +15,22 @@ export function convertToOpenAiMessages(
 
 	for (const neutralMessage of neutralHistory) {
 		if (typeof neutralMessage.content === "string") {
-			if (neutralMessage.role === 'user' || neutralMessage.role === 'assistant' || neutralMessage.role === 'system') {
+			if (
+				neutralMessage.role === "user" ||
+				neutralMessage.role === "assistant" ||
+				neutralMessage.role === "system"
+			) {
 				openAiMessages.push({
 					role: neutralMessage.role,
-					content: neutralMessage.content
-				});
-			} else if (neutralMessage.role === 'tool') {
+					content: neutralMessage.content,
+				})
+			} else if (neutralMessage.role === "tool") {
 				// OpenAI 'tool' role messages require a tool_call_id.
 				// This path (simple string content for 'tool' role) is unusual without it.
 				// Assuming structured tool results (with tool_use_id) are handled in the array content block.
-				console.warn(`[convertToOpenAiMessages] Skipping 'tool' role message with simple string content due to missing tool_call_id: ${neutralMessage.content}`);
+				console.warn(
+					`[convertToOpenAiMessages] Skipping 'tool' role message with simple string content due to missing tool_call_id: ${neutralMessage.content}`,
+				)
 			}
 		} else if (Array.isArray(neutralMessage.content)) {
 			// image_url.url is base64 encoded image data
@@ -30,19 +43,20 @@ export function convertToOpenAiMessages(
 	        */
 			if (neutralMessage.role === "user") {
 				const { nonToolMessages, toolMessages } = neutralMessage.content.reduce<{
-					nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[];
-					toolMessages: NeutralToolResultContentBlock[];
+					nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
+					toolMessages: NeutralToolResultContentBlock[]
 				}>(
-					(acc, part: NeutralContentBlock) => { // part is now NeutralContentBlock
+					(acc, part: NeutralContentBlock) => {
+						// part is now NeutralContentBlock
 						if (part.type === "tool_result") {
-							acc.toolMessages.push(part as NeutralToolResultContentBlock);
+							acc.toolMessages.push(part as NeutralToolResultContentBlock)
 						} else if (part.type === "text" || part.type === "image_url" || part.type === "image_base64") {
-							acc.nonToolMessages.push(part as NeutralTextContentBlock | NeutralImageContentBlock);
+							acc.nonToolMessages.push(part as NeutralTextContentBlock | NeutralImageContentBlock)
 						} // user cannot send tool_use messages
-						return acc;
+						return acc
 					},
-					{ nonToolMessages: [], toolMessages: [] }
-				);
+					{ nonToolMessages: [], toolMessages: [] },
+				)
 
 				// Process tool result messages FIRST since they must follow the tool use messages
 				let toolResultImages: NeutralImageContentBlock[] = []
@@ -57,12 +71,12 @@ export function convertToOpenAiMessages(
 							toolMessage.content
 								?.map((part: NeutralTextContentBlock | NeutralImageContentBlock) => {
 									if (part.type === "image_url" || part.type === "image_base64") {
-										toolResultImages.push(part);
-										return "(see following user message for image)";
+										toolResultImages.push(part)
+										return "(see following user message for image)"
 									} else if (part.type === "text") {
-										return part.text;
+										return part.text
 									}
-									return ""; // Fallback for unexpected block types if any
+									return "" // Fallback for unexpected block types if any
 								})
 								.join("\n") ?? ""
 					}
@@ -94,39 +108,40 @@ export function convertToOpenAiMessages(
 					openAiMessages.push({
 						role: "user",
 						content: nonToolMessages.map((part: NeutralTextContentBlock | NeutralImageContentBlock) => {
-							if (part.type === "image_base64" && part.source.type === 'base64') {
+							if (part.type === "image_base64" && part.source.type === "base64") {
 								return {
 									type: "image_url",
 									image_url: { url: `data:${part.source.media_type};base64,${part.source.data}` },
-								};
-							} else if (part.type === "image_url" && part.source.type === 'image_url') {
+								}
+							} else if (part.type === "image_url" && part.source.type === "image_url") {
 								return {
 									type: "image_url",
 									image_url: { url: part.source.url },
-								};
+								}
 							} else if (part.type === "text") {
-								return { type: "text", text: part.text };
+								return { type: "text", text: part.text }
 							}
 							// Fallback for any unexpected block types in nonToolMessages
-							return { type: "text", text: "[Unsupported content block]" };
+							return { type: "text", text: "[Unsupported content block]" }
 						}),
 					})
 				}
 			} else if (neutralMessage.role === "assistant") {
 				const { nonToolMessages, toolMessages } = neutralMessage.content.reduce<{
-					nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[];
-					toolMessages: NeutralToolUseContentBlock[];
+					nonToolMessages: (NeutralTextContentBlock | NeutralImageContentBlock)[]
+					toolMessages: NeutralToolUseContentBlock[]
 				}>(
-					(acc, part: NeutralContentBlock) => { // part is NeutralContentBlock
+					(acc, part: NeutralContentBlock) => {
+						// part is NeutralContentBlock
 						if (part.type === "tool_use") {
-							acc.toolMessages.push(part as NeutralToolUseContentBlock);
+							acc.toolMessages.push(part as NeutralToolUseContentBlock)
 						} else if (part.type === "text" || part.type === "image_url" || part.type === "image_base64") {
-							acc.nonToolMessages.push(part as NeutralTextContentBlock | NeutralImageContentBlock);
+							acc.nonToolMessages.push(part as NeutralTextContentBlock | NeutralImageContentBlock)
 						} // assistant cannot send tool_result messages
-						return acc;
+						return acc
 					},
-					{ nonToolMessages: [], toolMessages: [] }
-				);
+					{ nonToolMessages: [], toolMessages: [] },
+				)
 
 				// Process non-tool messages
 				let content: string | undefined
@@ -134,11 +149,11 @@ export function convertToOpenAiMessages(
 					content = nonToolMessages
 						.map((part: NeutralTextContentBlock | NeutralImageContentBlock) => {
 							if (part.type === "image_url" || part.type === "image_base64") {
-								return ""; // Assistant messages to OpenAI don't typically include images directly this way.
+								return "" // Assistant messages to OpenAI don't typically include images directly this way.
 							} else if (part.type === "text") {
-								return part.text;
+								return part.text
 							}
-							return ""; // Fallback for unexpected block types
+							return "" // Fallback for unexpected block types
 						})
 						.join("\n")
 				}

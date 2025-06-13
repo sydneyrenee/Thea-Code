@@ -30,7 +30,9 @@ export const VSCodeButtonLink = ({ href, children, onClick, ...props }: VSCodeBu
 				textDecoration: "none",
 				color: "inherit",
 			}}>
-			<Button onClick={handleClick} {...props}>{children}</Button>
+			<Button onClick={handleClick} {...props}>
+				{children}
+			</Button>
 		</a>
 	)
 }

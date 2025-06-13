@@ -291,25 +291,24 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 
 	// Handler for group checkbox changes
 	const handleGroupChange = useCallback(
-		(group: ToolGroup, isCustomMode: boolean, customMode: ModeConfig | undefined) =>
-			(checked: boolean) => {
-				if (!isCustomMode) return // Prevent changes to built-in modes
-				const oldGroups = customMode?.groups || []
-				let newGroups: GroupEntry[]
-				if (checked) {
-					newGroups = [...oldGroups, group]
-				} else {
-					newGroups = oldGroups.filter((g) => getGroupName(g) !== group)
-				}
-				if (customMode) {
-					const source = customMode.source || "global"
-					updateCustomMode(customMode.slug, {
-						...customMode,
-						groups: newGroups,
-						source,
-					})
-				}
-			},
+		(group: ToolGroup, isCustomMode: boolean, customMode: ModeConfig | undefined) => (checked: boolean) => {
+			if (!isCustomMode) return // Prevent changes to built-in modes
+			const oldGroups = customMode?.groups || []
+			let newGroups: GroupEntry[]
+			if (checked) {
+				newGroups = [...oldGroups, group]
+			} else {
+				newGroups = oldGroups.filter((g) => getGroupName(g) !== group)
+			}
+			if (customMode) {
+				const source = customMode.source || "global"
+				updateCustomMode(customMode.slug, {
+					...customMode,
+					groups: newGroups,
+					source,
+				})
+			}
+		},
 		[updateCustomMode],
 	)
 
@@ -552,7 +551,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									((e as unknown as CustomEvent)?.detail?.target?.value) ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									(e.target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(mode, customModes)
 								if (customMode) {
@@ -737,7 +736,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							})()}
 							onChange={(e) => {
 								const value =
-									((e as unknown as CustomEvent)?.detail?.target?.value) ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 								const customMode = findModeBySlug(mode, customModes)
 								if (customMode) {
@@ -897,7 +896,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 						value={customInstructions ?? ""}
 						onChange={(e) => {
 							const value =
-								((e as unknown as CustomEvent)?.detail?.target?.value) ||
+								(e as unknown as CustomEvent)?.detail?.target?.value ||
 								((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 							setCustomInstructions(value || undefined)
 							vscode.postMessage({
@@ -1012,7 +1011,7 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 							value={getSupportPromptValue(activeSupportTab)}
 							onChange={(e) => {
 								const value =
-									((e as unknown as CustomEvent)?.detail?.target?.value) ||
+									(e as unknown as CustomEvent)?.detail?.target?.value ||
 									((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
 								const trimmedValue = value.trim()
 								updateSupportPrompt(activeSupportTab, trimmedValue || undefined)
@@ -1232,8 +1231,11 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									value={newModeRoleDefinition}
 									onChange={(e) => {
 										const value =
-											((e as unknown as CustomEvent)?.detail?.target?.value) ||
-											((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
+											(e as unknown as CustomEvent)?.detail?.target?.value ||
+											(
+												(e as React.ChangeEvent<HTMLTextAreaElement>)
+													.target as HTMLTextAreaElement
+											).value
 										setNewModeRoleDefinition(value)
 									}}
 									rows={4}
@@ -1301,8 +1303,11 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 									value={newModeCustomInstructions}
 									onChange={(e) => {
 										const value =
-											((e as unknown as CustomEvent)?.detail?.target?.value) ||
-											((e as React.ChangeEvent<HTMLTextAreaElement>).target as HTMLTextAreaElement).value
+											(e as unknown as CustomEvent)?.detail?.target?.value ||
+											(
+												(e as React.ChangeEvent<HTMLTextAreaElement>)
+													.target as HTMLTextAreaElement
+											).value
 										setNewModeCustomInstructions(value)
 									}}
 									rows={4}

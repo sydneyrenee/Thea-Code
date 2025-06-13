@@ -188,57 +188,55 @@ describe("convertToAnthropicRole", () => {
 })
 
 describe("asObjectSafe via convertToVsCodeLmMessages", () => {
-    it("parses JSON strings in tool_use input", () => {
-        const messages: NeutralConversationHistory = [
-            {
-                role: "assistant",
-                content: [
-                    {
-                        type: "tool_use",
-                        id: "1",
-                        name: "test",
-                        input: { jsonString: '{"foo": "bar"}' }
-                    }
-                ]
-            }
-        ]
-        const result = convertToVsCodeLmMessages(messages)
-        const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
-        expect(toolCall.input).toEqual({ jsonString: '{"foo": "bar"}' })
-    })
+	it("parses JSON strings in tool_use input", () => {
+		const messages: NeutralConversationHistory = [
+			{
+				role: "assistant",
+				content: [
+					{
+						type: "tool_use",
+						id: "1",
+						name: "test",
+						input: { jsonString: '{"foo": "bar"}' },
+					},
+				],
+			},
+		]
+		const result = convertToVsCodeLmMessages(messages)
+		const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
+		expect(toolCall.input).toEqual({ jsonString: '{"foo": "bar"}' })
+	})
 
-    it("handles invalid JSON by returning empty object", () => {
-        const messages: NeutralConversationHistory = [
-            {
-                role: "assistant",
-                content: [
-                    {
-                        type: "tool_use",
-                        id: "2",
-                        name: "test",
-                        input: { invalidJson: '{invalid}' }
-                    }
-                ]
-            }
-        ]
-        const result = convertToVsCodeLmMessages(messages)
-        const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
-        expect(toolCall.input).toEqual({ invalidJson: '{invalid}' })
-    })
+	it("handles invalid JSON by returning empty object", () => {
+		const messages: NeutralConversationHistory = [
+			{
+				role: "assistant",
+				content: [
+					{
+						type: "tool_use",
+						id: "2",
+						name: "test",
+						input: { invalidJson: "{invalid}" },
+					},
+				],
+			},
+		]
+		const result = convertToVsCodeLmMessages(messages)
+		const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
+		expect(toolCall.input).toEqual({ invalidJson: "{invalid}" })
+	})
 
-    it("clones object inputs", () => {
-        const obj = { a: 1 }
-        const messages: NeutralConversationHistory = [
-            {
-                role: "assistant",
-                content: [
-                    { type: "tool_use", id: "3", name: "test", input: obj }
-                ]
-            }
-        ]
-        const result = convertToVsCodeLmMessages(messages)
-        const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
-        expect(toolCall.input).toEqual(obj)
-        expect(toolCall.input).not.toBe(obj)
-    })
+	it("clones object inputs", () => {
+		const obj = { a: 1 }
+		const messages: NeutralConversationHistory = [
+			{
+				role: "assistant",
+				content: [{ type: "tool_use", id: "3", name: "test", input: obj }],
+			},
+		]
+		const result = convertToVsCodeLmMessages(messages)
+		const toolCall = result[0].content[0] as MockLanguageModelToolCallPart
+		expect(toolCall.input).toEqual(obj)
+		expect(toolCall.input).not.toBe(obj)
+	})
 })

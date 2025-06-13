@@ -240,9 +240,8 @@ describe("Ollama MCP Integration", () => {
 				name: "weather",
 				id: "weather-123",
 				input: expect.objectContaining({
-					// eslint-disable-line @typescript-eslint/no-unsafe-assignment
 					location: "San Francisco",
-				}),
+				}) as { location: string },
 			}),
 		)
 

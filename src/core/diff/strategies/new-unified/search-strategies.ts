@@ -1,4 +1,3 @@
-import { CmpStr } from "cmpstr"
 import { closest } from "fastest-levenshtein"
 import { diff_match_patch } from "diff-match-patch"
 import { Change, Hunk } from "./types"
@@ -30,7 +29,7 @@ function evaluateContentUniqueness(searchStr: string, content: string[]): number
 
 	// Calculate how many search lines are relatively unique in the content
 	let uniqueCount = 0
-	for (const line of uniqueLines) {
+	for (const line of Array.from(uniqueLines)) {
 		const regex = new RegExp(line.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")
 		const matches = contentStr.match(regex)
 		if (matches && matches.length <= 2) {
@@ -42,6 +41,35 @@ function evaluateContentUniqueness(searchStr: string, content: string[]): number
 	return uniqueCount / uniqueLines.size
 }
 
+// Helper function to calculate Dice coefficient between two strings
+function calculateDiceCoefficient(str1: string, str2: string): number {
+	if (str1 === str2) return 1.0
+	if (str1.length < 2 || str2.length < 2) return 0.0
+
+	// Create bigrams for both strings
+	const bigrams1 = new Set<string>()
+	const bigrams2 = new Set<string>()
+
+	for (let i = 0; i < str1.length - 1; i++) {
+		bigrams1.add(str1.slice(i, i + 2))
+	}
+
+	for (let i = 0; i < str2.length - 1; i++) {
+		bigrams2.add(str2.slice(i, i + 2))
+	}
+
+	// Calculate intersection
+	const intersection = new Set<string>()
+	for (const bigram of Array.from(bigrams1)) {
+		if (bigrams2.has(bigram)) {
+			intersection.add(bigram)
+		}
+	}
+
+	// Dice coefficient formula: 2 * |intersection| / (|set1| + |set2|)
+	return (2 * intersection.size) / (bigrams1.size + bigrams2.size)
+}
+
 // Helper function to prepare search string from context
 export function prepareSearchString(changes: Change[]): string {
 	const lines = changes.filter((c) => c.type === "context" || c.type === "remove").map((c) => c.originalLine)
@@ -50,8 +78,7 @@ export function prepareSearchString(changes: Change[]): string {
 
 // Helper function to evaluate similarity between two texts
 export function evaluateSimilarity(original: string, modified: string): number {
-	const cmp = new CmpStr()
-	return cmp.compare("dice", original, modified) as number
+	return calculateDiceCoefficient(original, modified)
 }
 
 // Helper function to validate using diff-match-patch
@@ -245,8 +272,7 @@ export function findSimilarityMatch(
 
 	for (let i = startIndex; i < content.length - searchLines.length + 1; i++) {
 		const windowStr = content.slice(i, i + searchLines.length).join("\n")
-		const cmp = new CmpStr()
-		const score = cmp.compare("dice", searchStr, windowStr) as number
+		const score = calculateDiceCoefficient(searchStr, windowStr)
 		if (score > bestScore && score >= confidenceThreshold) {
 			const similarity = getDMPSimilarity(searchStr, windowStr)
 			const contextSimilarity = validateContextLines(searchStr, windowStr, confidenceThreshold)

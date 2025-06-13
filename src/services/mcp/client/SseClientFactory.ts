@@ -1,5 +1,7 @@
-/* eslint-disable */
 import { McpClient, McpClientInfo } from "./McpClient"
+// Import types for the MCP SDK
+import type { Client as SdkClient } from "@modelcontextprotocol/sdk/client/index.js"
+import type { SSEClientTransport as SdkSseTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 
 /**
  * Minimal mock implementation of the MCP client used when the SDK is absent.
@@ -9,7 +11,11 @@ class MockClient extends McpClient {
 		super(info)
 	}
 
-	async connect(_transport: unknown): Promise<void> {
+	async connect(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		transport: unknown
+	): Promise<void> {
+		// Parameter is required by interface but not used in this implementation
 		return Promise.resolve()
 	}
 
@@ -17,12 +23,17 @@ class MockClient extends McpClient {
 		return Promise.resolve()
 	}
 
-	async listTools(): Promise<unknown> {
-		return { tools: [] }
+	// Non-async methods since they don't use await
+	listTools(): Promise<unknown> {
+		return Promise.resolve({ tools: [] })
 	}
 
-	async callTool(_params: Record<string, unknown>): Promise<unknown> {
-		return { content: [] }
+	callTool(
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		params: Record<string, unknown>
+	): Promise<unknown> {
+		// Parameter is required by interface but not used in this implementation
+		return Promise.resolve({ content: [] })
 	}
 }
 
@@ -35,11 +46,14 @@ export class SseClientFactory {
 	 */
 	public static async createClient(serverUrl: URL): Promise<McpClient> {
 		try {
-			const { Client } = require("@modelcontextprotocol/sdk/client")
-			const { SSEClientTransport } = require("@modelcontextprotocol/sdk/client/sse")
+			// Dynamic imports to handle cases where the SDK might not be available
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
+			const { Client } = await import("@modelcontextprotocol/sdk/client/index.js") as { Client: typeof SdkClient }
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
+			const { SSEClientTransport } = await import("@modelcontextprotocol/sdk/client/sse.js") as { SSEClientTransport: typeof SdkSseTransport }
 
 			class SdkClientWrapper extends McpClient {
-				private client: any
+				private client: SdkClient
 
 				constructor(info: McpClientInfo) {
 					super(info)
@@ -67,8 +81,9 @@ export class SseClientFactory {
 			const client = new SdkClientWrapper({ name: "TheaCodeMcpClient", version: "1.0.0" })
 			await client.connect(transport)
 			return client
-		} catch (error) {
-			console.warn("MCP SDK not found, using mock client")
+		} catch (err) {
+			// Log the error but continue with mock client
+			console.warn("MCP SDK not found, using mock client", err instanceof Error ? err.message : String(err))
 			const client = new MockClient({ name: "TheaCodeMcpClient", version: "1.0.0" })
 			await client.connect(undefined)
 			return client

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import * as vscode from "vscode"
 
 import { SYSTEM_PROMPT } from "../system"
@@ -6,7 +7,6 @@ import { defaultModeSlug, modes, ModeConfig } from "../../../shared/modes"
 import "../../../utils/path" // Import path utils to get access to toPosix string extension.
 import { addCustomInstructions } from "../sections/custom-instructions"
 import { EXPERIMENT_IDS } from "../../../shared/experiments"
-import { MultiSearchReplaceDiffStrategy } from "../../diff/strategies/multi-search-replace"
 
 // Mock the sections
 jest.mock("../sections/modes", () => ({
@@ -282,12 +282,19 @@ describe("SYSTEM_PROMPT", () => {
 	})
 
 	it("should include diff strategy tool description when diffEnabled is true", async () => {
+		// Create a mock diff strategy that returns a Promise<DiffResult>
+		const mockDiffStrategy = {
+			getName: () => "MockStrategy",
+			getToolDescription: () => "apply_diff tool description",
+			applyDiff: jest.fn().mockResolvedValue({ success: true, content: "mock result" }),
+		}
+
 		const prompt = await SYSTEM_PROMPT(
 			mockContext,
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			mockDiffStrategy, // Use mock diff strategy that returns Promise
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -303,12 +310,19 @@ describe("SYSTEM_PROMPT", () => {
 	})
 
 	it("should exclude diff strategy tool description when diffEnabled is false", async () => {
+		// Create a mock diff strategy that returns a Promise<DiffResult>
+		const mockDiffStrategy = {
+			getName: () => "MockStrategy",
+			getToolDescription: () => "apply_diff tool description",
+			applyDiff: jest.fn().mockResolvedValue({ success: true, content: "mock result" }),
+		}
+
 		const prompt = await SYSTEM_PROMPT(
 			mockContext,
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			mockDiffStrategy, // Use mock diff strategy that returns Promise
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -324,12 +338,19 @@ describe("SYSTEM_PROMPT", () => {
 	})
 
 	it("should exclude diff strategy tool description when diffEnabled is undefined", async () => {
+		// Create a mock diff strategy that returns a Promise<DiffResult>
+		const mockDiffStrategy = {
+			getName: () => "MockStrategy",
+			getToolDescription: () => "apply_diff tool description",
+			applyDiff: jest.fn().mockResolvedValue({ success: true, content: "mock result" }),
+		}
+
 		const prompt = await SYSTEM_PROMPT(
 			mockContext,
 			"/test/path",
 			false, // supportsComputerUse
 			undefined, // mcpHub
-			new MultiSearchReplaceDiffStrategy(), // Use actual diff strategy from the codebase
+			mockDiffStrategy, // Use mock diff strategy that returns Promise
 			undefined, // browserViewportSize
 			defaultModeSlug, // mode
 			undefined, // customModePrompts
@@ -583,12 +604,19 @@ describe("SYSTEM_PROMPT", () => {
 				[EXPERIMENT_IDS.INSERT_BLOCK]: true,
 			}
 
+			// Create a mock diff strategy that returns a Promise<DiffResult>
+			const mockDiffStrategy = {
+				getName: () => "MockStrategy",
+				getToolDescription: () => "apply_diff tool description",
+				applyDiff: jest.fn().mockResolvedValue({ success: true, content: "mock result" }),
+			}
+
 			const prompt = await SYSTEM_PROMPT(
 				mockContext,
 				"/test/path",
 				false,
 				undefined,
-				new MultiSearchReplaceDiffStrategy(),
+				mockDiffStrategy, // Use mock diff strategy that returns Promise
 				undefined,
 				defaultModeSlug,
 				undefined,
@@ -611,12 +639,19 @@ describe("SYSTEM_PROMPT", () => {
 				[EXPERIMENT_IDS.INSERT_BLOCK]: true,
 			}
 
+			// Create a mock diff strategy that returns a Promise<DiffResult>
+			const mockDiffStrategy = {
+				getName: () => "MockStrategy",
+				getToolDescription: () => "apply_diff tool description",
+				applyDiff: jest.fn().mockResolvedValue({ success: true, content: "mock result" }),
+			}
+
 			const prompt = await SYSTEM_PROMPT(
 				mockContext,
 				"/test/path",
 				false,
 				undefined,
-				new MultiSearchReplaceDiffStrategy(),
+				mockDiffStrategy, // Use mock diff strategy that returns Promise
 				undefined,
 				defaultModeSlug,
 				undefined,

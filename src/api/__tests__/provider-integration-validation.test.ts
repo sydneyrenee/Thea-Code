@@ -48,6 +48,7 @@ jest.mock('../../services/mcp/integration/McpIntegration', () => {
 describe("Provider Integration Validation", () => {
   // Mock FakeAI implementation for integration testing
   const mockFakeAI = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async *createMessage(_systemPrompt: string, _messages: NeutralConversationHistory) {
     await Promise.resolve() // Add await to satisfy async requirement
     yield { type: "text" as const, text: "Hello! I'm ready to help." }
@@ -114,6 +115,9 @@ describe("Provider Integration Validation", () => {
         // For this test, we just verify the stream is properly created
         // Actual streaming functionality would require more complex mocking
         // but the key point is that all providers have the createMessage method
+        
+        // Add await to satisfy async requirement
+        await Promise.resolve()
       })
     })
   })

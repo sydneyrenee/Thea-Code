@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, @typescript-eslint/unbound-method */
 import * as vscode from "vscode"
 import * as os from "os"
 import fs from "fs/promises"

@@ -67,6 +67,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 		}
 
 		// @ts-expect-error - Mocking
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		vscode.workspace.createFileSystemWatcher.mockReturnValue(mockWatcher)
 
 		// Setup fs mocks
@@ -156,7 +157,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			// Verify error was logged
 			expect(consoleSpy).toHaveBeenCalledWith(
 				`Unexpected error loading ${GLOBAL_FILENAMES.IGNORE_FILENAME}:`,
-				expect.any(Error),
+				expect.objectContaining({ name: "Error" }),
 			)
 
 			// Cleanup
@@ -348,7 +349,7 @@ describe(`${AI_IDENTITY_NAME}Ignore Controller`, () => {
 			expect(result).toEqual([])
 
 			// Verify error was logged
-			expect(consoleSpy).toHaveBeenCalledWith("Error filtering paths:", expect.any(Error))
+			expect(consoleSpy).toHaveBeenCalledWith("Error filtering paths:", expect.objectContaining({ name: "Error" }))
 
 			// Cleanup
 			consoleSpy.mockRestore()

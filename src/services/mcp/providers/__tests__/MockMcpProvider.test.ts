@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/require-await, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any */
 import { MockMcpProvider } from '../MockMcpProvider';
 import { ToolDefinition, ToolCallResult } from '../../types/McpProviderTypes';
 

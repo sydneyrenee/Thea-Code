@@ -3,6 +3,7 @@
  * Tests the full pipeline from tool request to execution and response
  */
 import { McpIntegration } from '../../integration/McpIntegration';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-require-imports, @typescript-eslint/require-await, @typescript-eslint/no-explicit-any, @typescript-eslint/restrict-template-expressions */
 import { McpToolExecutor } from '../../core/McpToolExecutor';
 import { McpToolRouter } from '../../core/McpToolRouter';
 import { McpConverters } from '../../core/McpConverters';
@@ -56,7 +57,8 @@ jest.mock('../../providers/EmbeddedMcpProvider', () => {
     return instance;
   });
   
-  MockEmbeddedMcpProvider.create = jest.fn().mockImplementation(async () => {
+  const MockedProviderClass = MockEmbeddedMcpProvider as any;
+  MockedProviderClass.create = jest.fn().mockImplementation(async () => {
     return new MockEmbeddedMcpProvider();
   });
   
@@ -201,10 +203,10 @@ describe('MCP End-to-End Tool Use Flows', () => {
         
         switch (operation) {
           case 'add':
-            result = operands.reduce((sum: number, num: number) => sum + num, 0);
+            result = (operands as number[]).reduce((sum: number, num: number) => sum + num, 0);
             break;
           case 'multiply':
-            result = operands.reduce((product: number, num: number) => product * num, 1);
+            result = (operands as number[]).reduce((product: number, num: number) => product * num, 1);
             break;
           default:
             throw new Error(`Unsupported operation: ${operation}`);

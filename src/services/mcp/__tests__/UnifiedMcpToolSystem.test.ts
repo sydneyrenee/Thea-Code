@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-require-imports, @typescript-eslint/require-await, @typescript-eslint/no-explicit-any */
 import { McpToolExecutor } from '../core/McpToolExecutor';
 import { NeutralToolResult, ToolUseFormat } from '../types/McpToolTypes';
 import { McpConverters } from '../core/McpConverters';
@@ -20,7 +21,8 @@ jest.mock('../providers/EmbeddedMcpProvider', () => {
     return instance;
   });
   
-  MockEmbeddedMcpProvider.create = jest.fn().mockImplementation(async () => {
+  const MockedProviderClass = MockEmbeddedMcpProvider as any;
+  MockedProviderClass.create = jest.fn().mockImplementation(async () => {
     return new MockEmbeddedMcpProvider();
   });
   
@@ -72,7 +74,6 @@ describe('McpToolExecutor', () => {
     jest.clearAllMocks();
     
     // Get a fresh instance for each test
-    // @ts-expect-error - Reset the singleton instance for testing
     (McpToolExecutor as unknown as { instance: McpToolExecutor | undefined }).instance = undefined;
     mcpToolSystem = McpToolExecutor.getInstance();
   });
@@ -310,7 +311,6 @@ describe('McpToolRouter', () => {
         status: 'success'
       });
       
-      // @ts-expect-error - Replace the method for mocking
       (mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
       
       const request = {
@@ -336,7 +336,6 @@ describe('McpToolRouter', () => {
         status: 'success'
       });
       
-      // @ts-expect-error - Replace the method for mocking
       (mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
       
       const request = {
@@ -370,7 +369,6 @@ describe('McpToolRouter', () => {
       // Mock the McpToolExecutor's executeToolFromNeutralFormat method to throw an error
       const mockExecute = jest.fn().mockRejectedValue(new Error('Test error'));
       
-      // @ts-expect-error - Replace the method for mocking
       (mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }).mcpToolSystem.executeToolFromNeutralFormat = mockExecute;
       
       const request = {

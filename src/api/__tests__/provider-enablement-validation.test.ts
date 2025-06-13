@@ -4,7 +4,7 @@
  */
 import { buildApiHandler } from "../index"
 import { ApiConfiguration, ApiProvider, ModelInfo } from "../../shared/api"
-import { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
+import { NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
 
 // Mock the McpIntegration to avoid initialization issues

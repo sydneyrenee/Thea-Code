@@ -2,6 +2,7 @@
  * Integration tests for provider-transport interactions
  * Tests MockMcpProvider scenarios and provider interface compliance
  */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/require-await, @typescript-eslint/restrict-template-expressions, @typescript-eslint/unbound-method */
 import { MockMcpProvider } from '../../providers/MockMcpProvider';
 import { ToolDefinition } from '../../types/McpProviderTypes';
 

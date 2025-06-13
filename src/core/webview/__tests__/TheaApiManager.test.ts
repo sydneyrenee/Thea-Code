@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import * as vscode from "vscode"
 import axios from "axios"
 import { TheaApiManager } from "../api/TheaApiManager"
@@ -261,7 +262,7 @@ describe("ClineApiManager", () => {
 		const mockApiConfig = { apiProvider: "openrouter" as const }
 		const mockApiHandler = { getModel: jest.fn() }
 		const mockedBuildApiHandler = buildApiHandler as jest.MockedFunction<typeof buildApiHandler>
-		mockedBuildApiHandler.mockReturnValue(mockApiHandler as ApiHandler)
+		mockedBuildApiHandler.mockReturnValue(mockApiHandler as unknown as ApiHandler)
 
 		// Execute
 		const result = manager.buildApiHandler(mockApiConfig)

@@ -35,11 +35,11 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	use_mcp_tool: (args) => getUseMcpToolDescription(args),
 	access_mcp_resource: (args) => getAccessMcpResourceDescription(args),
 	switch_mode: () => getSwitchModeDescription(),
-	new_task: (args) => getNewTaskDescription(args),
+	new_task: () => getNewTaskDescription(),
 	insert_content: (args) => getInsertContentDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>
-		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
+		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: {} }) : "",
 }
 
 export function getToolDescriptionsForMode(
@@ -78,6 +78,17 @@ export function getToolDescriptionsForMode(
 
 	// Add always available tools
 	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
+
+	// Add always available tool groups
+	Object.values(TOOL_GROUPS).forEach((groupConfig) => {
+		if (groupConfig.alwaysAvailable) {
+			groupConfig.tools.forEach((tool) => {
+				if (isToolAllowedForMode(tool as ToolName, mode, customModes ?? [], experiments ?? {})) {
+					tools.add(tool)
+				}
+			})
+		}
+	})
 
 	// Map tool descriptions for allowed tools
 	const descriptions = Array.from(tools).map((toolName) => {

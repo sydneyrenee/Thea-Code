@@ -167,6 +167,17 @@ export function isToolAllowedForMode(
 		return true
 	}
 
+	// Check if tool is in any always available group
+	for (const groupConfig of Object.values(TOOL_GROUPS)) {
+		if (groupConfig.alwaysAvailable && groupConfig.tools.includes(tool)) {
+			// Still need to check experiments for always available tools
+			if (experiments && tool in experiments) {
+				return experiments[tool]
+			}
+			return true
+		}
+	}
+
 	if (experiments && tool in experiments) {
 		if (!experiments[tool]) {
 			return false

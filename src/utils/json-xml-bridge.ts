@@ -426,13 +426,13 @@ export function xmlThinkingToJson(xmlContent: string): string {
 export function jsonToolUseToXml(jsonObj: ToolUseJsonObject | GenericParsedJson): string {
 	if (typeof jsonObj === "object" && jsonObj.type === "tool_use" && jsonObj.name) {
 		// Ensure name is a string before using in template literal
-		let toolName: string
+		let toolNameStr: string
 		if (typeof jsonObj.name === "string") {
-			toolName = jsonObj.name
+			toolNameStr = jsonObj.name
 		} else if (typeof jsonObj.name === "number" || typeof jsonObj.name === "boolean") {
-			toolName = String(jsonObj.name)
+			toolNameStr = String(jsonObj.name)
 		} else {
-			toolName = JSON.stringify(jsonObj.name)
+			toolNameStr = JSON.stringify(jsonObj.name)
 		}
 		// Create the opening tool tag with the tool name
 		const toolName = safeStringify(jsonObj.name)
@@ -524,15 +524,6 @@ export function xmlToolUseToJson(xmlContent: string): string {
  */
 export function jsonToolResultToXml(jsonObj: ToolResultJsonObject | GenericParsedJson): string {
 	if (typeof jsonObj === "object" && jsonObj.type === "tool_result" && jsonObj.tool_use_id) {
-		// Ensure tool_use_id is a string before using in template literal
-		let toolUseId: string
-		if (typeof jsonObj.tool_use_id === "string") {
-			toolUseId = jsonObj.tool_use_id
-		} else if (typeof jsonObj.tool_use_id === "number" || typeof jsonObj.tool_use_id === "boolean") {
-			toolUseId = String(jsonObj.tool_use_id)
-		} else {
-			toolUseId = JSON.stringify(jsonObj.tool_use_id)
-		}
 		// Create the opening tool result tag
 		let xml = `<tool_result tool_use_id="${safeStringify(jsonObj.tool_use_id)}"`
 
@@ -563,10 +554,11 @@ export function jsonToolResultToXml(jsonObj: ToolResultJsonObject | GenericParse
 
 		// Add error if present
 		if (jsonObj.error && typeof jsonObj.error === "object") {
-			xml += `<error message="${jsonObj.error.message ?? ""}"`
-			if (jsonObj.error.details) {
+			const errorObj = jsonObj.error as { message?: string; details?: unknown };
+			xml += `<error message="${errorObj.message ?? ""}"`
+			if (errorObj.details) {
 				// Escape quotes in the JSON string
-				const escapedDetails = JSON.stringify(jsonObj.error.details).replace(/"/g, "&quot;")
+				const escapedDetails = JSON.stringify(errorObj.details).replace(/"/g, "&quot;")
 				xml += ` details="${escapedDetails}"`
 			}
 			xml += " />\n"
@@ -715,7 +707,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFun
 						type: "tool_use",
 						id: toolCall.id || `function-${Date.now()}`,
 						name: toolCall.function.name,
-						input,
+						input: args,
 					}
 				} catch {
 					// If arguments can't be parsed, use as string
@@ -723,7 +715,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFun
 						type: "tool_use",
 						id: toolCall.id || `function-${Date.now()}`,
 						name: toolCall.function.name,
-						input: { raw: toolCall.function.arguments },
+						input: { raw: toolCall.function.arguments as string },
 					}
 				}
 			}

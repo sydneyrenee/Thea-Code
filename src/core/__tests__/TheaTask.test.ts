@@ -471,12 +471,13 @@ describe("TheaTask", () => {
 				jest.spyOn(theaTask, "getEnvironmentDetails").mockResolvedValue("")
 
 				// Mock loadContext to return unmodified content.
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				jest.spyOn(theaTask, "loadContext").mockImplementation(
 					async (
 						_userContent: NeutralMessageContent,
 						_includeFileDetails?: boolean,
 					): Promise<[NeutralMessageContent, string]> => {
+						void _userContent
+						void _includeFileDetails
 						return Promise.resolve([[{ type: "text", text: "mocked" }], ""])
 					},
 				)
@@ -642,21 +643,23 @@ describe("TheaTask", () => {
 				// Mock environment details and context loading
 				jest.spyOn(theaTaskWithImages, "getEnvironmentDetails").mockResolvedValue("")
 				jest.spyOn(theaTaskWithoutImages, "getEnvironmentDetails").mockResolvedValue("") // Use correct variable
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				jest.spyOn(theaTaskWithImages, "loadContext").mockImplementation(
 					async (
 						_userContent: NeutralMessageContent,
 						_includeFileDetails?: boolean,
 					): Promise<[NeutralMessageContent, string]> => {
+						void _userContent
+						void _includeFileDetails
 						return Promise.resolve([[{ type: "text", text: "mocked" }], ""])
 					},
 				)
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				jest.spyOn(theaTaskWithoutImages, "loadContext").mockImplementation(
 					async (
 						_userContent: NeutralMessageContent,
 						_includeFileDetails?: boolean,
 					): Promise<[NeutralMessageContent, string]> => {
+						void _userContent
+						void _includeFileDetails
 						return Promise.resolve([[{ type: "text", text: "mocked" }], ""])
 					},
 				)

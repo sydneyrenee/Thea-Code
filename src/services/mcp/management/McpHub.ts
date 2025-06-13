@@ -751,9 +751,9 @@ export class McpHub {
 			}
 
 			// Mark tools as always allowed based on settings
-			const tools = (response?.tools || []).map((tool) => ({
+			const tools: McpTool[] = (response?.tools || []).map((tool) => ({
 				...tool,
-				alwaysAllow: tool.name && alwaysAllowConfig.includes(tool.name),
+				alwaysAllow: Boolean(tool.name && alwaysAllowConfig.includes(tool.name)),
 			}))
 
 			return tools
@@ -1121,33 +1121,37 @@ export class McpHub {
 
 		// Read and parse the config file
 		const content = await fs.readFile(configPath, "utf-8")
-		const config = JSON.parse(content)
+		const config = JSON.parse(content) as Record<string, unknown>
 
 		// Validate the config structure
 		if (!config || typeof config !== "object") {
 			throw new Error("Invalid config structure")
 		}
 
-		if (!config.mcpServers || typeof config.mcpServers !== "object") {
+		const mcpServers = config.mcpServers as Record<string, unknown> | undefined
+		if (!mcpServers || typeof mcpServers !== "object") {
 			config.mcpServers = {}
 		}
 
-		if (!config.mcpServers[serverName]) {
-			config.mcpServers[serverName] = {}
+		const typedMcpServers = config.mcpServers as Record<string, unknown>
+		if (!typedMcpServers[serverName]) {
+			typedMcpServers[serverName] = {}
 		}
 
 		// Create a new server config object to ensure clean structure
+		const existingServerConfig = typedMcpServers[serverName] as Record<string, unknown>
 		const serverConfig = {
-			...config.mcpServers[serverName],
+			...existingServerConfig,
 			...configUpdate,
 		}
 
 		// Ensure required fields exist
-		if (!serverConfig.alwaysAllow) {
+		const serverConfigAlwaysAllow = serverConfig.alwaysAllow as unknown[] | undefined
+		if (!serverConfigAlwaysAllow) {
 			serverConfig.alwaysAllow = []
 		}
 
-		config.mcpServers[serverName] = serverConfig
+		typedMcpServers[serverName] = serverConfig
 
 		// Write the entire config back
 		const updatedConfig = {
@@ -1212,30 +1216,33 @@ export class McpHub {
 			}
 
 			const content = await fs.readFile(configPath, "utf-8")
-			const config = JSON.parse(content)
+			const config = JSON.parse(content) as Record<string, unknown>
 
 			// Validate the config structure
 			if (!config || typeof config !== "object") {
 				throw new Error("Invalid config structure")
 			}
 
-			if (!config.mcpServers || typeof config.mcpServers !== "object") {
+			const mcpServers = config.mcpServers as Record<string, unknown> | undefined
+			if (!mcpServers || typeof mcpServers !== "object") {
 				config.mcpServers = {}
 			}
 
+			const typedMcpServers = config.mcpServers as Record<string, unknown>
+
 			// Remove the server from the settings
-			if (config.mcpServers[serverName]) {
-				delete config.mcpServers[serverName]
+			if (typedMcpServers[serverName]) {
+				delete typedMcpServers[serverName]
 
 				// Write the entire config back
 				const updatedConfig = {
-					mcpServers: config.mcpServers,
+					mcpServers: typedMcpServers,
 				}
 
 				await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
 
 				// Update server connections with the correct source
-				await this.updateServerConnections(config.mcpServers, serverSource)
+				await this.updateServerConnections(typedMcpServers, serverSource)
 
 				vscode.window.showInformationMessage(t("common:info.mcp_server_deleted", { serverName }))
 			} else {
@@ -1304,7 +1311,7 @@ export class McpHub {
 			{
 				timeout,
 			},
-		)
+		) as McpToolCallResponse
 	}
 
 	async toggleToolAlwaysAllow(
@@ -1337,24 +1344,29 @@ export class McpHub {
 
 			// Read the appropriate config file
 			const content = await fs.readFile(configPath, "utf-8")
-			const config = JSON.parse(content)
+			const config = JSON.parse(content) as Record<string, unknown>
 
 			// Initialize mcpServers if it doesn't exist
-			if (!config.mcpServers) {
-				config.mcpServers = {}
+			let mcpServers = config.mcpServers as Record<string, unknown> | undefined
+			if (!mcpServers) {
+				mcpServers = {}
+				config.mcpServers = mcpServers
 			}
 
 			// Initialize server config if it doesn't exist
-			if (!config.mcpServers[serverName]) {
-				config.mcpServers[serverName] = {}
+			let serverConfig = mcpServers[serverName] as Record<string, unknown> | undefined
+			if (!serverConfig) {
+				serverConfig = {}
+				mcpServers[serverName] = serverConfig
 			}
 
 			// Initialize alwaysAllow if it doesn't exist
-			if (!config.mcpServers[serverName].alwaysAllow) {
-				config.mcpServers[serverName].alwaysAllow = []
+			let alwaysAllow = serverConfig.alwaysAllow as string[] | undefined
+			if (!alwaysAllow) {
+				alwaysAllow = []
+				serverConfig.alwaysAllow = alwaysAllow
 			}
 
-			const alwaysAllow = config.mcpServers[serverName].alwaysAllow
 			const toolIndex = alwaysAllow.indexOf(toolName)
 
 			if (shouldAllow && toolIndex === -1) {
@@ -1394,6 +1406,6 @@ export class McpHub {
 		if (this.settingsWatcher) {
 			this.settingsWatcher.dispose()
 		}
-		this.disposables.forEach((d) => d.dispose())
+		this.disposables.forEach((d) => void d.dispose())
 	}
 }

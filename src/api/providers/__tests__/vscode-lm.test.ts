@@ -23,10 +23,9 @@ jest.mock("vscode", () => {
 
 	return {
 		workspace: {
-			onDidChangeConfiguration: jest.fn((_callback: (e: vscode.ConfigurationChangeEvent) => void) => ({
-				// eslint-disable-line @typescript-eslint/no-unused-vars
+			onDidChangeConfiguration: jest.fn((() => ({
 				dispose: jest.fn(),
-			})),
+			})) as (callback: (e: vscode.ConfigurationChangeEvent) => void) => { dispose: jest.Mock }),
 		},
 		CancellationTokenSource: jest.fn(() => ({
 			token: {
@@ -96,10 +95,11 @@ describe("VsCodeLmHandler", () => {
 		})
 
 		it("should handle configuration changes", () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-			const callback: (config: { affectsConfiguration: (section: string) => boolean }) => void = (
-				vscode.workspace.onDidChangeConfiguration as jest.Mock
-			).mock.calls[0][0]
+			const mockOnDidChangeConfiguration = vscode.workspace.onDidChangeConfiguration as jest.Mock
+			// Verify the mock was called and get the callback
+			expect(mockOnDidChangeConfiguration).toHaveBeenCalled()
+			const callArgs = mockOnDidChangeConfiguration.mock.calls[0] as [(e: vscode.ConfigurationChangeEvent) => void]
+			const callback = callArgs[0]
 			callback({ affectsConfiguration: () => true })
 			// Should reset client when config changes
 			expect(handler["client"]).toBeNull()
@@ -158,8 +158,7 @@ describe("VsCodeLmHandler", () => {
 
 			const responseText = "Hello! How can I help you?"
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () {
-					// eslint-disable-line @typescript-eslint/require-await
+				stream: (function* () {
 					yield new vscode.LanguageModelTextPart(responseText)
 				})(),
 			})
@@ -203,8 +202,7 @@ describe("VsCodeLmHandler", () => {
 			}
 
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () {
-					// eslint-disable-line @typescript-eslint/require-await
+				stream: (function* () {
 					yield new vscode.LanguageModelToolCallPart(
 						toolCallData.callId,
 						toolCallData.name,
@@ -282,8 +280,7 @@ describe("VsCodeLmHandler", () => {
 
 			const responseText = "Completed text"
 			mockLanguageModelChat.sendRequest.mockResolvedValueOnce({
-				stream: (async function* () {
-					// eslint-disable-line @typescript-eslint/require-await
+				stream: (function* () {
 					yield new vscode.LanguageModelTextPart(responseText)
 				})(),
 			})

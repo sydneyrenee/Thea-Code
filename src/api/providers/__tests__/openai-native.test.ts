@@ -14,6 +14,8 @@ import { openaiTeardown } from "../../../../test/openai-mock/teardown.ts"
 
 // Define types for openAI mock
 interface OpenAIMockInstance {
+	isActive: boolean
+	stopMocking: () => void
 	addCustomEndpoint: (
 		method: string,
 		path: string,
@@ -240,7 +242,8 @@ describe("OpenAiNativeHandler", () => {
 		it("should handle streaming response", async () => {
 			await openaiTeardown()
 			await openaiSetup()
-			;(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => {
+			const mockInstance = openAIMock as unknown as OpenAIMockInstance
+			mockInstance.addCustomEndpoint("POST", "/v1/chat/completions", () => {
 				const stream = new Readable({ read() {} })
 				const mockStream = [
 					{ choices: [{ delta: { content: "Hello" } }], usage: null },
@@ -293,7 +296,8 @@ describe("OpenAiNativeHandler", () => {
 		it("should handle empty delta content", async () => {
 			await openaiTeardown()
 			await openaiSetup()
-			;(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => {
+			const mockInstance = openAIMock as unknown as OpenAIMockInstance
+			mockInstance.addCustomEndpoint("POST", "/v1/chat/completions", () => {
 				const stream = new Readable({ read() {} })
 				const mockStream = [
 					{ choices: [{ delta: {} }], usage: null },
@@ -404,7 +408,8 @@ describe("OpenAiNativeHandler", () => {
 		it("should handle API errors", async () => {
 			await openaiTeardown()
 			await openaiSetup()
-			;(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
+			const mockInstance = openAIMock as unknown as OpenAIMockInstance
+			mockInstance.addCustomEndpoint("POST", "/v1/chat/completions", () => [
 				500,
 				{ error: { message: "API Error" } },
 			])
@@ -416,7 +421,8 @@ describe("OpenAiNativeHandler", () => {
 		it("should handle empty response", async () => {
 			await openaiTeardown()
 			await openaiSetup()
-			;(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
+			const mockInstance = openAIMock as unknown as OpenAIMockInstance
+			mockInstance.addCustomEndpoint("POST", "/v1/chat/completions", () => [
 				200,
 				{ choices: [{ message: { content: "" } }] },
 			])

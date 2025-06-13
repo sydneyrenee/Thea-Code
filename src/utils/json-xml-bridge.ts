@@ -357,7 +357,16 @@ export class FormatDetector {
  */
 export function jsonThinkingToXml(jsonObj: ThinkingJsonObject | GenericParsedJson): string {
 	if (typeof jsonObj === "object" && jsonObj.type === "thinking" && jsonObj.content) {
-		return `<think>${jsonObj.content}</think>`
+		// Ensure content is a string before using in template literal
+		let content: string
+		if (typeof jsonObj.content === "string") {
+			content = jsonObj.content
+		} else if (typeof jsonObj.content === "number" || typeof jsonObj.content === "boolean") {
+			content = String(jsonObj.content)
+		} else {
+			content = JSON.stringify(jsonObj.content)
+		}
+		return `<think>${content}</think>`
 	}
 	return JSON.stringify(jsonObj)
 }
@@ -390,8 +399,17 @@ export function xmlThinkingToJson(xmlContent: string): string {
  */
 export function jsonToolUseToXml(jsonObj: ToolUseJsonObject | GenericParsedJson): string {
 	if (typeof jsonObj === "object" && jsonObj.type === "tool_use" && jsonObj.name) {
+		// Ensure name is a string before using in template literal
+		let toolName: string
+		if (typeof jsonObj.name === "string") {
+			toolName = jsonObj.name
+		} else if (typeof jsonObj.name === "number" || typeof jsonObj.name === "boolean") {
+			toolName = String(jsonObj.name)
+		} else {
+			toolName = JSON.stringify(jsonObj.name)
+		}
 		// Create the opening tool tag with the tool name
-		let xml = `<${jsonObj.name}>\n`
+		let xml = `<${toolName}>\n`
 
 		// Add parameter tags
 		if (jsonObj.input && typeof jsonObj.input === "object" && jsonObj.input !== null) {
@@ -407,7 +425,7 @@ export function jsonToolUseToXml(jsonObj: ToolUseJsonObject | GenericParsedJson)
 		}
 
 		// Add closing tool tag
-		xml += `</${jsonObj.name}>`
+		xml += `</${toolName}>`
 
 		return xml
 	}
@@ -448,7 +466,7 @@ export function xmlToolUseToJson(xmlContent: string): string {
 			if (paramName !== toolName) {
 				// Attempt to parse as JSON if it looks like a JSON string
 				try {
-					const parsedValue = JSON.parse(paramValue)
+					const parsedValue: unknown = JSON.parse(paramValue)
 					params[paramName] = parsedValue
 				} catch {
 					params[paramName] = paramValue
@@ -478,12 +496,30 @@ export function xmlToolUseToJson(xmlContent: string): string {
  */
 export function jsonToolResultToXml(jsonObj: ToolResultJsonObject | GenericParsedJson): string {
 	if (typeof jsonObj === "object" && jsonObj.type === "tool_result" && jsonObj.tool_use_id) {
+		// Ensure tool_use_id is a string before using in template literal
+		let toolUseId: string
+		if (typeof jsonObj.tool_use_id === "string") {
+			toolUseId = jsonObj.tool_use_id
+		} else if (typeof jsonObj.tool_use_id === "number" || typeof jsonObj.tool_use_id === "boolean") {
+			toolUseId = String(jsonObj.tool_use_id)
+		} else {
+			toolUseId = JSON.stringify(jsonObj.tool_use_id)
+		}
 		// Create the opening tool result tag
-		let xml = `<tool_result tool_use_id="${jsonObj.tool_use_id}"`
+		let xml = `<tool_result tool_use_id="${toolUseId}"`
 
 		// Add status if present
 		if (jsonObj.status) {
-			xml += ` status="${jsonObj.status}"`
+			// Ensure status is a string before using in template literal
+			let status: string
+			if (typeof jsonObj.status === "string") {
+				status = jsonObj.status
+			} else if (typeof jsonObj.status === "number" || typeof jsonObj.status === "boolean") {
+				status = String(jsonObj.status)
+			} else {
+				status = JSON.stringify(jsonObj.status)
+			}
+			xml += ` status="${status}"`
 		}
 
 		xml += ">\n"
@@ -491,23 +527,27 @@ export function jsonToolResultToXml(jsonObj: ToolResultJsonObject | GenericParse
 		// Add content
 		if (Array.isArray(jsonObj.content)) {
 			for (const item of jsonObj.content) {
-				if (item.type === "text") {
-					xml += `${item.text}\n`
-				} else if (item.type === "image") {
-					if (item.source) {
-						// Add null check for item.source
-						xml += `<image type="${item.source.media_type}" data="${item.source.data}" />\n`
+				// Type guard to ensure item is a ToolResultContentItem
+				if (item && typeof item === "object" && 'type' in item) {
+					const contentItem = item as ToolResultContentItem
+					if (contentItem.type === "text") {
+						xml += `${contentItem.text ?? ""}\n`
+					} else if (contentItem.type === "image") {
+						if (contentItem.source && typeof contentItem.source === "object") {
+							// Add null check for contentItem.source
+							xml += `<image type="${contentItem.source.media_type ?? ""}" data="${contentItem.source.data ?? ""}" />\n`
+						}
 					}
 				}
 			}
 		}
 
 		// Add error if present
-		if (jsonObj.error) {
-			xml += `<error message="${jsonObj.error.message}"`
+		if (jsonObj.error && typeof jsonObj.error === "object") {
+			xml += `<error message="${jsonObj.error.message ?? ""}"`
 			if (jsonObj.error.details) {
 				// Escape quotes in the JSON string
-				const escapedDetails = JSON.stringify(jsonObj.error.details).replace(/"/g, '"')
+				const escapedDetails = JSON.stringify(jsonObj.error.details).replace(/"/g, "&quot;")
 				xml += ` details="${escapedDetails}"`
 			}
 			xml += " />\n"
@@ -581,13 +621,10 @@ export function xmlToolResultToJson(xmlContent: string): string {
 			}
 
 			if (errorMatch[2]) {
+				// Attempt to parse as JSON, otherwise keep as string
 				try {
-					// Attempt to parse as JSON, otherwise keep as string
-					try {
-						error.details = JSON.parse(errorMatch[2])
-					} catch {
-						error.details = errorMatch[2]
-					}
+					const parsed: unknown = JSON.parse(errorMatch[2])
+					error.details = parsed
 				} catch {
 					error.details = errorMatch[2]
 				}
@@ -622,13 +659,17 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFun
 	if (openAiFunctionCall.function_call) {
 		// Handle single function call
 		try {
-			const args: Record<string, unknown> = JSON.parse(openAiFunctionCall.function_call.arguments)
+			const args: unknown = JSON.parse(openAiFunctionCall.function_call.arguments)
+			// Type guard to ensure args is a record
+			const input = (args && typeof args === "object" && !Array.isArray(args)) 
+				? (args as Record<string, unknown>) 
+				: { raw: openAiFunctionCall.function_call.arguments }
 
 			return {
 				type: "tool_use",
 				id: openAiFunctionCall.function_call.id || `function-${Date.now()}`,
 				name: openAiFunctionCall.function_call.name,
-				input: args,
+				input,
 			}
 		} catch {
 			// If arguments can't be parsed, use as string
@@ -644,13 +685,17 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFun
 		for (const toolCall of openAiFunctionCall.tool_calls) {
 			if (toolCall.type === "function" && toolCall.function) {
 				try {
-					const args: Record<string, unknown> = JSON.parse(toolCall.function.arguments) // Cast to Record<string, unknown>
+					const args: unknown = JSON.parse(toolCall.function.arguments)
+					// Type guard to ensure args is a record
+					const input = (args && typeof args === "object" && !Array.isArray(args)) 
+						? (args as Record<string, unknown>) 
+						: { raw: toolCall.function.arguments }
 
 					return {
 						type: "tool_use",
 						id: toolCall.id || `function-${Date.now()}`,
 						name: toolCall.function.name,
-						input: args,
+						input,
 					}
 				} catch {
 					// If arguments can't be parsed, use as string

@@ -230,8 +230,7 @@ export class ContextProxy {
 		try {
 			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
 			// Use array destructuring with _ to explicitly ignore the first parameter
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			return Object.fromEntries(Object.entries(globalSettings).filter(([_, value]) => value !== undefined))
+			return Object.fromEntries(Object.entries(globalSettings).filter(([, value]) => value !== undefined))
 		} catch (error) {
 			if (error instanceof ZodError) {
 				telemetryService.captureSchemaValidationError({ schemaName: "GlobalSettings", error })

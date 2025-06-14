@@ -1,5 +1,8 @@
 // npx jest src/core/config/__tests__/importExport.test.ts
 
+/* eslint-disable @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import fs from "fs/promises"
 import * as path from "path"
 
@@ -18,7 +21,7 @@ jest.mock("vscode", () => ({
 		showSaveDialog: jest.fn(),
 	},
 	Uri: {
-		file: jest.fn((filePath) => ({ fsPath: filePath })),
+		file: jest.fn((filePath: string) => ({ fsPath: filePath })),
 	},
 }))
 

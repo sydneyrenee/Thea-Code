@@ -1928,19 +1928,18 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						osInfo: "unix",
 					} // Renamed getter
 
-					/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 					const shouldProcessMentions = (text: string) =>
 						text.includes("<task>") || text.includes("<feedback>")
 
 					if (block.type === "text") {
-						if (shouldProcessMentions(block.text as string)) {
+						if (shouldProcessMentions(block.text)) {
 							return {
 								...block,
 								text: await parseMentions(
-									block.text as string,
+									block.text,
 									this.cwd,
 									this.urlContentFetcher,
-									osInfo as string,
+									osInfo,
 								),
 							}
 						}
@@ -1950,12 +1949,12 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 						if (typeof block.content === "string") {
 							// This case should ideally not occur if input is valid NeutralToolResultContentBlock
 							const processedText = shouldProcessMentions(block.content)
-								? await parseMentions(block.content, this.cwd, this.urlContentFetcher, osInfo as string)
+								? await parseMentions(block.content, this.cwd, this.urlContentFetcher, osInfo)
 								: block.content
 							processedNestedContent = [{ type: "text", text: processedText }]
 						} else if (Array.isArray(block.content)) {
 							// Ensure block.content is treated as NeutralMessageContent for mapping
-							const currentNestedContent = block.content as NeutralMessageContent
+							const currentNestedContent = block.content
 							processedNestedContent = await Promise.all(
 								currentNestedContent.map(async (nestedBlock) => {
 									if (nestedBlock.type === "text" && shouldProcessMentions(nestedBlock.text)) {
@@ -1965,7 +1964,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 												nestedBlock.text,
 												this.cwd,
 												this.urlContentFetcher,
-												osInfo as string,
+												osInfo,
 											),
 										}
 									}

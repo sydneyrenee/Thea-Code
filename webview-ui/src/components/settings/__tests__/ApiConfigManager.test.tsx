@@ -29,14 +29,14 @@ jest.mock("@/components/ui/vscode-components", () => ({
 
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Dialog: ({ children, open, onOpenChange }: { [key: string]: unknown }) => (
+	Dialog: ({ children, open }: { [key: string]: unknown }) => (
 		<div role="dialog" aria-modal="true" style={{ display: open ? "block" : "none" }} data-testid="dialog">
 			{children}
 		</div>
 	),
 	DialogContent: ({ children }: { [key: string]: unknown }) => <div data-testid="dialog-content">{children}</div>,
 	DialogTitle: ({ children }: { [key: string]: unknown }) => <div data-testid="dialog-title">{children}</div>,
-	Button: ({ children, onClick, disabled, variant, "data-testid": dataTestId }: { [key: string]: unknown }) => (
+	Button: ({ children, onClick, disabled, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<button onClick={onClick} disabled={disabled} data-testid={dataTestId}>
 			{children}
 		</button>
@@ -50,7 +50,7 @@ jest.mock("@/components/ui", () => ({
 			data-testid={dataTestId}
 		/>
 	),
-	Select: ({ children, value, onValueChange }: { [key: string]: unknown }) => (
+	Select: ({ value, onValueChange }: { [key: string]: unknown }) => (
 		<select
 			value={value}
 			onChange={(e) => {

@@ -18,7 +18,7 @@
 		"clean": "rimraf build"
 	},
 	"dependencies": {
-		"@eslint/js": "^9.28.0",
+		"@eslint/js": "^9.29.0",
 		"@radix-ui/react-alert-dialog": "^1.1.14",
 		"@radix-ui/react-collapsible": "^1.1.11",
 		"@radix-ui/react-dialog": "^1.1.14",
@@ -43,7 +43,7 @@
 		"i18next": "^25.2.1",
 		"i18next-http-backend": "^3.0.2",
 		"knuth-shuffle-seeded": "^1.0.6",
-		"lucide-react": "^0.514.0",
+		"lucide-react": "^0.515.0",
 		"mermaid": "^11.6.0",
 		"posthog-js": "^1.252.0",
 		"react": "^19.1.0",
@@ -82,7 +82,7 @@
 		"@typescript-eslint/eslint-plugin": "^8.34.0",
 		"@typescript-eslint/parser": "^8.34.0",
 		"@vitejs/plugin-react": "^4.5.2",
-		"eslint": "^9.28.0",
+		"eslint": "^9.29.0",
 		"eslint-plugin-react": "^7.37.5",
 		"eslint-plugin-react-hooks": "^5.2.0",
 		"eslint-plugin-storybook": "^9.0.9",

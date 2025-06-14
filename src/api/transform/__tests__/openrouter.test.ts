@@ -251,15 +251,6 @@ describe("OpenRouter Transform Functions", () => {
 				specificProvider: "invalid"
 			}
 
-			// Mock the validation to return an error
-			const originalParams = {
-				model: modelId,
-				messages: [{ role: "system" as const, content: systemPrompt }],
-				stream: true as const,
-				stream_options: { include_usage: true },
-				provider: { order: ["invalid"] }
-			}
-
 			// This should work fine since our validation allows any string in provider order
 			expect(() => createOpenRouterRequest(systemPrompt, history, modelId, options)).not.toThrow()
 		})

@@ -9,15 +9,15 @@ import { Blockquote } from "./Blockquote"
 
 const MemoizedReactMarkdown: FC<Options> = memo(
 	ReactMarkdown,
-	(prevProps, nextProps) => prevProps.children === nextProps.children && prevProps.className === nextProps.className,
+	(prevProps, nextProps) => prevProps.children === nextProps.children,
 )
 
 export function Markdown({ content }: { content: string }) {
 	return (
-		<MemoizedReactMarkdown
-			remarkPlugins={[remarkGfm]}
-			className="custom-markdown break-words"
-			components={{
+		<div className="custom-markdown break-words">
+			<MemoizedReactMarkdown
+				remarkPlugins={[remarkGfm]}
+				components={{
 				p({ children }) {
 					return <div className="mb-2 last:mb-0">{children}</div>
 				},
@@ -77,5 +77,6 @@ export function Markdown({ content }: { content: string }) {
 			}}>
 			{content}
 		</MemoizedReactMarkdown>
+		</div>
 	)
 }

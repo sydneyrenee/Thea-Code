@@ -169,11 +169,10 @@ const ApiConfigManager = ({
 								setInputValue(target.target.value)
 								setError(null)
 							}}
-							onKeyDown={(e: unknown) => {
-								const event = e as { key: string }
-								if (event.key === "Enter" && inputValue.trim()) {
+							onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+								if (e.key === "Enter" && inputValue.trim()) {
 									handleSave()
-								} else if (event.key === "Escape") {
+								} else if (e.key === "Escape") {
 									handleCancel()
 								}
 							}}

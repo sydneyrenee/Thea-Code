@@ -1,8 +1,9 @@
 import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
-import rehypeHighlight, { Options } from "rehype-highlight"
+import rehypeHighlight from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
+import type { Node } from "unist"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { CODE_BLOCK_BG_COLOR } from "./CodeBlock"
 import MermaidBlock from "./MermaidBlock"
@@ -11,12 +12,12 @@ interface MarkdownBlockProps {
 	markdown?: string
 }
 
-interface ASTNode {
-	type?: string
+interface ASTNode extends Node {
+	type: string
 	value?: string
 	children?: ASTNode[]
 	lang?: string
-	[key: string]: unknown
+	url?: string
 }
 
 /**
@@ -31,6 +32,8 @@ const remarkUrlToLink = () => {
 	return (tree: ASTNode) => {
 		// Visit all "text" nodes in the markdown AST (Abstract Syntax Tree)
 		visit(tree, "text", (node: ASTNode, index, parent) => {
+			if (!node.value) return
+			
 			const urlRegex = /https?:\/\/[^\s<>)"]+/g
 			const matches = node.value.match(urlRegex)
 			if (!matches) return
@@ -52,8 +55,8 @@ const remarkUrlToLink = () => {
 			// Fix: Instead of converting the node to a paragraph (which broke things),
 			// we replace the original text node with our new nodes in the parent's children array.
 			// This preserves the document structure while adding our links.
-			if (parent) {
-				parent.children.splice(index, 1, ...children)
+			if (parent && 'children' in parent && typeof index === 'number') {
+				(parent as ASTNode).children?.splice(index, 1, ...children)
 			}
 		})
 	}
@@ -182,7 +185,7 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 	const { theme } = useExtensionState()
 	const [reactContent, setMarkdown] = useRemark({
 		remarkPlugins: [
-			remarkUrlToLink,
+			remarkUrlToLink(),
 			() => {
 				return (tree) => {
 					visit(tree, "code", (node: ASTNode) => {
@@ -196,10 +199,10 @@ const MarkdownBlock = memo(({ markdown }: MarkdownBlockProps) => {
 			},
 		],
 		rehypePlugins: [
-			rehypeHighlight as (options?: Options) => unknown,
-			{
+			// @ts-expect-error - rehype-highlight type compatibility
+			[rehypeHighlight, {
 				// languages: {},
-			} as Options,
+			}],
 		],
 		rehypeReactOptions: {
 			components: {

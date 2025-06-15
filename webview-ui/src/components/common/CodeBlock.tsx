@@ -1,6 +1,6 @@
 import React, { memo, useEffect } from "react"
 import { useRemark } from "react-remark"
-import rehypeHighlight, { Options } from "rehype-highlight"
+import rehypeHighlight from "rehype-highlight"
 import styled from "styled-components"
 import { visit } from "unist-util-visit"
 import { useExtensionState } from "../../context/ExtensionStateContext"
@@ -128,10 +128,10 @@ const CodeBlock = memo(({ source, forceWrap = false }: CodeBlockProps) => {
 			},
 		],
 		rehypePlugins: [
-			rehypeHighlight as (options?: Options) => unknown,
-			{
+			// @ts-expect-error - rehype-highlight type compatibility
+			[rehypeHighlight, {
 				// languages: {},
-			} as Options,
+			}],
 		],
 		rehypeReactOptions: {
 			components: {

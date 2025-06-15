@@ -1047,8 +1047,8 @@ const PromptsView = ({ onDone }: PromptsViewProps) => {
 										<VSCodeDropdown
 											value={enhancementApiConfigId || ""}
 											data-testid="api-config-dropdown"
-											onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-												const value = e.detail?.target?.value || e.target?.value
+											onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+												const value = e.target?.value
 												setEnhancementApiConfigId(value)
 												vscode.postMessage({
 													type: "enhancementApiConfigId",

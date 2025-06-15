@@ -108,8 +108,8 @@ export const BrowserSettings = ({
 				<div>
 					<VSCodeCheckbox
 						checked={browserToolEnabled}
-						onChange={(e: Event & { target: { checked: boolean; value: string } }) =>
-							setCachedStateField("browserToolEnabled", e.target.checked)
+						onChange={(checked: boolean) =>
+							setCachedStateField("browserToolEnabled", checked)
 						}>
 						<span className="font-medium">{t("settings:browser.enable.label")}</span>
 					</VSCodeCheckbox>
@@ -165,11 +165,11 @@ export const BrowserSettings = ({
 						<div>
 							<VSCodeCheckbox
 								checked={remoteBrowserEnabled}
-								onChange={(e: Event & { target: { checked: boolean; value: string } }) => {
+								onChange={(checked: boolean) => {
 									// Update the global state - remoteBrowserEnabled now means "enable remote browser connection".
-									setCachedStateField("remoteBrowserEnabled", e.target.checked)
+									setCachedStateField("remoteBrowserEnabled", checked)
 
-									if (!e.target.checked) {
+									if (!checked) {
 										// If disabling remote browser, clear the custom URL.
 										setCachedStateField("remoteBrowserHost", undefined)
 									}
@@ -186,7 +186,7 @@ export const BrowserSettings = ({
 								<div className="flex items-center gap-2">
 									<VSCodeTextField
 										value={remoteBrowserHost ?? ""}
-										onChange={(e: Event & { target: { checked: boolean; value: string } }) =>
+										onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
 											setCachedStateField("remoteBrowserHost", e.target.value || undefined)
 										}
 										placeholder={t("settings:browser.remote.urlPlaceholder")}

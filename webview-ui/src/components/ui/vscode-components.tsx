@@ -27,6 +27,7 @@ interface VSCodeTextFieldProps {
 	value?: string | number
 	onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
 	onInput?: (e: React.ChangeEvent<HTMLInputElement>) => void
+	onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 	placeholder?: string
 	disabled?: boolean
 	className?: string
@@ -166,7 +167,7 @@ export const VSCodeCheckbox: React.FC<VSCodeCheckboxProps> = ({
 }
 
 export const VSCodeTextField = React.forwardRef<HTMLInputElement, VSCodeTextFieldProps>(
-	({ children, value, onInput, placeholder, disabled, className, style, title, ...props }, ref) => {
+	({ children, value, onInput, onKeyDown, placeholder, disabled, className, style, title, ...props }, ref) => {
 		return (
 			<div
 				className={`vscode-textfield ${className || ""}`}
@@ -176,6 +177,7 @@ export const VSCodeTextField = React.forwardRef<HTMLInputElement, VSCodeTextFiel
 					type="text"
 					value={value}
 					onChange={onInput}
+					onKeyDown={onKeyDown}
 					placeholder={placeholder}
 					disabled={disabled}
 					title={title}

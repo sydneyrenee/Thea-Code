@@ -43,7 +43,7 @@ i18next.use(initReactI18next).init({
 			chat: translations.es.chat,
 		},
 	},
-})
+}).catch(console.error)
 
 export function loadTranslations() {
 	// Translations are already loaded in the mock

@@ -290,7 +290,7 @@ export const AutoApproveSettings = ({
 						<div className="flex gap-2">
 							<VSCodeTextField
 								value={commandInput}
-								onInput={(e: Event & { target: { value: string } }) => setCommandInput(e.target.value)}
+								onInput={(e: React.ChangeEvent<HTMLInputElement>) => setCommandInput(e.target.value)}
 								placeholder={t("settings:autoApprove.execute.commandPlaceholder")}
 								className="grow"
 								data-testid="command-input"

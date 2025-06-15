@@ -41,9 +41,6 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 	private disposable: vscode.Disposable | null
 	private currentRequestCancellation: vscode.CancellationTokenSource | null
 
-	// This is a placeholder for the actual implementation of completePrompt
-	// It is required by the SingleCompletionHandler interface
-
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options

@@ -49,6 +49,7 @@ Thea Code is a community-driven fork that evolved from the original Cline projec
 
 ### Fixed
 
+- Fix Ollama integration test mock implementation for proper OpenAI API simulation (Completed neutral handlers implementation)
 - Fix test import path ([63b061c9](https://github.com/SolaceHarmony/Thea-Code/commit/63b061c9))
 - Start mock servers with correct SDK imports ([e2684a7c](https://github.com/SolaceHarmony/Thea-Code/commit/e2684a7c))
 - Fix jest teardown and openai mock ([c4c0a8cd](https://github.com/SolaceHarmony/Thea-Code/commit/c4c0a8cd))

@@ -135,7 +135,7 @@ All providers have been systematically re-enabled in `src/api/index.ts`:
 **Provider-Specific Validation:**
 
 - **OpenAI-based providers** (openai, deepseek, requesty): Test tool use formats (native + XML/JSON)
-- **Ollama**: Verify OpenAI handler composition for tool detection works properly
+- **Ollama**: ✅ Verified OpenAI handler composition for tool detection works properly - Integration tests passing
 - **Mistral**: Test native SDK integration with MCP routing
 - **VSCode LM**: Verify VS Code API integration and tool registration
 - **Anthropic providers**: Confirm existing functionality maintained
@@ -417,7 +417,7 @@ This document consolidates and replaces the following scattered status documents
     - ✅ gemini
 - **Disabled Providers**: 10+ providers are commented out and throw errors:
     - ❌ openai (OpenAiHandler)
-    - ❌ ollama (OllamaHandler)
+    - 🧪 ollama (OllamaHandler) - Tests fixed, integration working
     - ❌ lmstudio (LmStudioHandler)
     - ❌ openai-native (OpenAiNativeHandler)
     - ❌ deepseek (DeepSeekHandler)

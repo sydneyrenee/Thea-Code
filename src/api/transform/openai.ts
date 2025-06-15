@@ -1,6 +1,8 @@
 import OpenAI from "openai"
 import type {
 	NeutralConversationHistory,
+	NeutralMessage,
+	NeutralMessageContent,
 	NeutralToolResultContentBlock,
 } from "../../shared/neutral-history"
 
@@ -63,12 +65,64 @@ export function extractToolCalls(delta: OpenAI.Chat.ChatCompletionChunk.Choice.D
 }
 
 /**
- * Convert OpenAI response to neutral format
+ * Convert OpenAI Chat Completion response to neutral format
+ * This function converts the OpenAI response format to the neutral conversation history format
+ * used throughout the application for provider-agnostic handling.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function convertOpenAIToNeutral(_response: OpenAI.Chat.ChatCompletion): NeutralConversationHistory {
-	// TODO: Implement conversion logic
-	return []
+export function convertOpenAIToNeutral(response: OpenAI.Chat.ChatCompletion): NeutralConversationHistory {
+	// Convert each choice to a neutral message
+	return response.choices.map((choice): NeutralMessage => {
+		const message = choice.message
+		
+		// Create the neutral message with proper role mapping
+		const neutralMessage: NeutralMessage = {
+			role: message.role,
+			content: [] as NeutralMessageContent
+		}
+
+		// Handle content based on its type
+		if (typeof message.content === "string" && message.content) {
+			// If content is a simple string, create a text block
+			neutralMessage.content = [{
+				type: "text",
+				text: message.content
+			}]
+		} else if (message.content === null) {
+			// Handle null content (can happen when tool_calls are present)
+			neutralMessage.content = []
+		}
+
+		// Handle tool calls for assistant messages
+		if (message.tool_calls && message.role === "assistant") {
+			// Ensure content is an array
+			if (!Array.isArray(neutralMessage.content)) {
+				neutralMessage.content = []
+			}
+			
+			message.tool_calls.forEach((toolCall) => {
+				if (toolCall.type === "function") {
+					// Parse the arguments JSON safely
+					let args: Record<string, unknown>
+					try {
+						args = JSON.parse(toolCall.function.arguments || "{}") as Record<string, unknown>
+					} catch (e) {
+						console.warn("Failed to parse tool call arguments:", e)
+						args = { raw: toolCall.function.arguments || "" }
+					}
+
+					// Add tool use block to content
+					(neutralMessage.content as NeutralMessageContent).push({
+						type: "tool_use",
+						id: toolCall.id,
+						name: toolCall.function.name,
+						input: args
+					})
+				}
+			})
+		}
+
+		return neutralMessage
+	})
 }
 
 /**

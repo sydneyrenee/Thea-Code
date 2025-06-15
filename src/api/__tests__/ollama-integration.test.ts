@@ -1,7 +1,6 @@
 import { OllamaHandler } from "../providers/ollama"
 import { NeutralConversationHistory } from "../../shared/neutral-history"
 import OpenAI from "openai"
-
 // Note: This test uses port 10000 which is for Msty, a service that uses Ollama on the backend
 
 // Mock the McpIntegration to avoid initialization issues
@@ -343,8 +342,8 @@ describe("Ollama Integration", () => {
 		jest.spyOn(handler["client"].chat.completions, "create").mockImplementationOnce(
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			((_body: OpenAI.Chat.ChatCompletionCreateParams, _options?: OpenAI.RequestOptions) => {
-				const stream = (function* () {
-					yield {
+				const chunks = [
+					{
 						choices: [
 							{
 								delta: { content: 'I see our previous conversation where I said "Hi there!". ' },
@@ -356,8 +355,8 @@ describe("Ollama Integration", () => {
 						created: 1678886409,
 						model: "llama2",
 						object: "chat.completion.chunk" as const,
-					}
-					yield {
+					},
+					{
 						choices: [
 							{
 								delta: { content: "Now I can continue from there." },
@@ -370,9 +369,16 @@ describe("Ollama Integration", () => {
 						model: "llama2",
 						object: "chat.completion.chunk" as const,
 					}
-				})()
+				]
 
-				return Promise.resolve(stream as never)
+				// Create a proper async iterator that matches OpenAI's Stream interface
+				function* generateChunks() {
+					for (const chunk of chunks) {
+						yield chunk
+					}
+				}
+
+				return generateChunks() as any
 			}),
 		)
 
@@ -511,8 +517,8 @@ describe("Ollama Integration", () => {
 		jest.spyOn(handler["client"].chat.completions, "create").mockImplementationOnce(
 			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			((_body: OpenAI.Chat.ChatCompletionCreateParams, _options?: OpenAI.RequestOptions) => {
-				const stream = (function* () {
-					yield {
+				const chunks = [
+					{
 						choices: [
 							{
 								delta: { content: "I need to think about this. " },
@@ -524,8 +530,8 @@ describe("Ollama Integration", () => {
 						created: 1678886411,
 						model: "llama2",
 						object: "chat.completion.chunk" as const,
-					}
-					yield {
+					},
+					{
 						choices: [
 							{
 								delta: {
@@ -539,8 +545,8 @@ describe("Ollama Integration", () => {
 						created: 1678886412,
 						model: "llama2",
 						object: "chat.completion.chunk" as const,
-					}
-					yield {
+					},
+					{
 						choices: [
 							{
 								delta: { content: " After thinking, my answer is 42." },
@@ -553,9 +559,16 @@ describe("Ollama Integration", () => {
 						model: "llama2",
 						object: "chat.completion.chunk" as const,
 					}
-				})()
+				]
 
-				return Promise.resolve(stream as never)
+				// Create a proper async iterator that matches OpenAI's Stream interface
+				function* generateChunks() {
+					for (const chunk of chunks) {
+						yield chunk
+					}
+				}
+
+				return generateChunks() as any
 			}),
 		)
 

@@ -1,106 +1,52 @@
-import OpenAI from "openai"
 import axios from "axios"
 
 import { SingleCompletionHandler } from "../"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
-import { NeutralConversationHistory } from "../../shared/neutral-history" // Import NeutralConversationHistory
-import { convertToOpenAiHistory } from "../transform/neutral-openai-format" // Use neutral format conversion
+import { NeutralConversationHistory } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
-import { BaseProvider } from "./base-provider"
+import { OpenAiCompatibleHandler } from "./openai-compatible-base"
+import { OpenAiHandler } from "./openai"
 
 const LMSTUDIO_DEFAULT_TEMPERATURE = 0
 
-export class LmStudioHandler extends BaseProvider implements SingleCompletionHandler {
-	protected options: ApiHandlerOptions
-	private client: OpenAI
-
+export class LmStudioHandler extends OpenAiCompatibleHandler implements SingleCompletionHandler {
 	constructor(options: ApiHandlerOptions) {
-		super()
-		this.options = options
-		this.client = new OpenAI({
-			baseURL: (this.options.lmStudioBaseUrl || "http://localhost:1234") + "/v1",
-			apiKey: "noop",
+		super(options, {
+			apiKey: "noop", // LMStudio doesn't require a real API key
+			baseUrl: (options.lmStudioBaseUrl || "http://localhost:1234") + "/v1",
+			modelId: options.lmStudioModelId || "",
+			includeMaxTokens: false,
+			streamingEnabled: true,
 		})
 	}
 
-	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-		// Convert neutral history to OpenAI format
-		const openAiMessages = convertToOpenAiHistory(messages)
-
-		// Add system prompt if not already included
-		const hasSystemMessage = openAiMessages.some((msg) => msg.role === "system")
-		if (systemPrompt && systemPrompt.trim() !== "" && !hasSystemMessage) {
-			openAiMessages.unshift({ role: "system", content: systemPrompt })
+	override createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// Apply LMStudio-specific temperature override if needed
+		if (this.options.modelTemperature === undefined) {
+			// Create a new options object with LMStudio temperature
+			const lmStudioOptions = { ...this.options, modelTemperature: LMSTUDIO_DEFAULT_TEMPERATURE }
+			// Create a new handler with the updated options
+			const lmStudioHandler = new OpenAiHandler({
+				...lmStudioOptions,
+				openAiApiKey: "noop",
+				openAiModelId: this.options.lmStudioModelId || "",
+				openAiBaseUrl: (this.options.lmStudioBaseUrl || "http://localhost:1234") + "/v1",
+				openAiStreamingEnabled: true,
+			})
+			return lmStudioHandler.createMessage(systemPrompt, messages)
 		}
-
-		try {
-			// Create params object with optional draft model
-			const params: OpenAI.Chat.ChatCompletionCreateParams = {
-				model: this.getModel().id,
-				messages: openAiMessages,
-				temperature: this.options.modelTemperature ?? LMSTUDIO_DEFAULT_TEMPERATURE,
-				stream: true,
-			}
-
-			// Add draft model if speculative decoding is enabled and a draft model is specified
-			if (this.options.lmStudioSpeculativeDecodingEnabled && this.options.lmStudioDraftModelId) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-				;(params as any).draft_model = this.options.lmStudioDraftModelId // Accommodate custom param
-			}
-
-			const stream = await this.client.chat.completions.create(params)
-
-			// Stream handling with MCP integration for tool use
-			for await (const chunk of stream) {
-				const delta = chunk.choices[0]?.delta
-				if (delta?.content) {
-					yield {
-						type: "text",
-						text: delta.content,
-					}
-				}
-
-				// Handle tool calls if present (MCP integration)
-				if (delta?.tool_calls) {
-					for (const toolCall of delta.tool_calls) {
-						if (toolCall.function?.name && toolCall.function?.arguments) {
-							try {
-								const toolUseInput = {
-									name: toolCall.function.name,
-									arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
-								}
-
-								const toolResult = await this.processToolUse(toolUseInput)
-								const toolResultString =
-									typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
-
-								yield {
-									type: "tool_result",
-									id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
-									content: toolResultString,
-								}
-							} catch (error) {
-								console.warn("LMStudio tool use error:", error)
-								yield {
-									type: "tool_result",
-									id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
-									content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-								}
-							}
-						}
-					}
-				}
-			}
-		} catch {
-			// const error = e as Error; // Unused
-			// LM Studio doesn't return an error code/body for now
-			throw new Error(
-				"Please check the LM Studio developer logs to debug what went wrong. You may need to load the model with a larger context length to work with Thea Code's prompts.",
-			)
-		}
+		
+		// TODO: Handle LMStudio-specific speculative decoding parameters
+		// This requires extending the OpenAI handler to support custom params
+		// For now, delegate to OpenAI handler for consistent tool use handling
+		return this.openAiHandler.createMessage(systemPrompt, messages)
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {
+		return this.getProviderModelInfo()
+	}
+
+	protected getProviderModelInfo(): { id: string; info: ModelInfo } {
 		return {
 			id: this.options.lmStudioModelId || "",
 			info: openAiModelInfoSaneDefaults,
@@ -108,25 +54,18 @@ export class LmStudioHandler extends BaseProvider implements SingleCompletionHan
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
+		// For non-streaming completion, we can delegate to the OpenAI handler's client
+		// or implement this method using the unified approach
 		try {
-			// Create params object with optional draft model
-			const params: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
-				model: this.getModel().id,
-				messages: [{ role: "user", content: prompt }],
-				temperature: this.options.modelTemperature ?? LMSTUDIO_DEFAULT_TEMPERATURE,
-				stream: false,
+			// This is a simplified implementation - could be enhanced
+			let result = ""
+			for await (const chunk of this.createMessage("", [{ role: "user", content: [{ type: "text", text: prompt }] }])) {
+				if (chunk.type === "text") {
+					result += chunk.text
+				}
 			}
-
-			// Add draft model if speculative decoding is enabled and a draft model is specified
-			if (this.options.lmStudioSpeculativeDecodingEnabled && this.options.lmStudioDraftModelId) {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-				;(params as any).draft_model = this.options.lmStudioDraftModelId // Accommodate custom param
-			}
-
-			const response = await this.client.chat.completions.create(params)
-			return response.choices[0]?.message.content || ""
+			return result
 		} catch {
-			// const error = e as Error; // Unused
 			throw new Error(
 				"Please check the LM Studio developer logs to debug what went wrong. You may need to load the model with a larger context length to work with Thea Code's prompts.",
 			)

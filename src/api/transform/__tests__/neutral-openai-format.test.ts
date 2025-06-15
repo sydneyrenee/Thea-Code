@@ -1,11 +1,11 @@
-// npx jest src/api/transform/__tests__/openai-format.test.ts
+// npx jest src/api/transform/__tests__/neutral-openai-format.test.ts
 
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import OpenAI from "openai"
 
-import { convertToOpenAiMessages } from "../openai-format"
+import { convertToOpenAiHistory } from "../neutral-openai-format"
 
-describe("convertToOpenAiMessages", () => {
+describe("convertToOpenAiHistory", () => {
 	it("should convert simple text messages", () => {
 		const anthropicMessages: NeutralConversationHistory = [
 			{
@@ -18,7 +18,7 @@ describe("convertToOpenAiMessages", () => {
 			},
 		]
 
-		const openAiMessages = convertToOpenAiMessages(anthropicMessages)
+		const openAiMessages = convertToOpenAiHistory(anthropicMessages)
 		expect(openAiMessages).toHaveLength(2)
 		expect(openAiMessages[0]).toEqual({
 			role: "user",
@@ -51,7 +51,7 @@ describe("convertToOpenAiMessages", () => {
 			},
 		]
 
-		const openAiMessages = convertToOpenAiMessages(anthropicMessages)
+		const openAiMessages = convertToOpenAiHistory(anthropicMessages)
 		expect(openAiMessages).toHaveLength(1)
 		expect(openAiMessages[0].role).toBe("user")
 
@@ -89,7 +89,7 @@ describe("convertToOpenAiMessages", () => {
 			},
 		]
 
-		const openAiMessages = convertToOpenAiMessages(anthropicMessages)
+		const openAiMessages = convertToOpenAiHistory(anthropicMessages)
 		expect(openAiMessages).toHaveLength(1)
 
 		const assistantMessage = openAiMessages[0] as OpenAI.Chat.ChatCompletionAssistantMessageParam
@@ -125,7 +125,7 @@ describe("convertToOpenAiMessages", () => {
 			},
 		]
 
-		const openAiMessages = convertToOpenAiMessages(anthropicMessages)
+		const openAiMessages = convertToOpenAiHistory(anthropicMessages)
 		expect(openAiMessages).toHaveLength(1)
 
 		const toolMessage = openAiMessages[0] as OpenAI.Chat.ChatCompletionToolMessageParam

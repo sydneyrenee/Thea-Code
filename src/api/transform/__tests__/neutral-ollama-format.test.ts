@@ -195,7 +195,6 @@ describe("neutral-ollama-format", () => {
 
 			const neutralHistory: NeutralConversationHistory = [
 				{
-					// @ts-expect-error Testing invalid role type
 					role: "tool",
 					content: [{ type: "text", text: "Tool result" }],
 				},
@@ -348,8 +347,8 @@ describe("neutral-ollama-format", () => {
 			console.warn = jest.fn()
 
 			const ollamaHistory: OpenAI.Chat.ChatCompletionMessageParam[] = [
+				// @ts-expect-error Testing invalid function message - missing name property
 				{
-					// @ts-expect-error Testing invalid role type
 					role: "function",
 					content: "Function result",
 				},

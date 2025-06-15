@@ -30,13 +30,10 @@ export class SseTransport implements IMcpTransport {
 			return
 		}
 		try {
-			const { StreamableHTTPServerTransport } = (await import(
-				"@modelcontextprotocol/sdk/server/streamableHttp.js"
-			)) as {
-				StreamableHTTPServerTransport: new (opts: Record<string, unknown>) => StreamableHTTPServerTransportLike
-			}
+			const mod = await import("@modelcontextprotocol/sdk/server/streamableHttp.js")
+			const Transport = mod.StreamableHTTPServerTransport as unknown as new (opts: Record<string, unknown>) => StreamableHTTPServerTransportLike
 
-			this.transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined })
+			this.transport = new Transport({ sessionIdGenerator: undefined })
 			const app = express()
 			app.use(express.json())
 			app.all(this.config.eventsPath!, async (req, res) => {
@@ -47,10 +44,10 @@ export class SseTransport implements IMcpTransport {
 			})
 
 			await new Promise<void>((resolve) => {
-				this.httpServer = app.listen(this.config.port, this.config.hostname, () => resolve())
+				this.httpServer = app.listen(this.config.port || 3000, this.config.hostname || 'localhost', () => resolve())
 			})
 			await this.transport.start()
-			const address = this.httpServer.address()
+			const address = this.httpServer?.address()
 			if (address && typeof address !== "string") {
 				this.port = address.port
 			}

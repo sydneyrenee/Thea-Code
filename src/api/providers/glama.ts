@@ -1,26 +1,22 @@
 import axios from "axios"
-import OpenAI from "openai"
 
 import { ApiHandlerOptions, ModelInfo, glamaDefaultModelId, glamaDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
-import { convertToOpenAiHistory } from "../transform/neutral-openai-format"
 import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
-import { BaseProvider } from "./base-provider"
-import { EXTENSION_ID as EXTENSION_ID_VALUE } from "../../../dist/thea-config"
+import { OpenAiCompatibleHandler } from "./openai-compatible-base"
 import { NeutralConversationHistory } from "../../shared/neutral-history"
-const GLAMA_DEFAULT_TEMPERATURE = 0
 
-export class GlamaHandler extends BaseProvider implements SingleCompletionHandler {
-	protected options: ApiHandlerOptions
-	private client: OpenAI
-
+export class GlamaHandler extends OpenAiCompatibleHandler implements SingleCompletionHandler {
 	constructor(options: ApiHandlerOptions) {
-		super()
-		this.options = options
-		const baseURL = "https://glama.ai/api/gateway/openai/v1"
-		const apiKey = this.options.glamaApiKey ?? "not-provided"
-		this.client = new OpenAI({ baseURL, apiKey })
+		super(options, {
+			apiKey: options.glamaApiKey ?? "not-provided",
+			baseUrl: "https://glama.ai/api/gateway/openai/v1",
+			modelId: options.glamaModelId ?? glamaDefaultModelId,
+			modelInfo: options.glamaModelInfo ?? glamaDefaultModelInfo,
+			includeMaxTokens: false,
+			streamingEnabled: true,
+		})
 	}
 
 	private supportsTemperature(): boolean {
@@ -28,6 +24,10 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {
+		return this.getProviderModelInfo()
+	}
+
+	protected getProviderModelInfo(): { id: string; info: ModelInfo } {
 		const modelId = this.options.glamaModelId
 		const modelInfo = this.options.glamaModelInfo
 
@@ -38,200 +38,33 @@ export class GlamaHandler extends BaseProvider implements SingleCompletionHandle
 		return { id: glamaDefaultModelId, info: glamaDefaultModelInfo }
 	}
 
-	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-		// Convert neutral history to OpenAI format
-		const convertedMessages = convertToOpenAiHistory(messages)
+	override createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// TODO: For now, delegate to OpenAI handler for tool use consistency
+		// In the future, we should extend the OpenAI handler to support:
+		// 1. Custom headers (X-Glama-Metadata)
+		// 2. Cache control for Anthropic models
+		// 3. Custom completion request tracking
+		// 
+		// This eliminates the direct tool_calls parsing that was causing architectural issues
 
-		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-			{ role: "system", content: systemPrompt },
-			...convertedMessages,
-		]
-
-		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
-		if (this.getModel().id.startsWith("anthropic/claude-3")) {
-			openAiMessages[0] = {
-				role: "system",
-				content: [
-					{
-						type: "text",
-						text: systemPrompt,
-						// @ts-expect-error Property 'cache_control' does not exist on type 'MessageContentText'.
-						cache_control: { type: "ephemeral" },
-					},
-				],
-			}
-
-			// Add cache_control to the last two user messages
-			// (note: this works because we only ever add one user message at a time,
-			// but if we added multiple we'd need to mark the user message before the last assistant message)
-			const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
-			lastTwoUserMessages.forEach((msg) => {
-				if (typeof msg.content === "string") {
-					msg.content = [{ type: "text", text: msg.content }]
-				}
-				if (Array.isArray(msg.content)) {
-					// NOTE: this is fine since env details will always be added at the end.
-					// but if it weren't there, and the user added a image_url type message,
-					// it would pop a text part before it and then move it after to the end.
-					let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
-
-					if (!lastTextPart) {
-						lastTextPart = { type: "text", text: "..." }
-						msg.content.push(lastTextPart)
-					}
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					;(lastTextPart as Record<string, any>)["cache_control"] = { type: "ephemeral" }
-				}
-			})
-		}
-
-		// Required by Anthropic
-		// Other providers default to max tokens allowed.
-		let maxTokens: number | undefined
-
-		if (this.getModel().id.startsWith("anthropic/")) {
-			maxTokens = this.getModel().info.maxTokens ?? undefined
-		}
-
-		const requestOptions: OpenAI.Chat.ChatCompletionCreateParams = {
-			model: this.getModel().id,
-			max_tokens: maxTokens,
-			messages: openAiMessages,
-			stream: true,
-		}
-
-		if (this.supportsTemperature()) {
-			requestOptions.temperature = this.options.modelTemperature ?? GLAMA_DEFAULT_TEMPERATURE
-		}
-
-		const { data: completion, response } = await this.client.chat.completions
-			.create(requestOptions, {
-				headers: {
-					"X-Glama-Metadata": JSON.stringify({
-						labels: [
-							{
-								key: "app",
-								value: EXTENSION_ID_VALUE,
-							},
-						],
-					}),
-				},
-			})
-			.withResponse()
-
-		const completionRequestId = response.headers.get("x-completion-request-id")
-
-		for await (const chunk of completion) {
-			const delta = chunk.choices[0]?.delta
-
-			if (delta?.content) {
-				yield {
-					type: "text",
-					text: delta.content,
-				}
-			}
-
-			// Handle tool calls with MCP integration
-			if (delta?.tool_calls) {
-				for (const toolCall of delta.tool_calls) {
-					if (toolCall.function?.name && toolCall.function?.arguments) {
-						try {
-							const toolUseInput = {
-								name: toolCall.function.name,
-								arguments: JSON.parse(toolCall.function.arguments) as Record<string, unknown>,
-							}
-
-							const toolResult = await this.processToolUse(toolUseInput)
-							const toolResultString =
-								typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
-
-							yield {
-								type: "tool_result",
-								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
-								content: toolResultString,
-							}
-						} catch (error) {
-							console.warn("Glama tool use error:", error)
-							yield {
-								type: "tool_result",
-								id: toolCall.id || `${toolCall.function.name}-${Date.now()}`,
-								content: `Error: ${error instanceof Error ? error.message : String(error)}`,
-							}
-						}
-					}
-				}
-			}
-		}
-
-		try {
-			let attempt = 0
-
-			const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-			while (attempt++ < 10) {
-				// In case of an interrupted request, we need to wait for the upstream API to finish processing the request
-				// before we can fetch information about the token usage and cost.
-				const response = await axios.get(
-					`https://glama.ai/api/gateway/v1/completion-requests/${completionRequestId}`,
-					{
-						headers: {
-							Authorization: `Bearer ${this.options.glamaApiKey}`,
-						},
-					},
-				)
-
-				const completionRequest = response.data as {
-					tokenUsage?: {
-						cacheCreationInputTokens?: number
-						cacheReadInputTokens?: number
-						promptTokens?: number
-						completionTokens?: number
-					}
-					totalCostUsd?: string | number
-				}
-
-				if (completionRequest?.tokenUsage && completionRequest?.totalCostUsd) {
-					yield {
-						type: "usage",
-						cacheWriteTokens: completionRequest.tokenUsage.cacheCreationInputTokens || 0,
-						cacheReadTokens: completionRequest.tokenUsage.cacheReadInputTokens || 0,
-						inputTokens: completionRequest.tokenUsage.promptTokens || 0,
-						outputTokens: completionRequest.tokenUsage.completionTokens || 0,
-						totalCost: parseFloat(String(completionRequest.totalCostUsd)),
-					}
-
-					break
-				}
-
-				await delay(200)
-			}
-		} catch (error) {
-			console.error("Error fetching Glama completion details", error)
-		}
+		// Delegate to OpenAI handler - this ensures consistent tool use handling
+		// The tool_calls will be properly extracted by the OpenAI handler
+		// and routed through MCP integration
+		return this.openAiHandler.createMessage(systemPrompt, messages)
 	}
 
 	async completePrompt(prompt: string): Promise<string> {
+		// For non-streaming completion, use the unified approach
 		try {
-			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
-				model: this.getModel().id,
-				messages: [{ role: "user", content: prompt }],
+			let result = ""
+			for await (const chunk of this.createMessage("", [{ role: "user", content: [{ type: "text", text: prompt }] }])) {
+				if (chunk.type === "text") {
+					result += chunk.text
+				}
 			}
-
-			if (this.supportsTemperature()) {
-				requestOptions.temperature = this.options.modelTemperature ?? GLAMA_DEFAULT_TEMPERATURE
-			}
-
-			if (this.getModel().id.startsWith("anthropic/")) {
-				requestOptions.max_tokens = this.getModel().info.maxTokens
-			}
-
-			const response = await this.client.chat.completions.create(requestOptions)
-			return response.choices[0]?.message.content || ""
+			return result
 		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(`Glama completion error: ${error.message}`)
-			}
-			throw error
+			throw new Error(`Glama completion error: ${error instanceof Error ? error.message : String(error)}`)
 		}
 	}
 }
@@ -280,5 +113,3 @@ export async function getGlamaModels() {
 
 	return models
 }
-
-// Note: countTokens will use the default implementation in BaseProvider which expects NeutralMessageContent

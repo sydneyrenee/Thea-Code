@@ -19,8 +19,15 @@ export function convertToOpenAiHistory(
 		// Create a properly typed message based on role
 		let openAiMessage: OpenAI.Chat.ChatCompletionMessageParam
 
+		// Check if this message contains tool results, which should override the role
+		const hasToolResults = Array.isArray(neutralMessage.content) && 
+			neutralMessage.content.some((block) => block.type === "tool_result")
+
+		// Use effective role: if there are tool results, treat as "tool" role
+		const effectiveRole = hasToolResults ? "tool" : neutralMessage.role
+
 		// Initialize with the appropriate role-specific type
-		switch (neutralMessage.role) {
+		switch (effectiveRole) {
 			case "user":
 				openAiMessage = {
 					role: "user",
@@ -98,7 +105,7 @@ export function convertToOpenAiHistory(
 					// If no text blocks, set content to null (OpenAI allows this when tool_calls is present)
 					openAiMessage.content = null
 				}
-			} else if (neutralMessage.role === "tool") {
+			} else if (effectiveRole === "tool") {
 				// For tool messages, use the tool_call_id format
 				const toolResultBlock = neutralMessage.content.find(
 					(block) => block.type === "tool_result",
@@ -162,13 +169,23 @@ export function convertToOpenAiContentBlocks(
 				text: block.text,
 			})
 		} else if (block.type === "image") {
-			const imageBlock = block
-			result.push({
-				type: "image_url",
-				image_url: {
-					url: `data:${imageBlock.source.media_type as string};base64,${imageBlock.source.data as string}`,
-				},
-			})
+			// Use proper type guard for image source
+			if (block.source.type === "base64") {
+				result.push({
+					type: "image_url",
+					image_url: {
+						url: `data:${block.source.media_type};base64,${block.source.data}`,
+					},
+				})
+			} else {
+				// Handle image_url type
+				result.push({
+					type: "image_url",
+					image_url: {
+						url: block.source.url,
+					},
+				})
+			}
 		} else if (block.type === "tool_use" || block.type === "tool_result") {
 			// Tool use and tool result blocks are handled separately in the message conversion
 			// Return a placeholder that will be filtered out later
@@ -261,7 +278,7 @@ export function convertToNeutralHistoryFromOpenAi(
 		interface AssistantMessageWithToolCalls extends OpenAI.Chat.ChatCompletionAssistantMessageParam {
 			tool_calls: Array<{
 				id: string
-				type: string
+				type: "function"
 				function: {
 					name: string
 					arguments: string

@@ -1,7 +1,7 @@
 // npx jest src/api/transform/__tests__/gemini-format.test.ts
 
 import type { NeutralImageContentBlock, NeutralTextContentBlock, NeutralConversationHistory } from "../../../shared/neutral-history"
-import { convertToGeminiHistory } from "../gemini-format"
+import { convertToGeminiHistory } from "../neutral-gemini-format"
 
 describe("convertToGeminiHistory", () => {
 	it("should convert a simple text message", () => {

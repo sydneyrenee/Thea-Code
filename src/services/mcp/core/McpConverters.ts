@@ -1,6 +1,7 @@
 import { xmlToolUseToJson, openAiFunctionCallToNeutralToolUse } from "../../../utils/json-xml-bridge"
 import { NeutralToolUseRequest, NeutralToolResult } from "../types/McpToolTypes"
 import { ToolDefinition } from "../types/McpProviderTypes"
+import { NeutralImageContentBlock } from "../../../shared/neutral-history"
 
 /**
  * McpConverters provides utility functions for converting between different tool use formats
@@ -111,8 +112,13 @@ export class McpConverters {
 				if (item.type === "text") {
 					return item.text
 				} else if (item.type === "image") {
-					const source = (item as { source: { media_type: string; data: string } }).source
-					return `<image type="${source.media_type}" data="${source.data}" />`
+					// Type guard to ensure we have an image item with source
+					const imageItem = item as unknown as NeutralImageContentBlock
+					if (imageItem.source && imageItem.source.type === "base64") {
+						return `<image type="${imageItem.source.media_type}" data="${imageItem.source.data}" />`
+					} else if (imageItem.source && imageItem.source.type === "image_url") {
+						return `<image url="${imageItem.source.url}" />`
+					}
 				}
 				return ""
 			})
@@ -157,7 +163,7 @@ export class McpConverters {
 	public static toolDefinitionsToOpenAiFunctions(tools: Map<string, ToolDefinition>): Array<Record<string, unknown>> {
 		const functions: Array<Record<string, unknown>> = []
 
-		for (const definition of tools.values()) {
+		for (const [, definition] of tools.entries()) {
 			functions.push({
 				name: definition.name,
 				description: definition.description || "",

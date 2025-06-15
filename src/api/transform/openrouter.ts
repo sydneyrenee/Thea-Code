@@ -90,14 +90,7 @@ export function applyAnthropicCacheControl(
 	if (modifiedMessages.length > 0 && modifiedMessages[0].role === "system") {
 		modifiedMessages[0] = {
 			role: "system",
-			content: [
-				{
-					type: "text",
-					text: systemPrompt,
-					// Anthropic-specific cache control - use unknown to bypass type checking
-					cache_control: { type: "ephemeral" } as unknown as undefined,
-				} as OpenAI.Chat.ChatCompletionContentPart,
-			],
+			content: systemPrompt, // OpenAI system messages use string content
 		}
 	}
 

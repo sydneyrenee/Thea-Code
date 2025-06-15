@@ -170,7 +170,7 @@ describe("convertAnthropicMessageToVertexGemini", () => {
 				{
 					type: "tool_result",
 					tool_use_id: "calculator-123",
-					// @ts-expect-error Testing null content
+					// @ts-expect-error Testing edge case with null content
 					content: null, // Empty content
 				},
 			],

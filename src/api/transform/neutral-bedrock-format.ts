@@ -67,7 +67,7 @@ export function convertToBedrockConverseMessages(neutralHistory: NeutralConversa
 		}
 
 		// Process complex content types
-		const content = neutralMessage.content.map((block) => {
+		const content = neutralMessage.content.map((block): ContentBlock => {
 			if (block.type === "text") {
 				return {
 					text: block.text || "",
@@ -78,44 +78,48 @@ export function convertToBedrockConverseMessages(neutralHistory: NeutralConversa
 				// Convert base64 string to byte array if needed
 				let byteArray: Uint8Array
 
-				// Safely get the data from the source
-				// Use type assertion to avoid unsafe assignment
-				const sourceData = block.source?.data as string | undefined
-				if (block.source && typeof sourceData === "string") {
-					// Use explicit string type to avoid unsafe call
-					const safeBase64: string = sourceData
-					try {
-						// Use explicit string type to avoid unsafe argument
-						const binaryString = atob(safeBase64)
-						byteArray = new Uint8Array(binaryString.length)
-						for (let i = 0; i < binaryString.length; i++) {
-							byteArray[i] = binaryString.charCodeAt(i)
+				// Safely get the data from the source with proper type guard
+				if (block.source && block.source.type === "base64") {
+					const sourceData = block.source.data
+					if (typeof sourceData === "string") {
+						// Use explicit string type to avoid unsafe call
+						const safeBase64: string = sourceData
+						try {
+							// Use explicit string type to avoid unsafe argument
+							const binaryString = atob(safeBase64)
+							byteArray = new Uint8Array(binaryString.length)
+							for (let i = 0; i < binaryString.length; i++) {
+								byteArray[i] = binaryString.charCodeAt(i)
+							}
+						} catch (error) {
+							console.error("Error decoding base64 data:", error)
+							byteArray = new Uint8Array(0)
 						}
-					} catch (error) {
-						console.error("Error decoding base64 data:", error)
+					} else {
 						byteArray = new Uint8Array(0)
 					}
-				} else if (block.source && sourceData) {
-					byteArray = new Uint8Array(sourceData as unknown as ArrayBuffer)
-				} else {
-					byteArray = new Uint8Array(0)
-				}
 
-				// Extract format from media_type (e.g., "image/jpeg" -> "jpeg")
-				const format = getFormatFromMediaType(block.source?.media_type)
+					// Extract format from media_type (e.g., "image/jpeg" -> "jpeg")
+					const format = getFormatFromMediaType(block.source.media_type)
 
-				if (!["png", "jpeg", "gif", "webp"].includes(format)) {
-					throw new Error(`Unsupported image format: ${format}`)
-				}
+					if (!["png", "jpeg", "gif", "webp"].includes(format)) {
+						throw new Error(`Unsupported image format: ${format}`)
+					}
 
-				return {
-					image: {
-						format: format as "png" | "jpeg" | "gif" | "webp",
-						source: {
-							bytes: byteArray,
+					return {
+						image: {
+							format: format as "png" | "jpeg" | "gif" | "webp",
+							source: {
+								bytes: byteArray,
+							},
 						},
-					},
-				} as ContentBlock
+					} as ContentBlock
+				} else {
+					// Handle image_url type or fallback
+					return {
+						text: "[Image content not supported in this format]",
+					} as ContentBlock
+				}
 			}
 
 			if (block.type === "tool_use") {
@@ -303,7 +307,7 @@ export function convertToBedrockContentBlocks(neutralContent: NeutralMessageCont
 		return [{ text: neutralContent } as ContentBlock]
 	}
 
-	return neutralContent.map((block) => {
+	return neutralContent.map((block): ContentBlock => {
 		if (block.type === "text") {
 			return {
 				text: block.text || "",
@@ -314,46 +318,49 @@ export function convertToBedrockContentBlocks(neutralContent: NeutralMessageCont
 			// Convert base64 string to byte array
 			let byteArray: Uint8Array
 
-			// Safely get the data from the source
-			// Use type assertion to avoid unsafe assignment
-			const sourceData = block.source?.data as string | undefined
-			if (block.source && typeof sourceData === "string") {
-				// Use explicit string type to avoid unsafe call
-				const safeBase64: string = sourceData
-				try {
-					// Use explicit string type to avoid unsafe argument
-					const binaryString = atob(safeBase64)
-					byteArray = new Uint8Array(binaryString.length)
-					for (let i = 0; i < binaryString.length; i++) {
-						byteArray[i] = binaryString.charCodeAt(i)
+			// Safely get the data from the source with proper type guard
+			if (block.source.type === "base64") {
+				const sourceData = block.source.data
+				if (typeof sourceData === "string") {
+					// Use explicit string type to avoid unsafe call
+					const safeBase64: string = sourceData
+					try {
+						// Use explicit string type to avoid unsafe argument
+						const binaryString = atob(safeBase64)
+						byteArray = new Uint8Array(binaryString.length)
+						for (let i = 0; i < binaryString.length; i++) {
+							byteArray[i] = binaryString.charCodeAt(i)
+						}
+					} catch (error) {
+						console.error("Error decoding base64 data:", error)
+						byteArray = new Uint8Array(0)
 					}
-				} catch (error) {
-					console.error("Error decoding base64 data:", error)
+				} else {
 					byteArray = new Uint8Array(0)
 				}
-			} else if (block.source && sourceData) {
-				byteArray = new Uint8Array(sourceData as unknown as ArrayBuffer)
-			} else {
-				byteArray = new Uint8Array(0)
-			}
 
-			// Extract format from media_type
-			// Use type assertion to avoid unsafe assignment and call
-			const mediaType = block.source?.media_type as string | undefined
-			const format: string = typeof mediaType === "string" ? mediaType.split("/")[1] || "" : ""
+				// Extract format from media_type with proper type guard
+				const mediaType = block.source.media_type
+				const format: string = mediaType.split("/")[1] || ""
 
-			if (!["png", "jpeg", "gif", "webp"].includes(format)) {
-				throw new Error(`Unsupported image format: ${format}`)
-			}
+				if (!["png", "jpeg", "gif", "webp"].includes(format)) {
+					throw new Error(`Unsupported image format: ${format}`)
+				}
 
-			return {
-				image: {
-					format: format as "png" | "jpeg" | "gif" | "webp",
-					source: {
-						bytes: byteArray,
+				return {
+					image: {
+						format: format as "png" | "jpeg" | "gif" | "webp",
+						source: {
+							bytes: byteArray,
+						},
 					},
-				},
-			} as ContentBlock
+				} as ContentBlock
+			} else {
+				// Handle image_url type or fallback
+				return {
+					text: "[Image content not supported in this format]",
+				} as ContentBlock
+			}
 		}
 
 		// Other block types are not directly supported in content blocks

@@ -2,7 +2,7 @@
 
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 
-import { convertToMistralMessages } from "../mistral-format"
+import { convertToMistralMessages } from "../neutral-mistral-format"
 
 describe("convertToMistralMessages", () => {
 	it("should convert simple text messages for user and assistant roles", () => {

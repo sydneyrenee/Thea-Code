@@ -56,7 +56,7 @@ describe("simple-format", () => {
 				{
 					type: "tool_result",
 					tool_use_id: "tool-1",
-					content: "Result text",
+					content: [{ type: "text", text: "Result text" }],
 				},
 			] as Array<NeutralTextContentBlock | NeutralToolResultContentBlock>
 			expect(convertToSimpleContent(content)).toBe("Tool result:\nResult text")

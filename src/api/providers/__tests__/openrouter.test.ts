@@ -132,10 +132,13 @@ describe("OpenRouterHandler", () => {
 		})()
 
 		// Mock OpenAI chat.completions.create
-
 		const mockCreate = jest
 			.spyOn(OpenAI.prototype.chat.completions, "create")
-			.mockImplementation(() => mockStream as unknown as { type: string })
+			.mockImplementation(() => {
+				// Return the mock stream directly, casting to the expected return type
+				// This works because the OpenRouter handler casts it to AsyncIterable anyway
+				return mockStream as unknown as ReturnType<typeof OpenAI.prototype.chat.completions.create>
+			})
 
 		const systemPrompt = "test system prompt"
 		const messages: NeutralMessage[] = [{ role: "user", content: "test message" }]
@@ -200,7 +203,9 @@ describe("OpenRouterHandler", () => {
 
 		const mockCreate = jest
 			.spyOn(OpenAI.prototype.chat.completions, "create")
-			.mockImplementation(() => mockStream as unknown as { type: string })
+			.mockImplementation(() => {
+				return mockStream as unknown as ReturnType<typeof OpenAI.prototype.chat.completions.create>
+			})
 		;(axios.get as jest.Mock).mockResolvedValue({ data: { data: {} } })
 
 		await handler.createMessage("test", []).next()
@@ -238,7 +243,9 @@ describe("OpenRouterHandler", () => {
 
 		const mockCreate = jest
 			.spyOn(OpenAI.prototype.chat.completions, "create")
-			.mockImplementation(() => mockStream as unknown as { type: string })
+			.mockImplementation(() => {
+				return mockStream as unknown as ReturnType<typeof OpenAI.prototype.chat.completions.create>
+			})
 		;(axios.get as jest.Mock).mockResolvedValue({ data: { data: {} } })
 
 		const messages: NeutralMessage[] = [
@@ -273,7 +280,9 @@ describe("OpenRouterHandler", () => {
 		})()
 
 		jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(
-			() => mockStream as unknown as { type: string },
+			() => {
+				return mockStream as unknown as ReturnType<typeof OpenAI.prototype.chat.completions.create>
+			}
 		)
 
 		const generator = handler.createMessage("test", [])
@@ -315,7 +324,7 @@ describe("OpenRouterHandler", () => {
 
 	test("completePrompt handles API errors", async () => {
 		const handler = new OpenRouterHandler(mockOptions)
-		const mockError = new OpenAI.APIError(500, { error: { message: "API Error" } }, "API Error", {})
+		const mockError = new OpenAI.APIError(500, { error: { message: "API Error" } }, "API Error", new Headers())
 
 		jest.spyOn(OpenAI.prototype.chat.completions, "create").mockRejectedValue(mockError)
 
@@ -359,12 +368,14 @@ describe("OpenRouterHandler", () => {
 		})()
 
 		jest.spyOn(OpenAI.prototype.chat.completions, "create").mockImplementation(
-			() => mockStream as unknown as { type: string },
+			() => {
+				return mockStream as unknown as ReturnType<typeof OpenAI.prototype.chat.completions.create>
+			}
 		)
 
 		const processSpy = jest
-			.spyOn(handler as unknown as { type: string }, "processToolUse")
-			.mockResolvedValue({ result: "ok" })
+			.spyOn(handler as unknown as { processToolUse: (content: string | Record<string, unknown>) => Promise<string> }, "processToolUse")
+			.mockResolvedValue("ok")
 
 		const generator = handler.createMessage("test", [])
 		const chunks: ApiStreamChunk[] = []

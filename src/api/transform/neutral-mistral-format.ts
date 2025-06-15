@@ -53,11 +53,20 @@ export function convertToMistralMessages(neutralHistory: NeutralConversationHist
 						role: "user",
 						content: nonToolMessages.map((part) => {
 							if (part.type === "image") {
-								return {
-									type: "image_url",
-									imageUrl: {
-										url: `data:${part.source.media_type as string};base64,${part.source.data as string}`,
-									},
+								// Use proper type guard for image source
+								if (part.source.type === "base64") {
+									return {
+										type: "image_url",
+										imageUrl: {
+											url: `data:${part.source.media_type};base64,${part.source.data}`,
+										},
+									}
+								} else {
+									// Handle image_url type
+									return {
+										type: "text",
+										text: "[Image content not supported in this format]",
+									}
 								}
 							}
 							// Ensure type safety with proper type guard
@@ -144,11 +153,20 @@ export function convertToMistralContent(neutralContent: NeutralMessageContent): 
 		if (block.type === "text") {
 			return { type: "text", text: block.text }
 		} else if (block.type === "image") {
-			return {
-				type: "image_url",
-				imageUrl: {
-					url: `data:${block.source.media_type as string};base64,${block.source.data as string}`,
-				},
+			// Use proper type guard for image source
+			if (block.source.type === "base64") {
+				return {
+					type: "image_url",
+					imageUrl: {
+						url: `data:${block.source.media_type};base64,${block.source.data}`,
+					},
+				}
+			} else {
+				// Handle image_url type
+				return {
+					type: "text",
+					text: "[Image content not supported in this format]",
+				}
 			}
 		}
 		// Other block types are not directly supported in Mistral's content format

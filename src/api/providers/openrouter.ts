@@ -3,7 +3,7 @@ import OpenAI from "openai"
 
 import { ApiHandlerOptions, ModelInfo, openRouterDefaultModelId, openRouterDefaultModelInfo } from "../../shared/api"
 import { parseApiPrice } from "../../utils/cost"
-import { convertToOpenAiMessages } from "../transform/openai-format"
+import { convertToOpenAiHistory } from "../transform/neutral-openai-format"
 import { ApiStreamChunk, ApiStreamUsageChunk } from "../transform/stream"
 
 import { convertToR1Format } from "../transform/r1-format"
@@ -76,7 +76,7 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 			}
 		}
 
-		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiMessages(history)
+		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiHistory(history)
 
 		// DeepSeek highly recommends using user instead of system role.
 		if (modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning") {

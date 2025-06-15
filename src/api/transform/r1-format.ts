@@ -1,6 +1,6 @@
 import OpenAI from "openai"
 import type { NeutralConversationHistory } from "../../shared/neutral-history"
-import { convertToOpenAiMessages } from "./openai-format"
+import { convertToOpenAiHistory } from "./neutral-openai-format"
 
 type ContentPartText = OpenAI.Chat.ChatCompletionContentPartText
 type ContentPartImage = OpenAI.Chat.ChatCompletionContentPartImage
@@ -16,7 +16,7 @@ type Message = OpenAI.Chat.ChatCompletionMessageParam
  * @returns Array of OpenAI messages where consecutive messages with the same role are combined
  */
 export function convertToR1Format(neutralHistory: NeutralConversationHistory): Message[] {
-	const messages = convertToOpenAiMessages(neutralHistory)
+	const messages = convertToOpenAiHistory(neutralHistory)
 	return messages.reduce<Message[]>((merged, message) => {
 		const lastMessage = merged[merged.length - 1]
 		let messageContent: string | (ContentPartText | ContentPartImage)[] = ""
@@ -30,10 +30,10 @@ export function convertToR1Format(neutralHistory: NeutralConversationHistory): M
 			message.content.forEach((part) => {
 				if (part.type === "text") {
 					textParts.push(part.text)
-				}
-				if (part.type === "image_url") {
+				} else if (part.type === "image_url") {
 					hasImages = true
-					imageParts.push(part)
+					// Type assertion is safe here since we checked part.type === "image_url"
+					imageParts.push(part as ContentPartImage)
 				}
 			})
 

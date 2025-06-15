@@ -45,7 +45,7 @@ export class StdioTransport implements IMcpTransport {
 		}
 		try {
 			const mod = await import("@modelcontextprotocol/sdk/server/stdio.js")
-			const Transport = mod.StdioServerTransport as new (
+			const Transport = mod.StdioServerTransport as unknown as new (
 				opts: StdioTransportConfig & { stderr: string },
 			) => StdioServerTransportLike
 			this.transport = new Transport({

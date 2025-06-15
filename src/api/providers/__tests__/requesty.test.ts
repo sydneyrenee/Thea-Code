@@ -4,12 +4,12 @@ import type { ApiStreamChunk } from "../../transform/stream"
 import OpenAI from "openai"
 import { ApiHandlerOptions } from "../../../shared/api" // ModelInfo, requestyDefaultModelInfo were unused
 import { RequestyHandler } from "../requesty"
-import { convertToOpenAiMessages } from "../../transform/openai-format"
+import { convertToOpenAiHistory } from "../../transform/neutral-openai-format"
 import { convertToR1Format } from "../../transform/r1-format"
 import { API_REFERENCES } from "../../../../dist/thea-config" // Import branded constants
 // Mock OpenAI and transform functions
 jest.mock("openai")
-jest.mock("../../transform/openai-format")
+jest.mock("../../transform/neutral-openai-format")
 jest.mock("../../transform/r1-format")
 
 describe("RequestyHandler", () => {
@@ -56,7 +56,7 @@ describe("RequestyHandler", () => {
 		)
 
 		// Mock transform functions
-		;(convertToOpenAiMessages as jest.Mock).mockImplementation((messages: any) => messages) // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+		;(convertToOpenAiHistory as jest.Mock).mockImplementation((messages: any) => messages) // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 		;(convertToR1Format as jest.Mock).mockImplementation((messages: any) => messages) // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 
 		// Create handler instance

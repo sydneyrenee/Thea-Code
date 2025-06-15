@@ -42,7 +42,7 @@ export class McpToolRouter extends EventEmitter {
 	private constructor(config?: SseTransportConfig) {
 		super()
 		this.sseConfig = config
-		this.mcpToolSystem = McpToolExecutor.getInstance(config)
+		this.mcpToolSystem = McpToolExecutor.getInstance()
 		console.log("McpToolRouter constructor - this.mcpToolSystem:", this.mcpToolSystem)
 
 		// Forward events from the MCP tool system

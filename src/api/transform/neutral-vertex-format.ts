@@ -51,17 +51,25 @@ export function convertToVertexClaudeMessage(neutralMessage: NeutralMessage): Ve
 				return {
 					type: "text",
 					text: block.text,
-				} as VertexTextBlock
-			} else if (block.type === "image") {
+				} as VertexTextBlock		} else if (block.type === "image") {
+			// Use proper type guard for image source
+			if (block.source.type === "base64") {
 				return {
 					type: "image",
 					source: {
 						type: "base64",
-						media_type: block.source.media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-						data: block.source.data as string,
+						media_type: block.source.media_type,
+						data: block.source.data,
 					},
 				} as VertexImageBlock
+			} else {
+				// Handle image_url type or fallback
+				return {
+					type: "text",
+					text: "[Image content not supported in this format]",
+				} as VertexTextBlock
 			}
+		}
 			// Other block types are not directly supported in Vertex Claude
 			return {
 				type: "text",
@@ -153,13 +161,18 @@ export function convertToVertexGeminiMessage(neutralMessage: NeutralMessage): Co
 				if (block.type === "text") {
 					return { text: block.text } as TextPart
 				} else if (block.type === "image") {
-					// Convert Neutral image source to Gemini image part
-					return {
-						inlineData: {
-							mimeType: block.source.media_type as string,
-							data: block.source.data as string, // Base64 data
-						},
-					} as InlineDataPart
+					// Convert Neutral image source to Gemini image part with proper type guard
+					if (block.source.type === "base64") {
+						return {
+							inlineData: {
+								mimeType: block.source.media_type,
+								data: block.source.data, // Base64 data
+							},
+						} as InlineDataPart
+					} else {
+						// Handle image_url type or fallback
+						return { text: "[Image content not supported in this format]" } as TextPart
+					}
 				} else if (block.type === "tool_use") {
 					// Convert to Gemini function call format
 					return {
@@ -197,13 +210,14 @@ export function convertToVertexGeminiMessage(neutralMessage: NeutralMessage): Co
 						// Add image parts if any
 						if (imageParts.length > 0) {
 							imageParts.forEach((part) => {
-								const source = part.source as { media_type: string; data: string }
-								parts.push({
-									inlineData: {
-										mimeType: source.media_type,
-										data: source.data,
-									},
-								} as InlineDataPart)
+								if (part.type === "image" && part.source.type === "base64") {
+									parts.push({
+										inlineData: {
+											mimeType: part.source.media_type,
+											data: part.source.data,
+										},
+									} as InlineDataPart)
+								}
 							})
 						}
 
@@ -243,14 +257,23 @@ export function convertToVertexClaudeContentBlocks(neutralContent: NeutralMessag
 				text: block.text,
 			} as VertexTextBlock
 		} else if (block.type === "image") {
-			return {
-				type: "image",
-				source: {
-					type: "base64",
-					media_type: block.source.media_type as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-					data: block.source.data as string,
-				},
-			} as VertexImageBlock
+			// Use proper type guard for image source
+			if (block.source.type === "base64") {
+				return {
+					type: "image",
+					source: {
+						type: "base64",
+						media_type: block.source.media_type,
+						data: block.source.data,
+					},
+				} as VertexImageBlock
+			} else {
+				// Handle image_url type or fallback
+				return {
+					type: "text",
+					text: "[Image content not supported in this format]",
+				} as VertexTextBlock
+			}
 		}
 		// Other block types are not directly supported
 		return {

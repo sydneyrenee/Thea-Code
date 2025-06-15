@@ -71,7 +71,7 @@ export class McpIntegration extends EventEmitter {
 		super()
 		this.sseConfig = config
 		this.mcpToolRouter = McpToolRouter.getInstance(config)
-		this.mcpToolSystem = McpToolExecutor.getInstance(config)
+		this.mcpToolSystem = McpToolExecutor.getInstance()
 
 		// Forward events from the MCP tool router
 		this.mcpToolRouter.on("tool-registered", (name: string) => this.emit("tool-registered", name))

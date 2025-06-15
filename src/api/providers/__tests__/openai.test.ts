@@ -228,15 +228,16 @@ describe("OpenAiHandler", () => {
 		await expect(handler.completePrompt("Test prompt")).rejects.toThrow("OpenAI completion error: API Error")
 	})
 
-		it("should handle empty response", async () => {
-			await openaiTeardown()
-			await openaiSetup()(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
-				200,
-				{ choices: [{ message: { content: "" } }] },
-			])
-			const result = await handler.completePrompt("Test prompt")
-			expect(result).toBe("")
-		})
+	it("should handle empty response", async () => {
+		await openaiTeardown()
+		await openaiSetup();
+		(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
+			200,
+			{ choices: [{ message: { content: "" } }] },
+		])
+		const result = await handler.completePrompt("Test prompt")
+		expect(result).toBe("")
+	})
 	})
 
 	describe("getModel", () => {

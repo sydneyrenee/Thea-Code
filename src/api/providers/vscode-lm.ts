@@ -3,7 +3,6 @@ import { SingleCompletionHandler } from "../"
 import { calculateApiCostAnthropic } from "../../utils/cost"
 import { ApiStream } from "../transform/stream"
 import { convertToVsCodeLmMessages } from "../transform/vscode-lm-format"
-import { convertToAnthropicHistory } from "../transform/neutral-anthropic-format"
 import { SELECTOR_SEPARATOR, stringifyVsCodeLmModelSelector } from "../../shared/vsCodeSelectorUtils"
 import { BaseProvider } from "./base-provider"
 import { ApiHandlerOptions, ModelInfo, openAiModelInfoSaneDefaults } from "../../shared/api"
@@ -376,13 +375,12 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 		// Clean system prompt and messages
 		const cleanedSystemPrompt = this.cleanTerminalOutput(systemPrompt)
 
-		const anthropicMessages = convertToAnthropicHistory(
-			messages.filter((msg) => msg.role === "user" || msg.role === "assistant"),
-		)
+		// Work directly with neutral messages - filter to only user/assistant
+		const filteredMessages = messages.filter((msg) => msg.role === "user" || msg.role === "assistant")
 
 		// Prepend system prompt to the first user message if it exists
 		if (cleanedSystemPrompt) {
-			const firstUserMessage = anthropicMessages.find((msg) => msg.role === "user")
+			const firstUserMessage = filteredMessages.find((msg) => msg.role === "user")
 			if (firstUserMessage) {
 				if (typeof firstUserMessage.content === "string") {
 					firstUserMessage.content = cleanedSystemPrompt + "\n" + firstUserMessage.content
@@ -391,19 +389,19 @@ export class VsCodeLmHandler extends BaseProvider implements SingleCompletionHan
 				}
 			} else {
 				// If no user message, add system prompt as a new user message
-				anthropicMessages.unshift({ role: "user", content: cleanedSystemPrompt })
+				filteredMessages.unshift({ role: "user", content: cleanedSystemPrompt })
 			}
 		}
 
-		const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = convertToVsCodeLmMessages(anthropicMessages)
+		const vsCodeLmMessages: vscode.LanguageModelChatMessage[] = convertToVsCodeLmMessages(filteredMessages)
 
 		// If we had any system or tool messages filtered out, log them
-		const filteredMessages = messages.filter(
+		const unsupportedMessages = messages.filter(
 			(msg) => msg.role !== "user" && msg.role !== "assistant" && msg.role !== "system" && msg.role !== "tool",
 		)
-		if (filteredMessages.length > 0) {
+		if (unsupportedMessages.length > 0) {
 			console.debug(
-				`${TEXT_PATTERNS.logPrefix()} Filtered out ${filteredMessages.length} messages with incompatible roles for Anthropic format`,
+				`${TEXT_PATTERNS.logPrefix()} Filtered out ${unsupportedMessages.length} messages with incompatible roles for VS Code LM format`,
 			)
 		}
 

@@ -142,33 +142,33 @@ describe("OllamaHandler", () => {
 				;(convertToOllamaHistory as jest.Mock).mockReturnValue([
 					{ role: "system", content: "Existing system prompt" },
 					{ role: "user", content: "Hello" },
-				])
+				])			// Create neutral history
+			const neutralHistory: NeutralConversationHistory = [
+				{ role: "system", content: [{ type: "text", text: "Existing system prompt" }] },
+				{ role: "user", content: [{ type: "text", text: "Hello" }] },
+			]
 
-				// Create neutral history
-				const neutralHistory: NeutralConversationHistory = [
-					{ role: "system", content: [{ type: "text", text: "Existing system prompt" }] },
-					{ role: "user", content: [{ type: "text", text: "Hello" }] },
-				]
-
-				nock("http://localhost:10000")
-					.post("/v1/chat/completions")
-					.reply(() => {
-						const stream = new Readable({ read() {} })
-						const deltas = [{ content: "Hello" }, { content: " world" }]
-						for (const d of deltas) {
-							const chunk = {
-								id: "id",
-								object: "chat.completion.chunk",
-								created: 0,
-								model: "test",
-								choices: [{ delta: d, index: 0, finish_reason: null }],
-							}
-							stream.push(`data: ${JSON.stringify(chunk)}\n\n`)
+			let requestBody: Record<string, unknown> | undefined
+			nock("http://localhost:10000")
+				.post("/v1/chat/completions")
+				.reply((_uri: string, body: unknown) => {
+					requestBody = body as Record<string, unknown>
+					const stream = new Readable({ read() {} })
+					const deltas = [{ content: "Hello" }, { content: " world" }]
+					for (const d of deltas) {
+						const chunk = {
+							id: "id",
+							object: "chat.completion.chunk",
+							created: 0,
+							model: "test",
+							choices: [{ delta: d, index: 0, finish_reason: null }],
 						}
-						stream.push("data: [DONE]\n\n")
-						stream.push(null)
-						return [200, stream]
-					})
+						stream.push(`data: ${JSON.stringify(chunk)}\n\n`)
+					}
+					stream.push("data: [DONE]\n\n")
+					stream.push(null)
+					return [200, stream]
+				})
 
 				const stream = handler.createMessage("You are helpful.", neutralHistory)
 

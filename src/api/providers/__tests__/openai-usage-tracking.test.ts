@@ -12,7 +12,7 @@ beforeEach(async () => {
 	await openaiTeardown()
 	await openaiSetup()
 	requestBody = undefined
-	;(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", function (_uri, body) {
+	;(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", function (_uri: any, body: any) {
 		requestBody = body
 		if (!body.stream) {
 			return [

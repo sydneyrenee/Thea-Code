@@ -67,13 +67,16 @@ describe("GeminiHandler", () => {
 					},
 				},
 			}
+		// Setup the mock implementation
+		const mockGenerateContentStream = jest.fn().mockResolvedValue(mockStream)
 
-			// Setup the mock implementation
-			const mockGenerateContentStream = jest.fn().mockResolvedValue(mockStream)
-
-			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
+		const mockClient = {
+			getGenerativeModel: jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
-			})
+			}),
+		}
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+		;(handler as any)["client"] = mockClient
 
 			const stream = handler.createMessage(systemPrompt, mockMessages)
 			const chunks = []
@@ -97,14 +100,13 @@ describe("GeminiHandler", () => {
 				inputTokens: 10,
 				outputTokens: 5,
 			})
-
-			// Verify the model configuration
-
-			expect((handler["client"] as unknown as { type: string }).getGenerativeModel).toHaveBeenCalledWith(
-				{
-					model: "gemini-2.0-flash-thinking-exp-1219",
-					systemInstruction: systemPrompt,
-				},
+		// Verify the model configuration
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+		expect((handler as any)["client"].getGenerativeModel).toHaveBeenCalledWith(
+			{
+				model: "gemini-2.0-flash-thinking-exp-1219",
+				systemInstruction: systemPrompt,
+			},
 				{
 					baseUrl: undefined,
 				},

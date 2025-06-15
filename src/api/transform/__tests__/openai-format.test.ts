@@ -3,8 +3,6 @@
 import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import OpenAI from "openai"
 
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-
 import { convertToOpenAiMessages } from "../openai-format"
 
 describe("convertToOpenAiMessages", () => {
@@ -116,7 +114,12 @@ describe("convertToOpenAiMessages", () => {
 					{
 						type: "tool_result",
 						tool_use_id: "weather-123",
-						content: "Current temperature in London: 20°C",
+						content: [
+							{
+								type: "text",
+								text: "Current temperature in London: 20°C",
+							},
+						],
 					},
 				],
 			},

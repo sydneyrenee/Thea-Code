@@ -1,4 +1,4 @@
-import * as fs from "fs"
+import * as fs from "node:fs/promises"
 import * as path from "path"
 
 import { build, filesystem, GluegunPrompt } from "gluegun"
@@ -40,7 +40,7 @@ async function runLanguage({ runId, model, language }: { runId: number; model: s
 	const languagePath = path.resolve(exercisesPath, language)
 
 	try {
-		await fs.promises.access(languagePath)
+		await fs.access(languagePath)
 	} catch {
 		console.error(`Language directory ${languagePath} does not exist`)
 		process.exit(1)
@@ -78,7 +78,7 @@ async function runExercise({
 	}
 
 	try {
-		await fs.promises.access(path.resolve(workspacePath, "usage.json"))
+		await fs.access(path.resolve(workspacePath, "usage.json"))
 		console.log(`Test result exists for ${language} / ${exercise}, skipping`)
 		return
 	} catch {
@@ -141,7 +141,7 @@ async function createRun({ model }: { model: string }): Promise<{ id: number; mo
 
 	const {
 		run: [run],
-	} = (await response.json()) as { run: [unknown] }
+	} = (await response.json()) as { run: [{ id: number; model: string }] }
 	return run
 }
 

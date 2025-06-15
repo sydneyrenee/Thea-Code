@@ -66,6 +66,7 @@ describe("openai transform utilities", () => {
 					{
 						delta: {},
 						index: 0,
+						finish_reason: null,
 					},
 				],
 			}

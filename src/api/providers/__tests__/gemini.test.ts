@@ -126,7 +126,7 @@ describe("GeminiHandler", () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContentStream = jest.fn().mockRejectedValue(mockError)
 
-			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as unknown as { getGenerativeModel: jest.Mock }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContentStream: mockGenerateContentStream,
 			})
 
@@ -149,14 +149,14 @@ describe("GeminiHandler", () => {
 				},
 			})
 
-			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as unknown as { getGenerativeModel: jest.Mock }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("Test response")
 
-			expect((handler["client"] as unknown as { type: string }).getGenerativeModel).toHaveBeenCalledWith(
+			expect((handler["client"] as unknown as { getGenerativeModel: jest.Mock }).getGenerativeModel).toHaveBeenCalledWith(
 				{
 					model: "gemini-2.0-flash-thinking-exp-1219",
 				},
@@ -176,7 +176,7 @@ describe("GeminiHandler", () => {
 			const mockError = new Error("Gemini API error")
 			const mockGenerateContent = jest.fn().mockRejectedValue(mockError)
 
-			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as unknown as { getGenerativeModel: jest.Mock }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 
@@ -192,7 +192,7 @@ describe("GeminiHandler", () => {
 				},
 			})
 
-			;(handler["client"] as unknown as { type: string }).getGenerativeModel = jest.fn().mockReturnValue({
+			;(handler["client"] as unknown as { getGenerativeModel: jest.Mock }).getGenerativeModel = jest.fn().mockReturnValue({
 				generateContent: mockGenerateContent,
 			})
 

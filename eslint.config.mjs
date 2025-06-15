@@ -88,7 +88,7 @@ export default [
 		"temp_similarity_check.js",
 		"scripts/",
 		"test/",
-		// "benchmark/", // Removed from ignores so subproject linting works
+		"benchmark/", // Re-enabled ignore to fix ESLint parsing issues
 		"**/*.md",
 		"**/*.json",
 		"**/*.yaml",
@@ -147,20 +147,6 @@ export default [
 					jsx: true,
 				},
 				project: "./tsconfig.json",
-			},
-		},
-	},
-	{
-		files: ["benchmark/**/*.{ts,tsx}", "!benchmark/**/*.js"],
-		...commonTsConfig,
-		languageOptions: {
-			...commonTsConfig.languageOptions,
-			parserOptions: {
-				...commonTsConfig.languageOptions.parserOptions,
-				ecmaFeatures: {
-					jsx: true,
-				},
-				project: "./benchmark/tsconfig.json",
 			},
 		},
 	},

@@ -56,7 +56,7 @@ jest.mock("openai", () => {
 							},
 						}
 
-						const result = mockCreate(options, requestOptions)
+						const result = mockCreate(options, requestOptions) as (OpenAI.Chat.Completions.ChatCompletion | Promise<OpenAI.Chat.Completions.ChatCompletion>) & { withResponse?: typeof mockWithResponse }
 						if (options.stream) {
 							mockWithResponse.mockReturnValue(
 								Promise.resolve({

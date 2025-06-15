@@ -90,13 +90,16 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			// (see normalizeApiConfiguration > openrouter).
 			const { apiConfiguration: currentApiConfig } = await provider.getState()
 			const openRouterHandler = new OpenRouterHandler(currentApiConfig)
-			const { info: openRouterModelInfo } = openRouterHandler.getModel()
-			if (Object.keys(openRouterModelInfo).length > 0) {
+			const { id: modelId, info: openRouterModelInfo } = openRouterHandler.getModel()
+			if (openRouterModelInfo && modelId) {
+				const openRouterModelsRecord: Record<string, typeof openRouterModelInfo> = {
+					[modelId]: openRouterModelInfo
+				}
 				await fs.writeFile(
 					path.join(cacheDir, GlobalFileNames.openRouterModels),
-					JSON.stringify(openRouterModelInfo),
+					JSON.stringify(openRouterModelsRecord),
 				)
-				await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels: openRouterModelInfo })
+				await provider.postMessageToWebview({ type: "openRouterModels", openRouterModels: openRouterModelsRecord })
 
 				// Update model info in state (this needs to be
 				// done here since we don't want to update state
@@ -104,10 +107,10 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				// models there).
 				const { apiConfiguration } = await provider.getState()
 
-				if (apiConfiguration.openRouterModelId) {
+				if (apiConfiguration.openRouterModelId && openRouterModelsRecord[apiConfiguration.openRouterModelId]) {
 					await provider.updateGlobalState(
 						"openRouterModelInfo",
-						openRouterModelInfo[apiConfiguration.openRouterModelId] as unknown,
+						openRouterModelsRecord[apiConfiguration.openRouterModelId],
 					)
 					await provider.postStateToWebview()
 				}

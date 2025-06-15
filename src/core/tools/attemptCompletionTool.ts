@@ -140,7 +140,12 @@ export async function attemptCompletionTool(
 				if (typeof commandResult === "string") {
 					toolResults.push({ type: "text", text: commandResult })
 				} else if (Array.isArray(commandResult)) {
-					toolResults.push(...commandResult)
+					// Filter to only include text and image blocks
+					const filteredResult = commandResult.filter(
+						(block): block is NeutralTextContentBlock | NeutralImageContentBlock =>
+							block.type === "text" || block.type === "image"
+					)
+					toolResults.push(...filteredResult)
 				}
 			}
 

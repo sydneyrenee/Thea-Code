@@ -8,7 +8,7 @@ describe("UnifiedDiffStrategy", () => {
 	})
 
 	describe("getToolDescription", () => {
-		it("should return tool description with correct cwd", () => {
+		it("should return tool description with correct cwd", async () => {
 			const cwd = "/test/path"
 			const description = strategy.getToolDescription({ cwd })
 
@@ -58,7 +58,7 @@ function calculateTotal(items: number[]): number {
 
 export { calculateTotal };`
 
-			const result = strategy.applyDiff(originalContent, diffContent)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
@@ -95,7 +95,7 @@ export { calculateTotal };`
   }
 }`
 
-			const result = strategy.applyDiff(originalContent, diffContent)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
@@ -133,7 +133,7 @@ function App() {
   return <Button onClick={() => setCount(count + 1)}>{count}</Button>;
 }`
 
-			const result = strategy.applyDiff(originalContent, diffContent)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
@@ -198,14 +198,14 @@ async function processFile(path: string) {
 
 export { processFile };`
 
-			const result = strategy.applyDiff(originalContent, diffContent)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)
 			}
 		})
 
-		it("should handle empty original content", () => {
+		it("should handle empty original content", async () => {
 			const originalContent = ""
 			const diffContent = `--- empty.ts
 +++ empty.ts
@@ -218,7 +218,7 @@ export { processFile };`
   return \`Hello, \${name}!\`;
 }\n`
 
-			const result = strategy.applyDiff(originalContent, diffContent)
+			const result = await strategy.applyDiff(originalContent, diffContent)
 			expect(result.success).toBe(true)
 			if (result.success) {
 				expect(result.content).toBe(expected)

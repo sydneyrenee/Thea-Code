@@ -230,13 +230,13 @@ export class ContextProxy {
 		try {
 			const globalSettings = globalSettingsExportSchema.parse(this.getValues())
 			// Use array destructuring with _ to explicitly ignore the first parameter
-			return Object.fromEntries(Object.entries(globalSettings).filter(([, value]) => value !== undefined))
+			return Promise.resolve(Object.fromEntries(Object.entries(globalSettings).filter(([, value]) => value !== undefined)))
 		} catch (error) {
 			if (error instanceof ZodError) {
 				telemetryService.captureSchemaValidationError({ schemaName: "GlobalSettings", error })
 			}
 
-			return undefined
+			return Promise.resolve(undefined)
 		}
 	}
 

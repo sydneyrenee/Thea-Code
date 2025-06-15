@@ -13,7 +13,7 @@ import {
 	NeutralTextContentBlock,
 	NeutralToolResultContentBlock,
 } from "../../shared/neutral-history"
-import { convertToNeutralHistory } from "../../api/transform/neutral-anthropic-format"
+
 import { TheaTask } from "../TheaTask" // Renamed import
 import { TheaProvider } from "../webview/TheaProvider" // Renamed import and path
 import { ApiConfiguration } from "../../shared/api"
@@ -598,8 +598,7 @@ describe("TheaTask", () => {
 				// Mock the model info to indicate image support
 				// jest.spyOn(theaTaskWithImages.api, "getModel").mockReturnValue(...) // Mock setup handled above
 
-				theaTaskWithImages.taskStateManager.apiConversationHistory =
-					convertToNeutralHistory(conversationHistory) // Correct variable
+				theaTaskWithImages.taskStateManager.apiConversationHistory = conversationHistory // Already in neutral format
 
 				// Test with model that doesn't support images
 				const [theaTaskWithoutImages, taskWithoutImages] = TheaTask.create({
@@ -622,8 +621,7 @@ describe("TheaTask", () => {
 					},
 				})
 
-				theaTaskWithoutImages.taskStateManager.apiConversationHistory =
-					convertToNeutralHistory(conversationHistory) // Use correct variable and state manager
+				theaTaskWithoutImages.taskStateManager.apiConversationHistory = conversationHistory // Already in neutral format
 
 				// Mock abort state for both instances
 				Object.defineProperty(theaTaskWithImages, "abort", {

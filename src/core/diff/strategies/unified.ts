@@ -111,7 +111,8 @@ Your diff here
 </apply_diff>`
 	}
 
-	applyDiff(originalContent: string, diffContent: string): DiffResult {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	applyDiff(originalContent: string, diffContent: string, startLine?: number, endLine?: number): Promise<DiffResult> {
 		try {
 			let cleanDiff = diffContent.replace(/^\s+/gm, "")
 			cleanDiff = cleanDiff.replace(/^(?![+\-@])/gm, " $&")
@@ -121,27 +122,27 @@ Your diff here
 
 			const result = applyPatch(originalContent, cleanDiff)
 			if (result === false) {
-				return {
+				return Promise.resolve({
 					success: false,
 					error: "Failed to apply unified diff - patch rejected",
 					details: {
 						searchContent: diffContent,
 					},
-				}
+				})
 			}
-			return {
+			return Promise.resolve({
 				success: true,
 				content: result,
-			}
+			})
 		} catch (error: unknown) {
 			const errorMessage = error instanceof Error ? error.message : String(error)
-			return {
+			return Promise.resolve({
 				success: false,
 				error: `Error applying unified diff: ${errorMessage}`,
 				details: {
 					searchContent: diffContent,
 				},
-			}
+			})
 		}
 	}
 }

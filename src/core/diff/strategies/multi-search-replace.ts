@@ -220,13 +220,14 @@ Only use a single line of '=======' between search and replacement content, beca
 				}
 	}
 
-	applyDiff(originalContent: string, diffContent: string): DiffResult {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	applyDiff(originalContent: string, diffContent: string, startLine?: number, endLine?: number): Promise<DiffResult> {
 		const validseq = this.validateMarkerSequencing(diffContent)
 		if (!validseq.success) {
-			return {
+			return Promise.resolve({
 				success: false,
 				error: validseq.error!,
-			}
+			})
 		}
 
 		/*
@@ -267,10 +268,10 @@ Only use a single line of '=======' between search and replacement content, beca
 		]
 
 		if (matches.length === 0) {
-			return {
+			return Promise.resolve({
 				success: false,
 				error: `Invalid diff format - missing required sections\n\nDebug Info:\n- Expected Format: <<<<<<< SEARCH\\n:start_line: start line\\n:end_line: end line\\n-------\\n[search content]\\n=======\\n[replace content]\\n>>>>>>> REPLACE\n- Tip: Make sure to include start_line/end_line/SEARCH/=======/REPLACE sections with correct markers on new lines`,
-			}
+			})
 		}
 		// Detect line ending from original content
 		const lineEnding = originalContent.includes("\r\n") ? "\r\n" : "\n"
@@ -489,16 +490,16 @@ Only use a single line of '=======' between search and replacement content, beca
 		}
 		const finalContent = resultLines.join(lineEnding)
 		if (appliedCount === 0) {
-			return {
+			return Promise.resolve({
 				success: false,
 				failParts: diffResults,
-			}
+			})
 		}
-		return {
+		return Promise.resolve({
 			success: true,
 			content: finalContent,
 			failParts: diffResults,
-		}
+		})
 	}
 
 	getProgressStatus(toolUse: ToolUse, result?: DiffResult): ToolProgressStatus {

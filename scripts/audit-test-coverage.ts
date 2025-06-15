@@ -3,7 +3,8 @@ import { execSync } from "child_process"
 
 const checklistPath = "MASTER_TEST_CHECKLIST.md"
 
-const checklist = fs.readFileSync(checklistPath, "utf8").split("\n")
+async function main() {
+	const checklist = (await fs.promises.readFile(checklistPath, "utf8")).split("\n")
 
 function hasTest(name: string): boolean {
 	try {
@@ -37,15 +38,22 @@ function hasTest(name: string): boolean {
 	}
 }
 
-const updated = checklist.map((line) => {
-	const match = line.match(/^- \[ \] (function|class|interface): ([^ ]+) \(/)
-	if (!match) return line
-	const name = match[2]
-	if (hasTest(name)) {
-		return line.replace("- [ ]", "- [x]")
-	}
-	return line
-})
+	const updated = checklist.map((line) => {
+		const match = line.match(/^- \[ \] (function|class|interface): ([^ ]+) \(/)
+		if (!match) return line
+		const name = match[2]
+		if (hasTest(name)) {
+			return line.replace("- [ ]", "- [x]")
+		}
+		return line
+	})
 
-fs.writeFileSync(checklistPath, updated.join("\n"))
-console.log("Audit complete.")
+	await fs.promises.writeFile(checklistPath, updated.join("\n"))
+	console.log("Audit complete.")
+}
+
+// Run the async main function with error handling
+main().catch((error) => {
+	console.error("Error during audit:", error)
+	process.exit(1)
+})

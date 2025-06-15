@@ -1,6 +1,6 @@
 // npx jest src/api/transform/__tests__/openai-format.test.ts
 
-import type { NeutralConversationHistory } from "../../shared/neutral-history"
+import type { NeutralConversationHistory } from "../../../shared/neutral-history"
 import OpenAI from "openai"
 
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

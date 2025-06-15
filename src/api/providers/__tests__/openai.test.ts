@@ -14,7 +14,8 @@ beforeEach(async () => {
 	await openaiTeardown()
 	await openaiSetup()
 	requestBody = undefined
-	capturedHeaders = {}(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", function (_uri, body) {
+	capturedHeaders = {};
+	(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", function (_uri: any, body: any) {
 		// `this` is the nock request
 		// @ts-expect-error req is provided by nock
 		capturedHeaders = this.req.headers as Record<string, string | string[]>
@@ -166,14 +167,15 @@ describe("OpenAiHandler", () => {
 			},
 		]
 
-		it("should handle API errors", async () => {
-			await openaiTeardown()
-			await openaiSetup()(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
-				500,
-				{ error: { message: "API Error" } },
-			])
+	it("should handle API errors", async () => {
+		await openaiTeardown()
+		await openaiSetup();
+		(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
+			500,
+			{ error: { message: "API Error" } },
+		])
 
-			const stream = handler.createMessage("system prompt", testMessages)
+		const stream = handler.createMessage("system prompt", testMessages)
 
 			await expect(async () => {
 				for await (const chunk of stream) {
@@ -182,14 +184,15 @@ describe("OpenAiHandler", () => {
 			}).rejects.toThrow("API Error")
 		})
 
-		it("should handle rate limiting", async () => {
-			await openaiTeardown()
-			await openaiSetup()(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
-				429,
-				{ error: { message: "Rate limit exceeded" } },
-			])
+	it("should handle rate limiting", async () => {
+		await openaiTeardown()
+		await openaiSetup();
+		(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
+			429,
+			{ error: { message: "Rate limit exceeded" } },
+		])
 
-			const stream = handler.createMessage("system prompt", testMessages)
+		const stream = handler.createMessage("system prompt", testMessages)
 
 			await expect(async () => {
 				for await (const chunk of stream) {
@@ -214,15 +217,16 @@ describe("OpenAiHandler", () => {
 			)
 		})
 
-		it("should handle API errors", async () => {
-			await openaiTeardown()
-			await openaiSetup()(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
-				500,
-				{ error: { message: "API Error" } },
-			])
+	it("should handle API errors", async () => {
+		await openaiTeardown()
+		await openaiSetup();
+		(openAIMock as any)!.addCustomEndpoint("POST", "/v1/chat/completions", () => [
+			500,
+			{ error: { message: "API Error" } },
+		])
 
-			await expect(handler.completePrompt("Test prompt")).rejects.toThrow("OpenAI completion error: API Error")
-		})
+		await expect(handler.completePrompt("Test prompt")).rejects.toThrow("OpenAI completion error: API Error")
+	})
 
 		it("should handle empty response", async () => {
 			await openaiTeardown()

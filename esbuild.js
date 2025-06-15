@@ -63,64 +63,70 @@ const copyWasmFiles = {
 	},
 }
 
-// Simple function to copy locale files
-function copyLocaleFiles() {
+// Simple function to copy locale files (async version)
+async function copyLocaleFiles() {
 	const srcDir = path.join(__dirname, "src", "i18n", "locales")
 	const destDir = path.join(__dirname, "dist", "i18n", "locales")
 	const outDir = path.join(__dirname, "out", "i18n", "locales")
 
 	// Ensure source directory exists before proceeding
-	if (!fs.existsSync(srcDir)) {
+	try {
+		await fs.promises.access(srcDir)
+	} catch {
 		console.warn(`Source locales directory does not exist: ${srcDir}`)
 		return // Exit early if source directory doesn't exist
 	}
 
 	// Create destination directories
-	fs.mkdirSync(destDir, { recursive: true })
+	await fs.promises.mkdir(destDir, { recursive: true })
 	try {
-		fs.mkdirSync(outDir, { recursive: true })
+		await fs.promises.mkdir(outDir, { recursive: true })
 	} catch (e) {}
 
-	// Function to copy directory recursively
-	function copyDir(src, dest) {
-		const entries = fs.readdirSync(src, { withFileTypes: true })
+	// Async function to copy directory recursively
+	async function copyDir(src, dest) {
+		const entries = await fs.promises.readdir(src, { withFileTypes: true })
 
-		for (const entry of entries) {
-			const srcPath = path.join(src, entry.name)
-			const destPath = path.join(dest, entry.name)
+		await Promise.all(
+			entries.map(async (entry) => {
+				const srcPath = path.join(src, entry.name)
+				const destPath = path.join(dest, entry.name)
 
-			if (entry.isDirectory()) {
-				// Create directory and copy contents
-				fs.mkdirSync(destPath, { recursive: true })
-				copyDir(srcPath, destPath)
-			} else {
-				// Copy the file
-				fs.copyFileSync(srcPath, destPath)
-			}
-		}
+				if (entry.isDirectory()) {
+					// Create directory and copy contents
+					await fs.promises.mkdir(destPath, { recursive: true })
+					await copyDir(srcPath, destPath)
+				} else {
+					// Copy the file
+					await fs.promises.copyFile(srcPath, destPath)
+				}
+			})
+		)
 	}
 
 	// Copy files to dist directory
-	copyDir(srcDir, destDir)
+	await copyDir(srcDir, destDir)
 	console.log("Copied locale files to dist/i18n/locales")
 
 	// Copy to out directory for debugging
 	try {
-		copyDir(srcDir, outDir)
+		await copyDir(srcDir, outDir)
 		console.log("Copied locale files to out/i18n/locales")
 	} catch (e) {
 		console.warn("Could not copy to out directory:", e.message)
 	}
 }
 
-// Set up file watcher if in watch mode
-function setupLocaleWatcher() {
+// Set up file watcher if in watch mode (async version)
+async function setupLocaleWatcher() {
 	if (!watch) return
 
 	const localesDir = path.join(__dirname, "src", "i18n", "locales")
 
 	// Ensure the locales directory exists before setting up watcher
-	if (!fs.existsSync(localesDir)) {
+	try {
+		await fs.promises.access(localesDir)
+	} catch {
 		console.warn(`Cannot set up watcher: Source locales directory does not exist: ${localesDir}`)
 		return
 	}
@@ -131,9 +137,13 @@ function setupLocaleWatcher() {
 	let debounceTimer = null
 	const debouncedCopy = () => {
 		if (debounceTimer) clearTimeout(debounceTimer)
-		debounceTimer = setTimeout(() => {
+		debounceTimer = setTimeout(async () => {
 			console.log("Locale files changed, copying...")
-			copyLocaleFiles()
+			try {
+				await copyLocaleFiles()
+			} catch (error) {
+				console.error("Error copying locale files:", error)
+			}
 		}, 300) // Wait 300ms after last change before copying
 	}
 
@@ -204,10 +214,10 @@ async function main() {
 
 		// Copy and watch locale files
 		console.log("Copying locale files initially...")
-		copyLocaleFiles()
+		await copyLocaleFiles()
 
 		// Set up the watcher for locale files
-		setupLocaleWatcher()
+		await setupLocaleWatcher()
 	} else {
 		await extensionCtx.rebuild()
 		await extensionCtx.dispose()

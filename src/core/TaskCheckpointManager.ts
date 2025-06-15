@@ -11,7 +11,7 @@ import { CheckpointStorage } from "../shared/checkpoints"
 import { TheaProvider } from "./webview/TheaProvider" // Renamed import and path
 import { TheaMessage } from "../shared/ExtensionMessage" // Renamed imports
 import { getWorkspacePath } from "../utils/path"
-import type { DIFF_VIEW_URI_SCHEME } from "../integrations/editor/DiffViewProvider" // Removed DiffViewProvider as it's not used directly
+import { DIFF_VIEW_URI_SCHEME } from "../integrations/editor/DiffViewProvider" // Fixed: removed type-only import
 
 // TODO: Rename types if necessary
 

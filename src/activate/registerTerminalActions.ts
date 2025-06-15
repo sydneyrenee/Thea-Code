@@ -2,8 +2,7 @@ import * as vscode from "vscode"
 import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { Terminal } from "../integrations/terminal/Terminal"
 import { t } from "../i18n"
-import { COMMANDS } from "../../dist/thea-config" // Import branded constants
-import type { AI_IDENTITY_NAME } from "../../dist/thea-config" // Import branded constant
+import { COMMANDS, AI_IDENTITY_NAME } from "../../dist/thea-config" // Fixed: combined imports
 const TERMINAL_COMMAND_IDS = {
 	ADD_TO_CONTEXT: COMMANDS.TERMINAL_ADD_TO_CONTEXT,
 	FIX: COMMANDS.TERMINAL_FIX,

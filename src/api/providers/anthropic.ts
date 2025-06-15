@@ -19,7 +19,7 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
-		this.client = new NeutralAnthropicClient(this.options.apiKey, this.options.anthropicBaseUrl || undefined)
+		this.client = new NeutralAnthropicClient(this.options.apiKey || "", this.options.anthropicBaseUrl || undefined)
 	}
 
 	// Updated to accept NeutralConversationHistory

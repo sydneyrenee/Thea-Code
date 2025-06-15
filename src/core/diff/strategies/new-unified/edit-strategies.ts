@@ -152,17 +152,17 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 		const originalText = content.join("\n")
 
 		try {
-			fs.writeFileSync(filePath, originalText)
+			await fs.promises.writeFile(filePath, originalText)
 			await git.add("file.txt")
 			const originalCommit = await git.commit("original")
 			console.log("Strategy 1 - Original commit:", originalCommit.commit)
 
-			fs.writeFileSync(filePath, searchText)
+			await fs.promises.writeFile(filePath, searchText)
 			await git.add("file.txt")
 			const searchCommit1 = await git.commit("search")
 			console.log("Strategy 1 - Search commit:", searchCommit1.commit)
 
-			fs.writeFileSync(filePath, replaceText)
+			await fs.promises.writeFile(filePath, replaceText)
 			await git.add("file.txt")
 			const replaceCommit = await git.commit("replace")
 			console.log("Strategy 1 - Replace commit:", replaceCommit.commit)
@@ -173,7 +173,7 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 				console.log("Strategy 1 - Attempting cherry-pick of:", replaceCommit.commit)
 				await git.raw(["cherry-pick", "--minimal", replaceCommit.commit])
 
-				const newText = fs.readFileSync(filePath, "utf-8")
+				const newText = await fs.promises.readFile(filePath, "utf-8")
 				const newLines = newText.split("\n")
 				return {
 					confidence: 1,
@@ -192,13 +192,13 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 			await git.addConfig("user.name", "Temp")
 			await git.addConfig("user.email", "temp@example.com")
 
-			fs.writeFileSync(filePath, searchText)
+			await fs.promises.writeFile(filePath, searchText)
 			await git.add("file.txt")
 			const searchCommit = await git.commit("search")
 			const searchHash = searchCommit.commit.replace(/^HEAD /, "")
 			console.log("Strategy 2 - Search commit:", searchHash)
 
-			fs.writeFileSync(filePath, replaceText)
+			await fs.promises.writeFile(filePath, replaceText)
 			await git.add("file.txt")
 			const replaceCommit = await git.commit("replace")
 			const replaceHash = replaceCommit.commit.replace(/^HEAD /, "")
@@ -206,7 +206,7 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 
 			console.log("Strategy 2 - Attempting checkout of:", searchHash)
 			await git.raw(["checkout", searchHash])
-			fs.writeFileSync(filePath, originalText)
+			await fs.promises.writeFile(filePath, originalText)
 			await git.add("file.txt")
 			const originalCommit2 = await git.commit("original")
 			console.log("Strategy 2 - Original commit:", originalCommit2.commit)
@@ -215,7 +215,7 @@ export async function applyGitFallback(hunk: Hunk, content: string[]): Promise<E
 				console.log("Strategy 2 - Attempting cherry-pick of:", replaceHash)
 				await git.raw(["cherry-pick", "--minimal", replaceHash])
 
-				const newText = fs.readFileSync(filePath, "utf-8")
+				const newText = await fs.promises.readFile(filePath, "utf-8")
 				const newLines = newText.split("\n")
 				return {
 					confidence: 1,

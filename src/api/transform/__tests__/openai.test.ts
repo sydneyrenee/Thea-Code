@@ -13,7 +13,9 @@ describe("openai transform utilities", () => {
 			const delta: OpenAI.Chat.ChatCompletionChunk.Choice.Delta = {
 				tool_calls: [
 					{
+						index: 0, // Added missing required field
 						id: "call_123",
+						type: "function", // Added missing required field
 						function: {
 							name: "test_function",
 							arguments: '{"param": "value"}',
@@ -46,6 +48,7 @@ describe("openai transform utilities", () => {
 					{
 						delta: { content: "Hello world" },
 						index: 0,
+						finish_reason: null, // Added missing required field
 					},
 				],
 			}

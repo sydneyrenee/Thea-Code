@@ -6,7 +6,7 @@ import { join } from "path"
 import { fileExistsAtPath } from "../../../utils/fs"
 
 import { getExcludePatterns } from "../excludes"
-import type { GIT_DISABLED_SUFFIX } from "../constants"
+import { GIT_DISABLED_SUFFIX } from "../constants" // Fixed: removed type-only import
 
 jest.mock("fs/promises")
 

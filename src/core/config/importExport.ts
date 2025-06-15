@@ -6,7 +6,7 @@ import * as vscode from "vscode"
 import { z } from "zod"
 
 import { SPECIFIC_STRINGS } from "../../../dist/thea-config" // Import branded constant
-import type { globalSettingsSchema } from "../../schemas"
+import { globalSettingsSchema } from "../../schemas" // Fixed: removed type-only import
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 

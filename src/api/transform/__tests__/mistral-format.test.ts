@@ -77,7 +77,7 @@ describe("convertToMistralMessages", () => {
 					{
 						type: "tool_result",
 						tool_use_id: "weather-123",
-						content: "Current temperature in London: 20°C",
+						content: [{ type: "text", text: "Current temperature in London: 20°C" }],
 					},
 				],
 			},
@@ -109,7 +109,7 @@ describe("convertToMistralMessages", () => {
 					{
 						type: "tool_result",
 						tool_use_id: "weather-123",
-						content: "Current temperature in London: 20°C",
+						content: [{ type: "text", text: "Current temperature in London: 20°C" }],
 					},
 				],
 			},
@@ -243,7 +243,7 @@ describe("convertToMistralMessages", () => {
 					{
 						type: "tool_result",
 						tool_use_id: "search-123",
-						content: "Found information about different mountain types.",
+						content: [{ type: "text", text: "Found information about different mountain types." }],
 					},
 				],
 			},

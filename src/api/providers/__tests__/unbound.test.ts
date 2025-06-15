@@ -99,12 +99,15 @@ describe("UnboundHandler", () => {
 		// Default mock implementation for non-streaming responses
 		mockCreate.mockResolvedValue({
 			id: "test-completion",
-			choices: [
-				{
-					message: { role: "assistant", content: "Test response" },
-					finish_reason: "stop",
-					index: 0,
-				},
+			created: Date.now(),
+			model: "test-model",
+			object: "chat.completion",
+			choices: [			{
+				message: { role: "assistant", content: "Test response", refusal: null },
+				finish_reason: "stop",
+				index: 0,
+				logprobs: null,
+			},
 			],
 		})
 	})
@@ -220,7 +223,11 @@ describe("UnboundHandler", () => {
 
 		it("should handle empty response", async () => {
 			mockCreate.mockResolvedValueOnce({
-				choices: [{ message: { content: "" } }],
+				id: "test-completion",
+				created: Date.now(),
+				model: "test-model",
+				object: "chat.completion",
+				choices: [{ message: { role: "assistant", content: "", refusal: null }, finish_reason: "stop", index: 0, logprobs: null }],
 			})
 			const result = await handler.completePrompt("Test prompt")
 			expect(result).toBe("")

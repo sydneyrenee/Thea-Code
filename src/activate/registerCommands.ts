@@ -5,7 +5,7 @@ import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { EXTENSION_NAME, EXTENSION_DISPLAY_NAME, HOMEPAGE_URL, COMMANDS } from "../../dist/thea-config" // Import branded constants
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
-import type { handleNewTask } from "./handleTask"
+import { handleNewTask } from "./handleTask" // Fixed: removed type-only import
 
 // Store panel references in both modes
 let sidebarPanel: vscode.WebviewView | undefined = undefined

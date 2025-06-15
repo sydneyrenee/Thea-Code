@@ -39,7 +39,9 @@ async function runAll({ runId, model }: { runId: number; model: string }) {
 async function runLanguage({ runId, model, language }: { runId: number; model: string; language: string }) {
 	const languagePath = path.resolve(exercisesPath, language)
 
-	if (!fs.existsSync(languagePath)) {
+	try {
+		await fs.promises.access(languagePath)
+	} catch {
 		console.error(`Language directory ${languagePath} does not exist`)
 		process.exit(1)
 	}
@@ -75,9 +77,12 @@ async function runExercise({
 		RUN_ID: runId.toString(),
 	}
 
-	if (fs.existsSync(path.resolve(workspacePath, "usage.json"))) {
+	try {
+		await fs.promises.access(path.resolve(workspacePath, "usage.json"))
 		console.log(`Test result exists for ${language} / ${exercise}, skipping`)
 		return
+	} catch {
+		// File doesn't exist, continue with test
 	}
 
 	console.log(`Running ${language} / ${exercise}`)

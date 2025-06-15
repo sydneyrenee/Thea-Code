@@ -21,7 +21,7 @@ jest.mock("vscode", () => ({
 		showSaveDialog: jest.fn(),
 	},
 	Uri: {
-		file: jest.fn((filePath) => ({ fsPath: filePath })),
+		file: jest.fn((filePath: string) => ({ fsPath: filePath })),
 	},
 }))
 

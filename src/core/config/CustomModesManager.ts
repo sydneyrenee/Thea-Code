@@ -269,8 +269,7 @@ export class CustomModesManager {
 		let content = "{}"
 		try {
 			content = await fs.readFile(filePath, "utf-8")
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		} catch (error) {
+		} catch {
 			// File might not exist yet, ignore the error
 			content = JSON.stringify({ customModes: [] })
 		}

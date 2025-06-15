@@ -4,6 +4,23 @@ import * as path from "path"
 import { build, filesystem, GluegunPrompt } from "gluegun"
 import { runTests } from "@vscode/test-electron"
 
+interface BenchmarkConfig {
+	language?: string
+	exercise?: string
+	runId?: string
+}
+
+interface GluegunParameters {
+	first?: string
+	second?: string
+	options: Record<string, string>
+}
+
+interface GluegunCommandContext {
+	config: BenchmarkConfig
+	parameters: GluegunParameters
+}
+
 // console.log(__dirname)
 // <...>/Thea-Code/benchmark/src
 
@@ -131,7 +148,7 @@ async function main() {
 		.version()
 		.command({
 			name: "run",
-			run: ({ config, parameters }) => {
+			run: ({ config, parameters }: GluegunCommandContext) => {
 				config.language = parameters.first
 				config.exercise = parameters.second
 
@@ -144,20 +161,21 @@ async function main() {
 		.create()
 
 	const { print, prompt, config } = await cli.run(process.argv)
+	const benchmarkConfig = config as BenchmarkConfig
 
 	try {
 		const model = "anthropic/claude-3.7-sonnet"
-		const runId = config.runId ? Number(config.runId) : (await createRun({ model })).id
+		const runId = benchmarkConfig.runId ? Number(benchmarkConfig.runId) : (await createRun({ model })).id
 
-		if (config.language === "all") {
+		if (benchmarkConfig.language === "all") {
 			console.log("Running all exercises for all languages")
 			await runAll({ runId, model })
-		} else if (config.exercise === "all") {
-			console.log(`Running all exercises for ${config.language}`)
-			await runLanguage({ runId, model, language: config.language })
+		} else if (benchmarkConfig.exercise === "all") {
+			console.log(`Running all exercises for ${benchmarkConfig.language!}`)
+			await runLanguage({ runId, model, language: benchmarkConfig.language! })
 		} else {
-			const language = config.language || (await askLanguage(prompt))
-			const exercise = config.exercise || (await askExercise(prompt, language))
+			const language = benchmarkConfig.language || (await askLanguage(prompt))
+			const exercise = benchmarkConfig.exercise || (await askExercise(prompt, language))
 			await runExercise({ runId, model, language, exercise })
 		}
 

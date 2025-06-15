@@ -341,7 +341,7 @@ describe("Ollama Integration", () => {
 
 		// Mock the OpenAI client's create method for this specific test
 		jest.spyOn(handler["client"].chat.completions, "create").mockImplementationOnce(
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-argument
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			((_body: OpenAI.Chat.ChatCompletionCreateParams, _options?: OpenAI.RequestOptions) => {
 				const stream = (function* () {
 					yield {
@@ -372,9 +372,9 @@ describe("Ollama Integration", () => {
 					}
 				})()
 
-				return Promise.resolve(stream as unknown as { type: string }) // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
-			}) as any,
-		) // eslint-disable-line @typescript-eslint/no-explicit-any
+				return Promise.resolve(stream as never)
+			}),
+		)
 
 		// Call createMessage
 		const stream = handler.createMessage("You are helpful.", neutralHistory)
@@ -509,7 +509,7 @@ describe("Ollama Integration", () => {
 
 		// Mock the OpenAI client's create method for this specific test
 		jest.spyOn(handler["client"].chat.completions, "create").mockImplementationOnce(
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-argument
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			((_body: OpenAI.Chat.ChatCompletionCreateParams, _options?: OpenAI.RequestOptions) => {
 				const stream = (function* () {
 					yield {
@@ -555,9 +555,9 @@ describe("Ollama Integration", () => {
 					}
 				})()
 
-				return Promise.resolve(stream as unknown as { type: string }) // Cast stream to any for now if direct Promise.resolve(stream) causes issues with APIPromise
-			}) as any,
-		) // eslint-disable-line @typescript-eslint/no-explicit-any
+				return Promise.resolve(stream as never)
+			}),
+		)
 
 		// Call createMessage
 		const stream = handler.createMessage("You are helpful.", neutralHistory)

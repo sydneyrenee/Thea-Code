@@ -16,7 +16,7 @@ jest.mock("@/components/ui/vscode-components", () => ({
 		</div>
 	),
 	VSCodeLink: ({ children, href }: { [key: string]: unknown }) => <a href={href}>{children}</a>,
-	VSCodeRadio: ({ children, value, checked }: { [key: string]: unknown }) => (
+	VSCodeRadio: ({ value, checked }: { [key: string]: unknown }) => (
 		<input type="radio" value={value} checked={checked} />
 	),
 	VSCodeRadioGroup: ({ children }: { [key: string]: unknown }) => <div>{children}</div>,
@@ -80,7 +80,6 @@ jest.mock("../TemperatureControl", () => ({
 jest.mock("../ThinkingBudget", () => ({
 	ThinkingBudget: ({
 		apiConfiguration,
-		setApiConfigurationField,
 		modelInfo,
 		provider,
 	}: {

@@ -378,6 +378,7 @@ describe("Ollama Integration", () => {
 					}
 				}
 
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 				return generateChunks() as any
 			}),
 		)
@@ -568,6 +569,7 @@ describe("Ollama Integration", () => {
 					}
 				}
 
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
 				return generateChunks() as any
 			}),
 		)

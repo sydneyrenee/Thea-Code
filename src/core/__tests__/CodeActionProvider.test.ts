@@ -155,13 +155,14 @@ describe("CodeActionProvider", () => {
 		})
 
 		it("should provide fix action instead of fix logic when diagnostics exist", () => {
-			mockContext.diagnostics = [
+			const diagnostics: vscode.Diagnostic[] = [
 				{
 					message: "test error",
 					severity: vscode.DiagnosticSeverity.Error,
 					range: mockRange,
 				} satisfies Partial<vscode.Diagnostic>,
-			] as readonly vscode.Diagnostic[]
+			] as vscode.Diagnostic[]
+			mockContext.diagnostics = diagnostics
 
 			const actions = provider.provideCodeActions(mockDocument, mockRange, mockContext)
 			const typedActions = actions as readonly MockCodeAction[]

@@ -35,8 +35,20 @@ describe("EditorUtils", () => {
 	let mockDocument: jest.Mocked<vscode.TextDocument>
 
 	beforeEach(() => {
+		const mockUri = {
+			fsPath: "/test/file.ts",
+			scheme: "file",
+			authority: "",
+			path: "/test/file.ts",
+			query: "",
+			fragment: "",
+			with: jest.fn(),
+			toJSON: jest.fn(),
+			toString: jest.fn(() => "file:///test/file.ts")
+		} as jest.Mocked<vscode.Uri>
+
 		mockDocument = {
-			uri: { fsPath: "/test/file.ts" } satisfies Partial<vscode.Uri>,
+			uri: mockUri,
 			fileName: "/test/file.ts",
 			isUntitled: false,
 			languageId: "typescript",
@@ -168,7 +180,17 @@ describe("EditorUtils", () => {
 	describe("getFilePath", () => {
 		it("should return relative path when in workspace", () => {
 			const mockWorkspaceFolder = {
-				uri: { fsPath: "/test" },
+				uri: {
+					fsPath: "/test",
+					scheme: "file",
+					authority: "",
+					path: "/test",
+					query: "",
+					fragment: "",
+					with: jest.fn(),
+					toJSON: jest.fn(),
+					toString: jest.fn(() => "file:///test")
+				} as jest.Mocked<vscode.Uri>,
 			}
 			;(vscode.workspace.getWorkspaceFolder as jest.Mock).mockReturnValue(mockWorkspaceFolder)
 

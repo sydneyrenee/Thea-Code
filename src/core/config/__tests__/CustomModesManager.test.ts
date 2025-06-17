@@ -37,8 +37,23 @@ describe("CustomModesManager", () => {
 			},
 		} as unknown as vscode.ExtensionContext
 
-		mockWorkspaceFolders = [{ uri: { fsPath: "/mock/workspace" } }]
-		;(vscode.workspace as unknown as { type: string }).workspaceFolders = mockWorkspaceFolders
+		mockWorkspaceFolders = [{ 
+			uri: { 
+				fsPath: "/mock/workspace",
+				scheme: "file",
+				authority: "",
+				path: "/mock/workspace",
+				query: "",
+				fragment: "",
+				with: jest.fn(),
+				toJSON: jest.fn(),
+				toString: jest.fn(() => "file:///mock/workspace")
+			} as jest.Mocked<vscode.Uri>
+		}]
+		Object.defineProperty(vscode.workspace, 'workspaceFolders', {
+			value: mockWorkspaceFolders,
+			writable: true
+		})
 		;(vscode.workspace.onDidSaveTextDocument as jest.Mock).mockReturnValue({ dispose: jest.fn() })
 		;(getWorkspacePath as jest.Mock).mockReturnValue("/mock/workspace")
 		;(fileExistsAtPath as jest.Mock).mockImplementation((path: string) => {
@@ -172,10 +187,10 @@ describe("CustomModesManager", () => {
 			;(fs.writeFile as jest.Mock).mockImplementation(
 				(filePath: string, content: string) => {
 					if (filePath === mockSettingsPath) {
-						settingsContent = JSON.parse(content) as { customModes: unknown[] }
+						settingsContent = JSON.parse(content)
 					}
 					if (filePath === mockProjectModesPath) {
-						roomodesContent = JSON.parse(content) as { customModes: unknown[] }
+						roomodesContent = JSON.parse(content)
 					}
 					return Promise.resolve()
 				},
@@ -313,8 +328,8 @@ describe("CustomModesManager", () => {
 
 			// Verify final state in settings file
 			expect(settingsContent.customModes).toHaveLength(2)
-			expect(settingsContent.customModes.map((m: { name: string }) => m.name)).toContain("Mode 1")
-			expect(settingsContent.customModes.map((m: { name: string }) => m.name)).toContain("Mode 2")
+			expect((settingsContent.customModes as Array<{ name: string }>).map((m) => m.name)).toContain("Mode 1")
+			expect((settingsContent.customModes as Array<{ name: string }>).map((m) => m.name)).toContain("Mode 2")
 
 			// Verify global state was updated
 			const allCalls = (mockContext.globalState.update as jest.Mock).mock.calls.filter(

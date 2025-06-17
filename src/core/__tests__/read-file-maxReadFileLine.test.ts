@@ -282,15 +282,14 @@ describe("read_file tool with maxReadFileLine setting", () => {
 			const { readFileTool } = require("../tools/readFileTool")
 
 			// Execute the tool
-			// Using toolResult instead of a separate variable to avoid unused variable warning
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			await readFileTool(
 				mockThea,
 				rangeToolUse,
 				mockThea.ask,
 				jest.fn(),
-				(result: string) => {
-					rangeResult = result
+				() => {
+					// Result callback - not used in this test
 				},
 				(param: string, value: string) => value,
 			)

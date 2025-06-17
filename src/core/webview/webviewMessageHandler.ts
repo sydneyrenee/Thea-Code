@@ -473,8 +473,11 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 		}
 		case "refreshOpenAiModels": {
 			if (message?.values?.baseUrl && message?.values?.apiKey) {
-				const openAiModels = await getOpenAiModels(message?.values?.baseUrl, message?.values?.apiKey)
-				await provider.postMessageToWebview({ type: "openAiModels", openAiModels })
+				const values = message.values as { baseUrl: string; apiKey: string }
+				const openAiModels = await getOpenAiModels(values.baseUrl, values.apiKey)
+				// Handle the case where getOpenAiModels returns {} on error
+				const normalizedModels = Array.isArray(openAiModels) ? openAiModels : []
+				await provider.postMessageToWebview({ type: "openAiModels", openAiModels: normalizedModels })
 			}
 
 			break
@@ -818,7 +821,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				}
 
 				const existingPrompts = provider.getGlobalState("customSupportPrompts") ?? {}
-				const updatedPrompts = { ...existingPrompts, ...message.values }
+				const updatedPrompts = { ...existingPrompts, ...(message.values as Record<string, string>) }
 				await provider.updateGlobalState("customSupportPrompts", updatedPrompts)
 				await provider.postStateToWebview()
 			} catch (error) {
@@ -1175,7 +1178,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 		case "renameApiConfiguration":
 			if (message.values && message.apiConfiguration) {
 				try {
-					const { oldName, newName } = message.values
+					const { oldName, newName } = message.values as { oldName: string; newName: string }
 
 					if (oldName === newName) {
 						break

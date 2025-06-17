@@ -105,7 +105,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				files,
 				false,
-				controller as unknown as { type: string },
+				controller as any,
 				true,
 			)
 
@@ -155,7 +155,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				files,
 				false,
-				controller as unknown as { type: string },
+				controller as any,
 				false, // showTheaIgnoredFiles = false
 			)
 
@@ -187,7 +187,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				["file1.txt", "file2.txt"],
 				true, // didHitLimit = true
-				controller as unknown as { type: string },
+				controller as any,
 				true,
 			)
 
@@ -209,7 +209,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				[],
 				false,
-				controller as unknown as { type: string },
+				controller as any,
 				true,
 			)
 

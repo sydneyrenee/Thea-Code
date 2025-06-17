@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
 import { McpHub } from "../management/McpHub"
-import type { McpServer } from "../../shared/mcp"
+import type { McpServer } from "../../../shared/mcp"
 
 /**
  * WebviewIntegration provides an integration layer for webview interactions.

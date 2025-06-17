@@ -40,10 +40,10 @@ export class ProviderIntegration extends EventEmitter {
 		for (const [name, provider] of this.providers.entries()) {
 			await provider.start()
 			if (!this.mcpToolExecutors.has(name)) {
-				const exec = McpToolExecutor.getInstance(provider, this.sseConfig)
+				const exec = McpToolExecutor.getInstance()
 				this.mcpToolExecutors.set(name, exec)
-				exec.on("tool-registered", (tool) => this.emit("tool-registered", name, tool))
-				exec.on("tool-unregistered", (tool) => this.emit("tool-unregistered", name, tool))
+				exec.on("tool-registered", (tool) => this.emit("tool-registered", { provider: name, tool }))
+				exec.on("tool-unregistered", (tool) => this.emit("tool-unregistered", { provider: name, tool }))
 			}
 		}
 
@@ -74,7 +74,7 @@ export class ProviderIntegration extends EventEmitter {
 		}
 
 		if (!this.mcpToolExecutors.has(name)) {
-			const exec = McpToolExecutor.getInstance(provider, this.sseConfig)
+			const exec = McpToolExecutor.getInstance()
 			this.mcpToolExecutors.set(name, exec)
 			exec.on("tool-registered", (tool) => this.emit("tool-registered", name, tool))
 			exec.on("tool-unregistered", (tool) => this.emit("tool-unregistered", name, tool))

@@ -82,14 +82,14 @@ export async function getTheme(): Promise<StandaloneThemeData | undefined> {
 
 		if (parsed.include) {
 			const includeThemeString = await fs.readFile(
-				path.join(getExtensionUri().fsPath, "src", "integrations", "theme", "default-themes", parsed.include),
+				path.join(getExtensionUri().fsPath, "src", "integrations", "theme", "default-themes", parsed.include as string),
 				"utf-8",
 			)
 			const includeTheme = parseThemeString(includeThemeString)
 			parsed = mergeJson(parsed, includeTheme)
 		}
 
-		const converted = convertTheme(parsed as IVSCodeTheme) as StandaloneThemeData
+		const converted = convertTheme(parsed as unknown as IVSCodeTheme) as StandaloneThemeData
 
 		converted.base = ["vs", "hc-black"].includes(converted.base)
 			? converted.base
@@ -140,9 +140,9 @@ export function mergeJson(
 				} else {
 					copyOfFirst[key] = [...(firstValue as unknown[]), ...(secondValue as unknown[])]
 				}
-			} else if (typeof secondValue === "object" && typeof firstValue === "object") {
+			} else if (typeof secondValue === "object" && typeof firstValue === "object" && firstValue !== null && secondValue !== null) {
 				// Object
-				copyOfFirst[key] = mergeJson(firstValue, secondValue, mergeBehavior)
+				copyOfFirst[key] = mergeJson(firstValue as JsonObject, secondValue as JsonObject, mergeBehavior)
 			} else {
 				// Other (boolean, number, string)
 				copyOfFirst[key] = secondValue

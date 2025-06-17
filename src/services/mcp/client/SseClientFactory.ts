@@ -2,6 +2,7 @@ import { McpClient, McpClientInfo } from "./McpClient"
 // Import types for the MCP SDK
 import type { Client as SdkClient } from "@modelcontextprotocol/sdk/client/index.js"
 import type { SSEClientTransport as SdkSseTransport } from "@modelcontextprotocol/sdk/client/sse.js"
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js"
 
 /**
  * Minimal mock implementation of the MCP client used when the SDK is absent.
@@ -59,11 +60,11 @@ export class SseClientFactory {
 
 				constructor(info: McpClientInfo) {
 					super(info)
-					this.client = new Client(info)
+					this.client = new Client(info as { [x: string]: unknown; name: string; version: string })
 				}
 
 				async connect(transport: unknown): Promise<void> {
-					await this.client.connect(transport)
+					await this.client.connect(transport as Transport)
 				}
 
 				async close(): Promise<void> {
@@ -75,7 +76,11 @@ export class SseClientFactory {
 				}
 
 				async callTool(params: Record<string, unknown>): Promise<unknown> {
-					return this.client.callTool(params)
+					const toolParams = {
+						name: params.name as string,
+						...params
+					} as { [x: string]: unknown; name: string; _meta?: { [x: string]: unknown; progressToken?: string | number | undefined; } | undefined; arguments?: { [x: string]: unknown; } | undefined; }
+					return this.client.callTool(toolParams)
 				}
 			}
 

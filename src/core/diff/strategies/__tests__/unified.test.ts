@@ -20,7 +20,7 @@ describe("UnifiedDiffStrategy", () => {
 	})
 
 	describe("applyDiff", () => {
-		it.skip("should successfully apply a function modification diff", () => {
+		it.skip("should successfully apply a function modification diff", async () => {
 			const originalContent = `import type { Logger } from "../logger";
 
 function calculateTotal(items: number[]): number {
@@ -65,7 +65,7 @@ export { calculateTotal };`
 			}
 		})
 
-		it.skip("should successfully apply a diff adding a new method", () => {
+		it.skip("should successfully apply a diff adding a new method", async () => {
 			const originalContent = `class Calculator {
   add(a: number, b: number): number {
     return a + b;
@@ -102,7 +102,7 @@ export { calculateTotal };`
 			}
 		})
 
-		it.skip("should successfully apply a diff modifying imports", () => {
+		it.skip("should successfully apply a diff modifying imports", async () => {
 			const originalContent = `import { useState } from 'react';
 import { Button } from './components';
 
@@ -140,7 +140,7 @@ function App() {
 			}
 		})
 
-		it.skip("should successfully apply a diff with multiple hunks", () => {
+		it.skip("should successfully apply a diff with multiple hunks", async () => {
 			const originalContent = `import { readFile, writeFile } from 'fs';
 
 function processFile(path: string) {

@@ -13,22 +13,24 @@ export class MockMcpProvider extends EventEmitter implements IMcpProvider {
 		super()
 	}
 
-	start(): void {
+	start(): Promise<void> {
 		if (this.isStarted) {
-			return
+			return Promise.resolve()
 		}
 		this.isStarted = true
 		this.serverUrl = new URL("http://localhost:0")
 		this.emit("started", { url: this.serverUrl.toString() })
+		return Promise.resolve()
 	}
 
-	stop(): void {
+	stop(): Promise<void> {
 		if (!this.isStarted) {
-			return
+			return Promise.resolve()
 		}
 		this.isStarted = false
 		this.serverUrl = undefined
 		this.emit("stopped")
+		return Promise.resolve()
 	}
 
 	registerToolDefinition(definition: ToolDefinition): void {

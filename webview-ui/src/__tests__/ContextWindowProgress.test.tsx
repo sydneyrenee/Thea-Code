@@ -2,13 +2,44 @@ import React from "react"
 import { render, screen } from "@testing-library/react"
 import "@testing-library/jest-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import TaskHeader from "../components/chat/TaskHeader"
-import { ExtensionStateContextProvider } from "../context/ExtensionStateContext"
-import TranslationProvider from "../i18n/TranslationContext"
+import TaskHeader from "@/components/chat/TaskHeader"
+
+// Mock i18n completely  
+const mockT = jest.fn((key: string) => {
+	// Return simple English strings for common keys
+	if (key === "chat:task.title") return "Task"
+	if (key === "chat:task.contextWindow") return "Context Window"
+	if (key.includes("tokenProgress")) return "Token Progress"
+	return key
+})
+
+jest.mock("react-i18next", () => ({
+	useTranslation: () => ({
+		t: mockT,
+		i18n: {
+			changeLanguage: jest.fn(),
+			language: "en",
+		},
+	}),
+}))
+
+// Mock TranslationProvider to be a simple passthrough
+const MockTranslationProvider = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 
 // Mock formatLargeNumber function
 jest.mock("@/utils/format", () => ({
-	formatLargeNumber: jest.fn((num) => num.toString()),
+	formatLargeNumber: jest.fn((num) => (num != null ? num.toString() : "0")),
+}))
+
+// Mock pretty-bytes
+jest.mock("pretty-bytes", () => jest.fn((num) => `${num} bytes`))
+
+// Mock CSS imports
+jest.mock("@/components/ui/vscode-components.css", () => ({}))
+
+// Mock shared types and utilities
+jest.mock("../../../src/shared/context-mentions", () => ({
+	mentionRegexGlobal: /(@[a-zA-Z0-9_-]+)/g,
 }))
 
 // Mock vscode utility
@@ -25,7 +56,7 @@ jest.mock("@/utils/model-utils", () => ({
 }))
 
 // Mock UI components
-jest.mock("../ui/vscode-components", () => ({
+jest.mock("@/components/ui/vscode-components", () => ({
 	VSCodeButton: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => <button onClick={onClick}>{children}</button>,
 }))
 
@@ -34,35 +65,40 @@ jest.mock("@/components/ui", () => ({
 }))
 
 // Mock Thumbnails component
-jest.mock("../common/Thumbnails", () => ({
+jest.mock("@/components/common/Thumbnails", () => ({
 	__esModule: true,
 	default: () => <div data-testid="thumbnails">Thumbnails</div>,
 }))
 
 // Mock DeleteTaskDialog
-jest.mock("../history/DeleteTaskDialog", () => ({
+jest.mock("@/components/history/DeleteTaskDialog", () => ({
 	DeleteTaskDialog: () => <div data-testid="delete-task-dialog">Delete Task Dialog</div>,
 }))
 
 // Mock settings utilities
-jest.mock("../settings/ApiOptions", () => ({
+jest.mock("@/components/settings/ApiOptions", () => ({
 	normalizeApiConfiguration: jest.fn(() => ({
 		selectedModelInfo: {
 			contextWindow: 128000,
 			supportsPromptCache: true,
 			thinking: false,
 		},
+		apiProvider: "openai",
 	})),
 }))
 
 // Mock react-use hooks
 jest.mock("react-use", () => ({
 	useWindowSize: jest.fn(() => ({ width: 1024, height: 768 })),
+	useEvent: jest.fn(() => {
+		// In tests, we don't need the actual event listener
+		// Just return a no-op
+	}),
 }))
 
-// Mock ExtensionStateContext since we use useExtensionState
-jest.mock("../context/ExtensionStateContext", () => ({
-	...jest.requireActual("../context/ExtensionStateContext"),
+// Mock ExtensionStateContext completely
+jest.mock("@/context/ExtensionStateContext", () => ({
+	ExtensionStateContextProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 	useExtensionState: jest.fn(() => ({
 		apiConfiguration: {
 			apiProvider: "openai",
@@ -73,6 +109,38 @@ jest.mock("../context/ExtensionStateContext", () => ({
 			number: 1,
 			size: 1024,
 		},
+		didHydrateState: true,
+		showWelcome: false,
+		theme: {},
+		mcpServers: [],
+		filePaths: [],
+		openedTabs: [],
+		setApiConfiguration: jest.fn(),
+		setCustomInstructions: jest.fn(),
+		setAlwaysAllowReadOnly: jest.fn(),
+		setAlwaysAllowReadOnlyOutsideWorkspace: jest.fn(),
+		setAlwaysAllowWrite: jest.fn(),
+		setAlwaysAllowWriteOutsideWorkspace: jest.fn(),
+		setAlwaysAllowExecute: jest.fn(),
+		setAlwaysAllowBrowser: jest.fn(),
+		setAlwaysAllowMcp: jest.fn(),
+		setAlwaysAllowModeSwitch: jest.fn(),
+		setAlwaysAllowSubtasks: jest.fn(),
+		setBrowserToolEnabled: jest.fn(),
+		setShowTheaIgnoredFiles: jest.fn(),
+		setShowAnnouncement: jest.fn(),
+		setAllowedCommands: jest.fn(),
+		setSoundEnabled: jest.fn(),
+		setSoundVolume: jest.fn(),
+		setTerminalShellIntegrationTimeout: jest.fn(),
+		setTtsEnabled: jest.fn(),
+		setTtsSpeed: jest.fn(),
+		setDiffEnabled: jest.fn(),
+		setEnableCheckpoints: jest.fn(),
+		setBrowserViewportSize: jest.fn(),
+		setFuzzyMatchThreshold: jest.fn(),
+		setWriteDelayMs: jest.fn(),
+		setScreenshotQuality: jest.fn(),
 	})),
 }))
 
@@ -109,14 +177,17 @@ describe("ContextWindowProgress", () => {
 			onClose: jest.fn(),
 		}
 
+		// Mock the extension state context provider
+		const MockExtensionStateProvider = ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+
 		return render(
-			<ExtensionStateContextProvider>
-				<TranslationProvider>
+			<MockExtensionStateProvider>
+				<MockTranslationProvider>
 					<QueryClientProvider client={queryClient}>
 						<TaskHeader {...defaultProps} {...props} />
 					</QueryClientProvider>
-				</TranslationProvider>
-			</ExtensionStateContextProvider>
+				</MockTranslationProvider>
+			</MockExtensionStateProvider>
 		)
 	}
 
@@ -130,12 +201,16 @@ describe("ContextWindowProgress", () => {
 			contextWindow: 4000,
 		})
 
-		// Check for basic elements
+		// Check for the task title (from TaskHeader)
+		const taskHeaderElement = screen.getByText(/Test task/i)
+		expect(taskHeaderElement).toBeInTheDocument()
+
+		// Check for context window specific elements
 		expect(screen.getByTestId("context-window-label")).toBeInTheDocument()
 		expect(screen.getByTestId("context-tokens-count")).toHaveTextContent("1000") // contextTokens
-		// The actual context window might be different than what we pass in
-		// due to the mock returning a default value from the API config
-		expect(screen.getByTestId("context-window-size")).toHaveTextContent(/(4000|128000)/) // contextWindow
+		expect(screen.getByTestId("context-window-size")).toHaveTextContent("128000") // from selectedModelInfo.contextWindow mock
+		expect(screen.getByTestId("context-tokens-used")).toBeInTheDocument()
+		expect(screen.getByTestId("context-reserved-tokens")).toBeInTheDocument()
 	})
 
 	test("handles zero context window gracefully", () => {

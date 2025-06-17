@@ -1,5 +1,6 @@
 // npx jest src/components/settings/__tests__/ApiOptions.test.ts
 
+import React from "react"
 import { render, screen } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -9,52 +10,100 @@ import ApiOptions from "../ApiOptions"
 
 // Mock VSCode components
 jest.mock("@/components/ui/vscode-components", () => ({
-	VSCodeTextField: ({ children, value, onBlur }: { [key: string]: unknown }) => (
+	VSCodeTextField: ({ 
+		children, 
+		value, 
+		onBlur 
+	}: { 
+		children?: React.ReactNode
+		value?: string | number
+		onBlur?: (e: React.ChangeEvent<HTMLInputElement>) => void 
+	}) => (
 		<div>
 			{children}
 			<input type="text" value={value} onChange={onBlur} />
 		</div>
 	),
-	VSCodeLink: ({ children, href }: { [key: string]: unknown }) => <a href={href}>{children}</a>,
-	VSCodeRadio: ({ value, checked }: { [key: string]: unknown }) => (
+	VSCodeLink: ({ children, href }: { children?: React.ReactNode; href?: string }) => <a href={href}>{children}</a>,
+	VSCodeRadio: ({ 
+		value, 
+		checked 
+	}: { 
+		value?: string | number
+		checked?: boolean 
+	}) => (
 		<input type="radio" value={value} checked={checked} />
 	),
-	VSCodeRadioGroup: ({ children }: { [key: string]: unknown }) => <div>{children}</div>,
-	VSCodeButton: ({ children }: { [key: string]: unknown }) => <div>{children}</div>,
+	VSCodeRadioGroup: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+	VSCodeButton: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
 // Mock other components
 jest.mock("vscrui", () => ({
-	Checkbox: ({ children, checked, onChange }: { [key: string]: unknown }) => (
+	Checkbox: ({ 
+		children, 
+		checked, 
+		onChange 
+	}: { 
+		children?: React.ReactNode
+		checked?: boolean
+		onChange?: (checked: boolean) => void 
+	}) => (
 		<label>
-			<input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+			<input type="checkbox" checked={checked} onChange={(e) => onChange?.(e.target.checked)} />
 			{children}
 		</label>
 	),
-	Button: ({ children, onClick }: { [key: string]: unknown }) => <button onClick={onClick}>{children}</button>,
+	Button: ({ 
+		children, 
+		onClick 
+	}: { 
+		children?: React.ReactNode
+		onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void 
+	}) => <button onClick={onClick}>{children}</button>,
 }))
 
 // Mock @shadcn/ui components
 jest.mock("@/components/ui", () => ({
-	Select: ({ children, value, onValueChange }: { [key: string]: unknown }) => (
+	Select: ({ 
+		children, 
+		value, 
+		onValueChange 
+	}: { 
+		children?: React.ReactNode
+		value?: string
+		onValueChange?: (value: string) => void 
+	}) => (
 		<div className="select-mock">
 			<select value={value} onChange={(e) => onValueChange && onValueChange(e.target.value)}>
 				{children}
 			</select>
 		</div>
 	),
-	SelectTrigger: ({ children }: { [key: string]: unknown }) => <div className="select-trigger-mock">{children}</div>,
-	SelectValue: ({ children }: { [key: string]: unknown }) => <div className="select-value-mock">{children}</div>,
-	SelectContent: ({ children }: { [key: string]: unknown }) => <div className="select-content-mock">{children}</div>,
-	SelectItem: ({ children, value }: { [key: string]: unknown }) => (
+	SelectTrigger: ({ children }: { children?: React.ReactNode }) => <div className="select-trigger-mock">{children}</div>,
+	SelectValue: ({ children }: { children?: React.ReactNode }) => <div className="select-value-mock">{children}</div>,
+	SelectContent: ({ children }: { children?: React.ReactNode }) => <div className="select-content-mock">{children}</div>,
+	SelectItem: ({ 
+		children, 
+		value 
+	}: { 
+		children?: React.ReactNode
+		value?: string | number 
+	}) => (
 		<option value={value} className="select-item-mock">
 			{children}
 		</option>
 	),
-	SelectSeparator: ({ children }: { [key: string]: unknown }) => (
+	SelectSeparator: ({ children }: { children?: React.ReactNode }) => (
 		<div className="select-separator-mock">{children}</div>
 	),
-	Button: ({ children, onClick }: { [key: string]: unknown }) => (
+	Button: ({ 
+		children, 
+		onClick 
+	}: { 
+		children?: React.ReactNode
+		onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void 
+	}) => (
 		<button onClick={onClick} className="button-mock">
 			{children}
 		</button>
@@ -62,12 +111,18 @@ jest.mock("@/components/ui", () => ({
 }))
 
 jest.mock("../TemperatureControl", () => ({
-	TemperatureControl: ({ value, onChange }: { [key: string]: unknown }) => (
+	TemperatureControl: ({ 
+		value, 
+		onChange 
+	}: { 
+		value?: number
+		onChange?: (value: number) => void 
+	}) => (
 		<div data-testid="temperature-control">
 			<input
 				type="range"
 				value={value || 0}
-				onChange={(e) => onChange(parseFloat(e.target.value))}
+				onChange={(e) => onChange?.(parseFloat(e.target.value))}
 				min={0}
 				max={2}
 				step={0.1}
@@ -81,13 +136,14 @@ jest.mock("../ThinkingBudget", () => ({
 	ThinkingBudget: ({
 		apiConfiguration,
 		modelInfo,
-		provider,
 	}: {
-		[key: string]: unknown
+		apiConfiguration?: { modelMaxThinkingTokens?: number }
+		modelInfo?: { thinking?: boolean }
+		setApiConfigurationField?: (field: string, value: unknown) => void
 	}) =>
 		modelInfo?.thinking ? (
-			<div data-testid="thinking-budget" data-provider={provider}>
-				<input data-testid="thinking-tokens" value={apiConfiguration?.modelMaxThinkingTokens} />
+			<div data-testid="thinking-budget">
+				<input data-testid="thinking-tokens" value={apiConfiguration?.modelMaxThinkingTokens || 0} />
 			</div>
 		) : null,
 }))

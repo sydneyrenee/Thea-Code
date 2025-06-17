@@ -142,25 +142,24 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				}
 			})
 
-			void getUnboundModels().then(async (unboundModels) => {
-				if (Object.keys(unboundModels).length > 0) {
-					await fs.writeFile(
-						path.join(cacheDir, GlobalFileNames.unboundModels),
-						JSON.stringify(unboundModels),
+			const unboundModels = await getUnboundModels()
+			if (Object.keys(unboundModels).length > 0) {
+				await fs.writeFile(
+					path.join(cacheDir, GlobalFileNames.unboundModels),
+					JSON.stringify(unboundModels),
+				)
+				await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
+
+				const { apiConfiguration } = await provider.getState()
+
+				if (apiConfiguration?.unboundModelId) {
+					await provider.updateGlobalState(
+						"unboundModelInfo",
+						unboundModels[apiConfiguration.unboundModelId],
 					)
-					await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
-
-					const { apiConfiguration } = await provider.getState()
-
-					if (apiConfiguration?.unboundModelId) {
-						await provider.updateGlobalState(
-							"unboundModelInfo",
-							unboundModels[apiConfiguration.unboundModelId],
-						)
-						await provider.postStateToWebview()
-					}
+					await provider.postStateToWebview()
 				}
-			})
+			}
 
 			void provider.readModelsFromCache(GlobalFileNames.requestyModels).then((requestyModels) => {
 				if (requestyModels) {

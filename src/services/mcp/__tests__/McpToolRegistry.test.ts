@@ -23,7 +23,7 @@ describe("McpToolRegistry", () => {
 			paramSchema: {
 				param: { type: "string", description: "A test parameter" },
 			},
-			handler: (args: Record<string, unknown>) => {
+			handler: async (args: Record<string, unknown>) => {
 				return {
 					content: [{ type: "text", text: `Executed test_tool with param: ${String(args.param)}` }],
 				}
@@ -43,7 +43,7 @@ describe("McpToolRegistry", () => {
 		const toolDefinition: ToolDefinition = {
 			name: "test_tool",
 			description: "A test tool",
-			handler: () => ({ content: [] }),
+			handler: async () => ({ content: [] }),
 		}
 
 		registry.registerTool(toolDefinition)
@@ -71,13 +71,13 @@ describe("McpToolRegistry", () => {
 		const tool1: ToolDefinition = {
 			name: "tool1",
 			description: "Tool 1",
-			handler: () => ({ content: [] }),
+			handler: async () => ({ content: [] }),
 		}
 
 		const tool2: ToolDefinition = {
 			name: "tool2",
 			description: "Tool 2",
-			handler: () => ({ content: [] }),
+			handler: async () => ({ content: [] }),
 		}
 
 		registry.registerTool(tool1)
@@ -97,7 +97,7 @@ describe("McpToolRegistry", () => {
 		const toolDefinition: ToolDefinition = {
 			name: "test_tool",
 			description: "A test tool",
-			handler: (args: Record<string, unknown>) => {
+			handler: async (args: Record<string, unknown>) => {
 				return {
 					content: [{ type: "text", text: `Executed with param: ${String(args.param)}` }],
 				}
@@ -150,7 +150,7 @@ describe("McpToolRegistry", () => {
 		const toolDefinition: ToolDefinition = {
 			name: "test_tool",
 			description: "A test tool",
-			handler: () => ({ content: [] }),
+			handler: async () => ({ content: [] }),
 		}
 
 		// Register the tool

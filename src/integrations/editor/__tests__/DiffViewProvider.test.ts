@@ -48,17 +48,17 @@ describe("DiffViewProvider", () => {
 		;(diffViewProvider as unknown as { relPath: string }).relPath = "test.txt"
 		;(diffViewProvider as unknown as { activeDiffEditor: vscode.TextEditor }).activeDiffEditor = {
 			document: {
-				uri: { fsPath: `${mockCwd}/test.txt` },
+				uri: vscode.Uri.file(`${mockCwd}/test.txt`),
 				getText: jest.fn(),
 				lineCount: 10,
-			},
+			} as unknown as vscode.TextDocument,
 			selection: {
-				active: { line: 0, character: 0 },
-				anchor: { line: 0, character: 0 },
-			},
+				active: new vscode.Position(0, 0),
+				anchor: new vscode.Position(0, 0),
+			} as unknown as vscode.Selection,
 			edit: jest.fn().mockResolvedValue(true),
 			revealRange: jest.fn(),
-		}
+		} as unknown as vscode.TextEditor
 		;(
 			diffViewProvider as unknown as { activeLineController: { setActiveLine: jest.Mock; clear: jest.Mock } }
 		).activeLineController = { setActiveLine: jest.fn(), clear: jest.fn() }

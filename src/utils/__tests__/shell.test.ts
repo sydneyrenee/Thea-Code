@@ -2,11 +2,18 @@ import * as vscode from "vscode"
 import { userInfo } from "os"
 import { getShell } from "../shell"
 
+// Mock the os module
+jest.mock("os", () => ({
+	userInfo: jest.fn(() => ({ shell: null }))
+}))
+
+const mockedUserInfo = userInfo as jest.MockedFunction<typeof userInfo>
+
+
 describe("Shell Detection Tests", () => {
 	let originalPlatform: string
 	let originalEnv: NodeJS.ProcessEnv
 	let originalGetConfig: typeof vscode.workspace.getConfiguration
-	let originalUserInfo: typeof userInfo
 
 	// Helper to mock VS Code configuration
 	function mockVsCodeConfig(
@@ -14,7 +21,7 @@ describe("Shell Detection Tests", () => {
 		defaultProfileName: string | null,
 		profiles: Record<string, unknown>,
 	) {
-		vscode.workspace.getConfiguration = () =>
+		;(vscode.workspace.getConfiguration as jest.Mock).mockImplementation(() =>
 			({
 				get: (key: string) => {
 					if (key === `defaultProfile.${platformKey}`) {
@@ -26,6 +33,7 @@ describe("Shell Detection Tests", () => {
 					return undefined
 				},
 			}) as unknown as typeof vscode.workspace.getConfiguration
+		)
 	}
 
 	// Helper function to create a properly typed mock for vscode.workspace.getConfiguration
@@ -38,14 +46,13 @@ describe("Shell Detection Tests", () => {
 		originalPlatform = process.platform
 		originalEnv = { ...process.env }
 		originalGetConfig = vscode.workspace.getConfiguration
-		originalUserInfo = userInfo
 
 		// Clear environment variables for a clean test
 		delete process.env.SHELL
 		delete process.env.COMSPEC
 
 		// Default userInfo() mock
-		userInfo = jest.fn(() => ({ shell: null })) as unknown as typeof userInfo
+		mockedUserInfo.mockReturnValue({ shell: null, username: 'test', uid: 1000, gid: 1000, homedir: '/home/test' })
 	})
 
 	afterEach(() => {
@@ -53,7 +60,7 @@ describe("Shell Detection Tests", () => {
 		Object.defineProperty(process, "platform", { value: originalPlatform })
 		process.env = originalEnv
 		vscode.workspace.getConfiguration = originalGetConfig
-		userInfo = originalUserInfo
+		jest.restoreAllMocks()
 	})
 
 	// --------------------------------------------------------------------------
@@ -114,7 +121,7 @@ describe("Shell Detection Tests", () => {
 
 		it("respects userInfo() if no VS Code config is available", () => {
 			vscode.workspace.getConfiguration = createConfigMock(undefined)
-			userInfo = jest.fn(() => ({ shell: "C:\\Custom\\PowerShell.exe" })) as unknown as typeof userInfo
+			mockedUserInfo.mockReturnValue({ shell: "C:\\Custom\\PowerShell.exe", username: 'test', uid: 1000, gid: 1000, homedir: '/home/test' })
 
 			expect(getShell()).toBe("C:\\Custom\\PowerShell.exe")
 		})
@@ -144,7 +151,7 @@ describe("Shell Detection Tests", () => {
 
 		it("falls back to userInfo().shell if no VS Code config is available", () => {
 			vscode.workspace.getConfiguration = createConfigMock(undefined)
-			userInfo = jest.fn(() => ({ shell: "/opt/homebrew/bin/zsh" })) as unknown as typeof userInfo
+			mockedUserInfo.mockReturnValue({ shell: "/opt/homebrew/bin/zsh", username: 'test', uid: 1000, gid: 1000, homedir: '/home/test' })
 			expect(getShell()).toBe("/opt/homebrew/bin/zsh")
 		})
 
@@ -177,7 +184,7 @@ describe("Shell Detection Tests", () => {
 
 		it("falls back to userInfo().shell if no VS Code config is available", () => {
 			vscode.workspace.getConfiguration = createConfigMock(undefined)
-			userInfo = jest.fn(() => ({ shell: "/usr/bin/zsh" })) as unknown as typeof userInfo
+			mockedUserInfo.mockReturnValue({ shell: "/usr/bin/zsh", username: 'test', uid: 1000, gid: 1000, homedir: '/home/test' })
 			expect(getShell()).toBe("/usr/bin/zsh")
 		})
 
@@ -208,16 +215,16 @@ describe("Shell Detection Tests", () => {
 			vscode.workspace.getConfiguration = (() => {
 				throw new Error("Configuration error")
 			}) as unknown as typeof vscode.workspace.getConfiguration
-			userInfo = jest.fn(() => ({ shell: "/bin/bash" })) as unknown as typeof userInfo
+			mockedUserInfo.mockReturnValue({ shell: "/bin/bash", username: 'test', uid: 1000, gid: 1000, homedir: '/home/test' })
 			expect(getShell()).toBe("/bin/bash")
 		})
 
 		it("handles userInfo errors gracefully, falling back to environment variable if present", () => {
 			Object.defineProperty(process, "platform", { value: "darwin" })
 			vscode.workspace.getConfiguration = createConfigMock(undefined)
-			userInfo = jest.fn(() => {
+			mockedUserInfo.mockImplementation(() => {
 				throw new Error("userInfo error")
-			}) as unknown as typeof userInfo
+			})
 			process.env.SHELL = "/bin/zsh"
 			expect(getShell()).toBe("/bin/zsh")
 		})
@@ -227,9 +234,9 @@ describe("Shell Detection Tests", () => {
 			vscode.workspace.getConfiguration = (() => {
 				throw new Error("Configuration error")
 			}) as unknown as typeof vscode.workspace.getConfiguration
-			userInfo = jest.fn(() => {
+			mockedUserInfo.mockImplementation(() => {
 				throw new Error("userInfo error")
-			}) as unknown as typeof userInfo
+			})
 			expect(getShell()).toBe("/bin/bash")
 		})
 	})

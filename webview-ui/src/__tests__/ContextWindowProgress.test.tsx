@@ -1,15 +1,68 @@
 import React from "react"
 import { render, screen } from "@testing-library/react"
 import "@testing-library/jest-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import TaskHeader from "../components/chat/TaskHeader"
+import { ExtensionStateContextProvider } from "../context/ExtensionStateContext"
+import TranslationProvider from "../i18n/TranslationContext"
 
 // Mock formatLargeNumber function
 jest.mock("@/utils/format", () => ({
 	formatLargeNumber: jest.fn((num) => num.toString()),
 }))
 
+// Mock vscode utility
+jest.mock("@/utils/vscode", () => ({
+	vscode: {
+		postMessage: jest.fn(),
+	},
+}))
+
+// Mock model utils
+jest.mock("@/utils/model-utils", () => ({
+	calculateTokenDistribution: jest.fn(() => ({ input: 100, output: 100, cache: 50 })),
+	getMaxTokensForModel: jest.fn(() => 128000),
+}))
+
+// Mock UI components
+jest.mock("../ui/vscode-components", () => ({
+	VSCodeButton: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => <button onClick={onClick}>{children}</button>,
+}))
+
+jest.mock("@/components/ui", () => ({
+	Button: ({ children, onClick }: { children?: React.ReactNode; onClick?: () => void }) => <button onClick={onClick}>{children}</button>,
+}))
+
+// Mock Thumbnails component
+jest.mock("../common/Thumbnails", () => ({
+	__esModule: true,
+	default: () => <div data-testid="thumbnails">Thumbnails</div>,
+}))
+
+// Mock DeleteTaskDialog
+jest.mock("../history/DeleteTaskDialog", () => ({
+	DeleteTaskDialog: () => <div data-testid="delete-task-dialog">Delete Task Dialog</div>,
+}))
+
+// Mock settings utilities
+jest.mock("../settings/ApiOptions", () => ({
+	normalizeApiConfiguration: jest.fn(() => ({
+		selectedModelInfo: {
+			contextWindow: 128000,
+			supportsPromptCache: true,
+			thinking: false,
+		},
+	})),
+}))
+
+// Mock react-use hooks
+jest.mock("react-use", () => ({
+	useWindowSize: jest.fn(() => ({ width: 1024, height: 768 })),
+}))
+
 // Mock ExtensionStateContext since we use useExtensionState
 jest.mock("../context/ExtensionStateContext", () => ({
+	...jest.requireActual("../context/ExtensionStateContext"),
 	useExtensionState: jest.fn(() => ({
 		apiConfiguration: {
 			apiProvider: "openai",
@@ -24,16 +77,18 @@ jest.mock("../context/ExtensionStateContext", () => ({
 }))
 
 // Mock highlighting function to avoid JSX parsing issues in tests
-jest.mock("../components/chat/TaskHeader", () => {
-	const originalModule = jest.requireActual("../components/chat/TaskHeader")
-	return {
-		__esModule: true,
-		...originalModule,
-		highlightMentions: jest.fn((text) => text),
-	}
-})
+// jest.mock("../components/chat/TaskHeader", () => {
+// 	const originalModule = jest.requireActual("../components/chat/TaskHeader")
+// 	return {
+// 		__esModule: true,
+// 		...originalModule,
+// 		highlightMentions: jest.fn((text) => text),
+// 	}
+// })
 
 describe("ContextWindowProgress", () => {
+	const queryClient = new QueryClient()
+
 	// Helper function to render just the ContextWindowProgress part through TaskHeader
 	const renderComponent = (props: Record<string, unknown>) => {
 		// Create a simple mock of the task that avoids importing the actual types
@@ -54,7 +109,15 @@ describe("ContextWindowProgress", () => {
 			onClose: jest.fn(),
 		}
 
-		return render(<TaskHeader {...defaultProps} {...props} />)
+		return render(
+			<ExtensionStateContextProvider>
+				<TranslationProvider>
+					<QueryClientProvider client={queryClient}>
+						<TaskHeader {...defaultProps} {...props} />
+					</QueryClientProvider>
+				</TranslationProvider>
+			</ExtensionStateContextProvider>
+		)
 	}
 
 	beforeEach(() => {

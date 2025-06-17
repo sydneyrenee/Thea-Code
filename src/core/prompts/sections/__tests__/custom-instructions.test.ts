@@ -50,13 +50,10 @@ describe("loadRuleFiles", () => {
 	})
 
 	it("should combine content from multiple rule files when they exist", async () => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		mockedFs.readFile.mockImplementation((filePath: any) => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		(fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
 			if (filePath.toString().endsWith(".Thearules")) {
 				return Promise.resolve("cline rules content")
 			}
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 			if (filePath.toString().endsWith(".cursorrules")) {
 				return Promise.resolve("cursor rules content")
 			}
@@ -88,22 +85,19 @@ describe("loadRuleFiles", () => {
 	})
 
 	it("should skip directories with same name as rule files", async () => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		mockedFs.readFile.mockImplementation((filePath: any) => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		(fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
 			if (filePath.toString().endsWith(".Thearules")) {
 				const error = new Error("Directory error") as Error & { code: string }
 				error.code = "EISDIR"
 				return Promise.reject(error)
 			}
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 			if (filePath.toString().endsWith(".cursorrules")) {
 				return Promise.resolve("cursor rules content")
 			}
 			const error = new Error("File not found") as Error & { code: string }
 			error.code = "ENOENT"
 			return Promise.reject(error)
-		}
+		})
 
 		const result = await loadRuleFiles("/fake/path")
 		expect(result).toBe("\n# Rules from .cursorrules:\ncursor rules content\n")
@@ -183,7 +177,7 @@ describe("addCustomInstructions", () => {
 	})
 
 	it("should skip mode-specific rule files that are directories", async () => {
-		mockedFs.readFile.mockImplementation(((filePath: string | Buffer | URL | number) => {
+		(fs.readFile as jest.Mock).mockImplementation((filePath: string) => {
 			if (filePath.toString().includes(".Thearules-test-mode")) {
 				const error = new Error("Directory error") as Error & { code: string }
 				error.code = "EISDIR"
@@ -192,7 +186,7 @@ describe("addCustomInstructions", () => {
 			const error = new Error("File not found") as Error & { code: string }
 			error.code = "ENOENT"
 			return Promise.reject(error)
-		}) as unknown as { type: string })
+		})
 
 		const result = await addCustomInstructions(
 			"mode instructions",

@@ -10,33 +10,48 @@ import { formatResponse } from "../../prompts/responses"
 jest.mock("../../prompts/responses")
 
 describe("askFollowupQuestionTool", () => {
-	type MockTheaTask = jest.Mocked<Partial<TheaTask>> & {
+	type MockTheaTask = {
 		consecutiveMistakeCount: number
-		webviewCommunicator: { ask: jest.Mock; say: jest.Mock }
+		webviewCommunicator: { 
+			ask: jest.Mock
+			say: jest.Mock
+		}
 		sayAndCreateMissingParamError: jest.Mock
 	}
 
 	let mockTheaTask: MockTheaTask
-	let mockAskApproval: jest.Mock
-	let mockHandleError: jest.Mock
-	let mockPushToolResult: jest.Mock
-	let mockRemoveClosingTag: jest.Mock
+	let mockAskApproval: jest.MockedFunction<AskApproval>
+	let mockHandleError: jest.MockedFunction<HandleError>
+	let mockPushToolResult: jest.MockedFunction<PushToolResult>
+	let mockRemoveClosingTag: jest.MockedFunction<RemoveClosingTag>
 	const mockedFormatResponse = formatResponse as jest.Mocked<typeof formatResponse>
 
 	beforeEach(() => {
 		jest.clearAllMocks()
+		const mockAsk = jest.fn()
+		const mockSay = jest.fn()
+		const mockSayAndCreateMissingParamError = jest.fn()
+		
+		// Use type assertion to avoid jest inference issues
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockAsk as any).mockResolvedValue({ response: "yesButtonClicked", text: undefined, images: undefined })
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockSay as any).mockResolvedValue(undefined)
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockSayAndCreateMissingParamError as any).mockResolvedValue("Missing param error")
+		
 		mockTheaTask = {
 			consecutiveMistakeCount: 0,
 			webviewCommunicator: {
-				ask: jest.fn().mockResolvedValue({}),
-				say: jest.fn().mockResolvedValue(undefined),
+				ask: mockAsk,
+				say: mockSay,
 			},
-			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing param error"),
-		} as MockTheaTask
-		mockAskApproval = jest.fn()
-		mockHandleError = jest.fn().mockResolvedValue(undefined)
-		mockPushToolResult = jest.fn()
-		mockRemoveClosingTag = jest.fn((_tag: string, content?: string) => content ?? "")
+			sayAndCreateMissingParamError: mockSayAndCreateMissingParamError,
+		}
+		mockAskApproval = jest.fn<AskApproval>()
+		mockHandleError = jest.fn<HandleError>().mockResolvedValue(undefined)
+		mockPushToolResult = jest.fn<PushToolResult>()
+		mockRemoveClosingTag = jest.fn<RemoveClosingTag>().mockImplementation((_tag: string, content?: string) => content ?? "")
 	})
 
 	it("handles partial blocks by sending a progress update", async () => {
@@ -91,7 +106,8 @@ describe("askFollowupQuestionTool", () => {
 			params: { question: "What?", follow_up: "<suggest><answer>Yes</answer></suggest>" },
 			partial: false,
 		}
-		mockTheaTask.webviewCommunicator.ask.mockResolvedValue({ text: "Sure", images: ["img"] })
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockTheaTask.webviewCommunicator.ask as any).mockResolvedValue({ response: "messageResponse", text: "Sure", images: ["img"] })
 		mockedFormatResponse.toolResult.mockReturnValue("tool result")
 
 		await askFollowupQuestionTool(

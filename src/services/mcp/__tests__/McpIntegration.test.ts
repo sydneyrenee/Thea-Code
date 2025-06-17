@@ -98,7 +98,7 @@ describe("McpIntegration", () => {
 				name: "test_tool",
 				description: "A test tool",
 				paramSchema: { type: "object" },
-				handler: () => ({ content: [], isError: false }),
+				handler: async () => ({ content: [], isError: false }),
 			}
 
 			mcpIntegration.registerTool(toolDefinition)

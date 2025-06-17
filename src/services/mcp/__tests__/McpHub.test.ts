@@ -70,7 +70,9 @@ describe("McpHub", () => {
 			context: {
 				subscriptions: [],
 				workspaceState: {} as unknown as Memento,
-				globalState: {} as unknown as Memento,
+				globalState: {
+					setKeysForSync: jest.fn(),
+				} as unknown as Memento & { setKeysForSync(keys: readonly string[]): void },
 				secrets: {} as unknown as SecretStorage,
 				extensionUri: mockUri,
 				extensionPath: "/test/path",
@@ -96,7 +98,7 @@ describe("McpHub", () => {
 				extensionMode: 1,
 				logPath: "/test/path",
 				languageModelAccessInformation: {} as unknown,
-			} as ExtensionContext,
+			} as unknown as ExtensionContext,
 		}
 
 		// Mock fs.readFile for initial settings

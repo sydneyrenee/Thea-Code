@@ -241,17 +241,17 @@ describe("Ollama MCP Integration with SSE Transport", () => {
 
 		// Create a mock conversation history
 		const openAiMessages = [
-			{ role: "system", content: "You are a helpful assistant." },
-			{ role: "user", content: "Can you help me test a tool?" },
+			{ role: "system" as const, content: "You are a helpful assistant." },
+			{ role: "user" as const, content: "Can you help me test a tool?" },
 		]
 
-		// Create stream with functions included
+		// Create stream with functions included (cast to unknown to bypass strict typing)
 		const stream = await ollamaHandler.client.chat.completions.create({
 			model: ollamaHandler.getModel().id,
-			messages: openAiMessages,
+			messages: openAiMessages as any,
 			temperature: ollamaHandler.options.modelTemperature ?? 0,
 			stream: true,
-			functions: functions,
+			functions: functions as any,
 			function_call: "auto",
 		})
 
@@ -265,8 +265,8 @@ describe("Ollama MCP Integration with SSE Transport", () => {
 		const functionCallChunk = chunks.find((chunk) => chunk.choices[0]?.delta?.function_call?.name === "test_tool")
 
 		expect(functionCallChunk).toBeDefined()
-		expect(functionCallChunk.choices[0].delta.function_call.name).toBe("test_tool")
-		expect(JSON.parse(functionCallChunk.choices[0].delta.function_call.arguments)).toEqual({
+		expect(functionCallChunk!.choices[0].delta.function_call!.name).toBe("test_tool")
+		expect(JSON.parse(functionCallChunk!.choices[0].delta.function_call!.arguments!)).toEqual({
 			param: "test value",
 		})
 	})

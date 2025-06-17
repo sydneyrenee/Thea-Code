@@ -3,11 +3,9 @@
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 import { executeCommandTool } from "../executeCommandTool"
 import { TheaTask } from "../../TheaTask" // Renamed import
-import { TheaIgnoreController } from "../../ignore/TheaIgnoreController"
 import { ToolUse } from "../../assistant-message"
 import { formatResponse } from "../../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../types"
-import { TheaAskResponse } from "../../../shared/WebviewMessage" // Import response type
 
 // Mock dependencies
 jest.mock("../../TheaTask") // Renamed mock
@@ -15,65 +13,66 @@ jest.mock("../../prompts/responses")
 
 describe("executeCommandTool", () => {
 	// Setup common test variables
-	let mockTheaTask: jest.Mocked<Partial<TheaTask>> & {
+	let mockTheaTask: {
 		consecutiveMistakeCount: number
 		didRejectTool: boolean
-		webviewCommunicator: { say: jest.Mock } // Add communicator mock
-		taskStateManager: { getTokenUsage: jest.Mock } // Add state manager mock for getTokenUsage if needed by other tests
+		webviewCommunicator: { 
+			say: jest.Mock
+			ask: jest.Mock
+		}
+		taskStateManager: { getTokenUsage: jest.Mock }
+		theaIgnoreController: { validateCommand: jest.Mock }
+		sayAndCreateMissingParamError: jest.Mock
+		executeCommandTool: jest.Mock
 	}
-	let mockAskApproval: jest.Mock
-	let mockHandleError: jest.Mock
-	let mockPushToolResult: jest.Mock
-	let mockRemoveClosingTag: jest.Mock
+	let mockAskApproval: jest.MockedFunction<AskApproval>
+	let mockHandleError: jest.MockedFunction<HandleError>
+	let mockPushToolResult: jest.MockedFunction<PushToolResult>
+	let mockRemoveClosingTag: jest.MockedFunction<RemoveClosingTag>
 	let mockToolUse: ToolUse
 
 	beforeEach(() => {
 		// Reset mocks
 		jest.clearAllMocks()
 
-		// Create mock implementations with eslint directives to handle the type issues
+		// Create simplified mocks focused on what we're testing
+		const mockSay = jest.fn()
+		const mockAsk = jest.fn()
+		const mockGetTokenUsage = jest.fn()
+		const mockValidateCommand = jest.fn()
+		const mockSayAndCreateMissingParamError = jest.fn()
+		const mockExecuteCommandTool = jest.fn()
+		
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockSay as any).mockResolvedValue(undefined)
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockAsk as any).mockResolvedValue({ response: "yesButtonClicked" })
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockGetTokenUsage as any).mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 })
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockValidateCommand as any).mockReturnValue(null)
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockSayAndCreateMissingParamError as any).mockResolvedValue("Missing parameter error")
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		;(mockExecuteCommandTool as any).mockResolvedValue([false, "Command executed"])
+
 		mockTheaTask = {
-			// @ts-expect-error - Jest mock function type issues
-			ask: jest.fn().mockResolvedValue(undefined),
-			// @ts-expect-error - Jest mock function type issues
-			say: jest.fn().mockResolvedValue(undefined),
-			// @ts-expect-error - Jest mock function type issues
-			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error"),
-			// @ts-expect-error - Jest mock function type issues
-			executeCommandTool: jest.fn().mockResolvedValue([false, "Command executed"]),
 			consecutiveMistakeCount: 0,
 			didRejectTool: false,
-			theaIgnoreController: {
-				validateCommand: jest.fn().mockReturnValue(null), // Simplified mock
-			} as Partial<TheaIgnoreController>, // Use proper partial type instead of any
 			webviewCommunicator: {
-				// Add communicator mock setup
-				say: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-				ask: jest
-					.fn<() => Promise<{ response: TheaAskResponse; text?: string; images?: string[] }>>()
-					.mockResolvedValue({ response: "yesButtonClicked" }),
-			} as unknown as { type: string }, // Cast partial mock to any
-			taskStateManager: {
-				// Add state manager mock setup
-				getTokenUsage: jest
-					.fn<
-						() => {
-							totalTokensIn: number
-							totalTokensOut: number
-							totalCost: number
-							contextTokens: number
-						}
-					>()
-					.mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 }),
-			} as unknown as { type: string }, // Cast partial mock to any
+				say: mockSay,
+				ask: mockAsk,
+			},
+			taskStateManager: { getTokenUsage: mockGetTokenUsage },
+			theaIgnoreController: { validateCommand: mockValidateCommand },
+			sayAndCreateMissingParamError: mockSayAndCreateMissingParamError,
+			executeCommandTool: mockExecuteCommandTool,
 		}
 
-		// @ts-expect-error - Jest mock function type issues
-		mockAskApproval = jest.fn().mockResolvedValue(true)
-		// @ts-expect-error - Jest mock function type issues
-		mockHandleError = jest.fn().mockResolvedValue(undefined)
-		mockPushToolResult = jest.fn()
-		mockRemoveClosingTag = jest.fn().mockReturnValue("command")
+		mockAskApproval = jest.fn<AskApproval>().mockResolvedValue(true)
+		mockHandleError = jest.fn<HandleError>().mockResolvedValue(undefined)
+		mockPushToolResult = jest.fn<PushToolResult>()
+		mockRemoveClosingTag = jest.fn<RemoveClosingTag>().mockReturnValue("command")
 
 		// Create a mock tool use object
 		mockToolUse = {
@@ -238,8 +237,8 @@ describe("executeCommandTool", () => {
 		it("should handle command rejection", async () => {
 			// Setup
 			mockToolUse.params.command = "echo test"
-			// @ts-expect-error - Jest mock function type issues
-			mockAskApproval.mockResolvedValue(false)
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+			;(mockAskApproval as any).mockResolvedValue(false)
 
 			// Execute
 			await executeCommandTool(

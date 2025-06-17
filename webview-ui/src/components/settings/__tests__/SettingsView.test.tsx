@@ -1,5 +1,6 @@
 // npx jest src/components/settings/__tests__/SettingsView.test.ts
 
+import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 
@@ -34,7 +35,7 @@ jest.mock("lucide-react", () => {
 // Mock ApiConfigManager component
 jest.mock("../ApiConfigManager", () => ({
 	__esModule: true,
-	default: ({ currentApiConfigName }: { [key: string]: unknown }) => (
+	default: ({ currentApiConfigName }: { currentApiConfigName?: string }) => (
 		<div data-testid="api-config-management">
 			<span>Current config: {currentApiConfigName}</span>
 		</div>
@@ -43,7 +44,17 @@ jest.mock("../ApiConfigManager", () => ({
 
 // Mock VSCode components
 jest.mock("@/components/ui/vscode-components", () => ({
-	VSCodeButton: ({ children, onClick, appearance, "data-testid": dataTestId }: { [key: string]: unknown }) =>
+	VSCodeButton: ({ 
+		children, 
+		onClick, 
+		appearance, 
+		"data-testid": dataTestId 
+	}: { 
+		children?: React.ReactNode
+		onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+		appearance?: string
+		"data-testid"?: string 
+	}) =>
 		appearance === "icon" ? (
 			<button
 				onClick={onClick}
@@ -57,49 +68,97 @@ jest.mock("@/components/ui/vscode-components", () => ({
 				{children}
 			</button>
 		),
-	VSCodeCheckbox: ({ children, onChange, checked, "data-testid": dataTestId }: { [key: string]: unknown }) => (
+	VSCodeCheckbox: ({ 
+		children, 
+		onChange, 
+		checked, 
+		"data-testid": dataTestId 
+	}: { 
+		children?: React.ReactNode
+		onChange?: (e: { target: { checked: boolean } }) => void
+		checked?: boolean
+		"data-testid"?: string 
+	}) => (
 		<label>
 			<input
 				type="checkbox"
 				checked={checked}
-				onChange={(e) => onChange({ target: { checked: e.target.checked } })}
+				onChange={(e) => onChange?.({ target: { checked: e.target.checked } })}
 				aria-label={typeof children === "string" ? children : undefined}
 				data-testid={dataTestId}
 			/>
 			{children}
 		</label>
 	),
-	VSCodeTextField: ({ value, onInput, placeholder, "data-testid": dataTestId }: { [key: string]: unknown }) => (
+	VSCodeTextField: ({ 
+		value, 
+		onInput, 
+		placeholder, 
+		"data-testid": dataTestId 
+	}: { 
+		value?: string | number
+		onInput?: (e: { target: { value: string } }) => void
+		placeholder?: string
+		"data-testid"?: string 
+	}) => (
 		<input
 			type="text"
 			value={value}
-			onChange={(e) => onInput({ target: { value: e.target.value } })}
+			onChange={(e) => onInput?.({ target: { value: e.target.value } })}
 			placeholder={placeholder}
 			data-testid={dataTestId}
 		/>
 	),
-	VSCodeLink: ({ children, href }: { [key: string]: unknown }) => <a href={href || "#"}>{children}</a>,
-	VSCodeRadio: ({ value, checked, onChange }: { [key: string]: unknown }) => (
+	VSCodeLink: ({ 
+		children, 
+		href 
+	}: { 
+		children?: React.ReactNode
+		href?: string 
+	}) => <a href={href || "#"}>{children}</a>,
+	VSCodeRadio: ({ 
+		value, 
+		checked, 
+		onChange 
+	}: { 
+		value?: string | number
+		checked?: boolean
+		onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void 
+	}) => (
 		<input type="radio" value={value} checked={checked} onChange={onChange} />
 	),
-	VSCodeRadioGroup: ({ children, onChange }: { [key: string]: unknown }) => <div onChange={onChange}>{children}</div>,
+	VSCodeRadioGroup: ({ 
+		children, 
+		onChange 
+	}: { 
+		children?: React.ReactNode
+		onChange?: (e: React.FormEvent<HTMLDivElement>) => void 
+	}) => <div onChange={onChange}>{children}</div>,
 }))
 
 // Mock Slider component
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Slider: ({ value, onValueChange, "data-testid": dataTestId }: { [key: string]: unknown }) => (
+	Slider: ({ 
+		value, 
+		onValueChange, 
+		"data-testid": dataTestId 
+	}: { 
+		value?: number[]
+		onValueChange?: (value: number[]) => void
+		"data-testid"?: string 
+	}) => (
 		<input
 			type="range"
-			value={value[0]}
-			onChange={(e) => onValueChange([parseFloat(e.target.value)])}
+			value={value?.[0] || 0}
+			onChange={(e) => onValueChange?.([parseFloat(e.target.value)])}
 			data-testid={dataTestId}
 		/>
 	),
 }))
 
 // Mock window.postMessage to trigger state hydration
-const mockPostMessage = (state: unknown) => {
+const mockPostMessage = (state: Record<string, unknown> = {}) => {
 	window.postMessage(
 		{
 			type: "state",

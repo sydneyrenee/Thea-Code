@@ -109,8 +109,6 @@ export interface WebviewMessage {
 		| "deleteMcpServer"
 		| "maxOpenTabsContext"
 		| "maxWorkspaceFiles"
-		| "humanRelayResponse"
-		| "humanRelayCancel"
 		| "browserToolEnabled"
 		| "telemetrySetting"
 		| "showTheaIgnoredFiles" // Rename message type

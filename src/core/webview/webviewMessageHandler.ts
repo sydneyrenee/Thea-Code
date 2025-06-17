@@ -42,7 +42,7 @@ import { Mode, defaultModeSlug, getModeBySlug, getGroupName } from "../../shared
 import { getDiffStrategy } from "../diff/DiffStrategy"
 import { SYSTEM_PROMPT } from "../prompts/system"
 import { buildApiHandler } from "../../api"
-import { EXTENSION_CONFIG_DIR, configSection, EXTENSION_NAME } from "../../../dist/thea-config" // Import branded constants
+import { EXTENSION_CONFIG_DIR, configSection } from "../../../dist/thea-config" // Import branded constants
 
 // Export for testing
 export const webviewMessageHandler = async (provider: TheaProvider, message: WebviewMessage) => {
@@ -1370,24 +1370,6 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				// Switch back to default mode after deletion
 				await provider.updateGlobalState("mode", defaultModeSlug)
 				await provider.postStateToWebview()
-			}
-			break
-		case "humanRelayResponse":
-			if (message.requestId && message.text) {
-				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, {
-					requestId: message.requestId,
-					text: message.text,
-					cancelled: false,
-				})
-			}
-			break
-
-		case "humanRelayCancel":
-			if (message.requestId) {
-				vscode.commands.executeCommand(`${EXTENSION_NAME}.handleHumanRelayResponse`, {
-					requestId: message.requestId,
-					cancelled: true,
-				})
 			}
 			break
 

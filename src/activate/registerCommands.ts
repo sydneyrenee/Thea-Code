@@ -4,7 +4,6 @@ import delay from "delay"
 import { TheaProvider } from "../core/webview/TheaProvider" // Renamed import
 import { EXTENSION_NAME, EXTENSION_DISPLAY_NAME, HOMEPAGE_URL, COMMANDS } from "../../dist/thea-config" // Import branded constants
 
-import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask" // Fixed: removed type-only import
 
 // Store panel references in both modes
@@ -78,23 +77,6 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL))
 		},
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
-		[`${EXTENSION_NAME}.showHumanRelayDialog`]: (params: { requestId: string; promptText: string }) => {
-			const panel = getPanel()
-
-			if (panel) {
-				panel?.webview.postMessage({
-					type: "showHumanRelayDialog",
-					requestId: params.requestId,
-					promptText: params.promptText,
-				})
-			}
-		},
-		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
-		[`${EXTENSION_NAME}.registerHumanRelayCallback`]: registerHumanRelayCallback,
-		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
-		[`${EXTENSION_NAME}.unregisterHumanRelayCallback`]: unregisterHumanRelayCallback,
-		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
-		[`${EXTENSION_NAME}.handleHumanRelayResponse`]: handleHumanRelayResponse,
 		[COMMANDS.NEW_TASK]: handleNewTask,
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.setCustomStoragePath`]: async () => {

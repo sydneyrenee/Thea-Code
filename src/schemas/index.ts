@@ -27,7 +27,6 @@ export const providerNames = [
 	"deepseek",
 	"unbound",
 	"requesty",
-	"human-relay",
 	"fake-ai",
 ] as const
 

@@ -161,10 +161,6 @@
     },
     "unboundApiKey": "Unbound API 金鑰",
     "getUnboundApiKey": "取得 Unbound API 金鑰",
-    "humanRelay": {
-      "description": "無需 API 金鑰，但使用者需協助將資訊複製到網頁聊天 AI。",
-      "instructions": "使用期間，對話方格會彈出且當前訊息會自動複製到剪貼簿。您需將其貼到 ChatGPT 或 Claude 網頁版，再將 AI 回應複製回對話方塊並點擊確認按鈕。"
-    },
     "openRouter": {
       "providerRouting": {
         "title": "OpenRouter 提供者路由",

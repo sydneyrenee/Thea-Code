@@ -19,7 +19,6 @@ type ProviderSettings = {
 				| "deepseek"
 				| "unbound"
 				| "requesty"
-				| "human-relay"
 				| "fake-ai"
 		  )
 		| undefined
@@ -191,7 +190,6 @@ type GlobalSettings = {
 							| "deepseek"
 							| "unbound"
 							| "requesty"
-							| "human-relay"
 							| "fake-ai"
 					  )
 					| undefined

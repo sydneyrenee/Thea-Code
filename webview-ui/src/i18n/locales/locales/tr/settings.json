@@ -160,10 +160,6 @@
 		},
 		"unboundApiKey": "Unbound API Anahtarı",
 		"getUnboundApiKey": "Unbound API Anahtarı Al",
-		"humanRelay": {
-			"description": "API anahtarı gerekmez, ancak kullanıcının bilgileri web sohbet yapay zekasına kopyalayıp yapıştırması gerekir.",
-			"instructions": "Kullanım sırasında bir iletişim kutusu açılacak ve mevcut mesaj otomatik olarak panoya kopyalanacaktır. Bunları web yapay zekalarına (ChatGPT veya Claude gibi) yapıştırmanız, ardından yapay zekanın yanıtını iletişim kutusuna kopyalayıp onay düğmesine tıklamanız gerekir."
-		},
 		"openRouter": {
 			"providerRouting": {
 				"title": "OpenRouter Sağlayıcı Yönlendirmesi",

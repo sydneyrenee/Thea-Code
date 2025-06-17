@@ -161,10 +161,6 @@
     "openRouterTransformsText": "Nén lời nhắc và chuỗi tin nhắn theo kích thước ngữ cảnh (<a>OpenRouter Transforms</a>)",
     "unboundApiKey": "Khóa API Unbound",
     "getUnboundApiKey": "Lấy khóa API Unbound",
-    "humanRelay": {
-      "description": "Không cần khóa API, nhưng người dùng cần giúp sao chép và dán thông tin vào AI trò chuyện web.",
-      "instructions": "Trong quá trình sử dụng, một hộp thoại sẽ xuất hiện và tin nhắn hiện tại sẽ được tự động sao chép vào clipboard. Bạn cần dán chúng vào các phiên bản web của AI (như ChatGPT hoặc Claude), sau đó sao chép phản hồi của AI trở lại hộp thoại và nhấp vào nút xác nhận."
-    },
     "openRouter": {
       "providerRouting": {
         "title": "Định tuyến nhà cung cấp OpenRouter",

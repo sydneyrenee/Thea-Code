@@ -160,10 +160,6 @@
 		},
 		"unboundApiKey": "Unbound API-Schlüssel",
 		"getUnboundApiKey": "Unbound API-Schlüssel erhalten",
-		"humanRelay": {
-			"description": "Es ist kein API-Schlüssel erforderlich, aber der Benutzer muss beim Kopieren und Einfügen der Informationen in den Web-Chat-KI helfen.",
-			"instructions": "Während der Verwendung wird ein Dialogfeld angezeigt und die aktuelle Nachricht wird automatisch in die Zwischenablage kopiert. Du musst diese in Web-Versionen von KI (wie ChatGPT oder Claude) einfügen, dann die Antwort der KI zurück in das Dialogfeld kopieren und auf die Bestätigungsschaltfläche klicken."
-		},
 		"openRouter": {
 			"providerRouting": {
 				"title": "OpenRouter Anbieter-Routing",

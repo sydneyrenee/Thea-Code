@@ -99,17 +99,6 @@ describe("Provider Enablement Validation", () => {
 			})
 		})
 
-		it("should throw error for human-relay provider as documented", () => {
-			const config: ApiConfiguration = {
-				...baseConfig,
-				apiProvider: "human-relay",
-			}
-
-			expect(() => {
-				buildApiHandler(config)
-			}).toThrow("HumanRelayHandler is not supported in this architecture.")
-		})
-
 		it("should default to anthropic for unknown provider", () => {
 			const config: ApiConfiguration = {
 				...baseConfig,

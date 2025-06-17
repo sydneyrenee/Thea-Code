@@ -12,6 +12,49 @@ jest.mock("../utils/vscode", () => ({
 	},
 }))
 
+// Mock react-use hooks
+jest.mock("react-use", () => ({
+	useEvent: jest.fn(() => {
+		// Return a no-op function for event listeners
+	}),
+}))
+
+// Mock i18n
+jest.mock("react-i18next", () => ({
+	useTranslation: () => ({
+		t: (key: string) => key,
+		i18n: {
+			changeLanguage: jest.fn(),
+			language: "en",
+		},
+	}),
+}))
+
+// Mock TranslationProvider  
+jest.mock("../i18n/TranslationContext", () => ({
+	__esModule: true,
+	default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}))
+
+// Mock TelemetryClient
+jest.mock("../utils/TelemetryClient", () => ({
+	telemetryClient: {
+		updateTelemetryState: jest.fn(),
+		capture: jest.fn(),
+	},
+}))
+
+// Mock HumanRelayDialog
+jest.mock("../components/human-relay/HumanRelayDialog", () => ({
+	HumanRelayDialog: () => <div data-testid="human-relay-dialog">Human Relay Dialog</div>,
+}))
+
+// Mock WelcomeView
+jest.mock("../components/welcome/WelcomeView", () => ({
+	__esModule: true,
+	default: () => <div data-testid="welcome-view">Welcome View</div>,
+}))
+
 jest.mock("../components/chat/ChatView", () => ({
 	__esModule: true,
 	default: function ChatView({ isHidden }: { isHidden: boolean }) {
@@ -72,6 +115,42 @@ jest.mock("../context/ExtensionStateContext", () => ({
 		didHydrateState: true,
 		showWelcome: false,
 		shouldShowAnnouncement: false,
+		telemetrySetting: "enabled",
+		telemetryKey: "test-key",
+		machineId: "test-machine",
+		// Add other required properties with default values
+		apiConfiguration: {},
+		customInstructions: undefined,
+		alwaysAllowReadOnly: false,
+		alwaysAllowReadOnlyOutsideWorkspace: false,
+		alwaysAllowWrite: false,
+		alwaysAllowWriteOutsideWorkspace: false,
+		alwaysAllowExecute: false,
+		alwaysAllowBrowser: false,
+		alwaysAllowMcp: false,
+		alwaysAllowModeSwitch: false,
+		alwaysAllowSubtasks: false,
+		browserToolEnabled: false,
+		showTheaIgnoredFiles: false,
+		soundEnabled: false,
+		soundVolume: 1,
+		ttsEnabled: false,
+		ttsSpeed: 1,
+		diffEnabled: false,
+		enableCheckpoints: false,
+		browserViewportSize: "1280x720",
+		fuzzyMatchThreshold: 0.5,
+		writeDelayMs: 0,
+		screenshotQuality: 80,
+		allowedCommands: [],
+		terminalShellIntegrationTimeout: 5000,
+		theme: {},
+		mcpServers: [],
+		filePaths: [],
+		openedTabs: [],
+		currentTaskItem: undefined,
+		currentCheckpoint: undefined,
+		language: "en",
 	}),
 	ExtensionStateContextProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))

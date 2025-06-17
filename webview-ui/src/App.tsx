@@ -14,7 +14,6 @@ import SettingsView, { SettingsViewRef } from "./components/settings/SettingsVie
 import WelcomeView from "./components/welcome/WelcomeView"
 import McpView from "./components/mcp/McpView"
 import PromptsView from "./components/prompts/PromptsView"
-import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
 
 type Tab = "settings" | "history" | "mcp" | "prompts" | "chat"
 
@@ -32,16 +31,6 @@ const App = () => {
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
 	const [tab, setTab] = useState<Tab>("chat")
-
-	const [humanRelayDialogState, setHumanRelayDialogState] = useState<{
-		isOpen: boolean
-		requestId: string
-		promptText: string
-	}>({
-		isOpen: false,
-		requestId: "",
-		promptText: "",
-	})
 
 	const settingsRef = useRef<SettingsViewRef>(null)
 
@@ -63,11 +52,6 @@ const App = () => {
 				if (newTab) {
 					switchTab(newTab)
 				}
-			}
-
-			if (message.type === "showHumanRelayDialog" && message.requestId && message.promptText) {
-				const { requestId, promptText } = message
-				setHumanRelayDialogState({ isOpen: true, requestId, promptText })
 			}
 		},
 		[switchTab],
@@ -110,14 +94,6 @@ const App = () => {
 				showAnnouncement={showAnnouncement}
 				hideAnnouncement={() => setShowAnnouncement(false)}
 				showHistoryView={() => switchTab("history")}
-			/>
-			<HumanRelayDialog
-				isOpen={humanRelayDialogState.isOpen}
-				requestId={humanRelayDialogState.requestId}
-				promptText={humanRelayDialogState.promptText}
-				onClose={() => setHumanRelayDialogState((prev) => ({ ...prev, isOpen: false }))}
-				onSubmit={(requestId, text) => vscode.postMessage({ type: "humanRelayResponse", requestId, text })}
-				onCancel={(requestId) => vscode.postMessage({ type: "humanRelayCancel", requestId })}
 			/>
 		</>
 	)

@@ -44,11 +44,6 @@ jest.mock("../utils/TelemetryClient", () => ({
 	},
 }))
 
-// Mock HumanRelayDialog
-jest.mock("../components/human-relay/HumanRelayDialog", () => ({
-	HumanRelayDialog: () => <div data-testid="human-relay-dialog">Human Relay Dialog</div>,
-}))
-
 // Mock WelcomeView
 jest.mock("../components/welcome/WelcomeView", () => ({
 	__esModule: true,

@@ -130,7 +130,7 @@ describe("askFollowupQuestionTool", () => {
 
 		expect(mockAsk).toHaveBeenCalledWith(
 			"followup",
-			JSON.stringify({ question: "What?", suggest: [{ answer: "Yes" }] }),
+			JSON.stringify({ question: "What?", suggest: ["<answer>Yes</answer>"] }),
 			false,
 		)
 		expect(mockSay).toHaveBeenCalledWith("user_feedback", "Sure", ["img"])

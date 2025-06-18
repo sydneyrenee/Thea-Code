@@ -1,7 +1,5 @@
 // npx jest src/core/tools/__tests__/applyDiffTool.test.ts
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: Complex Jest mocking type issues
 import { describe, it, expect, jest, beforeEach } from "@jest/globals"
 import { applyDiffTool } from "../applyDiffTool"
 import { TheaTask } from "../../TheaTask"
@@ -12,8 +10,6 @@ import fs from "fs/promises"
 
 jest.mock("fs/promises")
 jest.mock("../../../utils/fs")
-
-// We don't mock TheaTask module because we only need a partial object
 
  
 describe("applyDiffTool", () => {
@@ -67,35 +63,33 @@ describe("applyDiffTool", () => {
 			consecutiveMistakeCount: 0,
 			consecutiveMistakeCountForApplyDiff: new Map(),
 			webviewCommunicator: {
-				 
-				ask: jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<() => Promise<unknown>>,
-				 
-				say: jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<() => Promise<unknown>>,
+				// @ts-expect-error - Jest mock setup requires bypassing strict typing
+				ask: jest.fn().mockResolvedValue(undefined),
+				// @ts-expect-error - Jest mock setup requires bypassing strict typing
+				say: jest.fn().mockResolvedValue(undefined),
 			},
 			diffViewProvider: {
 				open: jest.fn(),
 				update: jest.fn(),
 				scrollToFirstDiff: jest.fn(),
 				revertChanges: jest.fn(),
-				saveChanges: jest
-					.fn()
-					 
-					.mockResolvedValue({ newProblemsMessage: "", userEdits: undefined, finalContent: "" }) as jest.MockedFunction<() => Promise<unknown>>,
+				// @ts-expect-error - Jest mock setup requires bypassing strict typing
+				saveChanges: jest.fn().mockResolvedValue({ newProblemsMessage: "", userEdits: undefined, finalContent: "" }),
 				reset: jest.fn(),
 			},
 			diffStrategy: {
-				 
-				applyDiff: jest.fn().mockResolvedValue({ success: true, content: "" }) as jest.MockedFunction<() => Promise<unknown>>,
+				// @ts-expect-error - Jest mock setup requires bypassing strict typing
+				applyDiff: jest.fn().mockResolvedValue({ success: true, content: "" }),
 				getProgressStatus: jest.fn(),
 			},
 			theaIgnoreController: { validateAccess: jest.fn().mockReturnValue(true) },
-			 
-			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error") as jest.MockedFunction<() => Promise<string>>,
+			// @ts-expect-error - Jest mock setup requires bypassing strict typing
+			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error"),
 		} as MockTheaTask
-		 
-		mockAskApproval = jest.fn().mockResolvedValue(true) as jest.MockedFunction<() => Promise<boolean>>
-		 
-		mockHandleError = jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<() => Promise<unknown>>
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
+		mockAskApproval = jest.fn().mockResolvedValue(true)
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
+		mockHandleError = jest.fn().mockResolvedValue(undefined)
 		mockPushToolResult = jest.fn()
 		mockRemoveClosingTag = jest.fn().mockReturnValue("")
 	})

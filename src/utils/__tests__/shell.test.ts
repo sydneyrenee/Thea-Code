@@ -3,10 +3,19 @@ import * as os from "os"
 import { getShell } from "../shell"
 
 // Mock the os module
-jest.mock("os", () => ({
-	...jest.requireActual("os"),
-	userInfo: jest.fn(() => ({ shell: null }))
-}))
+jest.mock("os", (): Partial<typeof import("os")> => {
+	const actualOs = jest.requireActual<typeof import("os")>("os")
+	return {
+		...actualOs,
+		userInfo: jest.fn().mockReturnValue({ 
+			username: "testuser",
+			uid: 1000,
+			gid: 1000,
+			shell: null,
+			homedir: "/home/testuser"
+		})
+	}
+})
 
 const mockUserInfo = os.userInfo as jest.MockedFunction<typeof os.userInfo>
 

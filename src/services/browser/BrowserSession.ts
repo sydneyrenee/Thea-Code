@@ -244,21 +244,19 @@ export class BrowserSession {
 			// },
 		}
 
-		let screenshotData = await this.page.screenshot({
+		let screenshotBase64 = (await this.page.screenshot({
 			...options,
 			type: "webp",
 			quality: this.context.globalState.get<number>("screenshotQuality") ?? 75,
-		})
-		let screenshotBase64 = Buffer.from(screenshotData).toString("base64")
+		})) as string
 		let screenshot = `data:image/webp;base64,${screenshotBase64}`
 
 		if (!screenshotBase64) {
 			console.log("webp screenshot failed, trying png")
-			screenshotData = await this.page.screenshot({
+			screenshotBase64 = (await this.page.screenshot({
 				...options,
 				type: "png",
-			})
-			screenshotBase64 = Buffer.from(screenshotData).toString("base64")
+			})) as string
 			screenshot = `data:image/png;base64,${screenshotBase64}`
 		}
 

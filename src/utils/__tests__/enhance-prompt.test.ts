@@ -37,7 +37,7 @@ describe("enhancePrompt", () => {
 		const result = await singleCompletionHandler(mockApiConfig, "Test prompt")
 
 		expect(result).toBe("Enhanced prompt")
-		const handler = buildApiHandler(mockApiConfig) as unknown as SingleCompletionHandler
+		const handler = buildApiHandler(mockApiConfig) as SingleCompletionHandler
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(handler.completePrompt).toHaveBeenCalledWith(`Test prompt`)
 	})
@@ -60,7 +60,7 @@ describe("enhancePrompt", () => {
 		)
 
 		expect(result).toBe("Enhanced prompt")
-		const handler = buildApiHandler(mockApiConfig) as unknown as SingleCompletionHandler
+		const handler = buildApiHandler(mockApiConfig) as SingleCompletionHandler
 		// eslint-disable-next-line @typescript-eslint/unbound-method
 		expect(handler.completePrompt).toHaveBeenCalledWith(`${customEnhancePrompt}\n\nTest prompt`)
 	})

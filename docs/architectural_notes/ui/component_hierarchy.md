@@ -19,6 +19,7 @@ App.tsx (Root)
     │   ├── HistoryView
     │   ├── McpView
     │   └── PromptsView
+    └── HumanRelayDialog (modal)
 ```
 
 ## Root Level Components
@@ -35,6 +36,7 @@ App.tsx (Root)
 ```typescript
 const App = () => {
     const [tab, setTab] = useState<Tab>("chat")
+    const [humanRelayDialogState, setHumanRelayDialogState] = useState({...})
     
     // Message handling for navigation
     useEvent("message", (event) => {

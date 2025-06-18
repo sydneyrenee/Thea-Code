@@ -14,18 +14,14 @@ jest.mock("@/components/ui/vscode-components", () => ({
 		onKeyDown,
 		"data-testid": dataTestId,
 	}: {
-		value?: string | number
-		onInput?: (e: React.ChangeEvent<HTMLInputElement>) => void
-		placeholder?: string
-		onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
-		"data-testid"?: string
+		[key: string]: unknown
 	}) => (
 		<input
-			value={value}
-			onChange={(e) => onInput?.(e)}
-			placeholder={placeholder}
-			onKeyDown={onKeyDown}
-			data-testid={dataTestId}
+			value={value as string}
+			onChange={(e) => (onInput as ((e: React.ChangeEvent<HTMLInputElement>) => void))?.(e)}
+			placeholder={placeholder as string}
+			onKeyDown={onKeyDown as React.KeyboardEventHandler<HTMLInputElement>}
+			data-testid={dataTestId as string}
 			ref={undefined} // Explicitly set ref to undefined to avoid warning
 		/>
 	),
@@ -33,84 +29,44 @@ jest.mock("@/components/ui/vscode-components", () => ({
 
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Dialog: ({ 
-		children, 
-		open 
-	}: { 
-		children?: React.ReactNode
-		open?: boolean 
-	}) => (
+	Dialog: ({ children, open }: { [key: string]: unknown }) => (
 		<div role="dialog" aria-modal="true" style={{ display: open ? "block" : "none" }} data-testid="dialog">
-			{children}
+			{children as React.ReactNode}
 		</div>
 	),
-	DialogContent: ({ children }: { children?: React.ReactNode }) => <div data-testid="dialog-content">{children}</div>,
-	DialogTitle: ({ children }: { children?: React.ReactNode }) => <div data-testid="dialog-title">{children}</div>,
-	Button: ({ 
-		children, 
-		onClick, 
-		disabled, 
-		"data-testid": dataTestId 
-	}: { 
-		children?: React.ReactNode
-		onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
-		disabled?: boolean
-		"data-testid"?: string 
-	}) => (
-		<button onClick={onClick} disabled={disabled} data-testid={dataTestId}>
-			{children}
+	DialogContent: ({ children }: { [key: string]: unknown }) => <div data-testid="dialog-content">{children as React.ReactNode}</div>,
+	DialogTitle: ({ children }: { [key: string]: unknown }) => <div data-testid="dialog-title">{children as React.ReactNode}</div>,
+	Button: ({ children, onClick, disabled, "data-testid": dataTestId }: { [key: string]: unknown }) => (
+		<button onClick={onClick as React.MouseEventHandler<HTMLButtonElement>} disabled={disabled as boolean} data-testid={dataTestId as string}>
+			{children as React.ReactNode}
 		</button>
 	),
-	Input: ({ 
-		value, 
-		onInput, 
-		placeholder, 
-		onKeyDown, 
-		"data-testid": dataTestId 
-	}: { 
-		value?: string | number
-		onInput?: (e: React.ChangeEvent<HTMLInputElement>) => void
-		placeholder?: string
-		onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
-		"data-testid"?: string 
-	}) => (
+	Input: ({ value, onInput, placeholder, onKeyDown, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<input
-			value={value}
-			onChange={(e) => onInput?.(e)}
-			placeholder={placeholder}
-			onKeyDown={onKeyDown}
-			data-testid={dataTestId}
+			value={value as string}
+			onChange={(e) => (onInput as ((e: React.ChangeEvent<HTMLInputElement>) => void))?.(e)}
+			placeholder={placeholder as string}
+			onKeyDown={onKeyDown as React.KeyboardEventHandler<HTMLInputElement>}
+			data-testid={dataTestId as string}
 		/>
 	),
-	Select: ({ 
-		value, 
-		onValueChange 
-	}: { 
-		value?: string
-		onValueChange?: (value: string) => void 
-	}) => (
+	Select: ({ value, onValueChange }: { [key: string]: unknown }) => (
 		<select
-			value={value}
+			value={value as string}
 			onChange={(e) => {
-				if (onValueChange) onValueChange(e.target.value)
+				if (onValueChange) (onValueChange as ((value: string) => void))(e.target.value)
 			}}
 			data-testid="select-component">
 			<option value="Default Config">Default Config</option>
 			<option value="Another Config">Another Config</option>
 		</select>
 	),
-	SelectTrigger: ({ children }: { children?: React.ReactNode }) => <div className="select-trigger-mock">{children}</div>,
-	SelectValue: ({ children }: { children?: React.ReactNode }) => <div className="select-value-mock">{children}</div>,
-	SelectContent: ({ children }: { children?: React.ReactNode }) => <div className="select-content-mock">{children}</div>,
-	SelectItem: ({ 
-		children, 
-		value 
-	}: { 
-		children?: React.ReactNode
-		value?: string | number 
-	}) => (
-		<option value={value} className="select-item-mock">
-			{children}
+	SelectTrigger: ({ children }: { [key: string]: unknown }) => <div className="select-trigger-mock">{children as React.ReactNode}</div>,
+	SelectValue: ({ children }: { [key: string]: unknown }) => <div className="select-value-mock">{children as React.ReactNode}</div>,
+	SelectContent: ({ children }: { [key: string]: unknown }) => <div className="select-content-mock">{children as React.ReactNode}</div>,
+	SelectItem: ({ children, value }: { [key: string]: unknown }) => (
+		<option value={value as string} className="select-item-mock">
+			{children as React.ReactNode}
 		</option>
 	),
 }))

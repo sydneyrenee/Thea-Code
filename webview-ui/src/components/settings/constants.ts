@@ -36,6 +36,7 @@ export const PROVIDERS = [
 	{ value: "ollama", label: "Ollama" },
 	{ value: "unbound", label: "Unbound" },
 	{ value: "requesty", label: "Requesty" },
+	{ value: "human-relay", label: "Human Relay" },
 ].sort((a, b) => a.label.localeCompare(b.label))
 
 export const AWS_REGIONS = [

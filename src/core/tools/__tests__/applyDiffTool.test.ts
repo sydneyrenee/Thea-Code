@@ -1,5 +1,7 @@
 // npx jest src/core/tools/__tests__/applyDiffTool.test.ts
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Complex Jest mocking type issues
 import { describe, it, expect, jest, beforeEach } from "@jest/globals"
 import { applyDiffTool } from "../applyDiffTool"
 import { TheaTask } from "../../TheaTask"
@@ -13,95 +15,89 @@ jest.mock("../../../utils/fs")
 
 // We don't mock TheaTask module because we only need a partial object
 
+ 
 describe("applyDiffTool", () => {
-	type MockTheaTask = jest.Mocked<Partial<TheaTask>> & {
+	type MockTheaTask = {
+		cwd: string
 		consecutiveMistakeCount: number
 		consecutiveMistakeCountForApplyDiff: Map<string, number>
 		webviewCommunicator: { 
-			ask: jest.Mock
-			say: jest.Mock
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			ask: jest.MockedFunction<() => Promise<any>>
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			say: jest.MockedFunction<() => Promise<any>>
 		}
 		diffViewProvider: {
-			open: jest.Mock
-			update: jest.Mock
-			scrollToFirstDiff: jest.Mock
-			revertChanges: jest.Mock
-			saveChanges: jest.Mock
-			reset: jest.Mock
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			open: jest.MockedFunction<() => any>
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			update: jest.MockedFunction<() => any>
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			scrollToFirstDiff: jest.MockedFunction<any>
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			revertChanges: jest.MockedFunction<any>
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			saveChanges: jest.MockedFunction<any>
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			reset: jest.MockedFunction<any>
 		}
-		diffStrategy: { 
-			applyDiff: jest.Mock
-			getProgressStatus: jest.Mock
-		}
-		theaIgnoreController: { validateAccess: jest.Mock }
-		sayAndCreateMissingParamError: jest.Mock
-		cwd: string
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		diffStrategy: { applyDiff: jest.MockedFunction<any>; getProgressStatus: jest.MockedFunction<any> }
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		theaIgnoreController: { validateAccess: jest.MockedFunction<any> }
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		sayAndCreateMissingParamError: jest.MockedFunction<any>
 		didEditFile?: boolean
 	}
 	let mockTheaTask: MockTheaTask
-	let mockAskApproval: jest.MockedFunction<AskApproval>
-	let mockHandleError: jest.MockedFunction<HandleError>
-	let mockPushToolResult: jest.MockedFunction<PushToolResult>
-	let mockRemoveClosingTag: jest.MockedFunction<RemoveClosingTag>
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let mockAskApproval: jest.MockedFunction<any>
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let mockHandleError: jest.MockedFunction<any>
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let mockPushToolResult: jest.MockedFunction<any>
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let mockRemoveClosingTag: jest.MockedFunction<any>
 	const mockedFs = fs as jest.Mocked<typeof fs>
 
 	beforeEach(() => {
 		jest.clearAllMocks()
-		
-		const mockAsk = jest.fn()
-		const mockSay = jest.fn()
-		const mockOpen = jest.fn()
-		const mockUpdate = jest.fn()
-		const mockScrollToFirstDiff = jest.fn()
-		const mockRevertChanges = jest.fn()
-		const mockSaveChanges = jest.fn()
-		const mockReset = jest.fn()
-		const mockApplyDiff = jest.fn()
-		const mockGetProgressStatus = jest.fn()
-		const mockValidateAccess = jest.fn()
-		const mockSayAndCreateMissingParamError = jest.fn()
-		
-		// Use type assertion to avoid jest inference issues
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		;(mockAsk as any).mockResolvedValue(undefined)
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		;(mockSay as any).mockResolvedValue(undefined)
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		;(mockSaveChanges as any).mockResolvedValue({ newProblemsMessage: "", userEdits: undefined, finalContent: "" })
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		;(mockApplyDiff as any).mockResolvedValue({ success: true, content: "" })
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		;(mockValidateAccess as any).mockReturnValue(true)
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-		;(mockSayAndCreateMissingParamError as any).mockResolvedValue("Missing parameter error")
-		
 		mockTheaTask = {
 			cwd: "/test",
 			consecutiveMistakeCount: 0,
 			consecutiveMistakeCountForApplyDiff: new Map(),
 			webviewCommunicator: {
-				ask: mockAsk,
-				say: mockSay,
+				 
+				ask: jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<() => Promise<unknown>>,
+				 
+				say: jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<() => Promise<unknown>>,
 			},
 			diffViewProvider: {
-				open: mockOpen,
-				update: mockUpdate,
-				scrollToFirstDiff: mockScrollToFirstDiff,
-				revertChanges: mockRevertChanges,
-				saveChanges: mockSaveChanges,
-				reset: mockReset,
+				open: jest.fn(),
+				update: jest.fn(),
+				scrollToFirstDiff: jest.fn(),
+				revertChanges: jest.fn(),
+				saveChanges: jest
+					.fn()
+					 
+					.mockResolvedValue({ newProblemsMessage: "", userEdits: undefined, finalContent: "" }) as jest.MockedFunction<() => Promise<unknown>>,
+				reset: jest.fn(),
 			},
 			diffStrategy: {
-				applyDiff: mockApplyDiff,
-				getProgressStatus: mockGetProgressStatus,
+				 
+				applyDiff: jest.fn().mockResolvedValue({ success: true, content: "" }) as jest.MockedFunction<() => Promise<unknown>>,
+				getProgressStatus: jest.fn(),
 			},
-			theaIgnoreController: { validateAccess: mockValidateAccess },
-			sayAndCreateMissingParamError: mockSayAndCreateMissingParamError,
+			theaIgnoreController: { validateAccess: jest.fn().mockReturnValue(true) },
+			 
+			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error") as jest.MockedFunction<() => Promise<string>>,
 		} as MockTheaTask
-		mockAskApproval = jest.fn<AskApproval>().mockResolvedValue(true)
-		mockHandleError = jest.fn<HandleError>().mockResolvedValue(undefined)
-		mockPushToolResult = jest.fn<PushToolResult>()
-		mockRemoveClosingTag = jest.fn<RemoveClosingTag>().mockImplementation((tag: string, content?: string) => content ?? "")
+		 
+		mockAskApproval = jest.fn().mockResolvedValue(true) as jest.MockedFunction<() => Promise<boolean>>
+		 
+		mockHandleError = jest.fn().mockResolvedValue(undefined) as jest.MockedFunction<() => Promise<unknown>>
+		mockPushToolResult = jest.fn()
+		mockRemoveClosingTag = jest.fn().mockReturnValue("")
 	})
 
 	it("handles partial blocks by sending a progress update", async () => {
@@ -115,10 +111,10 @@ describe("applyDiffTool", () => {
 		await applyDiffTool(
 			mockTheaTask as unknown as TheaTask,
 			block,
-			mockAskApproval,
-			mockHandleError,
-			mockPushToolResult,
-			mockRemoveClosingTag,
+			mockAskApproval as unknown as AskApproval,
+			mockHandleError as unknown as HandleError,
+			mockPushToolResult as unknown as PushToolResult,
+			mockRemoveClosingTag as unknown as RemoveClosingTag,
 		)
 
 		expect(mockTheaTask.webviewCommunicator.ask).toHaveBeenCalled()
@@ -132,10 +128,10 @@ describe("applyDiffTool", () => {
 		await applyDiffTool(
 			mockTheaTask as unknown as TheaTask,
 			block,
-			mockAskApproval,
-			mockHandleError,
-			mockPushToolResult,
-			mockRemoveClosingTag,
+			mockAskApproval as unknown as AskApproval,
+			mockHandleError as unknown as HandleError,
+			mockPushToolResult as unknown as PushToolResult,
+			mockRemoveClosingTag as unknown as RemoveClosingTag,
 		)
 
 		expect(mockTheaTask.sayAndCreateMissingParamError).toHaveBeenCalledWith("apply_diff", "path")
@@ -145,7 +141,7 @@ describe("applyDiffTool", () => {
 	})
 
 	it("handles non-existent files", async () => {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
 		;(fileExistsAtPath as any).mockResolvedValue(false)
 		const block: ToolUse = {
 			type: "tool_use",
@@ -157,10 +153,10 @@ describe("applyDiffTool", () => {
 		await applyDiffTool(
 			mockTheaTask as unknown as TheaTask,
 			block,
-			mockAskApproval,
-			mockHandleError,
-			mockPushToolResult,
-			mockRemoveClosingTag,
+			mockAskApproval as unknown as AskApproval,
+			mockHandleError as unknown as HandleError,
+			mockPushToolResult as unknown as PushToolResult,
+			mockRemoveClosingTag as unknown as RemoveClosingTag,
 		)
 
 		expect(fileExistsAtPath).toHaveBeenCalled()

@@ -186,6 +186,21 @@ interface ExtensionMessage {
 
 ### 2.4 Special Purpose Messages
 
+#### Human Relay Dialog
+```typescript
+interface ExtensionMessage {
+  type: "showHumanRelayDialog"
+  requestId?: string
+  promptText?: string
+}
+```
+
+**Data Flow:**
+- **Trigger**: AI requires human intervention
+- **Payload**: Request ID and prompt for user
+- **Handler**: `App.onMessage()`
+- **Effect**: Shows modal dialog for human input
+
 #### Enhanced Prompts
 ```typescript
 interface ExtensionMessage {

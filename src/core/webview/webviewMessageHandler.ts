@@ -142,23 +142,25 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 				}
 			})
 
-			const unboundModels = await getUnboundModels()
+			// getUnboundModels() is synchronous and returns Record<string, ModelInfo>
+			const unboundModels = getUnboundModels()
 			if (Object.keys(unboundModels).length > 0) {
-				await fs.writeFile(
+				void fs.writeFile(
 					path.join(cacheDir, GlobalFileNames.unboundModels),
 					JSON.stringify(unboundModels),
-				)
-				await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
+				).then(async () => {
+					await provider.postMessageToWebview({ type: "unboundModels", unboundModels })
 
-				const { apiConfiguration } = await provider.getState()
+					const { apiConfiguration } = await provider.getState()
 
-				if (apiConfiguration?.unboundModelId) {
-					await provider.updateGlobalState(
-						"unboundModelInfo",
-						unboundModels[apiConfiguration.unboundModelId],
-					)
-					await provider.postStateToWebview()
-				}
+					if (apiConfiguration?.unboundModelId && unboundModels[apiConfiguration.unboundModelId]) {
+						await provider.updateGlobalState(
+							"unboundModelInfo",
+							unboundModels[apiConfiguration.unboundModelId],
+						)
+						await provider.postStateToWebview()
+					}
+				})
 			}
 
 			void provider.readModelsFromCache(GlobalFileNames.requestyModels).then((requestyModels) => {
@@ -449,7 +451,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			break
 		}
 		case "refreshUnboundModels": {
-			const unboundModels = await getUnboundModels()
+			const unboundModels = getUnboundModels()
 
 			if (Object.keys(unboundModels).length > 0) {
 				const cacheDir = await provider.ensureCacheDirectoryExists()
@@ -474,7 +476,7 @@ export const webviewMessageHandler = async (provider: TheaProvider, message: Web
 			if (message?.values?.baseUrl && message?.values?.apiKey) {
 				const values = message.values as { baseUrl: string; apiKey: string }
 				const openAiModels = await getOpenAiModels(values.baseUrl, values.apiKey)
-				// Handle the case where getOpenAiModels returns {} on error
+				// Handle the case where getOpenAiModels returns {} on error or string[] on success
 				const normalizedModels = Array.isArray(openAiModels) ? openAiModels : []
 				await provider.postMessageToWebview({ type: "openAiModels", openAiModels: normalizedModels })
 			}

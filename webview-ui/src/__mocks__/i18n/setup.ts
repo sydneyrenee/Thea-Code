@@ -26,27 +26,34 @@ const translations: Record<string, Record<string, unknown>> = {
 }
 
 // Initialize i18next for React
-// This will be initialized with the VSCode language in TranslationProvider
-i18next.use(initReactI18next).init({
-	lng: "en", // Default language (will be overridden)
-	fallbackLng: "en",
-	debug: false,
-	interpolation: {
-		escapeValue: false, // React already escapes by default
-	},
-})
+i18next
+	.use(initReactI18next)
+	.init(
+		{
+			lng: "en",
+			fallbackLng: "en",
+			debug: false,
+			interpolation: {
+				escapeValue: false,
+			},
+			resources: {
+				en: {
+					chat: translations.en.chat as Record<string, unknown>,
+					settings: translations.en.settings as Record<string, unknown>,
+					common: translations.en.common as Record<string, unknown>,
+				},
+				es: {
+					chat: translations.es.chat as Record<string, unknown>,
+				},
+			},
+		},
+		(err) => {
+			if (err) console.error(err)
+		},
+	)
 
 export function loadTranslations() {
 	// Translations are already loaded in the mock
-	Object.entries(translations).forEach(([lang, namespaces]) => {
-		try {
-			Object.entries(namespaces).forEach(([namespace, resources]) => {
-				i18next.addResourceBundle(lang, namespace, resources, true, true)
-			})
-		} catch (error) {
-			console.warn(`Could not load ${lang} translations:`, error)
-		}
-	})
 }
 
 export function addTranslation(language: string, namespace: string, resources: Record<string, unknown>) {

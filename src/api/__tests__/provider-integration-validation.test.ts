@@ -149,6 +149,12 @@ describe("Provider Integration Validation", () => {
 				buildApiHandler({ apiProvider: "fake-ai", apiKey: "test" } as ApiConfiguration)
 			}).toThrow("Fake AI is not set")
 		})
+
+		it("should handle unsupported human-relay provider", () => {
+			expect(() => {
+				buildApiHandler({ apiProvider: "human-relay", apiKey: "test" } as ApiConfiguration)
+			}).toThrow("HumanRelayHandler is not supported in this architecture.")
+		})
 	})
 
 	describe("Provider compatibility", () => {

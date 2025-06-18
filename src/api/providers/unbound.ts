@@ -7,26 +7,29 @@ import type { NeutralConversationHistory } from "../../shared/neutral-history"
 /**
  * Get available Unbound models
  */
-export async function getUnboundModels(): Promise<Record<string, ModelInfo>> {
+export function getUnboundModels(): Record<string, ModelInfo> {
 	// For now, return a static list of known models
 	// This can be enhanced later to fetch dynamic model list if Unbound provides an API
-	const models: Record<string, ModelInfo> = {}
+	const models: ModelInfo[] = [
+		unboundDefaultModelInfo,
+		{
+			contextWindow: 128000,
+			supportsImages: false,
+			supportsPromptCache: false,
+			inputPrice: 0.0006, // per 1K tokens
+			outputPrice: 0.0024, // per 1K tokens
+			description: "Fast and efficient reasoning model",
+		},
+	]
 	
-	// Add default model
-	models[unboundDefaultModelId] = unboundDefaultModelInfo
-	
-	// Add o3-mini model
-	models["openai/o3-mini"] = {
-		maxTokens: undefined,
-		contextWindow: 128000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 0.0006, // per 1K tokens
-		outputPrice: 0.0024, // per 1K tokens
-		description: "Fast and efficient reasoning model",
-	}
-	
-	return models
+	// Convert array to Record using model names as keys
+	const result: Record<string, ModelInfo> = {}
+	models.forEach((model, index) => {
+		// Use a key based on the model info or index
+		const key = index === 0 ? unboundDefaultModelId : "openai/o3-mini"
+		result[key] = model
+	})
+	return result
 }
 
 export class UnboundHandler extends OpenAiCompatibleHandler implements SingleCompletionHandler {

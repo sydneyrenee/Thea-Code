@@ -85,13 +85,12 @@ describe("TerminalProcess", () => {
 			})
 
 			// Mock stream data with shell integration sequences.
-			mockStream = (async function* () {
+			mockStream = (function* () {
 				yield "\x1b]633;C\x07" // The first chunk contains the command start sequence with bell character.
 				yield "Initial output\n"
 				yield "More output\n"
 				yield "Final output"
 				yield "\x1b]633;D\x07" // The last chunk contains the command end sequence with bell character.
-				await new Promise(resolve => setTimeout(resolve, 0)) // Add await to make async valid
 				terminalProcess.emit("shell_execution_complete", { exitCode: 0 })
 			})()
 
@@ -159,13 +158,12 @@ describe("TerminalProcess", () => {
 				terminalProcess.on("shell_execution_complete", () => resolve())
 			})
 
-			mockStream = (async function* () {
+			mockStream = (function* () {
 				yield "\x1b]633;C\x07" // The first chunk contains the command start sequence with bell character.
 				yield "compiling...\n"
 				yield "still compiling...\n"
 				yield "done"
 				yield "\x1b]633;D\x07" // The last chunk contains the command end sequence with bell character.
-				await new Promise(resolve => setTimeout(resolve, 0)) // Add await to make async valid
 				terminalProcess.emit("shell_execution_complete", { exitCode: 0 })
 			})()
 

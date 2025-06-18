@@ -35,130 +35,72 @@ jest.mock("lucide-react", () => {
 // Mock ApiConfigManager component
 jest.mock("../ApiConfigManager", () => ({
 	__esModule: true,
-	default: ({ currentApiConfigName }: { currentApiConfigName?: string }) => (
+	default: ({ currentApiConfigName }: { [key: string]: unknown }) => (
 		<div data-testid="api-config-management">
-			<span>Current config: {currentApiConfigName}</span>
+			<span>Current config: {currentApiConfigName as React.ReactNode}</span>
 		</div>
 	),
 }))
 
 // Mock VSCode components
 jest.mock("@/components/ui/vscode-components", () => ({
-	VSCodeButton: ({ 
-		children, 
-		onClick, 
-		appearance, 
-		"data-testid": dataTestId 
-	}: { 
-		children?: React.ReactNode
-		onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
-		appearance?: string
-		"data-testid"?: string 
-	}) =>
+	VSCodeButton: ({ children, onClick, appearance, "data-testid": dataTestId }: { [key: string]: unknown }) =>
 		appearance === "icon" ? (
 			<button
-				onClick={onClick}
+				onClick={onClick as React.MouseEventHandler<HTMLButtonElement>}
 				className="codicon codicon-close"
 				aria-label="Remove command"
-				data-testid={dataTestId}>
+				data-testid={dataTestId as string}>
 				<span className="codicon codicon-close" />
 			</button>
 		) : (
-			<button onClick={onClick} data-appearance={appearance} data-testid={dataTestId}>
-				{children}
+			<button onClick={onClick as React.MouseEventHandler<HTMLButtonElement>} data-appearance={appearance as string} data-testid={dataTestId as string}>
+				{children as React.ReactNode}
 			</button>
 		),
-	VSCodeCheckbox: ({ 
-		children, 
-		onChange, 
-		checked, 
-		"data-testid": dataTestId 
-	}: { 
-		children?: React.ReactNode
-		onChange?: (e: { target: { checked: boolean } }) => void
-		checked?: boolean
-		"data-testid"?: string 
-	}) => (
+	VSCodeCheckbox: ({ children, onChange, checked, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<label>
 			<input
 				type="checkbox"
-				checked={checked}
-				onChange={(e) => onChange?.({ target: { checked: e.target.checked } })}
+				checked={checked as boolean}
+				onChange={(e) => (onChange as ((event: { target: { checked: boolean } }) => void))?.(({ target: { checked: e.target.checked } }))}
 				aria-label={typeof children === "string" ? children : undefined}
-				data-testid={dataTestId}
+				data-testid={dataTestId as string}
 			/>
-			{children}
+			{children as React.ReactNode}
 		</label>
 	),
-	VSCodeTextField: ({ 
-		value, 
-		onInput, 
-		placeholder, 
-		"data-testid": dataTestId 
-	}: { 
-		value?: string | number
-		onInput?: (e: { target: { value: string } }) => void
-		placeholder?: string
-		"data-testid"?: string 
-	}) => (
+	VSCodeTextField: ({ value, onInput, placeholder, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<input
 			type="text"
-			value={value}
-			onChange={(e) => onInput?.({ target: { value: e.target.value } })}
-			placeholder={placeholder}
-			data-testid={dataTestId}
+			value={value as string}
+			onChange={(e) => (onInput as ((event: { target: { value: string } }) => void))?.(({ target: { value: e.target.value } }))}
+			placeholder={placeholder as string}
+			data-testid={dataTestId as string}
 		/>
 	),
-	VSCodeLink: ({ 
-		children, 
-		href 
-	}: { 
-		children?: React.ReactNode
-		href?: string 
-	}) => <a href={href || "#"}>{children}</a>,
-	VSCodeRadio: ({ 
-		value, 
-		checked, 
-		onChange 
-	}: { 
-		value?: string | number
-		checked?: boolean
-		onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void 
-	}) => (
-		<input type="radio" value={value} checked={checked} onChange={onChange} />
+	VSCodeLink: ({ children, href }: { [key: string]: unknown }) => <a href={(href as string) || "#"}>{children as React.ReactNode}</a>,
+	VSCodeRadio: ({ value, checked, onChange }: { [key: string]: unknown }) => (
+		<input type="radio" value={value as string} checked={checked as boolean} onChange={onChange as React.ChangeEventHandler<HTMLInputElement>} />
 	),
-	VSCodeRadioGroup: ({ 
-		children, 
-		onChange 
-	}: { 
-		children?: React.ReactNode
-		onChange?: (e: React.FormEvent<HTMLDivElement>) => void 
-	}) => <div onChange={onChange}>{children}</div>,
+	VSCodeRadioGroup: ({ children, onChange }: { [key: string]: unknown }) => <div onChange={onChange as React.FormEventHandler<HTMLDivElement>}>{children as React.ReactNode}</div>,
 }))
 
 // Mock Slider component
 jest.mock("@/components/ui", () => ({
 	...jest.requireActual("@/components/ui"),
-	Slider: ({ 
-		value, 
-		onValueChange, 
-		"data-testid": dataTestId 
-	}: { 
-		value?: number[]
-		onValueChange?: (value: number[]) => void
-		"data-testid"?: string 
-	}) => (
+	Slider: ({ value, onValueChange, "data-testid": dataTestId }: { [key: string]: unknown }) => (
 		<input
 			type="range"
-			value={value?.[0] || 0}
-			onChange={(e) => onValueChange?.([parseFloat(e.target.value)])}
-			data-testid={dataTestId}
+			value={(value as number[])?.[0] || 0}
+			onChange={(e) => (onValueChange as ((value: number[]) => void))?.(([parseFloat(e.target.value)]))}
+			data-testid={dataTestId as string}
 		/>
 	),
 }))
 
 // Mock window.postMessage to trigger state hydration
-const mockPostMessage = (state: Record<string, unknown> = {}) => {
+const mockPostMessage = (state: unknown) => {
 	window.postMessage(
 		{
 			type: "state",
@@ -173,7 +115,7 @@ const mockPostMessage = (state: Record<string, unknown> = {}) => {
 				ttsSpeed: 1,
 				soundEnabled: false,
 				soundVolume: 0.5,
-				...state,
+				...(state as Record<string, unknown>),
 			},
 		},
 		"*",

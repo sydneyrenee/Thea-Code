@@ -30,11 +30,12 @@ describe("McpConverters", () => {
 						param: {
 							type: "string",
 							description: "A test parameter",
-						},				},
-				required: ["param"],
-			},
-			handler: async () => ({ content: [] }),
-		})
+						},
+					},
+					required: ["param"],
+				},
+				handler: () => ({ content: [] }),
+			})
 
 			tools.set("another_tool", {
 				name: "another_tool",
@@ -53,7 +54,7 @@ describe("McpConverters", () => {
 					},
 					required: ["option"],
 				},
-				handler: async () => ({ content: [] }),
+				handler: () => ({ content: [] }),
 			})
 
 			// Convert to OpenAI functions
@@ -106,7 +107,7 @@ describe("McpConverters", () => {
 			tools.set("simple_tool", {
 				name: "simple_tool",
 				description: "A simple tool without schema",
-				handler: async () => ({ content: [] }),
+				handler: () => ({ content: [] }),
 			})
 
 			// Convert to OpenAI functions
@@ -131,7 +132,7 @@ describe("McpConverters", () => {
 
 			tools.set("no_description", {
 				name: "no_description",
-				handler: async () => ({ content: [] }),
+				handler: () => ({ content: [] }),
 			})
 
 			// Convert to OpenAI functions

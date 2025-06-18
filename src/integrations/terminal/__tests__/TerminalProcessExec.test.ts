@@ -129,7 +129,7 @@ async function testTerminalCommand(
 		processId: Promise.resolve(123),
 		creationOptions: {},
 		exitStatus: undefined,
-		state: { isInteractedWith: true, shell: "/bin/bash" },
+		state: { isInteractedWith: true },
 		dispose: jest.fn(),
 		hide: jest.fn(),
 		show: jest.fn(),

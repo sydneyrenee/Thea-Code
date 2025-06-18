@@ -79,6 +79,8 @@ export function buildApiHandler(configuration: ApiConfiguration): ApiHandler {
 			return new UnboundHandler(options)
 		case "requesty":
 			return new RequestyHandler(options)
+		case "human-relay":
+			throw new Error("HumanRelayHandler is not supported in this architecture.")
 		case "fake-ai":
 			return new FakeAIHandler(options)
 		default:

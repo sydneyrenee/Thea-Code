@@ -2,6 +2,7 @@
  * Tests for OpenAI function format handling in MCP system
  * Validates conversion between OpenAI function calls and MCP neutral format
  */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/require-await, @typescript-eslint/no-explicit-any */
 import { McpConverters } from "../../core/McpConverters"
 import { ToolDefinition } from "../../types/McpProviderTypes"
 
@@ -22,7 +23,7 @@ describe("OpenAI Function Format Handling", () => {
 
 			expect(result).toEqual({
 				type: "tool_use",
-				id: expect.any(String) as string,
+				id: expect.any(String),
 				name: "get_weather",
 				input: {
 					location: "San Francisco",
@@ -78,7 +79,7 @@ describe("OpenAI Function Format Handling", () => {
 
 			expect(result).toEqual({
 				type: "tool_use",
-				id: expect.any(String) as string,
+				id: expect.any(String),
 				name: "get_current_time",
 				input: {},
 			})

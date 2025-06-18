@@ -76,7 +76,6 @@ const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOpt
 		[COMMANDS.HELP_BUTTON]: () => {
 			vscode.env.openExternal(vscode.Uri.parse(HOMEPAGE_URL))
 		},
-		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[COMMANDS.NEW_TASK]: handleNewTask,
 		// Assuming this command ID uses EXTENSION_NAME prefix convention implicitly
 		[`${EXTENSION_NAME}.setCustomStoragePath`]: async () => {

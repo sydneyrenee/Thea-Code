@@ -257,13 +257,7 @@ describe("TheaTaskHistory", () => {
 			}
 			const mockGetTaskWithId = jest
 				.spyOn(taskHistory, "getTaskWithId")
-				.mockResolvedValue({ 
-					historyItem: mockHistoryItem,
-					taskDirPath: "/test/storage/path/tasks/different-task-id",
-					apiConversationHistoryFilePath: "/test/storage/path/tasks/different-task-id/api_conversation_history.json",
-					uiMessagesFilePath: "/test/storage/path/tasks/different-task-id/ui_messages.json",
-					apiConversationHistory: []
-				})
+				.mockResolvedValue({ historyItem: mockHistoryItem })
 
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "current-task-id" }) // Keep as is, represents return value
 			const mockInitClineWithHistoryItem = jest.fn().mockResolvedValue({ taskId: mockHistoryItem.id }) // Keep as is, represents return value
@@ -318,16 +312,10 @@ describe("TheaTaskHistory", () => {
 				tokensOut: 200,
 				totalCost: 0.01,
 			}
-			const mockApiHistory = [{ role: "user" as const, content: [{ type: "text" as const, text: "Hello" }], ts: Date.now() }]
+			const mockApiHistory = [{ role: "user", content: "Hello" }]
 			const mockGetTaskWithId = jest
 				.spyOn(taskHistory, "getTaskWithId")
-				.mockResolvedValue({ 
-					historyItem: mockHistoryItem, 
-					taskDirPath: "/test/storage/path/tasks/test-task-id",
-					apiConversationHistoryFilePath: "/test/storage/path/tasks/test-task-id/api_conversation_history.json",
-					uiMessagesFilePath: "/test/storage/path/tasks/test-task-id/ui_messages.json",
-					apiConversationHistory: mockApiHistory 
-				})
+				.mockResolvedValue({ historyItem: mockHistoryItem, apiConversationHistory: mockApiHistory })
 
 			// Execute
 			await taskHistory.exportTaskWithId("test-task-id")
@@ -343,14 +331,8 @@ describe("TheaTaskHistory", () => {
 			// Setup
 			const taskId = "test-task-id"
 			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-			const mockGetTaskWithId = jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ 
-				historyItem: { id: taskId, task: "Test Task", ts: Date.now(), number: 1, tokensIn: 100, tokensOut: 200, totalCost: 0.01 },
-				taskDirPath,
-				apiConversationHistoryFilePath: path.join(taskDirPath, "api_conversation_history.json"),
-				uiMessagesFilePath: path.join(taskDirPath, "ui_messages.json"),
-				apiConversationHistory: []
-			})
-			const mockDeleteTaskFromState = jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
+			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
+			jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
 
 			// Mock getCurrentCline to return a different task ID
 			const mockGetCurrentCline = jest.fn().mockReturnValue({ taskId: "different-task-id" })
@@ -375,22 +357,7 @@ describe("TheaTaskHistory", () => {
 			// Setup
 			const taskId = "current-task-id"
 			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-			const mockHistoryItem: HistoryItem = {
-				id: taskId,
-				task: "Test Task",
-				ts: 123456789,
-				number: 1,
-				tokensIn: 100,
-				tokensOut: 200,
-				totalCost: 0.01,
-			}
-			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({
-				historyItem: mockHistoryItem,
-				taskDirPath,
-				apiConversationHistoryFilePath: path.join(taskDirPath, "api_conversation_history.json"),
-				uiMessagesFilePath: path.join(taskDirPath, "ui_messages.json"),
-				apiConversationHistory: []
-			})
+			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
 
 			jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
 
@@ -424,22 +391,7 @@ describe("TheaTaskHistory", () => {
 			// Setup
 			const taskId = "test-task-id"
 			const taskDirPath = path.join("/test/storage/path", "tasks", taskId)
-			const mockHistoryItem: HistoryItem = {
-				id: taskId,
-				task: "Test Task",
-				ts: 123456789,
-				number: 1,
-				tokensIn: 100,
-				tokensOut: 200,
-				totalCost: 0.01,
-			}
-			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({
-				historyItem: mockHistoryItem,
-				taskDirPath,
-				apiConversationHistoryFilePath: path.join(taskDirPath, "api_conversation_history.json"),
-				uiMessagesFilePath: path.join(taskDirPath, "ui_messages.json"),
-				apiConversationHistory: []
-			})
+			jest.spyOn(taskHistory, "getTaskWithId").mockResolvedValue({ taskDirPath })
 			jest.spyOn(taskHistory, "deleteTaskFromState").mockResolvedValue(undefined)
 
 			// Mock ShadowCheckpointService to throw an error

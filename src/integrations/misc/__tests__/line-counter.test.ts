@@ -11,7 +11,7 @@ jest.mock("fs", () => {
 		promises: {
 			access: jest.fn(),
 		},
-	} as unknown as typeof import("fs")
+	} as typeof import("fs")
 })
 
 // Mock readline

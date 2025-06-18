@@ -11,20 +11,20 @@ import type { TheaAskResponse } from "../../../shared/WebviewMessage"
 jest.mock("../../prompts/responses")
 
 describe("askFollowupQuestionTool", () => {
-	let mockAsk: jest.Mock<Promise<{ response: TheaAskResponse; text?: string; images?: string[] }>>
-	let mockSay: jest.Mock<Promise<void>>
-	let mockSayAndCreateMissingParamError: jest.Mock<Promise<string>>
+	let mockAsk: jest.Mock
+	let mockSay: jest.Mock
+	let mockSayAndCreateMissingParamError: jest.Mock
 	let mockTheaTask: TheaTask
-	let mockAskApproval: jest.Mock<Promise<boolean>>
-	let mockHandleError: jest.Mock<Promise<void>>
-	let mockPushToolResult: jest.Mock<void>
-	let mockRemoveClosingTag: jest.Mock<string>
+	let mockAskApproval: AskApproval
+	let mockHandleError: HandleError
+	let mockPushToolResult: PushToolResult
+	let mockRemoveClosingTag: RemoveClosingTag
 	const mockedFormatResponse = formatResponse as jest.Mocked<typeof formatResponse>
 
 	beforeEach(() => {
 		jest.clearAllMocks()
 		
-		// Create properly typed mock functions
+		// Create mock functions
 		mockAsk = jest.fn()
 		mockSay = jest.fn()
 		mockSayAndCreateMissingParamError = jest.fn()
@@ -39,19 +39,24 @@ describe("askFollowupQuestionTool", () => {
 			sayAndCreateMissingParamError: mockSayAndCreateMissingParamError,
 		} as unknown as TheaTask
 
-		// Set up mock return values
+		// Set up mock return values - Jest mocks have complex typing
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
 		mockAsk.mockResolvedValue({ 
 			response: "yesButtonClicked" as TheaAskResponse, 
 			text: "", 
 			images: [] 
 		})
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
 		mockSay.mockResolvedValue(undefined)
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
 		mockSayAndCreateMissingParamError.mockResolvedValue("Missing param error")
 		
-		mockAskApproval = jest.fn().mockResolvedValue(true) as jest.Mock<Promise<boolean>>
-		mockHandleError = jest.fn().mockResolvedValue(undefined) as jest.Mock<Promise<void>>
-		mockPushToolResult = jest.fn() as jest.Mock<void>
-		mockRemoveClosingTag = jest.fn((tag: string, content?: string) => content ?? "") as jest.Mock<string>
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
+		mockAskApproval = jest.fn().mockResolvedValue(true)
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
+		mockHandleError = jest.fn().mockResolvedValue(undefined)
+		mockPushToolResult = jest.fn() as PushToolResult
+		mockRemoveClosingTag = jest.fn((tag: string, content?: string) => content ?? "") as RemoveClosingTag
 	})
 
 	it("handles partial blocks by sending a progress update", async () => {
@@ -63,16 +68,16 @@ describe("askFollowupQuestionTool", () => {
 		}
 
 		await askFollowupQuestionTool(
-			mockTheaTask as unknown as TheaTask,
+			mockTheaTask,
 			block,
-			mockAskApproval as unknown as AskApproval,
-			mockHandleError as unknown as HandleError,
-			mockPushToolResult as unknown as PushToolResult,
-			mockRemoveClosingTag as unknown as RemoveClosingTag,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
 		)
 
 		expect(mockRemoveClosingTag).toHaveBeenCalledWith("question", "Test?")
-		expect(mockTheaTask.webviewCommunicator.ask).toHaveBeenCalledWith("followup", "Test?", true)
+		expect(mockAsk).toHaveBeenCalledWith("followup", "Test?", true)
 		expect(mockPushToolResult).not.toHaveBeenCalled()
 	})
 
@@ -85,18 +90,18 @@ describe("askFollowupQuestionTool", () => {
 		}
 
 		await askFollowupQuestionTool(
-			mockTheaTask as unknown as TheaTask,
+			mockTheaTask,
 			block,
-			mockAskApproval as unknown as AskApproval,
-			mockHandleError as unknown as HandleError,
-			mockPushToolResult as unknown as PushToolResult,
-			mockRemoveClosingTag as unknown as RemoveClosingTag,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
 		)
 
-		expect(mockTheaTask.sayAndCreateMissingParamError).toHaveBeenCalledWith("ask_followup_question", "question")
+		expect(mockSayAndCreateMissingParamError).toHaveBeenCalledWith("ask_followup_question", "question")
 		expect(mockPushToolResult).toHaveBeenCalledWith("Missing param error")
 		expect(mockTheaTask.consecutiveMistakeCount).toBe(1)
-		expect(mockTheaTask.webviewCommunicator.ask).not.toHaveBeenCalled()
+		expect(mockAsk).not.toHaveBeenCalled()
 	})
 
 	it("sends followup question and pushes tool result", async () => {
@@ -106,24 +111,29 @@ describe("askFollowupQuestionTool", () => {
 			params: { question: "What?", follow_up: "<suggest><answer>Yes</answer></suggest>" },
 			partial: false,
 		}
-		mockTheaTask.webviewCommunicator.ask.mockResolvedValue({ text: "Sure", images: ["img"] })
+		// @ts-expect-error - Jest mock setup requires bypassing strict typing
+		mockAsk.mockResolvedValue({ 
+			response: "messageResponse" as TheaAskResponse,
+			text: "Sure", 
+			images: ["img"] 
+		})
 		mockedFormatResponse.toolResult.mockReturnValue("tool result")
 
 		await askFollowupQuestionTool(
-			mockTheaTask as unknown as TheaTask,
+			mockTheaTask,
 			block,
-			mockAskApproval as unknown as AskApproval,
-			mockHandleError as unknown as HandleError,
-			mockPushToolResult as unknown as PushToolResult,
-			mockRemoveClosingTag as unknown as RemoveClosingTag,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
 		)
 
-		expect(mockTheaTask.webviewCommunicator.ask).toHaveBeenCalledWith(
+		expect(mockAsk).toHaveBeenCalledWith(
 			"followup",
 			JSON.stringify({ question: "What?", suggest: [{ answer: "Yes" }] }),
 			false,
 		)
-		expect(mockTheaTask.webviewCommunicator.say).toHaveBeenCalledWith("user_feedback", "Sure", ["img"])
+		expect(mockSay).toHaveBeenCalledWith("user_feedback", "Sure", ["img"])
 		expect(mockPushToolResult).toHaveBeenCalledWith("tool result")
 		expect(mockTheaTask.consecutiveMistakeCount).toBe(0)
 	})
@@ -138,15 +148,15 @@ describe("askFollowupQuestionTool", () => {
 		mockedFormatResponse.toolError.mockReturnValue("tool error")
 
 		await askFollowupQuestionTool(
-			mockTheaTask as unknown as TheaTask,
+			mockTheaTask,
 			block,
-			mockAskApproval as unknown as AskApproval,
-			mockHandleError as unknown as HandleError,
-			mockPushToolResult as unknown as PushToolResult,
-			mockRemoveClosingTag as unknown as RemoveClosingTag,
+			mockAskApproval,
+			mockHandleError,
+			mockPushToolResult,
+			mockRemoveClosingTag,
 		)
 
-		expect(mockTheaTask.webviewCommunicator.say).toHaveBeenCalledWith(
+		expect(mockSay).toHaveBeenCalledWith(
 			"error",
 			expect.stringContaining("Failed to parse operations"),
 		)

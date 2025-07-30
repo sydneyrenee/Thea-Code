@@ -1,7 +1,7 @@
-import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
 import { VertexAI } from "@google-cloud/vertexai"
 import { supportsPromptCaching } from "../../utils/model-capabilities" // Import capability detection functions
 import { getBaseModelId, isThinkingModel } from "../../utils/model-pattern-detection" // Import pattern detection functions
+import { NeutralVertexClient } from "../../services/vertex" // Import the NeutralVertexClient
 
 // Define neutral types to replace SDK dependencies
 interface MessageContentBlock {
@@ -128,7 +128,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	MODEL_GEMINI = "gemini"
 
 	protected options: ApiHandlerOptions
-	private anthropicClient: AnthropicVertex
+	private neutralVertexClient: NeutralVertexClient
 	private geminiClient: VertexAI
 	private modelType: string
 
@@ -147,34 +147,19 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			throw new Error(`Unknown model ID: ${modelId}`)
 		}
 
-		if (this.options.vertexJsonCredentials) {
-			this.anthropicClient = new AnthropicVertex({
-				projectId: this.options.vertexProjectId ?? "not-provided",
-				// https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude#regions
-				region: this.options.vertexRegion ?? "us-east5",
-				googleAuth: new GoogleAuth({
-					scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-					credentials: JSON.parse(this.options.vertexJsonCredentials) as Record<string, unknown>,
-				}),
-			})
-		} else if (this.options.vertexKeyFile) {
-			this.anthropicClient = new AnthropicVertex({
-				projectId: this.options.vertexProjectId ?? "not-provided",
-				// https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude#regions
-				region: this.options.vertexRegion ?? "us-east5",
-				googleAuth: new GoogleAuth({
-					scopes: ["https://www.googleapis.com/auth/cloud-platform"],
-					keyFile: this.options.vertexKeyFile,
-				}),
-			})
-		} else {
-			this.anthropicClient = new AnthropicVertex({
-				projectId: this.options.vertexProjectId ?? "not-provided",
-				// https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude#regions
-				region: this.options.vertexRegion ?? "us-east5",
-			})
+		// Initialize the NeutralVertexClient with the appropriate options
+		const clientOptions = {
+			projectId: this.options.vertexProjectId ?? "not-provided",
+			region: this.options.vertexRegion ?? "us-east5",
+			credentials: this.options.vertexJsonCredentials 
+				? JSON.parse(this.options.vertexJsonCredentials) as Record<string, unknown>
+				: undefined,
+			keyFile: this.options.vertexKeyFile,
 		}
+		
+		this.neutralVertexClient = new NeutralVertexClient(clientOptions)
 
+		// Initialize the Gemini client (still using the SDK for now)
 		if (this.options.vertexJsonCredentials) {
 			this.geminiClient = new VertexAI({
 				project: this.options.vertexProjectId ?? "not-provided",
@@ -256,166 +241,22 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		const modelInfo = this.getModel()
 		const { id, temperature, maxTokens } = modelInfo
 		
-		// Use capability detection function for prompt caching
-		const modelSupportsPromptCache = supportsPromptCaching(modelInfo.info)
-
-		// Find indices of user messages that we want to cache
-		// We only cache the last two user messages to stay within the 4-block limit
-		// (1 block for system + 1 block each for last two user messages = 3 total)
-		const userMsgIndices = modelSupportsPromptCache
-			? messages.reduce((acc, msg, i) => (msg.role === "user" ? [...acc, i] : acc), [] as number[])
-			: []
-		const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
-		const secondLastMsgUserIndex = userMsgIndices[userMsgIndices.length - 2] ?? -1
-
-		// Convert to Vertex Claude format
-		const vertexMessages = convertToVertexClaudeHistory(messages)
-
-		// Create the stream with appropriate caching configuration
-		const params: MessageCreateParams = {
+		// Use the NeutralVertexClient to create a Claude message
+		yield* this.neutralVertexClient.createClaudeMessage({
 			model: id,
-			max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
+			systemPrompt,
+			messages,
+			maxTokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 			temperature,
-			// Cache the system prompt if caching is supported by the model
-			system: modelSupportsPromptCache
-				? [
-						{
-							text: systemPrompt,
-							type: "text" as const,
-							cache_control: { type: "ephemeral" },
-						},
-					]
-				: systemPrompt,
-			messages: vertexMessages
-				.map((message, index) => {
-					// Only cache the last two user messages if caching is supported
-					const shouldCache = modelSupportsPromptCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
-					return formatMessageForCache(message, shouldCache)
-				})
-				.filter((m) => m.role === "user" || m.role === "assistant") as MessageParam[],
 			stream: true,
-		}
-
-		const stream = (await this.anthropicClient.messages.create(
-			params,
-		)) as unknown as AsyncIterable<VertexMessageStreamEvent>
-
-		// Process the stream chunks
-		for await (const chunk of stream) {
-			switch (chunk.type) {
-				case "message_start": {
-					const usage = chunk.message!.usage
-					yield {
-						type: "usage",
-						inputTokens: usage.input_tokens || 0,
-						outputTokens: usage.output_tokens || 0,
-						cacheWriteTokens: usage.cache_creation_input_tokens,
-						cacheReadTokens: usage.cache_read_input_tokens,
-					}
-					break
-				}
-				case "message_delta": {
-					yield {
-						type: "usage",
-						inputTokens: 0,
-						outputTokens: chunk.usage!.output_tokens || 0,
-					}
-					break
-				}
-				case "content_block_start": {
-					switch (chunk.content_block!.type) {
-						case "text": {
-							if (chunk.index! > 0) {
-								yield {
-									type: "text",
-									text: "\n",
-								}
-							}
-							yield {
-								type: "text",
-								text: chunk.content_block!.text,
-							}
-							break
-						}
-						case "thinking": {
-							if (chunk.index! > 0) {
-								yield {
-									type: "reasoning",
-									text: "\n",
-								}
-							}
-							// Define a type for the thinking content block
-							interface ThinkingContentBlock {
-								type: "thinking"
-								thinking: string
-							}
-							// Type assertion with a specific interface
-							const thinkingBlock = chunk.content_block as ThinkingContentBlock
-							yield {
-								type: "reasoning",
-								text: thinkingBlock.thinking,
-							}
-							break
-						}
-						case "tool_use": {
-							// Handle tool use blocks using MCP integration
-							if (chunk.content_block?.type === "tool_use") {
-								const toolUseBlock = chunk.content_block
-								const toolResult = await this.processToolUse({
-									id: toolUseBlock.id,
-									name: toolUseBlock.name,
-									input: toolUseBlock.input,
-								})
-
-								const toolResultString =
-									typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
-
-								yield {
-									type: "tool_result",
-									id: toolUseBlock.id,
-									content: toolResultString,
-								}
-							}
-							break
-						}
-					}
-					break
-				}
-				case "content_block_delta": {
-					switch (chunk.delta!.type) {
-						case "text_delta": {
-							yield {
-								type: "text",
-								text: chunk.delta!.text,
-							}
-							break
-						}
-						case "thinking_delta": {
-							// Define a type for the thinking delta
-							interface ThinkingDelta {
-								type: "thinking_delta"
-								thinking: string
-							}
-							// Type assertion with a specific interface
-							const thinkingDelta = chunk.delta as ThinkingDelta
-							yield {
-								type: "reasoning",
-								text: thinkingDelta.thinking,
-							}
-							break
-						}
-					}
-					break
-				}
-			}
-		}
+		})
 	}
 
 	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		// We need to use different clients based on model type due to API differences
 		switch (this.modelType) {
 			case this.MODEL_CLAUDE: {
-				// Claude models use the Anthropic Vertex client
+				// Claude models use the NeutralVertexClient
 				yield* this.createClaudeMessage(systemPrompt, messages)
 				break
 			}
@@ -494,46 +335,15 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 	private async completePromptClaude(prompt: string) {
 		try {
-			const { id, info, temperature, maxTokens } = this.getModel()
+			const { id, temperature, maxTokens } = this.getModel()
 			
-			// Use capability detection function for prompt caching
-			const modelSupportsPromptCache = supportsPromptCaching(info)
-
-			// Create a neutral history with a single message
-			const neutralHistory = [
-				{
-					role: "user" as const,
-					content: prompt,
-				},
-			]
-
-			// Convert the neutral history to Vertex Claude format
-			const claudeMessages = convertToVertexClaudeHistory(neutralHistory)
-
-			// Apply cache control if the model supports it
-			const messagesWithCache = claudeMessages.map((message) =>
-				modelSupportsPromptCache ? formatMessageForCache(message, true) : message,
+			// Use the NeutralVertexClient to complete a Claude prompt
+			return await this.neutralVertexClient.completeClaudePrompt(
+				prompt,
+				id,
+				maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
+				temperature
 			)
-
-			const params: MessageCreateParamsNonStreaming = {
-				model: id,
-				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
-				temperature,
-				system: "", // No system prompt needed for single completions
-				messages: messagesWithCache.filter(
-					(m) => m.role === "user" || m.role === "assistant",
-				) as MessageParam[],
-				stream: false,
-			}
-
-			const response = (await this.anthropicClient.messages.create(params)) as unknown as VertexMessageResponse
-			const content = response.content[0]
-
-			if (content.type === "text") {
-				return content.text
-			}
-
-			return ""
 		} catch (error) {
 			if (error instanceof Error) {
 				throw new Error(`Vertex completion error: ${error.message}`)

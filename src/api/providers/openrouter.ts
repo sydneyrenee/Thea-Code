@@ -84,43 +84,39 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 		}
 
 		// prompt caching: https://openrouter.ai/docs/prompt-caching
-		// this is specifically for claude models (some models may 'support prompt caching' automatically without this)
-		switch (true) {
-			case modelId.startsWith("anthropic/"): {
-				openAiMessages[0] = {
-					role: "system",
-					content: [
-						{
-							type: "text",
-							text: systemPrompt,
-							// @ts-expect-error - Anthropic SDK doesn't expose cache_control in type definitions
-							cache_control: { type: "ephemeral" },
-						},
-					],
-				}
-				// Add cache_control to the last two user messages
-				// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
-				const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
-				lastTwoUserMessages.forEach((msg) => {
-					if (typeof msg.content === "string") {
-						msg.content = [{ type: "text", text: msg.content }]
-					}
-					if (Array.isArray(msg.content)) {
-						// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
-						let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
-
-						if (!lastTextPart) {
-							lastTextPart = { type: "text", text: "..." }
-							msg.content.push(lastTextPart)
-						}
-						// @ts-expect-error - Adding cache_control property not defined in type
-						lastTextPart["cache_control"] = { type: "ephemeral" }
-					}
-				})
-				break
+		// Apply prompt caching for models that support it
+		const modelInfo = this.getModel().info
+		if (modelInfo.supportsPromptCache) {
+			openAiMessages[0] = {
+				role: "system",
+				content: [
+					{
+						type: "text",
+						text: systemPrompt,
+						// @ts-expect-error - Anthropic SDK doesn't expose cache_control in type definitions
+						cache_control: { type: "ephemeral" },
+					},
+				],
 			}
-			default:
-				break
+			// Add cache_control to the last two user messages
+			// (note: this works because we only ever add one user message at a time, but if we added multiple we'd need to mark the user message before the last assistant message)
+			const lastTwoUserMessages = openAiMessages.filter((msg) => msg.role === "user").slice(-2)
+			lastTwoUserMessages.forEach((msg) => {
+				if (typeof msg.content === "string") {
+					msg.content = [{ type: "text", text: msg.content }]
+				}
+				if (Array.isArray(msg.content)) {
+					// NOTE: this is fine since env details will always be added at the end. but if it weren't there, and the user added a image_url type message, it would pop a text part before it and then move it after to the end.
+					let lastTextPart = msg.content.filter((part) => part.type === "text").pop()
+
+					if (!lastTextPart) {
+						lastTextPart = { type: "text", text: "..." }
+						msg.content.push(lastTextPart)
+					}
+					// @ts-expect-error - Adding cache_control property not defined in type
+					lastTextPart["cache_control"] = { type: "ephemeral" }
+				}
+			})
 		}
 
 		// https://openrouter.ai/docs/transforms
@@ -301,51 +297,47 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 				inputPrice: parseApiPrice(rawModel.pricing?.prompt),
 				outputPrice: parseApiPrice(rawModel.pricing?.completion),
 				description: rawModel.description ?? undefined, // Default to undefined if null
-				thinking: rawModel.id === "anthropic/claude-3.7-sonnet:thinking",
+				thinking: rawModel.id.endsWith(":thinking"),
 			}
 
-			// NOTE: this needs to be synced with api.ts/openrouter default model info.
-			switch (true) {
-				case rawModel.id.startsWith("anthropic/claude-3.7-sonnet"):
-					modelInfo.supportsComputerUse = true
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = rawModel.id === "anthropic/claude-3.7-sonnet:thinking" ? 128_000 : 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet-20240620"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
+			// Set capabilities based on model features rather than hardcoded model names
+			
+			// Set default maxTokens if not provided by the API
+			if (!modelInfo.maxTokens) {
+				// For thinking models, use a larger token limit
+				if (modelInfo.thinking) {
+					modelInfo.maxTokens = 128_000
+				} else if (rawModel.id.includes("claude")) {
+					// Most Claude models support at least 8192 tokens
 					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3.5-sonnet"):
-					modelInfo.supportsComputerUse = true
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-5-haiku"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 1.25
-					modelInfo.cacheReadsPrice = 0.1
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-opus"):
-					modelInfo.supportsPromptCache = true
+				} else {
+					// Default for other models
+					modelInfo.maxTokens = 4096
+				}
+			}
+			
+			// Set prompt cache capabilities for Claude models
+			// This is still needed because OpenRouter doesn't provide this info directly
+			if (rawModel.id.includes("claude")) {
+				modelInfo.supportsPromptCache = true
+				
+				// Set cache pricing based on model tier
+				if (rawModel.id.includes("opus")) {
 					modelInfo.cacheWritesPrice = 18.75
 					modelInfo.cacheReadsPrice = 1.5
-					modelInfo.maxTokens = 8192
-					break
-				case rawModel.id.startsWith("anthropic/claude-3-haiku"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 0.3
-					modelInfo.cacheReadsPrice = 0.03
-					modelInfo.maxTokens = 8192
-					break
-				default:
-					break
+				} else if (rawModel.id.includes("haiku")) {
+					modelInfo.cacheWritesPrice = 1.25
+					modelInfo.cacheReadsPrice = 0.1
+				} else {
+					// Default cache pricing for sonnet and other models
+					modelInfo.cacheWritesPrice = 3.75
+					modelInfo.cacheReadsPrice = 0.3
+				}
+				
+				// Set computer use capability for models that support it
+				if (rawModel.id.includes("sonnet") && !rawModel.id.includes("20240620")) {
+					modelInfo.supportsComputerUse = true
+				}
 			}
 
 			models[rawModel.id] = modelInfo

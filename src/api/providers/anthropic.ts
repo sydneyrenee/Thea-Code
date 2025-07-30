@@ -19,7 +19,12 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 	constructor(options: ApiHandlerOptions) {
 		super()
 		this.options = options
-		this.client = new NeutralAnthropicClient(this.options.apiKey || "", this.options.anthropicBaseUrl || undefined)
+		
+		// Create client with options object instead of separate parameters
+		this.client = new NeutralAnthropicClient({
+			apiKey: this.options.apiKey || "",
+			baseURL: this.options.anthropicBaseUrl
+		})
 	}
 
 	// Updated to accept NeutralConversationHistory
@@ -65,10 +70,11 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		const virtualId = id
 
 		// Special handling for thinking variants
-		// The `:thinking` variant is a virtual identifier for the
-		// `claude-3-7-sonnet-20250219` model with a thinking budget.
-		if (id === "claude-3-7-sonnet-20250219:thinking") {
-			id = "claude-3-7-sonnet-20250219"
+		// For models with a `:thinking` suffix, use the base model ID
+		// but preserve the thinking capability
+		if (id.includes(":thinking")) {
+			// Extract the base model ID without the thinking suffix
+			id = id.split(":")[0] as AnthropicModelId
 		}
 
 		// Get base model parameters
@@ -84,8 +90,9 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 			const customMaxTokens = this.options.modelMaxTokens
 			const customMaxThinkingTokens = this.options.modelMaxThinkingTokens
 
-			// Set thinking parameter for model variants that use it
-			if (virtualId.includes(":thinking")) {
+			// Set thinking parameter based on model capability, not specific ID
+			// Check if the original ID had the thinking suffix or if the model info indicates thinking support
+			if (virtualId.includes(":thinking") || info.thinking === true) {
 				// Clamp the thinking budget to be at most 80% of max tokens and at least 1024 tokens
 				const effectiveMaxTokens = customMaxTokens ?? baseParams.maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS
 				const maxBudgetTokens = Math.floor(effectiveMaxTokens * 0.8)

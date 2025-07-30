@@ -69,19 +69,67 @@ export function getNewDiagnostics(
 // // File: /path/to/file3.ts
 // // - New error in file3 (1:1)
 
-// will return empty string if no problems with the given severity are found
+// Create a persistent document cache at module level
+const documentCache = new Map<string, vscode.TextDocument>()
+
+/**
+ * Converts diagnostics to a formatted string representation of problems
+ * 
+ * @param diagnostics Array of diagnostics with their URIs
+ * @param severities Array of diagnostic severities to include
+ * @param cwd Current working directory for relative path formatting
+ * @returns Formatted string of problems, empty string if none found
+ */
 export async function diagnosticsToProblemsString(
 	diagnostics: [vscode.Uri, vscode.Diagnostic[]][],
 	severities: vscode.DiagnosticSeverity[],
 	cwd: string,
 ): Promise<string> {
-	const documents = new Map<vscode.Uri, vscode.TextDocument>()
-	let result = ""
+	// Pre-load all documents in parallel before processing diagnostics
+	const documentPromises = new Map<string, Promise<vscode.TextDocument>>()
+	
+	// First pass: collect all unique URIs that need documents
 	for (const [uri, fileDiagnostics] of diagnostics) {
 		const problems = fileDiagnostics.filter((d) => severities.includes(d.severity))
 		if (problems.length > 0) {
-			result += `\n\n${path.relative(cwd, uri.fsPath).toPosix()}`
+			const uriString = uri.toString()
+			if (!documentCache.has(uriString) && !documentPromises.has(uriString)) {
+				// Create a properly typed promise with error handling
+				const docPromise = vscode.workspace.openTextDocument(uri)
+					.then(doc => doc)
+					.catch(e => {
+						// Safely access error properties with type checking
+						const errorMessage = e instanceof Error ? e.message : String(e)
+						console.warn(`Failed to open document ${uriString}: ${errorMessage}`)
+						return null
+					})
+				
+				documentPromises.set(uriString, docPromise)
+			}
+		}
+	}
+	
+	// Wait for all documents to load in parallel
+	await Promise.all([...documentPromises.values()])
+	
+	// Store successfully loaded documents in the cache
+	for (const [uriString, promise] of documentPromises.entries()) {
+		// No try/catch needed here since errors are already handled in the promise chain
+		const doc = await promise
+		if (doc) documentCache.set(uriString, doc)
+	}
+	
+	// Process diagnostics with loaded documents
+	const resultParts: string[] = []
+	
+	for (const [uri, fileDiagnostics] of diagnostics) {
+		const problems = fileDiagnostics.filter((d) => severities.includes(d.severity))
+		if (problems.length > 0) {
+			// Add file path
+			resultParts.push(`\n\n${path.relative(cwd, uri.fsPath).toPosix()}`)
+			
 			for (const diagnostic of problems) {
+				// Determine severity label
 				let label: string
 				switch (diagnostic.severity) {
 					case vscode.DiagnosticSeverity.Error:
@@ -99,14 +147,35 @@ export async function diagnosticsToProblemsString(
 					default:
 						label = "Diagnostic"
 				}
+				
 				const line = diagnostic.range.start.line + 1 // VSCode lines are 0-indexed
 				const source = diagnostic.source ? `${diagnostic.source} ` : ""
-				const document = documents.get(uri) || (await vscode.workspace.openTextDocument(uri))
-				documents.set(uri, document)
-				const lineContent = document.lineAt(diagnostic.range.start.line).text
-				result += `\n- [${source}${label}] ${line} | ${lineContent} : ${diagnostic.message}`
+				
+				try {
+					const uriString = uri.toString()
+					const document = documentCache.get(uriString)
+					
+					if (!document) {
+						// Skip this diagnostic if document couldn't be loaded
+						resultParts.push(`\n- [${source}${label}] ${line} | <document unavailable> : ${diagnostic.message}`)
+						continue
+					}
+					
+					try {
+						const lineContent = document.lineAt(diagnostic.range.start.line).text
+						resultParts.push(`\n- [${source}${label}] ${line} | ${lineContent} : ${diagnostic.message}`)
+					} catch (lineError) {
+						// Handle case where line doesn't exist in document
+						resultParts.push(`\n- [${source}${label}] ${line} | <line content unavailable> : ${diagnostic.message}`)
+					}
+				} catch (error) {
+					// Provide a fallback when document access fails
+					resultParts.push(`\n- [${source}${label}] ${line} | <error accessing content> : ${diagnostic.message}`)
+				}
 			}
 		}
 	}
-	return result.trim()
+	
+	// Join all parts and trim any leading/trailing whitespace
+	return resultParts.join("").trim()
 }

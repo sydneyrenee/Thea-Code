@@ -42,8 +42,15 @@ export class ProviderIntegration extends EventEmitter {
 			if (!this.mcpToolExecutors.has(name)) {
 				const exec = McpToolExecutor.getInstance()
 				this.mcpToolExecutors.set(name, exec)
-				exec.on("tool-registered", (tool) => this.emit("tool-registered", { provider: name, tool }))
-				exec.on("tool-unregistered", (tool) => this.emit("tool-unregistered", { provider: name, tool }))
+				// Add proper type annotations for event handlers
+				exec.on("tool-registered", (tool: string) => this.emit("tool-registered", { 
+					provider: name, 
+					tool 
+				} as { provider: string; tool: string }))
+				exec.on("tool-unregistered", (tool: string) => this.emit("tool-unregistered", { 
+					provider: name, 
+					tool 
+				} as { provider: string; tool: string }))
 			}
 		}
 
@@ -66,18 +73,21 @@ export class ProviderIntegration extends EventEmitter {
 	public registerProvider(name: string, provider: IMcpProvider): void {
 		this.providers.set(name, provider)
 
+		// Type guard to check if provider is an EventEmitter
 		if (provider instanceof EventEmitter) {
-			provider.on("tool-registered", (tool) => this.emit("tool-registered", name, tool))
-			provider.on("tool-unregistered", (tool) => this.emit("tool-unregistered", name, tool))
-			provider.on("started", (info) => this.emit("provider-started", name, info))
+			// Add proper type annotations for event handlers
+			provider.on("tool-registered", (tool: string) => this.emit("tool-registered", name, tool))
+			provider.on("tool-unregistered", (tool: string) => this.emit("tool-unregistered", name, tool))
+			provider.on("started", (info: unknown) => this.emit("provider-started", name, info))
 			provider.on("stopped", () => this.emit("provider-stopped", name))
 		}
 
 		if (!this.mcpToolExecutors.has(name)) {
 			const exec = McpToolExecutor.getInstance()
 			this.mcpToolExecutors.set(name, exec)
-			exec.on("tool-registered", (tool) => this.emit("tool-registered", name, tool))
-			exec.on("tool-unregistered", (tool) => this.emit("tool-unregistered", name, tool))
+			// Add proper type annotations for event handlers
+			exec.on("tool-registered", (tool: string) => this.emit("tool-registered", name, tool))
+			exec.on("tool-unregistered", (tool: string) => this.emit("tool-unregistered", name, tool))
 		}
 	}
 

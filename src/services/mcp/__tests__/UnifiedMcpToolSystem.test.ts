@@ -2,31 +2,38 @@ import { McpToolExecutor } from "../core/McpToolExecutor"
 import { NeutralToolResult, ToolUseFormat } from "../types/McpToolTypes"
 import { McpConverters } from "../core/McpConverters"
 import { McpToolRouter } from "../core/McpToolRouter"
+import { IMcpProvider, ToolCallResult } from "../types/McpProviderTypes"
+import { EventEmitter } from "events"
 
 // Mock EmbeddedMcpProvider
 jest.mock("../providers/EmbeddedMcpProvider", () => {
-	const { EventEmitter } = require("events")
-
-	const MockEmbeddedMcpProvider = jest.fn().mockImplementation(() => {
-		const instance = new EventEmitter()
+	// Create a mock implementation that satisfies the IMcpProvider interface
+	const mockImplementation = jest.fn().mockImplementation(() => {
+		const instance = new EventEmitter() as EventEmitter & Partial<IMcpProvider>
+		
+		// Define mock methods with proper return types
 		instance.start = jest.fn().mockImplementation(() => Promise.resolve())
 		instance.stop = jest.fn().mockImplementation(() => Promise.resolve())
 		instance.registerToolDefinition = jest.fn()
 		instance.unregisterTool = jest.fn().mockReturnValue(true)
-		instance.executeTool = jest.fn().mockImplementation(async () => ({
-			content: [{ type: "text", text: "Success" }],
-		}))
+		instance.executeTool = jest.fn().mockImplementation(() => 
+			Promise.resolve({
+				content: [{ type: "text", text: "Success" }],
+			} as ToolCallResult)
+		)
 		instance.getServerUrl = jest.fn().mockReturnValue(new URL("http://localhost:3000"))
-		return instance
+		instance.isRunning = jest.fn().mockReturnValue(true)
+		
+		return instance as EventEmitter & IMcpProvider
 	})
 
-	const MockedProviderClass = MockEmbeddedMcpProvider as any
-	MockedProviderClass.create = jest.fn().mockImplementation(async () => {
-		return new MockEmbeddedMcpProvider()
-	})
+	// Create the static create method
+	mockImplementation.create = jest.fn().mockImplementation(() => 
+		Promise.resolve(mockImplementation())
+	)
 
 	return {
-		EmbeddedMcpProvider: MockEmbeddedMcpProvider,
+		EmbeddedMcpProvider: mockImplementation,
 	}
 })
 
@@ -50,18 +57,21 @@ jest.mock("../core/McpToolRegistry", () => {
 
 // Types for accessing private fields in tests
 type McpToolExecutorInternal = {
-	mcpProvider: {
-		start: jest.Mock
-		unregisterTool: jest.Mock
-		registerToolDefinition: jest.Mock
-	}
+	mcpProvider: EventEmitter & IMcpProvider
 	toolRegistry: {
-		registerTool: jest.Mock
-		unregisterTool: jest.Mock
+		registerTool: jest.Mock<void, [ToolDefinition]>
+		unregisterTool: jest.Mock<boolean, [string]>
 		getTool: jest.Mock
 		getAllTools: jest.Mock
-		hasTool: jest.Mock
-		executeTool: jest.Mock
+		hasTool: jest.Mock<boolean, [string]>
+		executeTool: jest.Mock<Promise<ToolCallResult>, [string, Record<string, unknown>]>
+	}
+}
+
+// Type for accessing private fields in McpToolRouter
+type McpToolRouterInternal = {
+	mcpToolSystem: {
+		executeToolFromNeutralFormat: jest.Mock<Promise<NeutralToolResult>, [NeutralToolUseRequest]>
 	}
 }
 
@@ -82,7 +92,8 @@ describe("McpToolExecutor", () => {
 			await mcpToolSystem.initialize()
 
 			const { mcpProvider } = mcpToolSystem as unknown as McpToolExecutorInternal
-			expect(mcpProvider.start).toHaveBeenCalled()
+			// Use mockFn.mock.calls to avoid unbound method reference
+			expect(mcpProvider.start.mock.calls.length).toBeGreaterThan(0)
 		})
 
 		it("should not initialize the MCP server if already initialized", async () => {
@@ -315,7 +326,7 @@ describe("McpToolRouter", () => {
 			})
 
 			;(
-				mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }
+				mcpToolRouter as unknown as McpToolRouterInternal
 			).mcpToolSystem.executeToolFromNeutralFormat = mockExecute
 
 			const request = {
@@ -342,7 +353,7 @@ describe("McpToolRouter", () => {
 			})
 
 			;(
-				mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }
+				mcpToolRouter as unknown as McpToolRouterInternal
 			).mcpToolSystem.executeToolFromNeutralFormat = mockExecute
 
 			const request = {
@@ -377,7 +388,7 @@ describe("McpToolRouter", () => {
 			const mockExecute = jest.fn().mockRejectedValue(new Error("Test error"))
 
 			;(
-				mcpToolRouter as unknown as { mcpToolSystem: { executeToolFromNeutralFormat: unknown } }
+				mcpToolRouter as unknown as McpToolRouterInternal
 			).mcpToolSystem.executeToolFromNeutralFormat = mockExecute
 
 			const request = {

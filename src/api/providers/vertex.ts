@@ -1,6 +1,32 @@
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
-import Messages from "@anthropic-ai/sdk"
 import { VertexAI } from "@google-cloud/vertexai"
+
+// Define neutral types to replace SDK dependencies
+interface MessageContentBlock {
+  type: "text" | "image" | "tool_use" | "tool_result"
+  text?: string
+  cache_control?: { type: "ephemeral" }
+  [key: string]: unknown
+}
+
+interface MessageParam {
+  role: "user" | "assistant"
+  content: string | MessageContentBlock[]
+}
+
+interface MessageCreateParams {
+  model: string
+  max_tokens: number
+  temperature: number
+  system: string | MessageContentBlock[]
+  messages: MessageParam[]
+  stream: boolean
+  [key: string]: unknown
+}
+
+interface MessageCreateParamsNonStreaming extends Omit<MessageCreateParams, "stream"> {
+  stream: false
+}
 
 import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
@@ -95,6 +121,7 @@ interface VertexMessageStreamEvent {
  * same neutral interface for all consumer code.
  */
 export class VertexHandler extends BaseProvider implements SingleCompletionHandler {
+	// Model family identifiers
 	MODEL_CLAUDE = "claude"
 	MODEL_GEMINI = "gemini"
 
@@ -107,12 +134,15 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		super()
 		this.options = options
 
-		if (this.options.apiModelId?.startsWith(this.MODEL_CLAUDE)) {
+		// Determine model type based on model ID prefix
+		// This is still needed for initial client setup, but we'll use capabilities for behavior
+		const modelId = this.options.apiModelId || ""
+		if (modelId.startsWith(this.MODEL_CLAUDE)) {
 			this.modelType = this.MODEL_CLAUDE
-		} else if (this.options.apiModelId?.startsWith(this.MODEL_GEMINI)) {
+		} else if (modelId.startsWith(this.MODEL_GEMINI)) {
 			this.modelType = this.MODEL_GEMINI
 		} else {
-			throw new Error(`Unknown model ID: ${this.options.apiModelId}`)
+			throw new Error(`Unknown model ID: ${modelId}`)
 		}
 
 		if (this.options.vertexJsonCredentials) {
@@ -223,12 +253,14 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	private async *createClaudeMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
 		const modelInfo = this.getModel()
 		const { id, temperature, maxTokens } = modelInfo
-		const useCache = modelInfo.info.supportsPromptCache
+		
+		// Use capability detection for prompt caching
+		const supportsPromptCache = modelInfo.info.supportsPromptCache === true
 
 		// Find indices of user messages that we want to cache
 		// We only cache the last two user messages to stay within the 4-block limit
 		// (1 block for system + 1 block each for last two user messages = 3 total)
-		const userMsgIndices = useCache
+		const userMsgIndices = supportsPromptCache
 			? messages.reduce((acc, msg, i) => (msg.role === "user" ? [...acc, i] : acc), [] as number[])
 			: []
 		const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
@@ -238,12 +270,12 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		const vertexMessages = convertToVertexClaudeHistory(messages)
 
 		// Create the stream with appropriate caching configuration
-		const params: Messages.MessageCreateParams = {
+		const params: MessageCreateParams = {
 			model: id,
 			max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 			temperature,
-			// Cache the system prompt if caching is enabled
-			system: useCache
+			// Cache the system prompt if caching is supported by the model
+			system: supportsPromptCache
 				? [
 						{
 							text: systemPrompt,
@@ -254,11 +286,11 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				: systemPrompt,
 			messages: vertexMessages
 				.map((message, index) => {
-					// Only cache the last two user messages
-					const shouldCache = useCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
+					// Only cache the last two user messages if caching is supported
+					const shouldCache = supportsPromptCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
 					return formatMessageForCache(message, shouldCache)
 				})
-				.filter((m) => m.role === "user" || m.role === "assistant") as Messages.MessageParam[],
+				.filter((m) => m.role === "user" || m.role === "assistant") as MessageParam[],
 			stream: true,
 		}
 
@@ -378,12 +410,15 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	override async *createMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
+		// We need to use different clients based on model type due to API differences
 		switch (this.modelType) {
 			case this.MODEL_CLAUDE: {
+				// Claude models use the Anthropic Vertex client
 				yield* this.createClaudeMessage(systemPrompt, messages)
 				break
 			}
 			case this.MODEL_GEMINI: {
+				// Gemini models use the Google Vertex AI client
 				yield* this.createGeminiMessage(systemPrompt, messages)
 				break
 			}
@@ -398,8 +433,11 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		let id = modelId && modelId in vertexModels ? (modelId as VertexModelId) : vertexDefaultModelId
 		const info: ModelInfo = vertexModels[id]
 
-		// The `:thinking` variant is a virtual identifier for thinking-enabled
-		// models (similar to how it's handled in the Anthropic provider.)
+		// Track the original model ID for special variant handling
+		const virtualId = id
+
+		// Handle thinking variants by extracting the base model ID
+		// but preserving the thinking capability in the model info
 		if (id.endsWith(":thinking")) {
 			id = id.replace(":thinking", "") as VertexModelId
 		}
@@ -407,6 +445,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		return {
 			id,
 			info,
+			virtualId, // Include the original ID for reference
 			...getModelParams({ options: this.options, model: info, defaultMaxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS }),
 		}
 	}
@@ -454,7 +493,9 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	private async completePromptClaude(prompt: string) {
 		try {
 			const { id, info, temperature, maxTokens } = this.getModel()
-			const useCache = info.supportsPromptCache
+			
+			// Use capability detection for prompt caching
+			const supportsPromptCache = info.supportsPromptCache === true
 
 			// Create a neutral history with a single message
 			const neutralHistory = [
@@ -467,19 +508,19 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			// Convert the neutral history to Vertex Claude format
 			const claudeMessages = convertToVertexClaudeHistory(neutralHistory)
 
-			// Apply cache control if needed
+			// Apply cache control if the model supports it
 			const messagesWithCache = claudeMessages.map((message) =>
-				useCache ? formatMessageForCache(message, true) : message,
+				supportsPromptCache ? formatMessageForCache(message, true) : message,
 			)
 
-			const params: Messages.MessageCreateParamsNonStreaming = {
+			const params: MessageCreateParamsNonStreaming = {
 				model: id,
 				max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 				temperature,
 				system: "", // No system prompt needed for single completions
 				messages: messagesWithCache.filter(
 					(m) => m.role === "user" || m.role === "assistant",
-				) as Messages.MessageParam[],
+				) as MessageParam[],
 				stream: false,
 			}
 
@@ -508,8 +549,9 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	 */
 	override async countTokens(content: NeutralMessageContent): Promise<number> {
 		try {
-			// For both Claude and Gemini models, use the base provider's token counting
-			// as Vertex doesn't have a native token counting API for either model type
+			// Use the base provider's token counting for all model types
+			// Vertex AI doesn't have a native token counting API that works consistently
+			// across different model families (Claude, Gemini, etc.)
 			return super.countTokens(content)
 		} catch (error) {
 			console.warn("Vertex token counting error, using fallback", error)
@@ -518,6 +560,8 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	async completePrompt(prompt: string) {
+		// We need to use different clients based on model type due to API differences
+		// This is similar to createMessage but for non-streaming completions
 		switch (this.modelType) {
 			case this.MODEL_CLAUDE: {
 				return this.completePromptClaude(prompt)

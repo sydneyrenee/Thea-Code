@@ -3,6 +3,7 @@ import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { OpenAiCompatibleHandler } from "./openai-compatible-base"
 import type { NeutralConversationHistory } from "../../shared/neutral-history"
+import { supportsTemperature } from "../../utils/model-capabilities"
 
 /**
  * Get available Unbound models
@@ -11,11 +12,15 @@ export function getUnboundModels(): Record<string, ModelInfo> {
 	// For now, return a static list of known models
 	// This can be enhanced later to fetch dynamic model list if Unbound provides an API
 	const models: ModelInfo[] = [
-		unboundDefaultModelInfo,
+		{
+			...unboundDefaultModelInfo,
+			supportsTemperature: true,
+		},
 		{
 			contextWindow: 128000,
 			supportsImages: false,
 			supportsPromptCache: false,
+			supportsTemperature: false, // o3-mini doesn't support temperature
 			inputPrice: 0.0006, // per 1K tokens
 			outputPrice: 0.0024, // per 1K tokens
 			description: "Fast and efficient reasoning model",
@@ -45,7 +50,8 @@ export class UnboundHandler extends OpenAiCompatibleHandler implements SingleCom
 	}
 
 	private supportsTemperature(): boolean {
-		return !this.getModel().id.startsWith("openai/o3-mini")
+		// Use the capability detection function instead of hardcoded model check
+		return supportsTemperature(this.getModel().info)
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {

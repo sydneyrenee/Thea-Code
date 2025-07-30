@@ -8,8 +8,7 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 			strategy = new MultiSearchReplaceDiffStrategy()
 		})
 
-		it("validates correct marker sequence", async () => {
-
+		it("validates correct marker sequence", () => {
 			const diff = "<<<<<<< SEARCH\n" + "some content\n" + "=======\n" + "new content\n" + ">>>>>>> REPLACE"
 			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 		})

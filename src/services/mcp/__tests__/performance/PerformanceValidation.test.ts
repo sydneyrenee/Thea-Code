@@ -242,13 +242,13 @@ describe("MCP Performance and Streaming Validation", () => {
 	describe("Streaming Response Validation", () => {
 		let provider: MockMcpProvider
 
-		beforeEach(() => {
+		beforeEach(async () => {
 			provider = new MockMcpProvider()
-			provider.start()
+			await provider.start()
 		})
 
-		afterEach(() => {
-			provider.stop()
+		afterEach(async () => {
+			await provider.stop()
 			provider.removeAllListeners()
 		})
 
@@ -384,13 +384,13 @@ describe("MCP Performance and Streaming Validation", () => {
 	describe("Error Handling Performance", () => {
 		let provider: MockMcpProvider
 
-		beforeEach(() => {
+		beforeEach(async () => {
 			provider = new MockMcpProvider()
-			provider.start()
+			await provider.start()
 		})
 
-		afterEach(() => {
-			provider.stop()
+		afterEach(async () => {
+			await provider.stop()
 			provider.removeAllListeners()
 		})
 

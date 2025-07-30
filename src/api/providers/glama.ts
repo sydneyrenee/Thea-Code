@@ -6,6 +6,7 @@ import { ApiStream } from "../transform/stream"
 import { SingleCompletionHandler } from "../"
 import { OpenAiCompatibleHandler } from "./openai-compatible-base"
 import { NeutralConversationHistory } from "../../shared/neutral-history"
+import { supportsTemperature } from "../../utils/model-capabilities"
 
 export class GlamaHandler extends OpenAiCompatibleHandler implements SingleCompletionHandler {
 	constructor(options: ApiHandlerOptions) {
@@ -20,7 +21,8 @@ export class GlamaHandler extends OpenAiCompatibleHandler implements SingleCompl
 	}
 
 	private supportsTemperature(): boolean {
-		return !this.getModel().id.startsWith("openai/o3-mini")
+		// Use the capability detection function from model-capabilities.ts
+		return supportsTemperature(this.getModel().info)
 	}
 
 	override getModel(): { id: string; info: ModelInfo } {
@@ -94,6 +96,7 @@ export async function getGlamaModels() {
 				supportsImages: rawModel.capabilities?.includes("input:image"), // supportsImages can be undefined in ModelInfo
 				supportsComputerUse: rawModel.capabilities?.includes("computer_use"), // supportsComputerUse can be undefined
 				supportsPromptCache: rawModel.capabilities?.includes("caching") ?? false,
+				supportsTemperature: !rawModel.capabilities?.includes("low_reasoning"), // Set temperature support based on capabilities
 				inputPrice: parseApiPrice(rawModel.pricePerToken?.input),
 				outputPrice: parseApiPrice(rawModel.pricePerToken?.output),
 				description: undefined, // Ensure description is explicitly undefined if not present
@@ -101,7 +104,10 @@ export async function getGlamaModels() {
 				cacheReadsPrice: parseApiPrice(rawModel.pricePerToken?.cacheRead),
 			}
 
-			if (rawModel.id.startsWith("anthropic/")) {
+			// Set default maxTokens for models that don't specify it
+			// but are known to support at least 8192 tokens
+			if (!modelInfo.maxTokens && (rawModel.capabilities?.includes("tool_use") || 
+			    rawModel.capabilities?.includes("caching"))) {
 				modelInfo.maxTokens = 8192
 			}
 

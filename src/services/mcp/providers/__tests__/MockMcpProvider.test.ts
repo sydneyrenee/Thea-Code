@@ -20,44 +20,44 @@ describe("MockMcpProvider", () => {
 			expect(mockProvider.getServerUrl()).toBeUndefined()
 		})
 
-		it("should start successfully", () => {
+		it("should start successfully", async () => {
 			const startedSpy = jest.fn()
 			mockProvider.on("started", startedSpy)
 
-			mockProvider.start()
+			await mockProvider.start()
 
 			expect(mockProvider.isRunning()).toBe(true)
 			expect(mockProvider.getServerUrl()).toBeInstanceOf(URL)
 			expect(startedSpy).toHaveBeenCalledWith({ url: mockProvider.getServerUrl()?.toString() })
 		})
 
-		it("should not start twice", () => {
+		it("should not start twice", async () => {
 			const startedSpy = jest.fn()
 			mockProvider.on("started", startedSpy)
 
-			mockProvider.start()
-			mockProvider.start()
+			await mockProvider.start()
+			await mockProvider.start()
 
 			expect(startedSpy).toHaveBeenCalledTimes(1)
 		})
 
-		it("should stop successfully", () => {
+		it("should stop successfully", async () => {
 			const stoppedSpy = jest.fn()
 			mockProvider.on("stopped", stoppedSpy)
 
-			mockProvider.start()
-			mockProvider.stop()
+			await mockProvider.start()
+			await mockProvider.stop()
 
 			expect(mockProvider.isRunning()).toBe(false)
 			expect(mockProvider.getServerUrl()).toBeUndefined()
 			expect(stoppedSpy).toHaveBeenCalled()
 		})
 
-		it("should not stop if not started", () => {
+		it("should not stop if not started", async () => {
 			const stoppedSpy = jest.fn()
 			mockProvider.on("stopped", stoppedSpy)
 
-			mockProvider.stop()
+			await mockProvider.stop()
 
 			expect(stoppedSpy).not.toHaveBeenCalled()
 		})
@@ -74,31 +74,31 @@ describe("MockMcpProvider", () => {
 			}),
 		}
 
-		it("should register a tool", () => {
+		it("should register a tool", async () => {
 			const registeredSpy = jest.fn()
 			mockProvider.on("tool-registered", registeredSpy)
 
-			mockProvider.registerToolDefinition(sampleTool)
+			await mockProvider.registerToolDefinition(sampleTool)
 
 			expect(registeredSpy).toHaveBeenCalledWith("test_tool")
 		})
 
-		it("should unregister a tool", () => {
+		it("should unregister a tool", async () => {
 			const unregisteredSpy = jest.fn()
 			mockProvider.on("tool-unregistered", unregisteredSpy)
 
-			mockProvider.registerToolDefinition(sampleTool)
-			const result = mockProvider.unregisterTool("test_tool")
+			await mockProvider.registerToolDefinition(sampleTool)
+			const result = await mockProvider.unregisterTool("test_tool")
 
 			expect(result).toBe(true)
 			expect(unregisteredSpy).toHaveBeenCalledWith("test_tool")
 		})
 
-		it("should return false when unregistering non-existent tool", () => {
+		it("should return false when unregistering non-existent tool", async () => {
 			const unregisteredSpy = jest.fn()
 			mockProvider.on("tool-unregistered", unregisteredSpy)
 
-			const result = mockProvider.unregisterTool("non_existent")
+			const result = await mockProvider.unregisterTool("non_existent")
 
 			expect(result).toBe(false)
 			expect(unregisteredSpy).not.toHaveBeenCalled()

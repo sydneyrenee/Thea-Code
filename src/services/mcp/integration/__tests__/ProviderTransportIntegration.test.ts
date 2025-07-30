@@ -14,18 +14,18 @@ describe("Provider-Transport Integration", () => {
 			provider = new MockMcpProvider()
 		})
 
-		afterEach(() => {
+		afterEach(async () => {
 			if (provider && provider.isRunning()) {
-				provider.stop()
+				await provider.stop()
 			}
 			provider.removeAllListeners()
 		})
 
-		it("should start and provide connection info", () => {
+		it("should start and provide connection info", async () => {
 			const startedSpy = jest.fn()
 			provider.on("started", startedSpy)
 
-			provider.start()
+			await provider.start()
 
 			expect(provider.isRunning()).toBe(true)
 			expect(provider.getServerUrl()).toBeInstanceOf(URL)
@@ -36,12 +36,12 @@ describe("Provider-Transport Integration", () => {
 			)
 		})
 
-		it("should stop cleanly", () => {
+		it("should stop cleanly", async () => {
 			const stoppedSpy = jest.fn()
 			provider.on("stopped", stoppedSpy)
 
-			provider.start()
-			provider.stop()
+			await provider.start()
+			await provider.stop()
 
 			expect(provider.isRunning()).toBe(false)
 			expect(stoppedSpy).toHaveBeenCalled()
@@ -58,7 +58,7 @@ describe("Provider-Transport Integration", () => {
 				}),
 			}
 
-			provider.start()
+			await provider.start()
 			provider.registerToolDefinition(tool)
 
 			const result = await provider.executeTool("integration_tool", { input: "test data" })
@@ -83,7 +83,7 @@ describe("Provider-Transport Integration", () => {
 				},
 			]
 
-			provider.start()
+			await provider.start()
 
 			tools.forEach((tool) => provider.registerToolDefinition(tool))
 
@@ -94,14 +94,15 @@ describe("Provider-Transport Integration", () => {
 			expect(result2.content[0]).toEqual({ type: "text", text: "Tool 2" })
 		})
 
-		it("should emit events for tool lifecycle", () => {
+		it("should emit events for tool lifecycle", async () => {
 			const registeredSpy = jest.fn()
 			const unregisteredSpy = jest.fn()
 
 			provider.on("tool-registered", registeredSpy)
 			provider.on("tool-unregistered", unregisteredSpy)
 
-			provider.start()
+			// Properly await the start operation
+			await provider.start()
 
 			const tool: ToolDefinition = {
 				name: "event_tool",
@@ -130,7 +131,7 @@ describe("Provider-Transport Integration", () => {
 				},
 			}
 
-			provider.start()
+			await provider.start()
 			provider.registerToolDefinition(tool)
 
 			// Execute multiple tools concurrently
@@ -154,11 +155,11 @@ describe("Provider-Transport Integration", () => {
 			// Register tool before starting
 			provider.registerToolDefinition(tool)
 
-			provider.start()
+			await provider.start()
 			const result1 = await provider.executeTool("persistent_tool", {})
 
-			provider.stop()
-			provider.start()
+			await provider.stop()
+			await provider.start()
 
 			// Tool should still be available after restart
 			const result2 = await provider.executeTool("persistent_tool", {})
@@ -166,7 +167,7 @@ describe("Provider-Transport Integration", () => {
 			expect(result1).toEqual(result2)
 			expect(result1.content[0]).toEqual({ type: "text", text: "persistent" })
 
-			provider.stop()
+			await provider.stop()
 		})
 
 		it("should handle provider error scenarios", async () => {
@@ -178,7 +179,7 @@ describe("Provider-Transport Integration", () => {
 				},
 			}
 
-			provider.start()
+			await provider.start()
 			provider.registerToolDefinition(errorTool)
 
 			const result = await provider.executeTool("error_tool", {})
@@ -197,14 +198,14 @@ describe("Provider-Transport Integration", () => {
 				},
 			}
 
-			provider.start()
+			await provider.start()
 			provider.registerToolDefinition(longRunningTool)
 
 			// Start long-running operation
 			const executionPromise = provider.executeTool("long_tool", {})
 
 			// Stop provider while tool is running
-			provider.stop()
+			await provider.stop()
 
 			// Tool should still complete
 			const result = await executionPromise
@@ -240,7 +241,7 @@ describe("Provider-Transport Integration", () => {
 		})
 
 		it("should return correct types from methods", async () => {
-			provider.start()
+			await provider.start()
 
 			const tool: ToolDefinition = {
 				name: "type_test_tool",

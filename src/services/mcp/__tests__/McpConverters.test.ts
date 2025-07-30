@@ -213,7 +213,7 @@ describe("McpConverters", () => {
 			})
 		})
 
-		test("should convert MCP format to XML", () => {
+		test("should convert basic text content to XML", () => {
 			const mcpResult: NeutralToolResult = {
 				type: "tool_result",
 				tool_use_id: "test",
@@ -226,6 +226,150 @@ describe("McpConverters", () => {
 			expect(result).toContain('tool_use_id="test"')
 			expect(result).toContain('status="success"')
 			expect(result).toContain("Test result")
+		})
+
+		test("should properly escape XML special characters", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "test-123",
+				content: [{ type: "text", text: "Text with <special> & \"characters\"" }],
+				status: "success",
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain('tool_use_id="test-123"')
+			expect(result).toContain("Text with &lt;special&gt; &amp; &quot;characters&quot;")
+		})
+
+		test("should handle image content with base64 data", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "test-123",
+				content: [{ 
+					type: "image", 
+					source: {
+						type: "base64",
+						media_type: "image/png",
+						data: "base64data"
+					}
+				}],
+				status: "success",
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain('<image type="image/png" data="base64data" />')
+		})
+
+		test("should handle image content with URL", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "test-123",
+				content: [{ 
+					type: "image_url", 
+					source: {
+						type: "image_url",
+						url: "https://example.com/image.png"
+					}
+				}],
+				status: "success",
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain('<image url="https://example.com/image.png" />')
+		})
+
+		test("should handle mixed content types", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "test-123",
+				content: [
+					{ type: "text", text: "Text result" },
+					{ 
+						type: "image", 
+						source: {
+							type: "base64",
+							media_type: "image/png",
+							data: "base64data"
+						}
+					}
+				],
+				status: "success",
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain("Text result")
+			expect(result).toContain('<image type="image/png" data="base64data" />')
+		})
+
+		test("should handle error details", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "test-123",
+				content: [{ type: "text", text: "Error occurred" }],
+				status: "error",
+				error: {
+					message: "Something went wrong",
+					details: { code: 500, reason: "Internal error" }
+				}
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain('status="error"')
+			expect(result).toContain('<error message="Something went wrong"')
+			expect(result).toContain('details="{&quot;code&quot;:500,&quot;reason&quot;:&quot;Internal error&quot;}"')
+		})
+
+		test("should handle tool_use content type", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "test-123",
+				content: [{ 
+					type: "tool_use", 
+					name: "test_tool",
+					input: { param: "value" }
+				}],
+				status: "success",
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain('<tool_use name="test_tool" input="{&quot;param&quot;:&quot;value&quot;}" />')
+		})
+
+		test("should handle nested tool_result content type", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "parent-123",
+				content: [{ 
+					type: "tool_result", 
+					tool_use_id: "child-456",
+					content: [{ type: "text", text: "Nested result" }],
+					status: "success"
+				}],
+				status: "success",
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain('<nested_tool_result tool_use_id="child-456">Nested result</nested_tool_result>')
+		})
+
+		test("should handle unrecognized content types", () => {
+			const mcpResult: NeutralToolResult = {
+				type: "tool_result",
+				tool_use_id: "test-123",
+				content: [{ type: "unknown_type", someProperty: "value" }],
+				status: "success",
+			}
+
+			const result = McpConverters.mcpToXml(mcpResult)
+
+			expect(result).toContain('<unknown type="unknown_type" />')
 		})
 
 		test("should convert MCP format to JSON", () => {

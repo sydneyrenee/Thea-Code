@@ -1,7 +1,6 @@
 import { xmlToolUseToJson, openAiFunctionCallToNeutralToolUse } from "../../../utils/json-xml-bridge"
 import { NeutralToolUseRequest, NeutralToolResult } from "../types/McpToolTypes"
 import { ToolDefinition } from "../types/McpProviderTypes"
-import { NeutralImageContentBlock } from "../../../shared/neutral-history"
 
 /**
  * McpConverters provides utility functions for converting between different tool use formats
@@ -102,35 +101,73 @@ export class McpConverters {
 	}
 
 	/**
+	 * Helper function to escape XML special characters
+	 * @param text Text to escape
+	 * @returns Escaped text safe for XML
+	 */
+	private static escapeXml(text: string): string {
+		if (typeof text !== 'string') {
+			return '';
+		}
+		return text
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&apos;");
+	}
+
+	/**
 	 * Convert MCP protocol format to XML tool result format
 	 * @param result MCP protocol tool result
 	 * @returns XML string with tool result tags
 	 */
 	public static mcpToXml(result: NeutralToolResult): string {
-		return `<tool_result tool_use_id="${result.tool_use_id}" status="${result.status}">\n${result.content
-			.map((item) => {
-				if (item.type === "text") {
-					return item.text
-				} else if (item.type === "image") {
-					// Type guard to ensure we have an image item with source
-					const imageItem = item as unknown as NeutralImageContentBlock
-					if (imageItem.source && imageItem.source.type === "base64") {
-						return `<image type="${imageItem.source.media_type}" data="${imageItem.source.data}" />`
-					} else if (imageItem.source && imageItem.source.type === "image_url") {
-						return `<image url="${imageItem.source.url}" />`
+		return `<tool_result tool_use_id="${this.escapeXml(result.tool_use_id)}" status="${result.status}">\n${
+			result.content
+				.map((item) => {
+					// Handle different content types with proper type guards
+					if (item.type === "text" && "text" in item) {
+						return this.escapeXml(item.text);
+					} 
+					else if ((item.type === "image" || item.type === "image_url" || item.type === "image_base64") && "source" in item) {
+						const imageItem = item as { source: { type: string; media_type?: string; data?: string; url?: string } };
+						if (imageItem.source.type === "base64") {
+							return `<image type="${this.escapeXml(imageItem.source.media_type || '')}" data="${this.escapeXml(imageItem.source.data || '')}" />`;
+						} else if (imageItem.source.type === "image_url") {
+							return `<image url="${this.escapeXml(imageItem.source.url || '')}" />`;
+						}
 					}
-				}
-				return ""
-			})
-			.join("\n")}${
+					else if (item.type === "tool_use" && "name" in item && "input" in item) {
+						const toolUseItem = item as { name: string; input: Record<string, unknown> };
+						return `<tool_use name="${this.escapeXml(toolUseItem.name)}" input="${this.escapeXml(JSON.stringify(toolUseItem.input))}" />`;
+					}
+					else if (item.type === "tool_result" && "tool_use_id" in item && "content" in item) {
+						// Handle nested tool results
+						const nestedItem = item as { tool_use_id: string; content: Array<{ type: string; text?: string }> };
+						return `<nested_tool_result tool_use_id="${this.escapeXml(nestedItem.tool_use_id)}">${
+							Array.isArray(nestedItem.content) 
+								? nestedItem.content.map(subItem => 
+										subItem.type === "text" && "text" in subItem ? this.escapeXml(subItem.text || '') : ""
+									).join("\n")
+								: ""
+						}</nested_tool_result>`;
+					}
+					
+					// Log warning for unhandled content types
+					console.warn(`Unhandled content type in mcpToXml: ${item.type}`);
+					return `<unknown type="${this.escapeXml(item.type)}" />`;
+				})
+				.join("\n")
+		}${
 			result.error
-				? `\n<error message="${result.error.message}"${
+				? `\n<error message="${this.escapeXml(result.error.message)}"${
 						result.error.details
-							? ` details="${JSON.stringify(result.error.details).replace(/"/g, "&quot;")}"`
+							? ` details="${this.escapeXml(JSON.stringify(result.error.details))}"`
 							: ""
 					} />`
 				: ""
-		}\n</tool_result>`
+		}\n</tool_result>`;
 	}
 
 	/**

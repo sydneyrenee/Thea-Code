@@ -50,7 +50,7 @@ async function getOpenRouterProvidersForModel(modelId: string) {
 			return models
 		}
 
-		const { id, description, architecture, endpoints } = result.data.data
+		const { description, architecture, endpoints } = result.data.data
 
 		for (const endpoint of endpoints) {
 			const providerName = endpoint.name.split("|")[0].trim()
@@ -62,32 +62,37 @@ async function getOpenRouterProvidersForModel(modelId: string) {
 				contextWindow: endpoint.context_length,
 				supportsImages: architecture?.modality?.includes("image"),
 				supportsPromptCache: false,
+				supportsTemperature: true, // Most models support temperature by default
 				inputPrice,
 				outputPrice,
 				description,
-				thinking: modelId === "anthropic/claude-3.7-sonnet:thinking",
+				// Detect thinking capability based on model ID pattern rather than exact match
+				thinking: modelId.includes(":thinking") || modelId.endsWith("-thinking"),
 				label: providerName,
 			}
 
-			switch (true) {
-				case modelId.startsWith("anthropic/claude-3.7-sonnet"):
-					modelInfo.supportsComputerUse = true
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = id === "anthropic/claude-3.7-sonnet:thinking" ? 64_000 : 8192
-					break
-				case modelId.startsWith("anthropic/claude-3.5-sonnet-20240620"):
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-					modelInfo.maxTokens = 8192
-					break
-				default:
-					modelInfo.supportsPromptCache = true
-					modelInfo.cacheWritesPrice = 0.3
-					modelInfo.cacheReadsPrice = 0.03
-					break
+			// Set capabilities based on model properties rather than hardcoded IDs
+			// Default values for all models
+			modelInfo.supportsPromptCache = true
+			modelInfo.cacheWritesPrice = 0.3
+			modelInfo.cacheReadsPrice = 0.03
+			
+			// Detect model capabilities based on model ID patterns
+			if (modelId.includes("claude-3.7")) {
+				// Claude 3.7 models support computer use
+				modelInfo.supportsComputerUse = true
+				
+				// Higher cache prices for Claude 3.7
+				modelInfo.cacheWritesPrice = 3.75
+				modelInfo.cacheReadsPrice = 0.3
+				
+				// Set max tokens based on thinking capability
+				modelInfo.maxTokens = modelInfo.thinking ? 64_000 : 8192
+			} else if (modelId.includes("claude-3.5")) {
+				// Higher cache prices for Claude 3.5
+				modelInfo.cacheWritesPrice = 3.75
+				modelInfo.cacheReadsPrice = 0.3
+				modelInfo.maxTokens = 8192
 			}
 
 			models[providerName] = modelInfo

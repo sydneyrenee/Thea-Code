@@ -15,6 +15,7 @@ import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
 import { API_REFERENCES } from "../../../dist/thea-config" // Import branded constants
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants" // Import ANTHROPIC_DEFAULT_MAX_TOKENS
+import { supportsTemperature, hasCapability } from "../../utils/model-capabilities" // Import capability detection functions
 
 const DEEP_SEEK_DEFAULT_TEMPERATURE = 0.6
 
@@ -64,7 +65,8 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 		const modelInfo = this.getModel().info
 		const modelId = this.options.openAiModelId ?? ""
 		const enabledR1Format = this.options.openAiR1FormatEnabled ?? false // Keep for now, might be refactored later
-		const deepseekReasoner = modelId.includes("deepseek-reasoner") || enabledR1Format // Keep for now, might be refactored later
+		// Use model capabilities instead of hardcoded model checks
+		const isReasoningModel = modelInfo.reasoningEffort === "high" || enabledR1Format
 		// Note: ark variable removed as it was unused
 
 		// Convert neutral history to OpenAI format
@@ -76,7 +78,9 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 			openAiMessages = [{ role: "system", content: systemPrompt }, ...openAiMessages]
 		}
 
-		if (modelId.startsWith("o3-mini")) {
+		// Check if this is a model that requires special handling
+		// O3-mini models don't support temperature and need special handling
+		if (!supportsTemperature(modelInfo)) {
 			yield* this.handleO3FamilyMessage(modelId, systemPrompt, messages)
 			return
 		}
@@ -139,7 +143,7 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 
 			const requestOptions: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 				model: modelId,
-				temperature: this.options.modelTemperature ?? (deepseekReasoner ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0), // Keep for now
+				temperature: this.options.modelTemperature ?? (isReasoningModel ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0), // Use capability-based check
 				messages: openAiMessages, // Use the converted OpenAI messages
 				stream: true as const,
 				stream_options: { include_usage: true },
@@ -499,14 +503,31 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	): ApiStream {
 		// Convert neutral history to OpenAI format
 		const openAiMessages = convertToOpenAiHistory(messages)
+		const modelInfo = this.getModel().info
 
-		// Add system prompt as a developer message for o3-mini models
+		// Check if the model supports various capabilities
+		const supportsThinking = hasCapability(modelInfo, "thinking")
+		const supportsImages = hasCapability(modelInfo, "images")
+
+		// Customize the system prompt based on model capabilities
+		let enhancedSystemPrompt = systemPrompt;
+		
+		// Add specific instructions based on model capabilities
+		if (!supportsImages) {
+			enhancedSystemPrompt += "\nNote: This model doesn't support image processing. Please respond accordingly if images are mentioned.";
+		}
+		
+		if (supportsThinking) {
+			enhancedSystemPrompt += "\nYou can use <think>...</think> tags to show your reasoning process.";
+		}
+
+		// Add system prompt as a developer message for models that need special handling
 		const stream = await this.client.chat.completions.create({
-			model: "o3-mini",
+			model: modelId.startsWith("o3-mini") ? "o3-mini" : modelId, // Keep the model ID check for backward compatibility
 			messages: [
 				{
 					role: "developer",
-					content: `Formatting re-enabled\n${systemPrompt}`,
+					content: `Formatting re-enabled\n${enhancedSystemPrompt}`,
 				},
 				...openAiMessages,
 			],

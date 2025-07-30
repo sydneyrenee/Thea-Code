@@ -11,6 +11,8 @@ import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
 import { SingleCompletionHandler, getModelParams } from "../index"
+import { supportsThinking } from "../../utils/model-capabilities" // Import capability detection functions
+import { getBaseModelId, isThinkingModel } from "../../utils/model-pattern-detection" // Import pattern detection functions
 
 export class AnthropicHandler extends BaseProvider implements SingleCompletionHandler {
 	private options: ApiHandlerOptions
@@ -70,11 +72,9 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		const virtualId = id
 
 		// Special handling for thinking variants
-		// For models with a `:thinking` suffix, use the base model ID
-		// but preserve the thinking capability
-		if (id.includes(":thinking")) {
-			// Extract the base model ID without the thinking suffix
-			id = id.split(":")[0] as AnthropicModelId
+		// Use getBaseModelId to extract the base model ID without the thinking suffix
+		if (isThinkingModel(id)) {
+			id = getBaseModelId(id) as AnthropicModelId
 		}
 
 		// Get base model parameters
@@ -85,14 +85,14 @@ export class AnthropicHandler extends BaseProvider implements SingleCompletionHa
 		})
 
 		// Model-specific thinking adjustments
-		if (info.thinking) {
+		if (supportsThinking(info)) {
 			// For models that support thinking, ensure proper configuration
 			const customMaxTokens = this.options.modelMaxTokens
 			const customMaxThinkingTokens = this.options.modelMaxThinkingTokens
 
 			// Set thinking parameter based on model capability, not specific ID
-			// Check if the original ID had the thinking suffix or if the model info indicates thinking support
-			if (virtualId.includes(":thinking") || info.thinking === true) {
+			// Use isThinkingModel to check if the original ID had the thinking suffix
+			if (isThinkingModel(virtualId) || supportsThinking(info)) {
 				// Clamp the thinking budget to be at most 80% of max tokens and at least 1024 tokens
 				const effectiveMaxTokens = customMaxTokens ?? baseParams.maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS
 				const maxBudgetTokens = Math.floor(effectiveMaxTokens * 0.8)

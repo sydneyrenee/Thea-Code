@@ -2,8 +2,11 @@ import express from "express"
 import http from "http"
 
 const app = express() as any // Assert as any to bypass incorrect type inference
-const port = 10000
+// Use port 0 to let the OS assign a random available port
+const port = 0
 let server: http.Server | null = null
+// Track the actual port assigned by the OS
+let actualPort: number | null = null
 
 app.use(express.json())
 
@@ -80,7 +83,12 @@ export const startServer = (): Promise<void> => {
 	return new Promise((resolve, reject) => {
 		server = app
 			.listen(port, "localhost", () => {
-				console.log(`Mock Ollama Server listening on http://localhost:${port}`)
+				// Get the actual port assigned by the OS
+				const address = server?.address();
+				if (address && typeof address === 'object') {
+					actualPort = address.port;
+				}
+				console.log(`Mock Ollama Server listening on http://localhost:${actualPort}`)
 				resolve()
 			})
 			.on("error", (err) => {
@@ -88,6 +96,14 @@ export const startServer = (): Promise<void> => {
 				reject(err)
 			})
 	})
+}
+
+/**
+ * Get the actual port the server is listening on
+ * @returns The port number or null if the server is not running
+ */
+export const getServerPort = (): number | null => {
+	return actualPort;
 }
 
 export const stopServer = (): Promise<void> => {
@@ -99,11 +115,17 @@ export const stopServer = (): Promise<void> => {
 					reject(err)
 				} else {
 					console.log("Mock Ollama Server stopped.")
+					// Reset the actual port to ensure clean state between test runs
+					actualPort = null;
+					server = null;
 					resolve()
 				}
 			})
 		} else {
-			resolve() // Already stopped or never started
+			// Already stopped or never started
+			actualPort = null;
+			server = null;
+			resolve()
 		}
 	})
 }

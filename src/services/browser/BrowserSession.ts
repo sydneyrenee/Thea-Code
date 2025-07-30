@@ -233,35 +233,60 @@ export class BrowserSession {
 			interval: 100,
 		}).catch(() => {})
 
+		// Get viewport dimensions and user preferences
+		const viewport = this.getViewport()
+		const screenshotPrefs = this.getScreenshotPreferences()
+
 		let options: ScreenshotOptions = {
 			encoding: "base64",
-
-			// clip: {
-			// 	x: 0,
-			// 	y: 0,
-			// 	width: 900,
-			// 	height: 600,
-			// },
+			fullPage: screenshotPrefs.fullPage,
+			
+			// Enable clipping if the user has enabled it in settings
+			...(this.context.globalState.get<boolean>("useClipping") && {
+				clip: {
+					x: 0,
+					y: 0,
+					width: viewport.width,
+					height: viewport.height,
+				}
+			}),
 		}
 
-		let screenshotBase64 = (await this.page.screenshot({
-			...options,
-			type: "webp",
-			quality: this.context.globalState.get<number>("screenshotQuality") ?? 75,
-		})) as string
-		let screenshot = `data:image/webp;base64,${screenshotBase64}`
+		let screenshotBase64: string
+		let screenshot: string
 
-		if (!screenshotBase64) {
-			console.log("webp screenshot failed, trying png")
+		try {
+			// Try preferred format first
 			screenshotBase64 = (await this.page.screenshot({
 				...options,
-				type: "png",
+				type: screenshotPrefs.format,
+				...(screenshotPrefs.format === "webp" && { quality: screenshotPrefs.quality })
 			})) as string
-			screenshot = `data:image/png;base64,${screenshotBase64}`
-		}
 
-		if (!screenshotBase64) {
-			throw new Error("Failed to take screenshot.")
+			if (!screenshotBase64) {
+				throw new Error("Empty base64 string returned from screenshot")
+			}
+
+			screenshot = `data:image/${screenshotPrefs.format};base64,${screenshotBase64}`
+		} catch (error) {
+			console.log(`${screenshotPrefs.format} screenshot failed: ${error}, falling back to PNG format`)
+			
+			try {
+				// Try PNG as fallback
+				screenshotBase64 = (await this.page.screenshot({
+					...options,
+					type: "png"
+				})) as string
+
+				if (!screenshotBase64) {
+					throw new Error("Empty base64 string returned from PNG screenshot")
+				}
+
+				screenshot = `data:image/png;base64,${screenshotBase64}`
+			} catch (pngError) {
+				console.error(`PNG screenshot also failed: ${pngError}`)
+				throw new Error(`Failed to capture screenshot: ${pngError}`)
+			}
 		}
 
 		// this.page.removeAllListeners() <- causes the page to crash!
@@ -512,5 +537,17 @@ export class BrowserSession {
 				await delay(300)
 			})
 		})
+	}
+
+	/**
+	 * Gets screenshot preferences from user settings
+	 * @returns Object containing format and quality preferences
+	 */
+	private getScreenshotPreferences(): { format: "webp" | "png"; quality: number; fullPage: boolean } {
+		return {
+			format: this.context.globalState.get<string>("screenshotFormat") === "png" ? "png" : "webp",
+			quality: this.context.globalState.get<number>("screenshotQuality") ?? 75,
+			fullPage: this.context.globalState.get<boolean>("captureFullPage") ?? false
+		}
 	}
 }

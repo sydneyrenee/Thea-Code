@@ -1,8 +1,8 @@
 import { McpToolExecutor } from "../core/McpToolExecutor"
-import { NeutralToolResult, ToolUseFormat } from "../types/McpToolTypes"
+import { NeutralToolResult, ToolUseFormat, NeutralToolUseRequest } from "../types/McpToolTypes"
 import { McpConverters } from "../core/McpConverters"
 import { McpToolRouter } from "../core/McpToolRouter"
-import { IMcpProvider, ToolCallResult } from "../types/McpProviderTypes"
+import { IMcpProvider, ToolCallResult, ToolDefinition } from "../types/McpProviderTypes"
 import { EventEmitter } from "events"
 
 // Mock EmbeddedMcpProvider
@@ -19,6 +19,8 @@ jest.mock("../providers/EmbeddedMcpProvider", () => {
 		instance.executeTool = jest.fn().mockImplementation(() => 
 			Promise.resolve({
 				content: [{ type: "text", text: "Success" }],
+				status: "success",
+				tool_use_id: "mock-id",
 			} as ToolCallResult)
 		)
 		instance.getServerUrl = jest.fn().mockReturnValue(new URL("http://localhost:3000"))
@@ -93,7 +95,7 @@ describe("McpToolExecutor", () => {
 
 			const { mcpProvider } = mcpToolSystem as unknown as McpToolExecutorInternal
 			// Use mockFn.mock.calls to avoid unbound method reference
-			expect(mcpProvider.start.mock.calls.length).toBeGreaterThan(0)
+			expect((mcpProvider.start as jest.Mock).mock.calls.length).toBeGreaterThan(0)
 		})
 
 		it("should not initialize the MCP server if already initialized", async () => {
@@ -102,7 +104,7 @@ describe("McpToolExecutor", () => {
 
 			// Clear the mock
 			const { mcpProvider } = mcpToolSystem as unknown as McpToolExecutorInternal
-			mcpProvider.start.mockClear()
+			;(mcpProvider.start as jest.Mock).mockClear()
 
 			// Initialize again
 			await mcpToolSystem.initialize()
@@ -116,7 +118,7 @@ describe("McpToolExecutor", () => {
 		it("should register a tool with both the MCP server and the tool registry", async () => {
 			await mcpToolSystem.initialize()
 
-			const toolDefinition = {
+			const toolDefinition: ToolDefinition = {
 				name: "test_tool",
 				description: "A test tool",
 				paramSchema: { type: "object" },

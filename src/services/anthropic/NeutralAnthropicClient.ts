@@ -10,7 +10,9 @@ import type {
 	NeutralAnthropicClientOptions,
 	NeutralCreateMessageParams,
 	NeutralMessageStreamEvent,
-	NeutralCacheControlEphemeral
+	NeutralCacheControlEphemeral,
+	AnthropicHistoryMessage,
+	NeutralUsage
 } from "./types"
 
 export class NeutralAnthropicClient {
@@ -32,7 +34,7 @@ export class NeutralAnthropicClient {
 	 * @param history Array of messages in Anthropic format
 	 * @returns Conversation history in neutral format
 	 */
-	public fromAnthropicHistory(history: Array<{ role: "user" | "assistant"; content: string | Array<unknown>; ts?: number }>) {
+	public fromAnthropicHistory(history: Array<AnthropicHistoryMessage>) {
 		// Type assertion is needed because the content array can contain different types
 		// that are handled by the conversion function
 		return convertToNeutralHistory(history)
@@ -118,7 +120,7 @@ export class NeutralAnthropicClient {
 						switch (parsedChunk.type) {
 							case "message_start": {
 								// Extract usage information from message start event
-								const usage = parsedChunk.message.usage
+								const usage = parsedChunk.message.usage as NeutralUsage
 								yield {
 									type: "usage",
 									inputTokens: usage?.input_tokens || 0,
@@ -202,7 +204,8 @@ export class NeutralAnthropicClient {
 			}
 		} catch (error) {
 			console.error('Error in createMessage:', error)
-			throw error
+			// Convert to a more descriptive error before throwing
+			throw new Error(`Failed to create message: ${error instanceof Error ? error.message : String(error)}`)
 		}
 	}
 
@@ -242,7 +245,8 @@ export class NeutralAnthropicClient {
 			return result.input_tokens
 		} catch (error) {
 			console.error('Error in countTokens:', error)
-			throw error
+			// Convert to a more descriptive error before throwing
+			throw new Error(`Failed to count tokens: ${error instanceof Error ? error.message : String(error)}`)
 		}
 	}
 }

@@ -48,7 +48,7 @@ describe("DiffViewProvider", () => {
 		;(diffViewProvider as unknown as { relPath: string }).relPath = "test.txt"
 		;(diffViewProvider as unknown as { activeDiffEditor: vscode.TextEditor }).activeDiffEditor = {
 			document: {
-				uri: { fsPath: `${mockCwd}/test.txt` },
+				uri: { fsPath: `${mockCwd}/test.txt`, scheme: 'file' },
 				getText: jest.fn(),
 				lineCount: 10,
 			},

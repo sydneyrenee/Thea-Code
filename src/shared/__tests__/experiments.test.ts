@@ -36,7 +36,6 @@ describe("experiments", () => {
 				experimentalDiffStrategy: false,
 				search_and_replace: false,
 				insert_content: false,
-				powerSteering: false,
 			}
 			expect(Experiments.isEnabled(experiments, EXPERIMENT_IDS.POWER_STEERING)).toBe(false)
 		})

@@ -244,7 +244,7 @@ describe("AnthropicHandler", () => {
 
 		it("should fall back to base provider implementation on error", async () => {
 			// Mock the countTokens to throw an error
-			mockCountTokens.mockRejectedValue(new Error("API Error"))
+			mockCountTokens.mockRejectedValue(new Error("Failed to count tokens: API Error"))
 
 			// Mock the base provider's countTokens method
 			const mockBaseCountTokens = jest

@@ -15,6 +15,8 @@ import { BaseProvider } from "./base-provider"
 import { OpenAiHandler } from "./openai"
 
 import { API_REFERENCES } from "../../../dist/thea-config" // Import API_REFERENCES
+import { supportsPromptCaching } from "../../utils/model-capabilities" // Import capability detection functions
+import { isDeepSeekR1Model, setCapabilitiesFromModelId } from "../../utils/model-pattern-detection" // Import pattern detection functions
 
 const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -79,14 +81,16 @@ export class OpenRouterHandler extends BaseProvider implements ApiHandler, Singl
 		let openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = convertToOpenAiHistory(history)
 
 		// DeepSeek highly recommends using user instead of system role.
-		if (modelId.startsWith("deepseek/deepseek-r1") || modelId === "perplexity/sonar-reasoning") {
+		// Use pattern detection function instead of hardcoded model ID check
+		if (isDeepSeekR1Model(modelId)) {
 			openAiMessages = convertToR1Format([{ role: "user", content: systemPrompt }, ...history])
 		}
 
 		// prompt caching: https://openrouter.ai/docs/prompt-caching
 		// Apply prompt caching for models that support it
+		// Use capability detection function instead of direct property check
 		const modelInfo = this.getModel().info
-		if (modelInfo.supportsPromptCache) {
+		if (supportsPromptCaching(modelInfo)) {
 			openAiMessages[0] = {
 				role: "system",
 				content: [
@@ -289,7 +293,8 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 		const rawModels = (response.data as OpenRouterModelsResponse).data
 
 		for (const rawModel of rawModels) {
-			const modelInfo: ModelInfo = {
+			// Create base model info from API data
+			const baseModelInfo: ModelInfo = {
 				maxTokens: rawModel.top_provider?.max_completion_tokens,
 				contextWindow: rawModel.context_length ?? 0, // Default to 0 if null/undefined
 				supportsImages: rawModel.architecture?.modality?.includes("image"),
@@ -300,44 +305,14 @@ export async function getOpenRouterModels(options?: ApiHandlerOptions) {
 				thinking: rawModel.id.endsWith(":thinking"),
 			}
 
-			// Set capabilities based on model features rather than hardcoded model names
+			// Use setCapabilitiesFromModelId to set capabilities based on model ID patterns
+			// This centralizes the pattern-based capability detection logic
+			const modelInfo = setCapabilitiesFromModelId(rawModel.id, baseModelInfo)
 			
-			// Set default maxTokens if not provided by the API
+			// Set default maxTokens if not provided by the API and not set by setCapabilitiesFromModelId
 			if (!modelInfo.maxTokens) {
-				// For thinking models, use a larger token limit
-				if (modelInfo.thinking) {
-					modelInfo.maxTokens = 128_000
-				} else if (rawModel.id.includes("claude")) {
-					// Most Claude models support at least 8192 tokens
-					modelInfo.maxTokens = 8192
-				} else {
-					// Default for other models
-					modelInfo.maxTokens = 4096
-				}
-			}
-			
-			// Set prompt cache capabilities for Claude models
-			// This is still needed because OpenRouter doesn't provide this info directly
-			if (rawModel.id.includes("claude")) {
-				modelInfo.supportsPromptCache = true
-				
-				// Set cache pricing based on model tier
-				if (rawModel.id.includes("opus")) {
-					modelInfo.cacheWritesPrice = 18.75
-					modelInfo.cacheReadsPrice = 1.5
-				} else if (rawModel.id.includes("haiku")) {
-					modelInfo.cacheWritesPrice = 1.25
-					modelInfo.cacheReadsPrice = 0.1
-				} else {
-					// Default cache pricing for sonnet and other models
-					modelInfo.cacheWritesPrice = 3.75
-					modelInfo.cacheReadsPrice = 0.3
-				}
-				
-				// Set computer use capability for models that support it
-				if (rawModel.id.includes("sonnet") && !rawModel.id.includes("20240620")) {
-					modelInfo.supportsComputerUse = true
-				}
+				// Default for other models
+				modelInfo.maxTokens = 4096
 			}
 
 			models[rawModel.id] = modelInfo

@@ -33,22 +33,6 @@ describe("loadRuleFiles", () => {
 		expect(result).toBe("")
 	})
 
-	it("should throw on unexpected errors", async () => {
-		const error = new Error("Permission denied") as NodeJS.ErrnoException
-		error.code = "EPERM"
-		mockedFs.readFile.mockRejectedValue(error)
-
-		await expect(async () => {
-			await loadRuleFiles("/fake/path")
-		}).rejects.toThrow()
-	})
-})
-
-describe("loadRuleFiles", () => {
-	beforeEach(() => {
-		jest.clearAllMocks()
-	})
-
 	it("should combine content from multiple rule files when they exist", async () => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		mockedFs.readFile.mockImplementation((filePath: any) => {

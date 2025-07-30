@@ -74,31 +74,32 @@ describe("MockMcpProvider", () => {
 			}),
 		}
 
-		it("should register a tool", async () => {
+		it("should register a tool", () => {
 			const registeredSpy = jest.fn()
 			mockProvider.on("tool-registered", registeredSpy)
 
-			await mockProvider.registerToolDefinition(sampleTool)
+			// registerToolDefinition doesn't return a promise, so no await needed
+			mockProvider.registerToolDefinition(sampleTool)
 
 			expect(registeredSpy).toHaveBeenCalledWith("test_tool")
 		})
 
-		it("should unregister a tool", async () => {
+		it("should unregister a tool", () => {
 			const unregisteredSpy = jest.fn()
 			mockProvider.on("tool-unregistered", unregisteredSpy)
 
-			await mockProvider.registerToolDefinition(sampleTool)
-			const result = await mockProvider.unregisterTool("test_tool")
+			mockProvider.registerToolDefinition(sampleTool)
+			const result = mockProvider.unregisterTool("test_tool")
 
 			expect(result).toBe(true)
 			expect(unregisteredSpy).toHaveBeenCalledWith("test_tool")
 		})
 
-		it("should return false when unregistering non-existent tool", async () => {
+		it("should return false when unregistering non-existent tool", () => {
 			const unregisteredSpy = jest.fn()
 			mockProvider.on("tool-unregistered", unregisteredSpy)
 
-			const result = await mockProvider.unregisterTool("non_existent")
+			const result = mockProvider.unregisterTool("non_existent")
 
 			expect(result).toBe(false)
 			expect(unregisteredSpy).not.toHaveBeenCalled()

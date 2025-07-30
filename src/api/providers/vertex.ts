@@ -1,5 +1,7 @@
 import { AnthropicVertex } from "@anthropic-ai/vertex-sdk"
 import { VertexAI } from "@google-cloud/vertexai"
+import { supportsPromptCaching } from "../../utils/model-capabilities" // Import capability detection functions
+import { getBaseModelId, isThinkingModel } from "../../utils/model-pattern-detection" // Import pattern detection functions
 
 // Define neutral types to replace SDK dependencies
 interface MessageContentBlock {
@@ -254,13 +256,13 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		const modelInfo = this.getModel()
 		const { id, temperature, maxTokens } = modelInfo
 		
-		// Use capability detection for prompt caching
-		const supportsPromptCache = modelInfo.info.supportsPromptCache === true
+		// Use capability detection function for prompt caching
+		const modelSupportsPromptCache = supportsPromptCaching(modelInfo.info)
 
 		// Find indices of user messages that we want to cache
 		// We only cache the last two user messages to stay within the 4-block limit
 		// (1 block for system + 1 block each for last two user messages = 3 total)
-		const userMsgIndices = supportsPromptCache
+		const userMsgIndices = modelSupportsPromptCache
 			? messages.reduce((acc, msg, i) => (msg.role === "user" ? [...acc, i] : acc), [] as number[])
 			: []
 		const lastUserMsgIndex = userMsgIndices[userMsgIndices.length - 1] ?? -1
@@ -275,7 +277,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			max_tokens: maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
 			temperature,
 			// Cache the system prompt if caching is supported by the model
-			system: supportsPromptCache
+			system: modelSupportsPromptCache
 				? [
 						{
 							text: systemPrompt,
@@ -287,7 +289,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 			messages: vertexMessages
 				.map((message, index) => {
 					// Only cache the last two user messages if caching is supported
-					const shouldCache = supportsPromptCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
+					const shouldCache = modelSupportsPromptCache && (index === lastUserMsgIndex || index === secondLastMsgUserIndex)
 					return formatMessageForCache(message, shouldCache)
 				})
 				.filter((m) => m.role === "user" || m.role === "assistant") as MessageParam[],
@@ -438,8 +440,8 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 		// Handle thinking variants by extracting the base model ID
 		// but preserving the thinking capability in the model info
-		if (id.endsWith(":thinking")) {
-			id = id.replace(":thinking", "") as VertexModelId
+		if (isThinkingModel(id)) {
+			id = getBaseModelId(id) as VertexModelId
 		}
 
 		return {
@@ -494,8 +496,8 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		try {
 			const { id, info, temperature, maxTokens } = this.getModel()
 			
-			// Use capability detection for prompt caching
-			const supportsPromptCache = info.supportsPromptCache === true
+			// Use capability detection function for prompt caching
+			const modelSupportsPromptCache = supportsPromptCaching(info)
 
 			// Create a neutral history with a single message
 			const neutralHistory = [
@@ -510,7 +512,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 			// Apply cache control if the model supports it
 			const messagesWithCache = claudeMessages.map((message) =>
-				supportsPromptCache ? formatMessageForCache(message, true) : message,
+				modelSupportsPromptCache ? formatMessageForCache(message, true) : message,
 			)
 
 			const params: MessageCreateParamsNonStreaming = {

@@ -7,33 +7,43 @@ import { supportsTemperature } from "../../utils/model-capabilities"
 
 /**
  * Get available Unbound models
+ * 
+ * This function returns a static list of known Unbound models with their capabilities.
+ * Each model has specific capabilities defined based on its features:
+ * - Default model: Supports temperature adjustment
+ * - o3-mini: Optimized for speed but doesn't support temperature adjustment
+ * 
+ * In the future, this could be enhanced to fetch the model list dynamically
+ * from the Unbound API if they provide such functionality.
  */
 export function getUnboundModels(): Record<string, ModelInfo> {
-	// For now, return a static list of known models
-	// This can be enhanced later to fetch dynamic model list if Unbound provides an API
+	// Define models with their capabilities
 	const models: ModelInfo[] = [
+		// Default model (Claude-based)
 		{
 			...unboundDefaultModelInfo,
-			supportsTemperature: true,
+			supportsTemperature: true, // Supports temperature adjustment
 		},
+		// o3-mini model
 		{
 			contextWindow: 128000,
 			supportsImages: false,
 			supportsPromptCache: false,
-			supportsTemperature: false, // o3-mini doesn't support temperature
+			supportsTemperature: false, // o3-mini is optimized for speed and doesn't support temperature
 			inputPrice: 0.0006, // per 1K tokens
 			outputPrice: 0.0024, // per 1K tokens
 			description: "Fast and efficient reasoning model",
 		},
 	]
 	
-	// Convert array to Record using model names as keys
+	// Convert array to Record using model IDs as keys
 	const result: Record<string, ModelInfo> = {}
+	const modelIds = [unboundDefaultModelId, "openai/o3-mini"]
+	
 	models.forEach((model, index) => {
-		// Use a key based on the model info or index
-		const key = index === 0 ? unboundDefaultModelId : "openai/o3-mini"
-		result[key] = model
+		result[modelIds[index]] = model
 	})
+	
 	return result
 }
 

@@ -428,6 +428,7 @@
     "openai-api-mock": "^0.1.32",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
+    "tcp-port-used": "^1.0.2",
     "ts-jest": "29.3.4",
     "tsup": "^8.5.0",
     "tsx": "^4.20.3",

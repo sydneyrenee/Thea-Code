@@ -29,8 +29,28 @@ export class SseTransport implements IMcpTransport {
 		if (this.transport) {
 			return
 		}
+		
+		// Check if we're in a Jest environment
+		if (process.env.JEST_WORKER_ID) {
+			// In Jest, but we can't reliably detect teardown directly
+			// Instead, we'll rely on the try-catch around the import
+			console.debug("Running in Jest environment, proceeding with caution")
+		}
+		
 		try {
-			const mod = await import("@modelcontextprotocol/sdk/server/streamableHttp.js")
+			// Wrap the dynamic import in a try-catch to handle Jest environment teardown
+			let mod
+			try {
+				mod = await import("@modelcontextprotocol/sdk/server/streamableHttp.js")
+			} catch (importError) {
+				// Check if this is a Jest teardown error
+				if (String(importError).includes("Jest environment has been torn down")) {
+					console.warn("Skipping MCP SDK initialization during Jest teardown")
+					return
+				}
+				throw importError
+			}
+			
 			const Transport = mod.StreamableHTTPServerTransport as unknown as new (opts: Record<string, unknown>) => StreamableHTTPServerTransportLike
 
 			this.transport = new Transport({ sessionIdGenerator: undefined })

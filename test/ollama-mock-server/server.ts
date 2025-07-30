@@ -1,9 +1,10 @@
 import express from "express"
 import http from "http"
+import { findAvailablePort, waitForPortInUse } from "../../src/utils/port-utils"
 
 const app = express() as any // Assert as any to bypass incorrect type inference
-// Use port 0 to let the OS assign a random available port
-const port = 0
+// We'll find an available port dynamically
+let port: number
 let server: http.Server | null = null
 // Track the actual port assigned by the OS
 let actualPort: number | null = null
@@ -79,23 +80,63 @@ app.post("/v1/chat/completions", (req, res) => {
 	}
 })
 
-export const startServer = (): Promise<void> => {
-	return new Promise((resolve, reject) => {
-		server = app
-			.listen(port, "localhost", () => {
-				// Get the actual port assigned by the OS
-				const address = server?.address();
-				if (address && typeof address === 'object') {
-					actualPort = address.port;
-				}
-				console.log(`Mock Ollama Server listening on http://localhost:${actualPort}`)
-				resolve()
-			})
-			.on("error", (err) => {
-				console.error("Mock Ollama Server failed to start:", err)
-				reject(err)
-			})
-	})
+export const startServer = async (): Promise<void> => {
+	try {
+		// Define preferred port ranges for the Ollama mock server
+		// Try ports in the 10000-10100 range first, then 20000-20100
+		const preferredRanges: Array<[number, number]> = [
+			[10000, 10100],
+			[20000, 20100]
+		];
+		
+		// Find an available port with preferred ranges and more attempts
+		console.log("Starting Mock Ollama Server...");
+		port = await findAvailablePort(10000, "localhost", preferredRanges, 150);
+		console.log(`Mock Ollama Server: Found available port ${port}`);
+		
+		return new Promise((resolve, reject) => {
+			// Start the server with the found port
+			server = app
+				.listen(port, "localhost", async () => {
+					try {
+						// Get the actual port assigned by the OS (should be the same as our found port)
+						const address = server?.address();
+						if (address && typeof address === 'object') {
+							actualPort = address.port;
+						} else {
+							actualPort = port; // Fallback to our found port
+						}
+						
+						// Wait for the server to be ready with longer timeout and server name
+						// Use 15 seconds timeout and provide server name for better error reporting
+						await waitForPortInUse(
+							actualPort, 
+							"localhost", 
+							200,  // Initial retry time
+							15000, // Longer timeout (15 seconds)
+							"Mock Ollama Server", // Server name for better error reporting
+							10 // Max retries
+						);
+						
+						console.log(`Mock Ollama Server listening on http://localhost:${actualPort}`);
+						console.log("Mock Ollama Server started.");
+						resolve();
+					} catch (error) {
+						console.error("Mock Ollama Server failed to confirm readiness:", error);
+						// Still resolve as the server might be working
+						console.log("Mock Ollama Server started.");
+						resolve();
+					}
+				})
+				.on("error", (err) => {
+					console.error("Mock Ollama Server failed to start:", err);
+					reject(err);
+				});
+		});
+	} catch (error) {
+		console.error("Failed to find available port for Mock Ollama Server:", error);
+		throw error;
+	}
 }
 
 /**

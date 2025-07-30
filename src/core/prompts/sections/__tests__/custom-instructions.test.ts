@@ -22,13 +22,17 @@ describe("loadRuleFiles", () => {
 	})
 
 	it("should handle ENOENT error", async () => {
-		mockedFs.readFile.mockRejectedValue({ code: "ENOENT" })
+		const error = new Error("File not found") as Error & { code: string }
+		error.code = "ENOENT"
+		mockedFs.readFile.mockRejectedValue(error)
 		const result = await loadRuleFiles("/fake/path")
 		expect(result).toBe("")
 	})
 
 	it("should handle EISDIR error", async () => {
-		mockedFs.readFile.mockRejectedValue({ code: "EISDIR" })
+		const error = new Error("Is a directory") as Error & { code: string }
+		error.code = "EISDIR"
+		mockedFs.readFile.mockRejectedValue(error)
 		const result = await loadRuleFiles("/fake/path")
 		expect(result).toBe("")
 	})
@@ -44,7 +48,9 @@ describe("loadRuleFiles", () => {
 			if (filePath.toString().endsWith(".cursorrules")) {
 				return Promise.resolve("cursor rules content")
 			}
-			return Promise.reject(new Error("ENOENT"))
+			const error = new Error("File not found") as Error & { code: string }
+			error.code = "ENOENT"
+			return Promise.reject(error)
 		})
 
 		const result = await loadRuleFiles("/fake/path")
@@ -55,7 +61,9 @@ describe("loadRuleFiles", () => {
 	})
 
 	it("should handle when no rule files exist", async () => {
-		mockedFs.readFile.mockRejectedValue({ code: "ENOENT" })
+		const error = new Error("File not found") as Error & { code: string }
+		error.code = "ENOENT"
+		mockedFs.readFile.mockRejectedValue(error)
 
 		const result = await loadRuleFiles("/fake/path")
 		expect(result).toBe("")
@@ -119,14 +127,18 @@ describe("addCustomInstructions", () => {
 	})
 
 	it("should return empty string when no instructions provided", async () => {
-		mockedFs.readFile.mockRejectedValue({ code: "ENOENT" })
+		const error = new Error("File not found") as Error & { code: string }
+		error.code = "ENOENT"
+		mockedFs.readFile.mockRejectedValue(error)
 
 		const result = await addCustomInstructions("", "", "/fake/path", "", {})
 		expect(result).toBe("")
 	})
 
 	it("should handle missing mode-specific rules file", async () => {
-		mockedFs.readFile.mockRejectedValue({ code: "ENOENT" })
+		const error = new Error("File not found") as Error & { code: string }
+		error.code = "ENOENT"
+		mockedFs.readFile.mockRejectedValue(error)
 
 		const result = await addCustomInstructions(
 			"mode instructions",
@@ -141,7 +153,9 @@ describe("addCustomInstructions", () => {
 	})
 
 	it("should handle unknown language codes properly", async () => {
-		mockedFs.readFile.mockRejectedValue({ code: "ENOENT" })
+		const error = new Error("File not found") as Error & { code: string }
+		error.code = "ENOENT"
+		mockedFs.readFile.mockRejectedValue(error)
 
 		const result = await addCustomInstructions(
 			"mode instructions",

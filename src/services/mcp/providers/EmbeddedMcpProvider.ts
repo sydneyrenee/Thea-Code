@@ -12,6 +12,7 @@ import {
 	IMcpProvider,
 } from "../types/McpProviderTypes"
 import { StdioTransportConfig, IMcpTransport } from "../types/McpTransportTypes"
+import { findAvailablePort, waitForPortInUse } from "../../../utils/port-utils"
 
 const isTestEnv = process.env.JEST_WORKER_ID !== undefined
 
@@ -303,34 +304,123 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 					port?: number
 				}
 
-				let actualPort: number | undefined
-				// The SDK's SSEServerTransport has an `httpServer` which is a Node `http.Server`
-				// The `address()` method returns an `AddressInfo` object or string.
-				if (
-					sdkSseTransportInstance.httpServer &&
-					typeof sdkSseTransportInstance.httpServer.address === "function"
-				) {
-					const rawAddress: AddressInfo | string | null = sdkSseTransportInstance.httpServer.address()
-					if (rawAddress && typeof rawAddress === "object" && "port" in rawAddress) {
-						actualPort = rawAddress.port
+				// Special handling for dynamic port (port 0)
+				const isDynamicPort = this.sseConfig.port === 0;
+				
+				let actualPort: number;
+				
+				if (isDynamicPort) {
+					// For dynamic port (port 0), find an available port instead of letting the OS assign one
+					try {
+						// Define preferred port ranges for MCP server
+						const preferredRanges: Array<[number, number]> = [
+							[3000, 3100],  // Try 3000-3100 first
+							[8000, 8100],  // Then 8000-8100
+							[9000, 9100]   // Then 9000-9100
+						];
+						
+						// Find an available port with preferred ranges and more attempts
+						if (!isTestEnv) {
+							console.log("Finding available port for MCP server...");
+						}
+						actualPort = await findAvailablePort(3000, "localhost", preferredRanges, 150);
+						if (!isTestEnv) {
+							console.log(`Found available port for MCP server: ${actualPort}`);
+						}
+						
+						// Update the config with the found port
+						this.sseConfig.port = actualPort;
+						
+						// If we're in a test environment, we need to restart the transport with the new port
+						if (isTestEnv) {
+							// Close the current transport
+							if (this.transport?.close) {
+								await this.transport.close();
+							}
+							
+							// Recreate the transport with the new port
+							this.transport = new SseTransport(this.sseConfig);
+							this.registerHandlers();
+							await this.server.connect(this.transport as unknown);
+						}
+					} catch (error) {
+						const errorMessage = error instanceof Error ? error.message : String(error);
+						throw new Error(`Failed to find available port: ${errorMessage}`);
 					}
+				} else {
+					// For fixed port, implement a retry mechanism to handle race conditions in port determination
+					const getPort = async (
+						maxRetries = 10,
+						retryDelay = 200
+					): Promise<number> => {
+						let retries = 0;
+						
+						while (retries < maxRetries) {
+							let port: number | undefined;
+							
+							// Try to get port from httpServer.address()
+							if (
+								sdkSseTransportInstance.httpServer &&
+								typeof sdkSseTransportInstance.httpServer.address === "function"
+							) {
+								const rawAddress: AddressInfo | string | null = sdkSseTransportInstance.httpServer.address()
+								if (rawAddress && typeof rawAddress === "object" && "port" in rawAddress) {
+									port = rawAddress.port;
+									if (!isTestEnv) {
+										console.log(`Retrieved port from httpServer.address(): ${port}`);
+									}
+									return port;
+								}
+							}
+							
+							// Fallback to .port property
+							if (
+								typeof sdkSseTransportInstance.port === "number" &&
+								sdkSseTransportInstance.port !== 0
+							) {
+								port = sdkSseTransportInstance.port;
+								if (!isTestEnv) {
+									console.warn("Retrieved port from sdkSseTransportInstance.port");
+								}
+								return port;
+							}
+							
+							// If we couldn't get the port, wait and retry
+							retries++;
+							if (retries < maxRetries) {
+								if (!isTestEnv) {
+									console.warn(`Port determination attempt ${retries} failed, retrying in ${retryDelay}ms...`);
+								}
+								await new Promise(resolve => setTimeout(resolve, retryDelay));
+							}
+						}
+						
+						throw new Error("SSE Transport failed to determine the listening port after multiple attempts.");
+					};
+					
+					// Get the port with retry mechanism
+					actualPort = await getPort();
 				}
-
-				if (
-					!actualPort &&
-					typeof sdkSseTransportInstance.port === "number" &&
-					sdkSseTransportInstance.port !== 0
-				) {
-					// Fallback to .port property if httpServer.address() didn't yield a port
-					// This might be the case if the SDK sets .port directly after listening.
-					actualPort = sdkSseTransportInstance.port
+				
+				// Wait for the port to be in use (server ready)
+				try {
+					const host = this.sseConfig.hostname || "localhost";
+					// Use improved waitForPortInUse with longer timeout, server name, and more retries
+					await waitForPortInUse(
+						actualPort, 
+						host, 
+						200,  // Initial retry time
+						30000, // Longer timeout (30 seconds)
+						"MCP Server", // Server name for better error reporting
+						15 // More retries with exponential backoff
+					);
 					if (!isTestEnv) {
-						console.warn("Retrieved port from sdkSseTransportInstance.port")
+						console.log(`Confirmed MCP server is listening on port ${actualPort}`);
 					}
-				}
-
-				if (!actualPort) {
-					throw new Error("SSE Transport failed to determine the listening port after connect.")
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					console.warn(`Warning: Could not confirm MCP server is listening: ${errorMessage}`);
+					// Continue anyway, as the server might still be working
 				}
 
 				const host = this.sseConfig.hostname || "localhost"

@@ -60,7 +60,7 @@ export class SseClientFactory {
 
 				constructor(info: McpClientInfo) {
 					super(info)
-					this.client = new Client(info as { [x: string]: unknown; name: string; version: string })
+					this.client = new Client(info as { name: string; version: string })
 				}
 
 				async connect(transport: unknown): Promise<void> {
@@ -79,18 +79,19 @@ export class SseClientFactory {
 					const toolParams = {
 						name: params.name as string,
 						...params
-					} as { [x: string]: unknown; name: string; _meta?: { [x: string]: unknown; progressToken?: string | number | undefined; } | undefined; arguments?: { [x: string]: unknown; } | undefined; }
+					} as { name: string; _meta?: { progressToken?: string | number | undefined } | undefined; arguments?: Record<string, unknown> | undefined }
 					return this.client.callTool(toolParams)
 				}
 			}
 
+			// Create transport and client using the dynamically imported classes
 			const transport = new SSEClientTransport(serverUrl)
 			const client = new SdkClientWrapper({ name: "TheaCodeMcpClient", version: "1.0.0" })
 			await client.connect(transport)
 			return client
 		} catch (err) {
 			// Log the error but continue with mock client
-			console.warn("MCP SDK not found, using mock client", err instanceof Error ? err.message : String(err))
+			console.warn("MCP SDK error, using mock client", err instanceof Error ? err.message : String(err))
 			const client = new MockClient({ name: "TheaCodeMcpClient", version: "1.0.0" })
 			await client.connect(undefined)
 			return client

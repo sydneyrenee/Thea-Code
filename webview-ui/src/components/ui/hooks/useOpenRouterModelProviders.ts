@@ -4,6 +4,7 @@ import { useQuery, UseQueryOptions } from "@tanstack/react-query"
 
 import { ModelInfo } from "../../../../../src/schemas"
 import { parseApiPrice } from "../../../../../src/utils/cost"
+import { setCapabilitiesFromModelId } from "../../../../../src/utils/model-pattern-detection"
 
 export const OPENROUTER_DEFAULT_PROVIDER_NAME = "[default]"
 
@@ -58,7 +59,7 @@ async function getOpenRouterProvidersForModel(modelId: string) {
 			const outputPrice = parseApiPrice(endpoint.pricing?.completion)
 
 			// Initialize model info with properties from the API response
-			const modelInfo: OpenRouterModelProvider = {
+			let modelInfo: OpenRouterModelProvider = {
 				maxTokens: endpoint.max_completion_tokens || endpoint.context_length,
 				contextWindow: endpoint.context_length,
 				// Detect image support based on model architecture
@@ -76,39 +77,8 @@ async function getOpenRouterProvidersForModel(modelId: string) {
 			modelInfo.cacheWritesPrice = 0.3
 			modelInfo.cacheReadsPrice = 0.03
 			
-			// Detect model capabilities based on model properties and patterns
-			
-			// Detect thinking capability based on model ID pattern
-			const hasThinkingCapability = modelId.includes(":thinking") || modelId.endsWith("-thinking")
-			modelInfo.thinking = hasThinkingCapability
-			
-			// Detect computer use capability based on model family
-			// Currently only Claude 3.7+ models support computer use
-			const isAdvancedModel = modelId.includes("claude-3.7") || 
-			                        modelId.includes("claude-3-opus") || 
-			                        modelId.includes("claude-3-sonnet") ||
-			                        modelId.includes("gpt-4") ||
-			                        modelId.includes("gpt4")
-			
-			if (isAdvancedModel) {
-				modelInfo.supportsComputerUse = true
-			}
-			
-			// Set pricing and token limits based on model family
-			const isClaudeLatestGen = modelId.includes("claude-3.5") || modelId.includes("claude-3.7")
-			
-			if (isClaudeLatestGen) {
-				// Higher cache prices for latest Claude models
-				modelInfo.cacheWritesPrice = 3.75
-				modelInfo.cacheReadsPrice = 0.3
-				
-				// Set max tokens based on model and thinking capability
-				if (modelId.includes("claude-3.7") && hasThinkingCapability) {
-					modelInfo.maxTokens = 64_000 // Higher token limit for thinking-enabled Claude 3.7
-				} else {
-					modelInfo.maxTokens = 8192 // Standard token limit for other Claude models
-				}
-			}
+			// Use the capability detection system to set capabilities based on model ID patterns
+			modelInfo = setCapabilitiesFromModelId(modelId, modelInfo)
 
 			models[providerName] = modelInfo
 		}

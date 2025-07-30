@@ -10,6 +10,12 @@ import { estimateTokenCount, truncateConversation, truncateConversationIfNeeded 
 
 // Create a mock ApiHandler for testing
 class MockApiHandler extends BaseProvider {
+	// Override the registerTools method to do nothing
+	// This prevents the "McpToolExecutor not initialized" error
+	protected registerTools(): void {
+		// No-op - we don't need to register tools for these tests
+	}
+	
 	createMessage(): ApiStream {
 		throw new Error("Method not implemented.")
 	}

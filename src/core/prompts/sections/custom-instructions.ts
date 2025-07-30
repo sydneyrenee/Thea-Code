@@ -8,25 +8,54 @@ async function safeReadFile(filePath: string): Promise<string> {
 		const content = await fs.readFile(filePath, "utf-8")
 		return content.trim()
 	} catch (err) {
-		const errorCode = (err as NodeJS.ErrnoException).code
-		if (!errorCode || !["ENOENT", "EISDIR"].includes(errorCode)) {
-			throw err
+		// Safely check if the error has a code property
+		const error = err as Error & { code?: string }
+		const errorCode = error.code
+		
+		// Handle ENOENT (file not found) and EISDIR (is a directory) errors by returning empty string
+		if (errorCode && ["ENOENT", "EISDIR"].includes(errorCode)) {
+			return ""
 		}
-		return ""
+		
+		// For all other errors, rethrow the original error to maintain error type
+		throw err
 	}
 }
 
 export async function loadRuleFiles(cwd: string): Promise<string> {
+	// Validate input
+	if (!cwd) {
+		console.warn("loadRuleFiles called with empty cwd, using current directory")
+		cwd = "."
+	}
+
 	const ruleFiles = [".Thearules", ".cursorrules", ".windsurfrules"]
 	let combinedRules = ""
 
 	for (const file of ruleFiles) {
-		const content = await safeReadFile(path.join(cwd, file))
-		if (content) {
-			combinedRules += `\n# Rules from ${file}:\n${content}\n`
+		try {
+			// Safely join paths
+			const filePath = path.join(cwd, file)
+			const content = await safeReadFile(filePath)
+			if (content) {
+				combinedRules += `\n# Rules from ${file}:\n${content}\n`
+			}
+		} catch (err) {
+			// Check if this is an expected error type that we should handle
+			const error = err as Error & { code?: string }
+			const errorCode = error.code
+			
+			// For ENOENT and EISDIR, just log and continue
+			if (errorCode && ["ENOENT", "EISDIR"].includes(errorCode)) {
+				console.warn(`Error reading rule file ${file}: ${error.message}`)
+				// Continue with other files
+			} else {
+				// For unexpected errors, rethrow
+				throw err
+			}
 		}
 	}
-
+	
 	return combinedRules
 }
 
@@ -37,13 +66,35 @@ export async function addCustomInstructions(
 	mode: string,
 	options: { language?: string; theaIgnoreInstructions?: string } = {}, // Rename parameter
 ): Promise<string> {
+	// Validate input
+	if (!cwd) {
+		console.warn("addCustomInstructions called with empty cwd, using current directory")
+		cwd = "."
+	}
+	
 	const sections = []
 
 	// Load mode-specific rules if mode is provided
 	let modeRuleContent = ""
 	if (mode) {
-		const modeRuleFile = `.Thearules-${mode}`
-		modeRuleContent = await safeReadFile(path.join(cwd, modeRuleFile))
+		try {
+			const modeRuleFile = `.Thearules-${mode}`
+			const filePath = path.join(cwd, modeRuleFile)
+			modeRuleContent = await safeReadFile(filePath)
+		} catch (err) {
+			// Check if this is an expected error type that we should handle
+			const error = err as Error & { code?: string }
+			const errorCode = error.code
+			
+			// For ENOENT and EISDIR, just log and continue
+			if (errorCode && ["ENOENT", "EISDIR"].includes(errorCode)) {
+				console.warn(`Error reading mode-specific rule file for mode ${mode}: ${error.message}`)
+				// Continue with empty mode rule content
+			} else {
+				// For unexpected errors, rethrow
+				throw err
+			}
+		}
 	}
 
 	// Add language preference if provided
@@ -78,7 +129,7 @@ export async function addCustomInstructions(
 		rules.push(options.theaIgnoreInstructions) // Use renamed parameter
 	}
 
-	// Add generic rules
+	// Add generic rules - let errors propagate up
 	const genericRuleContent = await loadRuleFiles(cwd)
 	if (genericRuleContent && genericRuleContent.trim()) {
 		rules.push(genericRuleContent.trim())

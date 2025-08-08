@@ -143,7 +143,7 @@ export class CompactLogger implements ILogger {
 			m: message,
 			c: meta?.ctx,
 			d: meta
-				? (({ _ctx, ...rest }) => (void _ctx, Object.keys(rest).length > 0 ? rest : undefined))(meta)
+				? (({ ctx, ...rest }) => (void ctx, Object.keys(rest).length > 0 ? rest : undefined))(meta)
 				: undefined,
 		}
 

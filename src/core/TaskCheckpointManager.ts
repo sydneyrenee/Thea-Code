@@ -12,6 +12,7 @@ import { TheaProvider } from "./webview/TheaProvider" // Renamed import and path
 import { TheaMessage } from "../shared/ExtensionMessage" // Renamed imports
 import { getWorkspacePath } from "../utils/path"
 import { DIFF_VIEW_URI_SCHEME } from "../integrations/editor/DiffViewProvider" // Fixed: removed type-only import
+import { logger } from "../utils/logging"
 
 // TODO: Rename types if necessary
 
@@ -58,7 +59,7 @@ export class TaskCheckpointManager extends EventEmitter<CheckpointManagerEvents>
 	}
 
 	private log(message: string) {
-		console.log(`[TaskCheckpointManager:${this.taskId}] ${message}`)
+		logger.info(`[TaskCheckpointManager:${this.taskId}] ${message}`)
 		try {
 			void this.providerRef.deref()?.log(`[TaskCheckpointManager:${this.taskId}] ${message}`)
 		} catch {

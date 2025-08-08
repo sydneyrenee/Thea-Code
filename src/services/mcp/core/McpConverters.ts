@@ -117,6 +117,26 @@ export class McpConverters {
 			.replace(/'/g, "&apos;");
 	}
 
+	private static getTextSafe(item: { text?: string }): string {
+		return typeof item.text === 'string' ? item.text : ''
+	}
+
+	private static isBase64Image(src: unknown): src is { media_type?: string; data?: string } {
+		if (!src || typeof src !== 'object') return false
+		const r = src as Record<string, unknown>
+		return 'media_type' in r || 'data' in r
+	}
+
+	private static isTyped(src: unknown, t: string): boolean {
+		if (!src || typeof src !== 'object') return false
+		const r = src as Record<string, unknown>
+		return typeof r.type === 'string' && r.type === t
+	}
+
+	private static hasUrl(src: unknown): src is { url?: string } {
+		return !!src && typeof src === 'object' && 'url' in (src as Record<string, unknown>)
+	}
+
 	/**
 	 * Convert MCP protocol format to XML tool result format
 	 * @param result MCP protocol tool result
@@ -125,49 +145,49 @@ export class McpConverters {
 	public static mcpToXml(result: NeutralToolResult): string {
 		return `<tool_result tool_use_id="${this.escapeXml(result.tool_use_id)}" status="${result.status}">\n${
 			result.content
-				.map((item) => {
-					// Handle different content types with proper type guards
-					if (item.type === "text" && "text" in item) {
-						return this.escapeXml(item.text);
+				.map((item: Record<string, unknown> & { type: string }) => {
+					if (item.type === "text") {
+						return this.escapeXml(this.getTextSafe(item as { text?: string }));
 					} 
-					else if ((item.type === "image" || item.type === "image_url" || item.type === "image_base64") && "source" in item) {
-						const imageItem = item as { source: { type: string; media_type?: string; data?: string; url?: string } };
-						if (imageItem.source.type === "base64") {
-							return `<image type="${this.escapeXml(imageItem.source.media_type || '')}" data="${this.escapeXml(imageItem.source.data || '')}" />`;
-						} else if (imageItem.source.type === "image_url") {
-							return `<image url="${this.escapeXml(imageItem.source.url || '')}" />`;
+					else if ((item.type === "image" || item.type === "image_url" || item.type === "image_base64") && 'source' in item) {
+						const src = (item as { source?: unknown }).source
+						if (this.isTyped(src, 'base64') || this.isBase64Image(src)) {
+							const s = src as { media_type?: string; data?: string }
+							return `<image type="${this.escapeXml(s.media_type || '')}" data="${this.escapeXml(s.data || '')}" />`;
+						} else if (this.isTyped(src, 'image_url') || this.hasUrl(src)) {
+							const s = src as { url?: string }
+							return `<image url="${this.escapeXml(s.url || '')}" />`;
 						}
 					}
-					else if (item.type === "tool_use" && "name" in item && "input" in item) {
-						const toolUseItem = item as { name: string; input: Record<string, unknown> };
+					else if (item.type === "tool_use" && 'name' in item && 'input' in item) {
+						const toolUseItem = item as unknown as { name: string; input: Record<string, unknown> };
 						return `<tool_use name="${this.escapeXml(toolUseItem.name)}" input="${this.escapeXml(JSON.stringify(toolUseItem.input))}" />`;
 					}
-					else if (item.type === "tool_result" && "tool_use_id" in item && "content" in item) {
-						// Handle nested tool results
-						const nestedItem = item as { tool_use_id: string; content: Array<{ type: string; text?: string }> };
+					else if (item.type === "tool_result" && 'tool_use_id' in item && 'content' in item) {
+						const nestedItem = item as unknown as { tool_use_id: string; content: Array<{ type: string; text?: string }> };
 						return `<nested_tool_result tool_use_id="${this.escapeXml(nestedItem.tool_use_id)}">${
 							Array.isArray(nestedItem.content) 
 								? nestedItem.content.map(subItem => 
-										subItem.type === "text" && "text" in subItem ? this.escapeXml(subItem.text || '') : ""
+										subItem.type === "text" ? this.escapeXml(this.getTextSafe(subItem)) : ""
 									).join("\n")
 								: ""
 						}</nested_tool_result>`;
 					}
-					
-					// Log warning for unhandled content types
 					console.warn(`Unhandled content type in mcpToXml: ${item.type}`);
 					return `<unknown type="${this.escapeXml(item.type)}" />`;
 				})
 				.join("\n")
-		}${
+		}
+		${
 			result.error
 				? `\n<error message="${this.escapeXml(result.error.message)}"${
 						result.error.details
 							? ` details="${this.escapeXml(JSON.stringify(result.error.details))}"`
-							: ""
+						: ""
 					} />`
 				: ""
-		}\n</tool_result>`;
+		}
+		\n</tool_result>`;
 	}
 
 	/**

@@ -82,6 +82,7 @@ import { newTaskTool } from "./tools/newTaskTool"
 import { TaskCheckpointManager } from "./TaskCheckpointManager" // Import the new manager
 import { TaskStateManager } from "./TaskStateManager" // Import the new state manager
 import { TaskWebviewCommunicator } from "./TaskWebviewCommunicator" // Import the new communicator
+import { logger } from "../utils/logging"
 
 export type ToolResponse = string | NeutralMessageContent
 type UserContent = NeutralMessageContent
@@ -691,7 +692,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		// 	return
 		// }
 
-		console.log(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
+		logger.info(`[subtasks] aborting task ${this.taskId}.${this.instanceId}`)
 
 		// Will stop any autonomously running promises.
 		if (isAbandoned) {
@@ -1477,9 +1478,9 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 		When you see the UI inactive during this, it means that a tool is breaking without presenting any UI. For example the write_to_file tool was breaking when relpath was undefined, and for invalid relpath it never presented UI.
 		*/
 		this.presentAssistantMessageLocked = false // this needs to be placed here, if not then calling this.presentAssistantMessage below would fail (sometimes) since it's locked
-		// NOTE: when tool is rejected, iterator stream is interrupted and it waits for userMessageContentReady to be true. Future calls to present will skip execution since didRejectTool and iterate until contentIndex is set to message length and it sets userMessageContentReady to true itself (instead of preemptively doing it in iterator)
+		// NOTE: when tool is rejected, iterator stream is interrupted and it waits for userMessageContentReady to be true. Future calls to present will skip execution since it's locked and iterate until contentIndex is set to message length and it sets userMessageContentReady to true itself (instead of preemptively doing it in iterator)
 		if (!block.partial || this.didRejectTool || this.didAlreadyUseTool) {
-			// block is finished streaming and executing
+			// block is finished streaming and it is finished executing
 			if (this.currentStreamingContentIndex === this.assistantMessageContent.length - 1) {
 				// its okay that we increment if !didCompleteReadingStream, it'll just return bc out of bounds and as streaming continues it will call presentAssitantMessage if a new block is ready. if streaming is finished then we set userMessageContentReady to true when out of bounds. This gracefully allows the stream to continue on and all potential content blocks be presented.
 				// last block is complete and it is finished executing
@@ -1658,7 +1659,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					// lastMessage.ts = Date.now() DO NOT update ts since it is used as a key for virtuoso list
 					lastMessage.partial = false
 					// instead of streaming partialMessage events, we do a save and post like normal to persist to disk
-					console.log("updating partial message", lastMessage)
+					logger.debug("updating partial message", lastMessage as unknown as Record<string, unknown>)
 					// await this.taskStateManager.saveClineMessages()
 				}
 
@@ -1695,6 +1696,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 			this.userMessageContentReady = false
 			this.didRejectTool = false
 			this.didAlreadyUseTool = false
+		
 			this.presentAssistantMessageLocked = false
 			this.presentAssistantMessageHasPendingUpdates = false
 			this.diffViewProvider.reset()
@@ -1740,7 +1742,7 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					}
 
 					if (this.abort) {
-						console.log(`aborting stream, this.abandoned = ${this.abandoned}`)
+						logger.info(`aborting stream, this.abandoned = ${this.abandoned}`)
 
 						if (!this.abandoned) {
 							// only need to gracefully abort if this instance isn't abandoned (sometimes openrouter stream hangs, in which case this would affect future instances of thea)
@@ -1783,6 +1785,8 @@ export class TheaTask extends EventEmitter<TheaProviderEvents> {
 					if (history) {
 						await this.providerRef.deref()?.initWithHistoryItem(history.historyItem) // TODO: Rename initClineWithHistoryItem
 						// await this.providerRef.deref()?.postStateToWebview()
+					} else {
+						logger.warn(`Task ${this.taskId} not found in history after streaming failure`, { ctx: 'theaTask' })
 					}
 				}
 			} finally {

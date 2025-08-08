@@ -11,6 +11,7 @@ import type {
 	NeutralMessageStreamEvent,
 	NeutralCacheControlEphemeral,
 } from "./types"
+import { logger } from "../../utils/logging"
 
 export class NeutralAnthropicClient {
 	private apiKey: string
@@ -190,12 +191,12 @@ export class NeutralAnthropicClient {
 								break
 						}
 					} catch (error) {
-						console.error('Error parsing stream chunk:', error)
+						logger.error(error instanceof Error ? error : new Error(String(error)), { ctx: 'anthropic:createMessage', phase: 'parse' })
 					}
 				}
 			}
 		} catch (error) {
-			console.error('Error in createMessage:', error)
+			logger.error(error instanceof Error ? error : new Error(String(error)), { ctx: 'anthropic:createMessage' })
 			// Convert to a more descriptive error before throwing
 			throw new Error(`Failed to create message: ${error instanceof Error ? error.message : String(error)}`)
 		}
@@ -236,7 +237,7 @@ export class NeutralAnthropicClient {
 			// Return the token count from the result
 			return result.input_tokens
 		} catch (error) {
-			console.error('Error in countTokens:', error)
+			logger.error(error instanceof Error ? error : new Error(String(error)), { ctx: 'anthropic:countTokens' })
 			// Convert to a more descriptive error before throwing
 			throw new Error(`Failed to count tokens: ${error instanceof Error ? error.message : String(error)}`)
 		}

@@ -42,6 +42,7 @@ import { TheaApiManager } from "./api/TheaApiManager" // Renamed import
 import { TheaTaskHistory } from "./history/TheaTaskHistory" // Renamed import
 import { TheaCacheManager } from "./cache/TheaCacheManager" // Renamed import
 import { TheaMcpManager } from "./mcp/TheaMcpManager" // Renamed import
+import { logger } from "../../utils/logging"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -1048,9 +1049,7 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 
 	public log(message: string) {
 		this.outputChannel.appendLine(message)
-		const g = globalThis as Record<string, unknown>
-		if (g.__JEST_TEARDOWN__ === true) return
-		console.log(message)
+		logger.info(message)
 	}
 
 	// integration tests

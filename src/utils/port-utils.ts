@@ -9,6 +9,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - module has no types
 import * as tcpPortUsedModule from 'tcp-port-used';
+import { logger } from "./logging"
 const tcpPortUsed = tcpPortUsedModule as {
   check: (port: number, host: string) => Promise<boolean>;
   waitUntilFree: (port: number, host: string, retryTimeMs: number, timeOutMs: number) => Promise<void>;
@@ -118,48 +119,48 @@ export async function findAvailablePort(
  * @returns Promise<void> - Resolves when the port becomes available
  */
 export async function waitForPortAvailable(
-  port: number, 
-  host = 'localhost', 
-  retryTimeMs = 200, 
-  timeOutMs = 30000, // Increased default timeout to 30 seconds
-  resourceName?: string,
-  maxRetries = 10,
-  signal?: AbortSignal
+	port: number,
+	host = 'localhost',
+	retryTimeMs = 200,
+	timeOutMs = 30000,
+	resourceName?: string,
+	maxRetries = 10,
+	signal?: AbortSignal
 ): Promise<void> {
-  const isTestEnv = !!process.env.JEST_WORKER_ID || process.env.NODE_ENV === 'test' || typeof (globalThis as Record<string, unknown>).jest !== 'undefined'
-  if (isTestEnv) return
-  const resourceDesc = resourceName ? `${resourceName} on port ${port}` : `port ${port}`;
-  console.log(`Waiting for ${resourceDesc} to become available...`);
-  let currentRetry = 0;
-  let currentRetryTime = retryTimeMs;
-  while (currentRetry < maxRetries) {
-    if (signal?.aborted) return
-    try {
-      const attemptTimeout = Math.min(timeOutMs / 3, 10000);
-      await tcpPortUsed.waitUntilFree(port, host, currentRetryTime, attemptTimeout);
-      console.log(`${resourceDesc} is now available`);
-      return;
-    } catch (error) {
-      currentRetry++;
-      if (currentRetry >= maxRetries) {
-        const errorMsg = `Timeout waiting for ${resourceDesc} to become available after ${maxRetries} attempts`;
-        console.error(errorMsg, error);
-        throw new Error(errorMsg);
-      }
-      const jitter = Math.random() * 100;
-      currentRetryTime = Math.min(currentRetryTime * 1.5 + jitter, 2000);
-      console.warn(`Retry ${currentRetry}/${maxRetries} for ${resourceDesc} (next retry in ${Math.round(currentRetryTime)}ms)`);
-      await new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, currentRetryTime)
-        if (signal) {
-          const onAbort = () => { clearTimeout(t); resolve() }
-          if (signal.aborted) { clearTimeout(t); resolve(); return }
-          signal.addEventListener('abort', onAbort, { once: true })
-        }
-      })
-    }
-  }
-  throw new Error(`Failed to wait for ${resourceDesc} to become available after ${maxRetries} attempts`);
+	const isTestEnv = !!process.env.JEST_WORKER_ID || process.env.NODE_ENV === 'test' || typeof (globalThis as Record<string, unknown>).jest !== 'undefined'
+	if (isTestEnv) return
+	const resourceDesc = resourceName ? `${resourceName} on port ${port}` : `port ${port}`;
+	logger.info(`Waiting for ${resourceDesc} to become available...`, { ctx: 'ports' });
+	let currentRetry = 0;
+	let currentRetryTime = retryTimeMs;
+	while (currentRetry < maxRetries) {
+		if (signal?.aborted) return
+		try {
+			const attemptTimeout = Math.min(timeOutMs / 3, 10000);
+			await tcpPortUsed.waitUntilFree(port, host, currentRetryTime, attemptTimeout);
+			logger.info(`${resourceDesc} is now available`, { ctx: 'ports' });
+			return;
+		} catch (error) {
+			currentRetry++;
+			if (currentRetry >= maxRetries) {
+				const errorMsg = `Timeout waiting for ${resourceDesc} to become available after ${maxRetries} attempts`;
+				logger.error(errorMsg, { ctx: 'ports', error: error as Error });
+				throw new Error(errorMsg);
+			}
+			const jitter = Math.random() * 100;
+			currentRetryTime = Math.min(currentRetryTime * 1.5 + jitter, 2000);
+			logger.warn(`Retry ${currentRetry}/${maxRetries} for ${resourceDesc} (next retry in ${Math.round(currentRetryTime)}ms)`, { ctx: 'ports' });
+			await new Promise<void>((resolve) => {
+				const t = setTimeout(resolve, currentRetryTime)
+				if (signal) {
+					const onAbort = () => { clearTimeout(t); resolve() }
+					if (signal.aborted) { clearTimeout(t); resolve(); return }
+					signal.addEventListener('abort', onAbort, { once: true })
+				}
+			})
+		}
+	}
+	throw new Error(`Failed to wait for ${resourceDesc} to become available after ${maxRetries} attempts`);
 }
 
 /**
@@ -174,51 +175,51 @@ export async function waitForPortAvailable(
  * @returns Promise<void> - Resolves when the port is in use
  */
 export async function waitForPortInUse(
-  port: number, 
-  host = 'localhost', 
-  retryTimeMs = 200, 
-  timeOutMs = 30000,
-  serverName?: string,
-  maxRetries = 10,
-  silent = false,
-  signal?: AbortSignal
+	port: number,
+	host = 'localhost',
+	retryTimeMs = 200,
+	timeOutMs = 30000,
+	serverName?: string,
+	maxRetries = 10,
+	silent = false,
+	signal?: AbortSignal
 ): Promise<void> {
-  const isTestEnv = !!process.env.JEST_WORKER_ID || process.env.NODE_ENV === 'test' || typeof (globalThis as Record<string, unknown>).jest !== 'undefined'
-  if (isTestEnv) return
-  const serverDesc = serverName ? `${serverName} on port ${port}` : `port ${port}`;
-  if (!silent) console.log(`Waiting for ${serverDesc} to be ready...`)
-  if (silent && maxRetries <= 2) {
-    try { await tcpPortUsed.waitUntilUsed(port, host, retryTimeMs, Math.min(timeOutMs, 250)) } catch {}
-    return
-  }
-  let currentRetry = 0;
-  let currentRetryTime = retryTimeMs;
-  while (currentRetry < maxRetries) {
-    if (signal?.aborted) return
-    try {
-      const attemptTimeout = Math.min(timeOutMs / 3, 10000);
-      await tcpPortUsed.waitUntilUsed(port, host, currentRetryTime, attemptTimeout);
-      if (!silent) console.log(`${serverDesc} is now ready`);
-      return;
-    } catch (error) {
-      currentRetry++;
-      if (currentRetry >= maxRetries) {
-        const errorMsg = `Timeout waiting for ${serverDesc} to be ready after ${maxRetries} attempts`;
-        if (!silent) console.error(errorMsg, error)
-        throw new Error(errorMsg)
-      }
-      const jitter = Math.random() * 100;
-      currentRetryTime = Math.min(currentRetryTime * 1.5 + jitter, 2000);
-      if (!silent) console.warn(`Retry ${currentRetry}/${maxRetries} for ${serverDesc} (next retry in ${Math.round(currentRetryTime)}ms)`)
-      await new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, currentRetryTime)
-        if (signal) {
-          const onAbort = () => { clearTimeout(t); resolve() }
-          if (signal.aborted) { clearTimeout(t); resolve(); return }
-          signal.addEventListener('abort', onAbort, { once: true })
-        }
-      })
-    }
-  }
-  throw new Error(`Failed to connect to ${serverDesc} after ${maxRetries} attempts`);
+	const isTestEnv = !!process.env.JEST_WORKER_ID || process.env.NODE_ENV === 'test' || typeof (globalThis as Record<string, unknown>).jest !== 'undefined'
+	if (isTestEnv) return
+	const serverDesc = serverName ? `${serverName} on port ${port}` : `port ${port}`;
+	if (!silent) logger.info(`Waiting for ${serverDesc} to be ready...`, { ctx: 'ports' })
+	if (silent && maxRetries <= 2) {
+		try { await tcpPortUsed.waitUntilUsed(port, host, retryTimeMs, Math.min(timeOutMs, 250)) } catch {}
+		return
+	}
+	let currentRetry = 0;
+	let currentRetryTime = retryTimeMs;
+	while (currentRetry < maxRetries) {
+		if (signal?.aborted) return
+		try {
+			const attemptTimeout = Math.min(timeOutMs / 3, 10000);
+			await tcpPortUsed.waitUntilUsed(port, host, currentRetryTime, attemptTimeout);
+			if (!silent) logger.info(`${serverDesc} is now ready`, { ctx: 'ports' });
+			return;
+		} catch (error) {
+			currentRetry++;
+			if (currentRetry >= maxRetries) {
+				const errorMsg = `Timeout waiting for ${serverDesc} to be ready after ${maxRetries} attempts`;
+				if (!silent) logger.error(errorMsg, { ctx: 'ports', error: error as Error })
+				throw new Error(errorMsg)
+			}
+			const jitter = Math.random() * 100;
+			currentRetryTime = Math.min(currentRetryTime * 1.5 + jitter, 2000);
+			if (!silent) logger.warn(`Retry ${currentRetry}/${maxRetries} for ${serverDesc} (next retry in ${Math.round(currentRetryTime)}ms)`, { ctx: 'ports' })
+			await new Promise<void>((resolve) => {
+				const t = setTimeout(resolve, currentRetryTime)
+				if (signal) {
+					const onAbort = () => { clearTimeout(t); resolve() }
+					if (signal.aborted) { clearTimeout(t); resolve(); return }
+					signal.addEventListener('abort', onAbort, { once: true })
+				}
+			})
+		}
+	}
+	throw new Error(`Failed to connect to ${serverDesc} after ${maxRetries} attempts`);
 }

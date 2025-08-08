@@ -46,37 +46,27 @@ if (!String.prototype.toPosix) {
 	}
 }
 
-// Suppress console output after Jest teardown to avoid noisy errors from late async logs
-const originalConsole = {
+// Suppress console output after Jest teardown or between tests
+const original = {
 	log: console.log.bind(console),
-	info: console.info?.bind(console) ?? console.log.bind(console),
+	info: (console.info?.bind(console) ?? console.log.bind(console)) as typeof console.log,
 	warn: console.warn.bind(console),
 	error: console.error.bind(console),
-	debug: console.debug?.bind(console) ?? console.log.bind(console),
+	debug: (console.debug?.bind(console) ?? console.log.bind(console)) as typeof console.log,
 }
 
-function wrapConsole<K extends keyof typeof originalConsole>(key: K) {
-	const fn = originalConsole[key]
-	;(console as any)[key] = (...args: unknown[]) => {
-		const g = globalThis as Record<string, unknown>
-		const afterTeardown = (g.__JEST_TEARDOWN__ as boolean | undefined) === true
-		const inActiveTest = (g.__JEST_ACTIVE_TEST__ as boolean | undefined) === true
-		if (afterTeardown || !inActiveTest) {
-			return // drop logs after tests end or between tests
-		}
-		try {
-			fn(...args as [])
-		} catch {
-			// ignore
-		}
-	}
+const shouldAllowLog = () => {
+	const g = globalThis as Record<string, unknown>
+	const afterTeardown = (g.__JEST_TEARDOWN__ as boolean | undefined) === true
+	const inActiveTest = (g.__JEST_ACTIVE_TEST__ as boolean | undefined) === true
+	return !afterTeardown && inActiveTest
 }
 
-wrapConsole('log')
-wrapConsole('info')
-wrapConsole('warn')
-wrapConsole('error')
-wrapConsole('debug')
+console.log = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.log(...(args as [])) } catch {} } }
+console.info = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.info(...(args as [])) } catch {} } }
+console.warn = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.warn(...(args as [])) } catch {} } }
+console.error = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.error(...(args as [])) } catch {} } }
+console.debug = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.debug(...(args as [])) } catch {} } }
 
 // Propagate mock server base URLs from global port into env for provider clients
 (() => {
@@ -85,7 +75,6 @@ wrapConsole('debug')
 	if (port && typeof port === 'number') {
 		const base = `http://127.0.0.1:${port}`
 		process.env.OLLAMA_BASE_URL = base
-		process.env.OPENAI_BASE_URL = base
 		process.env.ANTHROPIC_BASE_URL = base
 		process.env.GEMINI_BASE_URL = base
 	}

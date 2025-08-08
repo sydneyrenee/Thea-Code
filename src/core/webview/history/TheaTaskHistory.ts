@@ -13,6 +13,7 @@ import { downloadTask } from "../../../integrations/misc/export-markdown" // Adj
 import { t } from "../../../i18n" // Adjusted path
 import { getWorkspacePath } from "../../../utils/path" // Adjusted path
 import type { NeutralConversationHistory } from "../../../shared/neutral-history" // Import neutral history types
+import { logger } from "../../../utils/logging"
 
 /**
  * Manages task history storage, retrieval, and associated file operations.
@@ -103,7 +104,7 @@ export class TheaTaskHistory {
 		}
 
 		// If task metadata not found in history list, try to clean up and throw
-		console.warn(`Task ${id} not found in history list. Attempting cleanup from state.`)
+		logger.warn(`Task ${id} not found in history list. Attempting cleanup from state.`)
 		await this.deleteTaskFromState(id) // Attempt removal from state only
 		throw new Error(`Task ${id} not found`)
 	}

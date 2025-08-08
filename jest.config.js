@@ -8,6 +8,7 @@ module.exports = {
 			testEnvironment: "node",
 			testMatch: ["<rootDir>/src/**/__tests__/**/*.test.ts"],
 			setupFiles: ["<rootDir>/src/__mocks__/jest.setup.ts"],
+			setupFilesAfterEnv: ["<rootDir>/src/__mocks__/jest.afterEnv.ts"],
 			transform: {
 				"^.+\\.tsx?$": [
 					"ts-jest",

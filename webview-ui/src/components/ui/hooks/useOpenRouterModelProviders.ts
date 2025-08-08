@@ -78,7 +78,9 @@ async function getOpenRouterProvidersForModel(modelId: string) {
 			modelInfo.cacheReadsPrice = 0.03
 			
 			// Use the capability detection system to set capabilities based on model ID patterns
-			modelInfo = setCapabilitiesFromModelId(modelId, modelInfo)
+			const updated = setCapabilitiesFromModelId(modelId, modelInfo)
+			// Preserve label if helper returns a new object without it in the type
+			modelInfo = { ...updated, label: providerName }
 
 			models[providerName] = modelInfo
 		}

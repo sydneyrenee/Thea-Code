@@ -281,6 +281,7 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 		}
 
 		try {
+			const g = globalThis as Record<string, unknown>
 			if (this.transportType === "stdio") {
 				this.transport = new StdioTransport(this.stdioConfig!)
 			} else {
@@ -310,42 +311,25 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 				let actualPort: number;
 				
 				if (isDynamicPort) {
-					// For dynamic port (port 0), find an available port instead of letting the OS assign one
 					try {
-						// Define preferred port ranges for MCP server
 						const preferredRanges: Array<[number, number]> = [
-							[3000, 3100],  // Try 3000-3100 first
-							[8000, 8100],  // Then 8000-8100
-							[9000, 9100]   // Then 9000-9100
-						];
-						
-						// Find an available port with preferred ranges and more attempts
-						if (!isTestEnv) {
-							console.log("Finding available port for MCP server...");
-						}
-						actualPort = await findAvailablePort(3000, "localhost", preferredRanges, 150);
-						if (!isTestEnv) {
-							console.log(`Found available port for MCP server: ${actualPort}`);
-						}
-						
-						// Update the config with the found port
-						this.sseConfig.port = actualPort;
-						
-						// If we're in a test environment, we need to restart the transport with the new port
+							[3000, 3100],
+							[8000, 8100],
+							[9000, 9100],
+						]
+						if (!isTestEnv) console.log("Finding available port for MCP server...")
+						actualPort = await findAvailablePort(3000, "127.0.0.1", preferredRanges, isTestEnv ? 20 : 150, isTestEnv)
+						if (!isTestEnv) console.log(`Found available port for MCP server: ${actualPort}`)
+						this.sseConfig.port = actualPort
 						if (isTestEnv) {
-							// Close the current transport
-							if (this.transport?.close) {
-								await this.transport.close();
-							}
-							
-							// Recreate the transport with the new port
-							this.transport = new SseTransport(this.sseConfig);
-							this.registerHandlers();
-							await this.server.connect(this.transport as unknown);
+							if (this.transport?.close) await this.transport.close()
+							this.transport = new SseTransport(this.sseConfig)
+							this.registerHandlers()
+							await this.server.connect(this.transport as unknown)
 						}
 					} catch (error) {
-						const errorMessage = error instanceof Error ? error.message : String(error);
-						throw new Error(`Failed to find available port: ${errorMessage}`);
+						const errorMessage = error instanceof Error ? error.message : String(error)
+						throw new Error(`Failed to find available port: ${errorMessage}`)
 					}
 				} else {
 					// For fixed port, implement a retry mechanism to handle race conditions in port determination
@@ -404,34 +388,24 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 				
 				// Wait for the port to be in use (server ready)
 				try {
-					const host = this.sseConfig.hostname || "localhost";
-					// Use improved waitForPortInUse with longer timeout, server name, and more retries
-					await waitForPortInUse(
-						actualPort, 
-						host, 
-						200,  // Initial retry time
-						30000, // Longer timeout (30 seconds)
-						"MCP Server", // Server name for better error reporting
-						15 // More retries with exponential backoff
-					);
 					if (!isTestEnv) {
-						console.log(`Confirmed MCP server is listening on port ${actualPort}`);
+						const hostRaw = this.sseConfig.hostname || "localhost"
+						await waitForPortInUse(actualPort, hostRaw, 200, 30000, "MCP Server", 15)
+						console.log(`Confirmed MCP server is listening on port ${actualPort}`)
 					}
 				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : String(error);
-					console.warn(`Warning: Could not confirm MCP server is listening: ${errorMessage}`);
-					// Continue anyway, as the server might still be working
+					const errorMessage = error instanceof Error ? error.message : String(error)
+					if (!isTestEnv) console.warn(`Warning: Could not confirm MCP server is listening: ${errorMessage}`)
 				}
-
-				const host = this.sseConfig.hostname || "localhost"
-				this.serverUrl = new URL(`http://${host}:${actualPort}`)
-				if (!isTestEnv) {
+				const finalHost = isTestEnv ? "127.0.0.1" : this.sseConfig.hostname || "localhost"
+				this.serverUrl = new URL(`http://${finalHost}:${actualPort}`)
+				if (isTestEnv) {
+					g.__MCP_SERVER_URL__ = this.serverUrl.toString()
+				} else {
 					console.log(`MCP server (SSE) started at ${this.serverUrl.toString()}`)
 				}
 			} else {
-				if (!isTestEnv) {
-					console.log(`MCP server started with ${this.transportType} transport`)
-				}
+				if (!isTestEnv) console.log(`MCP server started with ${this.transportType} transport`)
 			}
 
 			this.isStarted = true

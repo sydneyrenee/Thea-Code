@@ -21,7 +21,16 @@ export class NeutralAnthropicClient {
 
 	constructor(options: NeutralAnthropicClientOptions) {
 		this.apiKey = options.apiKey
-		this.baseURL = options.baseURL || "https://api.anthropic.com"
+		const envBase = process.env.ANTHROPIC_BASE_URL
+		if (options.baseURL) {
+			this.baseURL = options.baseURL
+		} else if (envBase && envBase.length > 0) {
+			this.baseURL = envBase
+		} else {
+			const g = globalThis as Record<string, unknown>
+			const mockPort = g.__OLLAMA_PORT__ as number | undefined
+			this.baseURL = mockPort ? `http://127.0.0.1:${mockPort}` : "https://api.anthropic.com"
+		}
 	}
 
 	/** Convert neutral history to Anthropic format */

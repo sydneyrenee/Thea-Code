@@ -1,3 +1,8 @@
+// Define global augmentation for shared mock port
+declare global {
+	var __OLLAMA_PORT__: number | undefined
+}
+
 import { OllamaHandler, getOllamaModels } from "../ollama"
 import { McpIntegration } from "../../../services/mcp/integration/McpIntegration"
 import { NeutralConversationHistory } from "../../../shared/neutral-history"
@@ -139,82 +144,65 @@ describe("Ollama MCP Integration", () => {
 
 	beforeAll(async () => {
 		try {
-			// Start the Ollama mock server with dynamic port
-			await startServer()
-			
-			// Get the dynamic port assigned by the OS
-			const port = getServerPort()
-			if (!port) {
-				throw new Error("Failed to get Ollama mock server port")
+			// Reuse global port if globalSetup already started the server
+			const globalPort: number | undefined = global.__OLLAMA_PORT__
+			if (globalPort) {
+				ollamaBaseUrl = `http://127.0.0.1:${globalPort}`
+				console.log(`Using existing global Ollama mock server at ${ollamaBaseUrl}`)
+			} else {
+				await startServer()
+				const port = getServerPort()
+				if (!port) {
+					throw new Error("Failed to get Ollama mock server port")
+				}
+				ollamaBaseUrl = `http://127.0.0.1:${port}`
+				console.log(`Started new Ollama mock server at ${ollamaBaseUrl}`)
 			}
-			
-			// Set the base URL with the dynamic port
-			ollamaBaseUrl = `http://localhost:${port}`
-			console.log(`Using Ollama mock server at ${ollamaBaseUrl}`)
-			
+
 			try {
-				// Get all available models using the dynamic port with a timeout
 				const modelPromise = getOllamaModels(ollamaBaseUrl)
 				const timeoutPromise = new Promise<string[]>((_, reject) => {
 					setTimeout(() => reject(new Error("Timeout fetching Ollama models")), 5000)
 				})
-				
 				availableModels = await Promise.race([modelPromise, timeoutPromise])
 				console.log("Available Ollama models:", availableModels)
 			} catch (error) {
 				console.warn("Error fetching Ollama models:", error)
-				// Continue with default models on error
 			}
 		} catch (error) {
 			console.error("Error setting up Ollama mock server:", error)
-			// Ensure we have default models even if server setup fails
 		}
 
-		// If no models are found, use a default model name for testing
 		if (!availableModels || availableModels.length === 0) {
 			availableModels = ["default-model"]
 		}
 	})
-	
-	// Keep track of any timeouts that need to be cleared
-	const timeouts: NodeJS.Timeout[] = []
-	
-	// Helper function to create a timeout that will be automatically tracked for cleanup
-	const createTrackedTimeout = (callback: () => void, ms: number): NodeJS.Timeout => {
-		const timeout = setTimeout(callback, ms)
-		timeouts.push(timeout)
-		return timeout
-	}
-	
+
 	afterAll(async () => {
-		try {
-			// Stop the Ollama mock server
-			await stopServer()
-			console.log("Ollama mock server stopped successfully")
-		} catch (error) {
-			console.error("Error stopping Ollama mock server:", error)
-			// Don't throw the error to ensure tests can complete
-		} finally {
-			// Clean up any lingering timeouts
-			timeouts.forEach(clearTimeout)
-			
-			// Force garbage collection if available (in Node.js with --expose-gc flag)
-			if (global.gc) {
-				global.gc()
+		// Only stop server if we started it locally (no global port stored by globalSetup)
+		if (!global.__OLLAMA_PORT__) {
+			try {
+				await stopServer()
+				console.log("Ollama mock server stopped successfully")
+			} catch (error) {
+				console.error("Error stopping Ollama mock server:", error)
 			}
-			
-			// Give event loop a chance to clean up
-			await new Promise(resolve => setTimeout(resolve, 100))
 		}
+		// Clean up any lingering timeouts
+		// Force garbage collection if available (in Node.js with --expose-gc flag)
+		if (global.gc) {
+			global.gc()
+		}
+		
+		// Give event loop a chance to clean up
+		await new Promise(resolve => setTimeout(resolve, 100))
 	})
 
 	beforeEach(() => {
 		jest.clearAllMocks()
-
-		// Create handler with mock options using dynamic port
 		handler = new OllamaHandler({
 			ollamaBaseUrl: ollamaBaseUrl,
-			ollamaModelId: "llama2", // Default model for tests
+			ollamaModelId: "llama2",
 		})
 	})
 
@@ -235,24 +223,15 @@ describe("Ollama MCP Integration", () => {
 		})
 
 		it("should use OpenAI handler for tool use detection", async () => {
-			// Create a spy on the OpenAI handler's extractToolCalls method
 			const extractToolCallsSpy = jest.spyOn(handler["openAiHandler"], "extractToolCalls")
-
-			// Create neutral history
 			const neutralHistory: NeutralConversationHistory = [
 				{ role: "user", content: [{ type: "text", text: "Use a tool" }] },
 			]
-
-			// Call createMessage
 			const stream = handler.createMessage("You are helpful.", neutralHistory)
-
-			// Collect stream chunks
 			const chunks: ApiStreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
-
-			// Verify OpenAI handler's extractToolCalls method was called
 			expect(extractToolCallsSpy).toHaveBeenCalled()
 		})
 	})
@@ -283,24 +262,18 @@ describe("Ollama MCP Integration", () => {
 			{ role: "user", content: [{ type: "text", text: "What is the weather in San Francisco?" }] },
 		]
 
-		// For this test, we need to ensure the mock is called, so we'll use a shorter timeout
-		// and make sure the test completes even if there's a timeout
 		const stream = handler.createMessage("You are helpful.", neutralHistory)
-
-		// Set a timeout for the test
 		const timeoutId = setTimeout(() => {
 			console.warn("Test timed out, but continuing to verify mocks were called")
 		}, 5000)
 
+		const chunks: ApiStreamChunk[] = []
 		try {
-			// Collect stream chunks
-			const chunks: ApiStreamChunk[] = []
 			for await (const chunk of stream) {
 				chunks.push(chunk)
 			}
 		} catch (error) {
 			console.error("Error in stream processing:", error)
-			// Continue the test even if there's an error
 		} finally {
 			clearTimeout(timeoutId)
 		}
@@ -312,62 +285,44 @@ describe("Ollama MCP Integration", () => {
 				type: "tool_use",
 				name: "weather",
 				id: "weather-123",
-				input: expect.objectContaining({
-
-					location: "San Francisco",
-				}) as { location: string },
+				input: expect.objectContaining({ location: "San Francisco" }) as { location: string },
 			}),
 		)
 
-		// Verify tool result was yielded
-		const toolResultChunks = chunks.filter((chunk) => chunk.type === "tool_result")
+		const toolResultChunks = chunks.filter((c) => c.type === "tool_result")
 		expect(toolResultChunks.length).toBeGreaterThan(0)
 	})
 
 	it("should handle errors in JSON tool use processing", async () => {
 		// Use the first available model or default to 'llama2'
 		const modelId = availableModels.length > 0 ? availableModels[0] : "llama2"
-		// Update handler to use the current model with dynamic port
 		handler = new OllamaHandler({
 			ollamaBaseUrl: ollamaBaseUrl,
 			ollamaModelId: modelId,
 		})
-		// Mock processToolUse to throw an error for JSON
 		jest.spyOn(handler["mcpIntegration"], "routeToolUse").mockImplementationOnce(() => {
 			throw new Error("JSON tool use error")
-		}) // JSON call fails
-
-		// Create neutral history
+		})
 		const neutralHistory: NeutralConversationHistory = [
 			{ role: "user", content: [{ type: "text", text: "What is the weather in San Francisco?" }] },
 		]
-
-		// Mock console.warn
 		const originalWarn = console.warn
 		console.warn = jest.fn()
-
-		// Call createMessage with timeout handling
 		const streamPromise = handler.createMessage("You are helpful.", neutralHistory)
 		const timeoutPromise = new Promise<never>((_, reject) => {
 			setTimeout(() => reject(new Error("Timeout waiting for stream response")), 10000)
 		})
-
-		// Collect stream chunks with timeout
-		const chunks = []
+		const collected: ApiStreamChunk[] = []
 		try {
 			const stream = await Promise.race([streamPromise, timeoutPromise])
 			for await (const chunk of stream) {
-				chunks.push(chunk)
+				collected.push(chunk)
 			}
-			
 			// Verify console.warn was called
 			expect(console.warn).toHaveBeenCalledWith("Error processing JSON tool use:", expect.any(Error))
 		} catch (error) {
 			console.error("Error or timeout in stream processing:", error)
-			// Continue the test even if there's a timeout
-			// This prevents the test from hanging indefinitely
 		} finally {
-			// Restore console.warn
 			console.warn = originalWarn
 		}
 	})

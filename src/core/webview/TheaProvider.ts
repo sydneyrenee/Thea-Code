@@ -1048,6 +1048,8 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 
 	public log(message: string) {
 		this.outputChannel.appendLine(message)
+		const g = globalThis as Record<string, unknown>
+		if (g.__JEST_TEARDOWN__ === true) return
 		console.log(message)
 	}
 
@@ -1263,4 +1265,3 @@ export class TheaProvider extends EventEmitter<TheaProviderEvents> implements vs
 		return this.theaMcpManager.getMcpHub() // Renamed property
 	}
 }
-// Removed duplicated code block from lines 1078-1255

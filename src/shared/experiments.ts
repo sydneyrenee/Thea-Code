@@ -32,6 +32,7 @@ export const experimentDefault: Record<ExperimentId, boolean> = Object.fromEntri
 
 export const experiments = {
 	get: (id: ExperimentKey): ExperimentConfig | undefined => experimentConfigsMap[id],
-	isEnabled: (experimentsConfig: Record<ExperimentId, boolean>, id: ExperimentId) =>
+	// Accept a partial config so callers can omit keys and fall back to defaults
+	isEnabled: (experimentsConfig: Partial<Record<ExperimentId, boolean>>, id: ExperimentId) =>
 		experimentsConfig[id] ?? experimentDefault[id],
 } as const

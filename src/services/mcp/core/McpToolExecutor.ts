@@ -15,6 +15,8 @@ export class McpToolExecutor extends EventEmitter {
 	private toolRegistry: McpToolRegistry
 	private isInitialized: boolean = false
 	private sseConfig?: SseTransportConfig
+	private pendingRegistrations: ToolDefinition[] = []
+	private initializingPromise: Promise<void> | null = null
 
 	/**
 	 * Get the singleton instance of the McpToolExecutor
@@ -54,17 +56,30 @@ export class McpToolExecutor extends EventEmitter {
 		if (this.isInitialized) {
 			return
 		}
+		if (this.initializingPromise) {
+			await this.initializingPromise
+			return
+		}
+		this.initializingPromise = (async () => {
+			// Create and start the EmbeddedMcpProvider instance
+			this.mcpProvider = await EmbeddedMcpProvider.create(this.sseConfig)
+			await this.mcpProvider.start()
+			this.isInitialized = true
 
-		// Create and start the EmbeddedMcpProvider instance
-		this.mcpProvider = await EmbeddedMcpProvider.create(this.sseConfig)
-		await this.mcpProvider.start()
-		this.isInitialized = true
+			// Forward events from the MCP provider
+			this.mcpProvider.on("tool-registered", (name: string) => this.emit("tool-registered", name))
+			this.mcpProvider.on("tool-unregistered", (name: string) => this.emit("tool-unregistered", name))
+			this.mcpProvider.on("started", (info: unknown) => this.emit("started", info))
+			this.mcpProvider.on("stopped", () => this.emit("stopped"))
 
-		// Forward events from the MCP provider
-		this.mcpProvider.on("tool-registered", (name: string) => this.emit("tool-registered", name))
-		this.mcpProvider.on("tool-unregistered", (name: string) => this.emit("tool-unregistered", name))
-		this.mcpProvider.on("started", (info: unknown) => this.emit("started", info))
-		this.mcpProvider.on("stopped", () => this.emit("stopped"))
+			// flush queued registrations
+			for (const def of this.pendingRegistrations.splice(0)) {
+				this.mcpProvider.registerToolDefinition(def)
+				this.toolRegistry.registerTool(def)
+			}
+		})()
+		await this.initializingPromise
+		this.initializingPromise = null
 	}
 
 	/**
@@ -86,7 +101,9 @@ export class McpToolExecutor extends EventEmitter {
 	 */
 	public registerTool(definition: ToolDefinition): void {
 		if (!this.mcpProvider) {
-			throw new Error("McpToolExecutor not initialized")
+			this.pendingRegistrations.push(definition)
+			void this.initialize()
+			return
 		}
 		// Register with both the MCP provider and the tool registry
 		this.mcpProvider.registerToolDefinition(definition)

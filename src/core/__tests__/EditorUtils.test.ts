@@ -21,6 +21,10 @@ jest.mock("vscode", () => {
 	return {
 		Range: MockRange,
 		Position: MockPosition,
+		EndOfLine: {
+			LF: 1,
+			CRLF: 2,
+		},
 		workspace: {
 			getWorkspaceFolder: jest.fn(),
 		},

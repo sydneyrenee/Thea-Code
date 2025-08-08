@@ -135,7 +135,8 @@ export function parseAssistantMessage(assistantMessage: string) {
 
 	// Note: it doesnt matter if check for currentToolUse or currentTextContent, only one of them will be defined since only one can be partial at a time
 	if (currentTextContent) {
-		// stream did not complete text content, add it as partial
+		// If we've reached the end of the message and there's text content, it's complete
+		currentTextContent.partial = false
 		contentBlocks.push(currentTextContent)
 	}
 

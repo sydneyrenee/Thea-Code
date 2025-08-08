@@ -43,12 +43,12 @@ import { SseTransportConfig } from "../types/McpTransportTypes"
  * ```
  */
 export class McpIntegration extends EventEmitter {
-	private static instance: McpIntegration
+	private static instance: McpIntegration | null = null
 	private mcpToolRouter: McpToolRouter
 	private mcpToolSystem: McpToolExecutor
 	private isInitialized: boolean = false
 	private sseConfig?: SseTransportConfig
-	private eventHandlers: Map<string, (...args: any[]) => void> = new Map()
+	private eventHandlers: Map<string, (...args: unknown[]) => void> = new Map()
 
 	/**
 	 * Get the singleton instance of the McpIntegration
@@ -57,7 +57,7 @@ export class McpIntegration extends EventEmitter {
 	public static getInstance(config?: SseTransportConfig): McpIntegration {
 		if (!McpIntegration.instance) {
 			McpIntegration.instance = new McpIntegration(config)
-		} else if (config) {
+		} else if (config && McpIntegration.instance) {
 			// Update config if provided
 			McpIntegration.instance.sseConfig = config
 		}
@@ -231,7 +231,8 @@ export class McpIntegration extends EventEmitter {
 	public static async dispose(): Promise<void> {
 		if (McpIntegration.instance) {
 			await McpIntegration.instance.shutdown()
-			McpIntegration.instance = undefined as any
+			// Clear the instance by setting it to null
+			McpIntegration.instance = null
 		}
 	}
 }

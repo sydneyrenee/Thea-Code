@@ -62,11 +62,12 @@ const shouldAllowLog = () => {
 	return !afterTeardown && inActiveTest
 }
 
-console.log = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.log(...(args as [])) } catch {} } }
-console.info = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.info(...(args as [])) } catch {} } }
-console.warn = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.warn(...(args as [])) } catch {} } }
-console.error = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.error(...(args as [])) } catch {} } }
-console.debug = (...args: unknown[]) => { if (shouldAllowLog()) { try { original.debug(...(args as [])) } catch {} } }
+// Suppress all console output during tests to keep output clean
+console.log = () => {}
+console.info = () => {}
+console.warn = () => {}
+console.error = () => {}
+console.debug = () => {}
 
 // Propagate mock server base URLs from global port into env for provider clients
 (() => {

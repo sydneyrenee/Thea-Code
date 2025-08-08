@@ -133,7 +133,7 @@ export async function diagnosticsToProblemsString(
 	cleanupDocumentCache()
 	
 	// Pre-load all documents in parallel before processing diagnostics
-	const documentPromises = new Map<string, Promise<vscode.TextDocument>>()
+	const documentPromises = new Map<string, Promise<vscode.TextDocument | null>>()
 	const now = Date.now()
 	
 	// First pass: collect all unique URIs that need documents
@@ -151,9 +151,11 @@ export async function diagnosticsToProblemsString(
 			
 			if (!documentPromises.has(uriString)) {
 				// Create a properly typed promise with error handling
-				const docPromise: Promise<vscode.TextDocument | null> = vscode.workspace.openTextDocument(uri)
-					.then(doc => doc)
-					.catch((e: unknown) => {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+				const openDocPromise: Thenable<vscode.TextDocument> = vscode.workspace.openTextDocument(uri)
+				const docPromise: Promise<vscode.TextDocument | null> = Promise.resolve(openDocPromise)
+					.then((doc): vscode.TextDocument | null => doc)
+					.catch((e: unknown): null => {
 						// Safely access error properties with type checking
 						const errorMessage = e instanceof Error ? e.message : String(e)
 						console.warn(`Failed to open document ${uriString}: ${errorMessage}`)

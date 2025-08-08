@@ -49,7 +49,11 @@ export class NeutralVertexClient {
     this.geminiBaseUrl = `https://${this.region}-aiplatform.googleapis.com/v1/projects/${this.projectId}/locations/${this.region}/publishers/google/models`;
     
     // Initialize GoogleAuth with the provided credentials or keyFile
-    const authOptions: any = {
+    const authOptions: {
+      scopes: string[];
+      credentials?: Record<string, unknown>;
+      keyFilename?: string;
+    } = {
       scopes: ['https://www.googleapis.com/auth/cloud-platform'],
     };
     
@@ -84,7 +88,8 @@ export class NeutralVertexClient {
         this.accessToken = tokenResponse.token;
         // Set token expiry to 5 minutes before actual expiry for safety
         // If no expiry is provided, default to 55 minutes (tokens typically last 1 hour)
-        const expiryTime = tokenResponse.res?.data?.expiry_date || (now + 55 * 60 * 1000);
+        const responseData = tokenResponse.res?.data as { expiry_date?: number } | undefined;
+        const expiryTime = responseData?.expiry_date || (now + 55 * 60 * 1000);
         this.tokenExpiry = expiryTime - (5 * 60 * 1000);
       } catch (error) {
         console.error("Error obtaining Google Auth token:", error);

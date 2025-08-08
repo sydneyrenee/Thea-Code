@@ -1,9 +1,8 @@
 // Fetch-based implementation without SDK dependencies
-import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
+import type { NeutralMessageContent } from "../../shared/neutral-history"
 import {
 	convertToAnthropicHistory,
 	convertToAnthropicContentBlocks,
-	convertToNeutralHistory,
 } from "../../api/transform/neutral-anthropic-format"
 import type { ApiStreamChunk, ApiStream } from "../../api/transform/stream"
 import type { 
@@ -11,8 +10,6 @@ import type {
 	NeutralCreateMessageParams,
 	NeutralMessageStreamEvent,
 	NeutralCacheControlEphemeral,
-	AnthropicHistoryMessage,
-	NeutralUsage
 } from "./types"
 
 export class NeutralAnthropicClient {
@@ -31,22 +28,6 @@ export class NeutralAnthropicClient {
 			const mockPort = g.__OLLAMA_PORT__ as number | undefined
 			this.baseURL = mockPort ? `http://127.0.0.1:${mockPort}` : "https://api.anthropic.com"
 		}
-	}
-
-	/** Convert neutral history to Anthropic format */
-	public toAnthropicHistory(history: NeutralConversationHistory) {
-		return convertToAnthropicHistory(history)
-	}
-
-	/** 
-	 * Convert Anthropic history back to neutral format 
-	 * @param history Array of messages in Anthropic format
-	 * @returns Conversation history in neutral format
-	 */
-	public fromAnthropicHistory(history: Array<AnthropicHistoryMessage>) {
-		// Type assertion is needed because the content array can contain different types
-		// that are handled by the conversion function
-		return convertToNeutralHistory(history)
 	}
 
 	/** Create a streaming chat message */
@@ -129,13 +110,15 @@ export class NeutralAnthropicClient {
 						switch (parsedChunk.type) {
 							case "message_start": {
 								// Extract usage information from message start event
-								const usage = parsedChunk.message.usage as NeutralUsage
+								const usage = parsedChunk.message.usage
+								type ExtendedUsage = { cache_creation_input_tokens?: number; cache_read_input_tokens?: number }
+								const ext: ExtendedUsage = usage as ExtendedUsage
 								yield {
 									type: "usage",
 									inputTokens: usage?.input_tokens || 0,
 									outputTokens: usage?.output_tokens || 0,
-									cacheWriteTokens: usage?.cache_creation_input_tokens,
-									cacheReadTokens: usage?.cache_read_input_tokens,
+									cacheWriteTokens: ext.cache_creation_input_tokens,
+									cacheReadTokens: ext.cache_read_input_tokens,
 								} as ApiStreamChunk
 								break
 							}
@@ -202,8 +185,8 @@ export class NeutralAnthropicClient {
 							}
 							
 							default:
-								// Log unexpected chunk types
-								console.warn(`Unexpected chunk type encountered: ${parsedChunk.type}`)
+								// Avoid referencing discriminated union after exhaustive switch
+								console.warn("Unexpected chunk type encountered in stream")
 								break
 						}
 					} catch (error) {

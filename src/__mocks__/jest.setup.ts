@@ -77,3 +77,16 @@ wrapConsole('info')
 wrapConsole('warn')
 wrapConsole('error')
 wrapConsole('debug')
+
+// Propagate mock server base URLs from global port into env for provider clients
+(() => {
+	const g = globalThis as Record<string, unknown>
+	const port = g.__OLLAMA_PORT__ as number | undefined
+	if (port && typeof port === 'number') {
+		const base = `http://127.0.0.1:${port}`
+		process.env.OLLAMA_BASE_URL = base
+		process.env.OPENAI_BASE_URL = base
+		process.env.ANTHROPIC_BASE_URL = base
+		process.env.GEMINI_BASE_URL = base
+	}
+})()

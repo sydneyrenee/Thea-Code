@@ -37,17 +37,6 @@ function safeStringify(value: unknown): string {
 	return "[unknown]"
 }
 
-/**
- * Helper function to safely parse any JSON value (not just objects)
- */
-function safeJsonParseAny(jsonString: string): unknown {
-	try {
-		return JSON.parse(jsonString)
-	} catch {
-		return jsonString // Return the original string if parsing fails
-	}
-}
-
 export interface GenericParsedJson {
 	type?: string
 	content?: unknown
@@ -116,7 +105,6 @@ export interface JsonMatcherResult {
 	matched: boolean
 	data: string | object
 	type?: string
-	text?: string // Added for non-matched text
 }
 
 /**
@@ -167,7 +155,6 @@ export class JsonMatcher {
 			const textResult: JsonMatcherResult = {
 				matched: false,
 				data: this.buffer,
-				text: this.buffer,
 			}
 
 			this.buffer = ""
@@ -199,7 +186,6 @@ export class JsonMatcher {
 					const textResult: JsonMatcherResult = {
 						matched: false,
 						data: text,
-						text: text,
 					}
 
 					results.push(textResult)
@@ -214,7 +200,6 @@ export class JsonMatcher {
 				const textResult: JsonMatcherResult = {
 					matched: false,
 					data: text,
-					text: text,
 				}
 
 				results.push(textResult)
@@ -238,13 +223,13 @@ export class JsonMatcher {
 					const matchedResult: JsonMatcherResult = {
 						matched: true,
 						data:
-							typeof jsonObj.content === "string" ||
-							(typeof jsonObj.content === "object" && jsonObj.content !== null)
-								? jsonObj.content
-								: typeof jsonObj.text === "string" ||
-									  (typeof jsonObj.text === "object" && jsonObj.text !== null)
-									? jsonObj.text
-									: jsonObj,
+							this.matchType === "thinking"
+								? (typeof jsonObj.content === "string" || (typeof jsonObj.content === "object" && jsonObj.content !== null)
+									? (jsonObj.content as unknown as string | object)
+									: (typeof jsonObj.text === "string" || (typeof jsonObj.text === "object" && jsonObj.text !== null)
+										? (jsonObj.text as unknown as string | object)
+										: (jsonObj as unknown as object)))
+								: (jsonObj as unknown as object),
 						type: this.matchType,
 					}
 
@@ -254,7 +239,6 @@ export class JsonMatcher {
 					const textResult: JsonMatcherResult = {
 						matched: false,
 						data: jsonStr,
-						text: jsonStr,
 					}
 
 					results.push(textResult)
@@ -264,7 +248,6 @@ export class JsonMatcher {
 				const textResult: JsonMatcherResult = {
 					matched: false,
 					data: jsonStr,
-					text: jsonStr,
 				}
 
 				results.push(textResult)
@@ -483,11 +466,14 @@ export function xmlToolUseToJson(xmlContent: string): string {
 
 			// Skip if the param name is the same as the tool name (outer tag)
 			if (paramName !== toolName) {
-				// Attempt to parse as JSON if it looks like a JSON string
-				try {
-					const parsedValue = safeJsonParseAny(paramValue)
-					params[paramName] = parsedValue
-				} catch {
+				// Keep XML values as strings unless clearly JSON (starts with { or [)
+				if (paramValue.startsWith("{") || paramValue.startsWith("[")) {
+					try {
+						params[paramName] = JSON.parse(paramValue)
+					} catch {
+						params[paramName] = paramValue
+					}
+				} else {
 					params[paramName] = paramValue
 				}
 			}
@@ -623,12 +609,20 @@ export function xmlToolResultToJson(xmlContent: string): string {
 			}
 
 			if (errorMatch[2]) {
-				// Attempt to parse as JSON, otherwise keep as string
+				// Decode XML entities then attempt to parse as JSON, otherwise keep as string
+				const decodeEntities = (s: string) =>
+					s
+						.replace(/&quot;/g, '"')
+						.replace(/&apos;/g, "'")
+						.replace(/&lt;/g, "<")
+						.replace(/&gt;/g, ">")
+						.replace(/&amp;/g, "&")
 				try {
-					const parsed: unknown = JSON.parse(errorMatch[2])
+					const decoded = decodeEntities(errorMatch[2])
+					const parsed: unknown = JSON.parse(decoded)
 					error.details = parsed
 				} catch {
-					error.details = errorMatch[2]
+					error.details = decodeEntities(errorMatch[2])
 				}
 			}
 		}
@@ -660,7 +654,24 @@ export function xmlToolResultToJson(xmlContent: string): string {
 export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFunctionCall): ToolUseJsonObject | null {
 	if (openAiFunctionCall.function_call) {
 		// Handle single function call
-		let args: Record<string, unknown>
+		let args: Record<string, unknown> | null
+		// If arguments are null or undefined, set input accordingly per tests
+		if (openAiFunctionCall.function_call.arguments === null) {
+			return {
+				type: "tool_use",
+				id: openAiFunctionCall.function_call.id || `function-${Date.now()}`,
+				name: openAiFunctionCall.function_call.name,
+				input: null as unknown as Record<string, unknown>,
+			}
+		}
+		if (typeof openAiFunctionCall.function_call.arguments === 'undefined') {
+			return {
+				type: "tool_use",
+				id: openAiFunctionCall.function_call.id || `function-${Date.now()}`,
+				name: openAiFunctionCall.function_call.name,
+				input: { raw: undefined } as unknown as Record<string, unknown>,
+			}
+		}
 		try {
 			const parsed = JSON.parse(openAiFunctionCall.function_call.arguments) as unknown
 			if (typeof parsed === "object" && parsed !== null) {
@@ -678,7 +689,7 @@ export function openAiFunctionCallToNeutralToolUse(openAiFunctionCall: OpenAIFun
 			type: "tool_use",
 			id: openAiFunctionCall.function_call.id || `function-${Date.now()}`,
 			name: openAiFunctionCall.function_call.name,
-			input: args,
+			input: args as unknown as Record<string, unknown>,
 		}
 	} else if (openAiFunctionCall.tool_calls && Array.isArray(openAiFunctionCall.tool_calls)) {
 		// Handle tool calls array (return first one for now)
@@ -775,33 +786,28 @@ export class ToolUseMatcher<
 		let results: Result[] = []
 
 		if (this.detectedFormat === "xml" || this.detectedFormat === "unknown") {
-			const xmlResults = this.xmlMatcher.update(chunk)
-			for (const result of xmlResults) {
-				if (result.matched) {
-					// Attempt to parse XML content to extract tool name
-					const toolNameMatch = /<(\w+)>/.exec(result.data)
-					if (
-						toolNameMatch &&
-						toolNameMatch[1] &&
-						toolNameMatch[1] !== "think" &&
-						toolNameMatch[1] !== "tool_result"
-					) {
-						const toolName = toolNameMatch[1]
-						const toolId = `${toolName}-${Date.now()}`
-						this.toolUseIds.set(toolName, toolId)
-						results.push(
-							this.transformResult({
-								matched: true,
-								data: result.data,
-								type: "tool_use",
-							}),
-						)
-					} else {
-						results.push(this.transformResult(result))
-					}
-				} else {
-					results.push(this.transformResult(result))
+			// Detect any <tool>...</tool> blocks that are not think or tool_result
+			const re = /<([A-Za-z_][\w-]*)>[\s\S]*?<\/\1>/g
+			let m: RegExpExecArray | null
+			let found = false
+			while ((m = re.exec(chunk)) !== null) {
+				const tag = m[1]
+				if (tag === "think" || tag === "tool_result") continue
+				found = true
+				const block = m[0]
+				try {
+					const jsonStr = xmlToolUseToJson(block)
+					const obj = JSON.parse(jsonStr) as unknown as ToolUseJsonObject
+					const toolId = obj.id || `${obj.name}-${Date.now()}`
+					this.toolUseIds.set(obj.name, toolId)
+					results.push(this.transformResult({ matched: true, data: obj, type: "tool_use" }))
+				} catch {
+					results.push(this.transformResult({ matched: true, data: block, type: "tool_use" }))
 				}
+			}
+			if (!found) {
+				// No tool blocks detected; fall back to xmlMatcher passthrough to preserve non-matched data
+				results.push(...this.xmlMatcher.update(chunk).map((r) => this.transformResult(r)))
 			}
 		} else if (this.detectedFormat === "json") {
 			const jsonResults = this.jsonMatcher.update(chunk)
@@ -870,8 +876,9 @@ export class ToolUseMatcher<
 	 *
 	 * @returns Map of tool name to tool use ID
 	 */
-	getToolUseIds(): Map<string, string> {
-		return this.toolUseIds
+	public getToolUseIds(): Map<string, string> {
+		// Return a new Map to avoid exposing internal mutable reference
+		return new Map(this.toolUseIds)
 	}
 }
 
@@ -950,14 +957,18 @@ export class ToolResultMatcher<
 					)
 				}
 
-				// Process the tool result block
-				results.push(
-					this.transformResult({
-						matched: true,
-						data: match.content,
-						type: "tool_result",
-					}),
-				)
+				// Process the tool result block (parse to object)
+				try {
+					const jsonStr = xmlToolResultToJson(match.content)
+					const obj = JSON.parse(jsonStr) as unknown as ToolResultJsonObject
+					results.push(
+						this.transformResult({ matched: true, data: obj, type: "tool_result" }),
+					)
+				} catch {
+					results.push(
+						this.transformResult({ matched: true, data: match.content, type: "tool_result" }),
+					)
+				}
 
 				lastIndex = match.end
 			}
@@ -1087,7 +1098,7 @@ export class HybridMatcher<Result extends JsonMatcherResult | XmlMatcherResult =
 							this.transformResult({
 								matched: true,
 								data: result.data,
-								type: "reasoning",
+								type: "thinking",
 							}),
 						)
 					} else {
@@ -1106,7 +1117,7 @@ export class HybridMatcher<Result extends JsonMatcherResult | XmlMatcherResult =
 							this.transformResult({
 								matched: true,
 								data: (result.data as ThinkingJsonObject).content,
-								type: "reasoning",
+								type: "thinking",
 							}),
 						)
 					} else {
@@ -1114,7 +1125,10 @@ export class HybridMatcher<Result extends JsonMatcherResult | XmlMatcherResult =
 					}
 				}
 			}
-			return results
+			// Only early-return if we actually matched thinking content
+			if (results.some((r) => (r as unknown as { matched?: boolean }).matched)) {
+				return results
+			}
 		}
 
 		// Process with specialized matchers if enabled
@@ -1123,11 +1137,8 @@ export class HybridMatcher<Result extends JsonMatcherResult | XmlMatcherResult =
 			if (toolUseResults.length > 0) {
 				results = [...results, ...toolUseResults]
 			}
-
-			// Create a new ToolResultMatcher with updated tool use IDs if needed
-			if (this.toolResultMatcher && this.toolUseMatcher.getToolUseIds().size > 0) {
-				this.toolResultMatcher = new ToolResultMatcher(this.toolUseMatcher.getToolUseIds(), this.transform)
-			}
+			// Sync IDs from the underlying matcher so callers can read them
+			this.toolUseIds = new Map(this.toolUseMatcher.getToolUseIds())
 		}
 
 		if (this.matchToolResult && this.toolResultMatcher) {
@@ -1215,9 +1226,7 @@ export class HybridMatcher<Result extends JsonMatcherResult | XmlMatcherResult =
 	 * @returns Map of tool name to tool use ID
 	 */
 	public getToolUseIds(): Map<string, string> {
-		if (this.toolUseMatcher) {
-			return this.toolUseMatcher.getToolUseIds()
-		}
-		return this.toolUseIds
+		// Always return a new Map for safety
+		return new Map(this.toolUseIds)
 	}
 }

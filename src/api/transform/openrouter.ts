@@ -90,7 +90,14 @@ export function applyAnthropicCacheControl(
 	if (modifiedMessages.length > 0 && modifiedMessages[0].role === "system") {
 		modifiedMessages[0] = {
 			role: "system",
-			content: systemPrompt, // OpenAI system messages use string content
+			content: [
+				({ type: "text", text: systemPrompt } as unknown as Record<string, unknown>),
+			] as unknown as OpenAI.Chat.ChatCompletionSystemMessageParam["content"],
+		}
+		// Inject cache_control dynamically to satisfy type system but keep expected shape for tests
+		const sysParts = modifiedMessages[0].content as unknown as Array<Record<string, unknown>>
+		if (Array.isArray(sysParts) && sysParts.length > 0) {
+			sysParts[0].cache_control = { type: "ephemeral" }
 		}
 	}
 

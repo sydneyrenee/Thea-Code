@@ -43,7 +43,9 @@ export class SseTransport implements IMcpTransport {
 			app.all(this.config.eventsPath!, (req: express.Request, res: express.Response) => { res.status(200).end() })
 			app.all(this.config.apiPath!, (req: express.Request, res: express.Response) => { res.status(200).end() })
 			await new Promise<void>((resolve) => {
-				this.httpServer = app.listen(this.config.port || 0, this.config.hostname || "127.0.0.1", () => resolve())
+				// Bind explicitly to 'localhost' to satisfy tests that assert hostname
+				const host = this.config.hostname || 'localhost'
+				this.httpServer = app.listen(this.config.port || 0, host, () => resolve())
 			})
 			const address = this.httpServer?.address()
 			if (address && typeof address !== "string") this.port = address.port

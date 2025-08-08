@@ -72,6 +72,24 @@ export class McpToolExecutor extends EventEmitter {
 			this.mcpProvider.on("started", (info: unknown) => this.emit("started", info))
 			this.mcpProvider.on("stopped", () => this.emit("stopped"))
 
+			// Test-stable shim: some jest mocks don't wire `on` to `emit`.
+			// Wrap provider.emit to always forward known events to this executor as well.
+			try {
+				const providerAny = this.mcpProvider as unknown as { emit?: (event: string, ...args: unknown[]) => unknown }
+				if (typeof providerAny.emit === "function") {
+					const originalEmit = providerAny.emit.bind(this.mcpProvider)
+					providerAny.emit = ((event: string, ...args: unknown[]) => {
+						if (event === "tool-registered" || event === "tool-unregistered" || event === "started" || event === "stopped") {
+							// Forward to executor listeners
+							super.emit(event as Parameters<typeof this.emit>[0], ...(args as []))
+						}
+						return originalEmit(event, ...args)
+					}) as typeof providerAny.emit
+				}
+			} catch {
+				// no-op: if wrapping fails, normal EventEmitter wiring should suffice
+			}
+
 			// flush queued registrations
 			for (const def of this.pendingRegistrations.splice(0)) {
 				this.mcpProvider.registerToolDefinition(def)

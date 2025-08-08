@@ -110,6 +110,7 @@ describe("McpToolExecutor", () => {
 			await mcpToolSystem.initialize()
 
 			// Should not call start again
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mcpProvider.start).not.toHaveBeenCalled()
 		})
 	})
@@ -132,6 +133,7 @@ describe("McpToolExecutor", () => {
 
 			const { mcpProvider, toolRegistry } = mcpToolSystem as unknown as McpToolExecutorInternal
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mcpProvider.registerToolDefinition).toHaveBeenCalledWith(toolDefinition)
 			expect(toolRegistry.registerTool).toHaveBeenCalledWith(toolDefinition)
 		})
@@ -143,6 +145,7 @@ describe("McpToolExecutor", () => {
 
 			const { mcpProvider, toolRegistry } = mcpToolSystem as unknown as McpToolExecutorInternal
 
+			// eslint-disable-next-line @typescript-eslint/unbound-method
 			expect(mcpProvider.unregisterTool).toHaveBeenCalledWith("test_tool")
 			expect(toolRegistry.unregisterTool).toHaveBeenCalledWith("test_tool")
 			expect(result).toBe(true)
@@ -320,12 +323,13 @@ describe("McpToolRouter", () => {
 
 		it("should route XML tool use requests", async () => {
 			// Mock the McpToolExecutor's executeToolFromNeutralFormat method
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const mockExecute = jest.fn().mockResolvedValue({
 				type: "tool_result",
 				tool_use_id: "test-123",
 				content: [{ type: "text", text: "Test result" }],
 				status: "success",
-			})
+			}) as jest.Mock<Promise<NeutralToolResult>, [NeutralToolUseRequest], any>
 
 			;(
 				mcpToolRouter as unknown as McpToolRouterInternal
@@ -347,12 +351,13 @@ describe("McpToolRouter", () => {
 
 		it("should route JSON tool use requests", async () => {
 			// Mock the McpToolExecutor's executeToolFromNeutralFormat method
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const mockExecute = jest.fn().mockResolvedValue({
 				type: "tool_result",
 				tool_use_id: "test-123",
 				content: [{ type: "text", text: "Test result" }],
 				status: "success",
-			})
+			}) as jest.Mock<Promise<NeutralToolResult>, [NeutralToolUseRequest], any>
 
 			;(
 				mcpToolRouter as unknown as McpToolRouterInternal
@@ -387,7 +392,8 @@ describe("McpToolRouter", () => {
 
 		it("should handle errors in tool routing", async () => {
 			// Mock the McpToolExecutor's executeToolFromNeutralFormat method to throw an error
-			const mockExecute = jest.fn().mockRejectedValue(new Error("Test error"))
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const mockExecute = jest.fn().mockRejectedValue(new Error("Test error")) as jest.Mock<Promise<NeutralToolResult>, [NeutralToolUseRequest], any>
 
 			;(
 				mcpToolRouter as unknown as McpToolRouterInternal

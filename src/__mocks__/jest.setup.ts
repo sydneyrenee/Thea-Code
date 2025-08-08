@@ -77,5 +77,6 @@ console.debug = (...args: unknown[]) => { if (shouldAllowLog()) { try { original
 		process.env.OLLAMA_BASE_URL = base
 		process.env.ANTHROPIC_BASE_URL = base
 		process.env.GEMINI_BASE_URL = base
+		process.env.OPENAI_BASE_URL = base
 	}
 })()

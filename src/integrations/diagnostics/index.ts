@@ -69,8 +69,52 @@ export function getNewDiagnostics(
 // // File: /path/to/file3.ts
 // // - New error in file3 (1:1)
 
-// Create a persistent document cache at module level
-const documentCache = new Map<string, vscode.TextDocument>()
+// Create a persistent document cache at module level with TTL support
+interface CachedDocument {
+	document: vscode.TextDocument
+	timestamp: number
+}
+
+const documentCache = new Map<string, CachedDocument>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes TTL
+const MAX_CACHE_SIZE = 100 // Maximum number of cached documents
+
+/**
+ * Clean up expired entries from the document cache
+ */
+function cleanupDocumentCache(): void {
+	const now = Date.now()
+	const entriesToDelete: string[] = []
+	
+	for (const [key, value] of documentCache.entries()) {
+		if (now - value.timestamp > CACHE_TTL) {
+			entriesToDelete.push(key)
+		}
+	}
+	
+	for (const key of entriesToDelete) {
+		documentCache.delete(key)
+	}
+	
+	// If cache is still too large, remove oldest entries
+	if (documentCache.size > MAX_CACHE_SIZE) {
+		const sortedEntries = Array.from(documentCache.entries())
+			.sort((a, b) => a[1].timestamp - b[1].timestamp)
+		
+		const entriesToRemove = sortedEntries.slice(0, documentCache.size - MAX_CACHE_SIZE)
+		for (const [key] of entriesToRemove) {
+			documentCache.delete(key)
+		}
+	}
+}
+
+/**
+ * Clear all entries from the document cache
+ * This should be called when the extension is deactivated or during cleanup
+ */
+export function clearDocumentCache(): void {
+	documentCache.clear()
+}
 
 /**
  * Converts diagnostics to a formatted string representation of problems
@@ -85,19 +129,31 @@ export async function diagnosticsToProblemsString(
 	severities: vscode.DiagnosticSeverity[],
 	cwd: string,
 ): Promise<string> {
+	// Clean up expired cache entries periodically
+	cleanupDocumentCache()
+	
 	// Pre-load all documents in parallel before processing diagnostics
 	const documentPromises = new Map<string, Promise<vscode.TextDocument>>()
+	const now = Date.now()
 	
 	// First pass: collect all unique URIs that need documents
 	for (const [uri, fileDiagnostics] of diagnostics) {
 		const problems = fileDiagnostics.filter((d) => severities.includes(d.severity))
 		if (problems.length > 0) {
 			const uriString = uri.toString()
-			if (!documentCache.has(uriString) && !documentPromises.has(uriString)) {
+			const cachedEntry = documentCache.get(uriString)
+			
+			// Check if we have a valid cached document
+			if (cachedEntry && (now - cachedEntry.timestamp) < CACHE_TTL) {
+				// Document is cached and still valid, skip loading
+				continue
+			}
+			
+			if (!documentPromises.has(uriString)) {
 				// Create a properly typed promise with error handling
-				const docPromise = vscode.workspace.openTextDocument(uri)
+				const docPromise: Promise<vscode.TextDocument | null> = vscode.workspace.openTextDocument(uri)
 					.then(doc => doc)
-					.catch(e => {
+					.catch((e: unknown) => {
 						// Safely access error properties with type checking
 						const errorMessage = e instanceof Error ? e.message : String(e)
 						console.warn(`Failed to open document ${uriString}: ${errorMessage}`)
@@ -112,11 +168,16 @@ export async function diagnosticsToProblemsString(
 	// Wait for all documents to load in parallel
 	await Promise.all([...documentPromises.values()])
 	
-	// Store successfully loaded documents in the cache
+	// Store successfully loaded documents in the cache with timestamp
 	for (const [uriString, promise] of documentPromises.entries()) {
 		// No try/catch needed here since errors are already handled in the promise chain
 		const doc = await promise
-		if (doc) documentCache.set(uriString, doc)
+		if (doc) {
+			documentCache.set(uriString, {
+				document: doc,
+				timestamp: now
+			})
+		}
 	}
 	
 	// Process diagnostics with loaded documents
@@ -153,22 +214,24 @@ export async function diagnosticsToProblemsString(
 				
 				try {
 					const uriString = uri.toString()
-					const document = documentCache.get(uriString)
+					const cachedEntry = documentCache.get(uriString)
 					
-					if (!document) {
+					if (!cachedEntry || !cachedEntry.document) {
 						// Skip this diagnostic if document couldn't be loaded
 						resultParts.push(`\n- [${source}${label}] ${line} | <document unavailable> : ${diagnostic.message}`)
 						continue
 					}
 					
+					const document = cachedEntry.document
+					
 					try {
 						const lineContent = document.lineAt(diagnostic.range.start.line).text
 						resultParts.push(`\n- [${source}${label}] ${line} | ${lineContent} : ${diagnostic.message}`)
-					} catch (lineError) {
+					} catch {
 						// Handle case where line doesn't exist in document
 						resultParts.push(`\n- [${source}${label}] ${line} | <line content unavailable> : ${diagnostic.message}`)
 					}
-				} catch (error) {
+				} catch {
 					// Provide a fallback when document access fails
 					resultParts.push(`\n- [${source}${label}] ${line} | <error accessing content> : ${diagnostic.message}`)
 				}

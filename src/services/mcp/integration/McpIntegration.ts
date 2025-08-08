@@ -48,6 +48,7 @@ export class McpIntegration extends EventEmitter {
 	private mcpToolSystem: McpToolExecutor
 	private isInitialized: boolean = false
 	private sseConfig?: SseTransportConfig
+	private eventHandlers: Map<string, (...args: any[]) => void> = new Map()
 
 	/**
 	 * Get the singleton instance of the McpIntegration
@@ -73,11 +74,23 @@ export class McpIntegration extends EventEmitter {
 		this.mcpToolRouter = McpToolRouter.getInstance(config)
 		this.mcpToolSystem = McpToolExecutor.getInstance()
 
+		// Create event handlers and store them for cleanup
+		const toolRegisteredHandler = (name: string) => this.emit("tool-registered", name)
+		const toolUnregisteredHandler = (name: string) => this.emit("tool-unregistered", name)
+		const startedHandler = (info: unknown) => this.emit("started", info)
+		const stoppedHandler = () => this.emit("stopped")
+
+		// Store handlers for cleanup
+		this.eventHandlers.set("tool-registered", toolRegisteredHandler)
+		this.eventHandlers.set("tool-unregistered", toolUnregisteredHandler)
+		this.eventHandlers.set("started", startedHandler)
+		this.eventHandlers.set("stopped", stoppedHandler)
+
 		// Forward events from the MCP tool router
-		this.mcpToolRouter.on("tool-registered", (name: string) => this.emit("tool-registered", name))
-		this.mcpToolRouter.on("tool-unregistered", (name: string) => this.emit("tool-unregistered", name))
-		this.mcpToolRouter.on("started", (info: unknown) => this.emit("started", info))
-		this.mcpToolRouter.on("stopped", () => this.emit("stopped"))
+		this.mcpToolRouter.on("tool-registered", toolRegisteredHandler)
+		this.mcpToolRouter.on("tool-unregistered", toolUnregisteredHandler)
+		this.mcpToolRouter.on("started", startedHandler)
+		this.mcpToolRouter.on("stopped", stoppedHandler)
 	}
 
 	/** Check whether the integration has been initialized. */
@@ -99,12 +112,21 @@ export class McpIntegration extends EventEmitter {
 	}
 
 	/**
-	 * Shutdown the MCP integration
+	 * Shutdown the MCP integration and clean up resources
 	 */
 	public async shutdown(): Promise<void> {
 		if (!this.isInitialized) {
 			return
 		}
+
+		// Remove all event listeners to prevent memory leaks
+		for (const [eventName, handler] of this.eventHandlers.entries()) {
+			this.mcpToolRouter.removeListener(eventName, handler)
+		}
+		this.eventHandlers.clear()
+
+		// Remove all listeners from this instance
+		this.removeAllListeners()
 
 		// Shutdown the MCP tool router
 		await this.mcpToolRouter.shutdown()
@@ -200,6 +222,17 @@ export class McpIntegration extends EventEmitter {
 	 */
 	public getServerUrl(): URL | undefined {
 		return this.mcpToolSystem.getServerUrl()
+	}
+
+	/**
+	 * Dispose of the singleton instance and clean up all resources
+	 * This should be called when the application is shutting down
+	 */
+	public static async dispose(): Promise<void> {
+		if (McpIntegration.instance) {
+			await McpIntegration.instance.shutdown()
+			McpIntegration.instance = undefined as any
+		}
 	}
 }
 

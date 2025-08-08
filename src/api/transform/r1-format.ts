@@ -33,7 +33,7 @@ export function convertToR1Format(neutralHistory: NeutralConversationHistory): M
 				} else if (part.type === "image_url") {
 					hasImages = true
 					// Type assertion is safe here since we checked part.type === "image_url"
-					imageParts.push(part as ContentPartImage)
+					imageParts.push(part)
 				}
 			})
 

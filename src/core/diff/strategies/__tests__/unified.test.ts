@@ -8,7 +8,7 @@ describe("UnifiedDiffStrategy", () => {
 	})
 
 	describe("getToolDescription", () => {
-		it("should return tool description with correct cwd", async () => {
+		it("should return tool description with correct cwd", () => {
 			const cwd = "/test/path"
 			const description = strategy.getToolDescription({ cwd })
 

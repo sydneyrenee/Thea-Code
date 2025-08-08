@@ -466,14 +466,24 @@ export function xmlToolUseToJson(xmlContent: string): string {
 
 			// Skip if the param name is the same as the tool name (outer tag)
 			if (paramName !== toolName) {
-				// Keep XML values as strings unless clearly JSON (starts with { or [)
+				// Try to parse values as their appropriate types
 				if (paramValue.startsWith("{") || paramValue.startsWith("[")) {
 					try {
 						params[paramName] = JSON.parse(paramValue)
 					} catch {
 						params[paramName] = paramValue
 					}
+				} else if (paramValue === "true" || paramValue === "false") {
+					// Parse boolean values
+					params[paramName] = paramValue === "true"
+				} else if (/^-?\d+$/.test(paramValue)) {
+					// Parse integer values
+					params[paramName] = parseInt(paramValue, 10)
+				} else if (/^-?\d+\.\d+$/.test(paramValue)) {
+					// Parse float values
+					params[paramName] = parseFloat(paramValue)
 				} else {
+					// Keep as string
 					params[paramName] = paramValue
 				}
 			}

@@ -366,6 +366,7 @@
     "fzf": "^0.5.2",
     "get-folder-size": "^5.0.0",
     "globby": "^14.1.0",
+    "google-auth-library": "^10.2.1",
     "i18next": "^25.2.1",
     "isbinaryfile": "^5.0.4",
     "js-tiktoken": "^1.0.20",

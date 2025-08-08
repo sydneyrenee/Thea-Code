@@ -1,3 +1,4 @@
+import { GoogleAuth } from "google-auth-library";
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history";
 import {
   convertToVertexClaudeHistory,
@@ -29,6 +30,9 @@ export class NeutralVertexClient {
   private keyFile?: string;
   private claudeBaseUrl: string;
   private geminiBaseUrl: string;
+  private auth: GoogleAuth;
+  private accessToken: string | null = null;
+  private tokenExpiry: number = 0;
 
   /**
    * Creates a new NeutralVertexClient
@@ -43,27 +47,53 @@ export class NeutralVertexClient {
     // Set base URLs for the Vertex AI API
     this.claudeBaseUrl = `https://${this.region}-aiplatform.googleapis.com/v1/projects/${this.projectId}/locations/${this.region}/publishers/anthropic/models`;
     this.geminiBaseUrl = `https://${this.region}-aiplatform.googleapis.com/v1/projects/${this.projectId}/locations/${this.region}/publishers/google/models`;
+    
+    // Initialize GoogleAuth with the provided credentials or keyFile
+    const authOptions: any = {
+      scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+    };
+    
+    if (this.credentials) {
+      authOptions.credentials = this.credentials;
+    } else if (this.keyFile) {
+      authOptions.keyFilename = this.keyFile;
+    }
+    // If neither credentials nor keyFile is provided, GoogleAuth will use
+    // Application Default Credentials (ADC)
+    
+    this.auth = new GoogleAuth(authOptions);
   }
 
   /**
    * Get authentication headers for the Vertex AI API
-   * This is a placeholder that would need to be implemented with actual Google Auth
    * @returns Authentication headers for API requests
    */
-  private getAuthHeaders(): Record<string, string> {
-    // In a real implementation, this would use the Google Auth library
-    // to generate authentication tokens based on credentials or keyFile
-    
-    // For now, return a placeholder that would be replaced in the actual implementation
-    // with code that generates valid authentication tokens
-    
-    // This is just a placeholder - the actual implementation would need to:
-    // 1. Use the credentials or keyFile to authenticate with Google
-    // 2. Generate an access token
-    // 3. Return the token in the Authorization header
+  private async getAuthHeaders(): Promise<Record<string, string>> {
+    // Check if we have a valid cached token
+    const now = Date.now();
+    if (!this.accessToken || now >= this.tokenExpiry) {
+      try {
+        // Get a new access token
+        const client = await this.auth.getClient();
+        const tokenResponse = await client.getAccessToken();
+        
+        if (!tokenResponse.token) {
+          throw new Error("Failed to obtain access token from Google Auth");
+        }
+        
+        this.accessToken = tokenResponse.token;
+        // Set token expiry to 5 minutes before actual expiry for safety
+        // If no expiry is provided, default to 55 minutes (tokens typically last 1 hour)
+        const expiryTime = tokenResponse.res?.data?.expiry_date || (now + 55 * 60 * 1000);
+        this.tokenExpiry = expiryTime - (5 * 60 * 1000);
+      } catch (error) {
+        console.error("Error obtaining Google Auth token:", error);
+        throw new Error(`Failed to authenticate with Google Cloud: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
     
     return {
-      "Authorization": "Bearer TOKEN_PLACEHOLDER",
+      "Authorization": `Bearer ${this.accessToken}`,
       "Content-Type": "application/json",
     };
   }
@@ -103,7 +133,7 @@ export class NeutralVertexClient {
     
     try {
       // Get authentication headers
-      const headers = this.getAuthHeaders();
+      const headers = await this.getAuthHeaders();
       
       // Make the API request
       const response = await fetch(`${this.claudeBaseUrl}/${model}:generateContent`, {
@@ -168,7 +198,7 @@ export class NeutralVertexClient {
                   };
                 } else if (contentBlock?.type === "thinking" && contentBlock.thinking) {
                   yield {
-                    type: "thinking",
+                    type: "reasoning",
                     text: contentBlock.thinking,
                   };
                 } else if (contentBlock?.type === "tool_use" && contentBlock.name) {
@@ -192,7 +222,7 @@ export class NeutralVertexClient {
                   };
                 } else if (delta?.type === "thinking_delta" && delta.thinking) {
                   yield {
-                    type: "thinking",
+                    type: "reasoning",
                     text: delta.thinking,
                   };
                 }
@@ -246,7 +276,7 @@ export class NeutralVertexClient {
       };
       
       // Get authentication headers
-      const headers = this.getAuthHeaders();
+      const headers = await this.getAuthHeaders();
       
       // Make the API request
       const response = await fetch(`${this.claudeBaseUrl}/${model}:generateContent`, {
@@ -297,7 +327,7 @@ export class NeutralVertexClient {
     
     try {
       // Get authentication headers
-      const headers = this.getAuthHeaders();
+      const headers = await this.getAuthHeaders();
       
       // Make the API request
       const response = await fetch(`${this.geminiBaseUrl}/${model}:generateContent`, {
@@ -410,7 +440,7 @@ export class NeutralVertexClient {
       };
       
       // Get authentication headers
-      const headers = this.getAuthHeaders();
+      const headers = await this.getAuthHeaders();
       
       // Make the API request
       const response = await fetch(`${this.geminiBaseUrl}/${model}:generateContent`, {

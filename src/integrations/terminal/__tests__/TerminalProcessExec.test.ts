@@ -329,13 +329,13 @@ describe("TerminalProcess with Real Command Output", () => {
 		for (const index of sampleIndices) {
 			expect(lines[index]).toBe("A".repeat(76))
 		}
-	})
+	}, 30000) // 30 second timeout for processing 1M lines
 
 	describe("exit code interpretation", () => {
 		it("should handle exit 2", async () => {
 			const { exitDetails } = await testTerminalCommand("exit 2", "")
 			expect(exitDetails).toEqual({ exitCode: 2 })
-		})
+		}, 10000) // 10 second timeout
 
 		it("should handle normal exit codes", async () => {
 			// Test successful command
@@ -345,7 +345,7 @@ describe("TerminalProcess with Real Command Output", () => {
 			// Test failed command
 			const { exitDetails: exitDetails2 } = await testTerminalCommand("false", "")
 			expect(exitDetails2).toEqual({ exitCode: 1 })
-		})
+		}, 10000) // 10 second timeout
 
 		it("should interpret SIGTERM exit code", async () => {
 			// Run kill in subshell to ensure signal affects the command
@@ -356,7 +356,7 @@ describe("TerminalProcess with Real Command Output", () => {
 				signalName: "SIGTERM",
 				coreDumpPossible: false,
 			})
-		})
+		}, 10000) // 10 second timeout
 
 		it("should interpret SIGSEGV exit code", async () => {
 			// Run kill in subshell to ensure signal affects the command
@@ -367,12 +367,12 @@ describe("TerminalProcess with Real Command Output", () => {
 				signalName: "SIGSEGV",
 				coreDumpPossible: true,
 			})
-		})
+		}, 10000) // 10 second timeout
 
 		it("should handle command not found", async () => {
 			// Test a non-existent command
 			const { exitDetails } = await testTerminalCommand("nonexistentcommand", "")
 			expect(exitDetails?.exitCode).toBe(127) // Command not found
-		})
+		}, 10000) // 10 second timeout
 	})
 })

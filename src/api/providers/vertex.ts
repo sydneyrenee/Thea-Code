@@ -1,49 +1,13 @@
-import { VertexAI } from "@google-cloud/vertexai"
-import { supportsPromptCaching } from "../../utils/model-capabilities" // Import capability detection functions
 import { getBaseModelId, isThinkingModel } from "../../utils/model-pattern-detection" // Import pattern detection functions
 import { NeutralVertexClient } from "../../services/vertex" // Import the NeutralVertexClient
-
-// Define neutral types to replace SDK dependencies
-interface MessageContentBlock {
-  type: "text" | "image" | "tool_use" | "tool_result"
-  text?: string
-  cache_control?: { type: "ephemeral" }
-  [key: string]: unknown
-}
-
-interface MessageParam {
-  role: "user" | "assistant"
-  content: string | MessageContentBlock[]
-}
-
-interface MessageCreateParams {
-  model: string
-  max_tokens: number
-  temperature: number
-  system: string | MessageContentBlock[]
-  messages: MessageParam[]
-  stream: boolean
-  [key: string]: unknown
-}
-
-interface MessageCreateParamsNonStreaming extends Omit<MessageCreateParams, "stream"> {
-  stream: false
-}
 
 import { ApiHandlerOptions, ModelInfo, vertexDefaultModelId, VertexModelId, vertexModels } from "../../shared/api"
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history"
 import { ApiStream } from "../transform/stream"
-import {
-	convertToVertexGeminiHistory,
-	convertToVertexClaudeHistory,
-	formatMessageForCache,
-} from "../transform/neutral-vertex-format"
 import { BaseProvider } from "./base-provider"
 
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants"
 import { getModelParams, SingleCompletionHandler } from "../"
-import { GoogleAuth } from "google-auth-library"
-
 // Types for Vertex SDK
 
 /**
@@ -59,54 +23,6 @@ import { GoogleAuth } from "google-auth-library"
  * This ensures we stay under the 4-block limit while maintaining effective caching
  * for the most relevant context.
  */
-
-interface VertexUsage {
-	input_tokens?: number
-	output_tokens?: number
-	cache_creation_input_tokens?: number
-	cache_read_input_tokens?: number
-}
-
-// This type is used for type checking in the anthropic.messages.create calls
-
-interface VertexMessageResponse {
-	content: Array<{ type: "text"; text: string }>
-}
-
-interface VertexMessageStreamEvent {
-	type: "message_start" | "message_delta" | "content_block_start" | "content_block_delta"
-	message?: {
-		usage: VertexUsage
-	}
-	usage?: {
-		output_tokens: number
-	}
-	content_block?:
-		| {
-				type: "text"
-				text: string
-		  }
-		| {
-				type: "thinking"
-				thinking: string
-		  }
-		| {
-				type: "tool_use"
-				id: string
-				name: string
-				input: Record<string, unknown>
-		  }
-	index?: number
-	delta?:
-		| {
-				type: "text_delta"
-				text: string
-		  }
-		| {
-				type: "thinking_delta"
-				thinking: string
-		  }
-}
 
 // https://docs.anthropic.com/en/api/claude-on-vertex-ai
 /**
@@ -129,7 +45,6 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 	protected options: ApiHandlerOptions
 	private neutralVertexClient: NeutralVertexClient
-	private geminiClient: VertexAI
 	private modelType: string
 
 	constructor(options: ApiHandlerOptions) {
@@ -158,82 +73,42 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 		}
 		
 		this.neutralVertexClient = new NeutralVertexClient(clientOptions)
-
-		// Initialize the Gemini client (still using the SDK for now)
-		if (this.options.vertexJsonCredentials) {
-			this.geminiClient = new VertexAI({
-				project: this.options.vertexProjectId ?? "not-provided",
-				location: this.options.vertexRegion ?? "us-east5",
-				googleAuthOptions: {
-					credentials: JSON.parse(this.options.vertexJsonCredentials) as Record<string, unknown>,
-				},
-			})
-		} else if (this.options.vertexKeyFile) {
-			this.geminiClient = new VertexAI({
-				project: this.options.vertexProjectId ?? "not-provided",
-				location: this.options.vertexRegion ?? "us-east5",
-				googleAuthOptions: {
-					keyFile: this.options.vertexKeyFile,
-				},
-			})
-		} else {
-			this.geminiClient = new VertexAI({
-				project: this.options.vertexProjectId ?? "not-provided",
-				location: this.options.vertexRegion ?? "us-east5",
-			})
-		}
 	}
 
 	private async *createGeminiMessage(systemPrompt: string, messages: NeutralConversationHistory): ApiStream {
-		const model = this.geminiClient.getGenerativeModel({
-			model: this.getModel().id,
-			systemInstruction: systemPrompt,
+		const modelInfo = this.getModel()
+		const { id, temperature, maxTokens } = modelInfo
+		
+		// Use the NeutralVertexClient to create a Gemini message
+		const stream = this.neutralVertexClient.createGeminiMessage({
+			model: id,
+			systemPrompt,
+			messages,
+			maxTokens: maxTokens ?? undefined,
+			temperature,
 		})
+		
+		for await (const chunk of stream) {
+			// Handle tool use responses
+			if (chunk.type === "tool_use") {
+				const toolResult = await this.processToolUse({
+					name: chunk.name,
+					input: chunk.input,
+					id: chunk.id,
+				})
 
-		const result = await model.generateContentStream({
-			contents: convertToVertexGeminiHistory(messages),
-			generationConfig: {
-				maxOutputTokens: this.getModel().info.maxTokens ?? undefined,
-				temperature: this.options.modelTemperature ?? 0,
-			},
-		})
+				const toolResultString =
+					typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
 
-		for await (const chunk of result.stream) {
-			if (chunk.candidates?.[0]?.content?.parts) {
-				for (const part of chunk.candidates[0].content.parts) {
-					if (part.text) {
-						yield {
-							type: "text",
-							text: part.text,
-						}
-					}
-					// Handle tool use in Gemini format
-					if (part.functionCall) {
-						const toolResult = await this.processToolUse({
-							name: part.functionCall.name,
-							input: part.functionCall.args,
-							id: `${part.functionCall.name}-${Date.now()}`,
-						})
-
-						const toolResultString =
-							typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
-
-						yield {
-							type: "tool_result",
-							id: `${part.functionCall.name}-${Date.now()}`,
-							content: toolResultString,
-						}
-					}
+				yield {
+					type: "tool_result",
+					id: chunk.id,
+					content: toolResultString,
 				}
+			} else {
+				// Pass through other chunk types (text, usage, etc.)
+				yield chunk
 			}
-		}
-
-		const response = await result.response
-
-		yield {
-			type: "usage",
-			inputTokens: response.usageMetadata?.promptTokenCount ?? 0,
-			outputTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
 		}
 	}
 
@@ -261,7 +136,7 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 				break
 			}
 			case this.MODEL_GEMINI: {
-				// Gemini models use the Google Vertex AI client
+				// Gemini models use the NeutralVertexClient
 				yield* this.createGeminiMessage(systemPrompt, messages)
 				break
 			}
@@ -295,36 +170,15 @@ export class VertexHandler extends BaseProvider implements SingleCompletionHandl
 
 	private async completePromptGemini(prompt: string) {
 		try {
-			const model = this.geminiClient.getGenerativeModel({
-				model: this.getModel().id,
-			})
-
-			// Create a neutral history with a single message
-			const neutralHistory = [
-				{
-					role: "user" as const,
-					content: prompt,
-				},
-			]
-
-			// Convert the neutral history to Vertex Gemini format
-			const geminiMessages = convertToVertexGeminiHistory(neutralHistory)
-
-			const result = await model.generateContent({
-				contents: geminiMessages,
-				generationConfig: {
-					temperature: this.options.modelTemperature ?? 0,
-				},
-			})
-
-			let text = ""
-			result.response.candidates?.forEach((candidate) => {
-				candidate.content.parts.forEach((part) => {
-					text += part.text
-				})
-			})
-
-			return text
+			const { id, temperature, maxTokens } = this.getModel()
+			
+			// Use the NeutralVertexClient to complete a Gemini prompt
+			return await this.neutralVertexClient.completeGeminiPrompt(
+				prompt,
+				id,
+				maxTokens ?? undefined,
+				temperature
+			)
 		} catch (error) {
 			if (error instanceof Error) {
 				throw new Error(`Vertex completion error: ${error.message}`)

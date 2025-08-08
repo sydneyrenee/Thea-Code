@@ -13,7 +13,7 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 		})
 
-		it("validates multiple correct marker sequences", async () => {
+		it("validates multiple correct marker sequences", () => {
 
 			const diff =
 				"<<<<<<< SEARCH\n" +
@@ -29,7 +29,7 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 			expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 		})
 
-		it("detects separator before search", async () => {
+		it("detects separator before search", () => {
 
 			const diff = "=======\n" + "content\n" + ">>>>>>> REPLACE"
 			const result = strategy["validateMarkerSequencing"](diff)
@@ -37,7 +37,7 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 			expect(result.error).toContain("'=======' found in your diff content")
 		})
 
-		it("detects replace before separator", async () => {
+		it("detects replace before separator", () => {
 
 			const diff = "<<<<<<< SEARCH\n" + "content\n" + ">>>>>>> REPLACE"
 			const result = strategy["validateMarkerSequencing"](diff)
@@ -45,7 +45,7 @@ describe("MultiSearchReplaceDiffStrategy", () => {
 			expect(result.error).toContain("'>>>>>>> REPLACE' found in your diff content")
 		})
 
-		it("detects incomplete sequence", async () => {
+		it("detects incomplete sequence", () => {
 
 			const diff = "<<<<<<< SEARCH\n" + "content\n" + "=======\n" + "new content"
 			const result = strategy["validateMarkerSequencing"](diff)
@@ -836,7 +836,7 @@ function five() {
 					}
 				})
 
-				it("detects search marker when expecting replace", async () => {
+				it("detects search marker when expecting replace", () => {
 
 					const diff = "<<<<<<< SEARCH\n" + "content\n" + "=======\n" + "new content\n" + "<<<<<<< SEARCH"
 					const result = strategy["validateMarkerSequencing"](diff)
@@ -844,7 +844,7 @@ function five() {
 					expect(result.error).toContain("'<<<<<<< SEARCH' found in your diff content")
 				})
 
-				it("allows escaped search marker in content", async () => {
+				it("allows escaped search marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -858,7 +858,7 @@ function five() {
 					expect(result.success).toBe(true)
 				})
 
-				it("allows escaped separator in content", async () => {
+				it("allows escaped separator in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1072,7 +1072,7 @@ function five() {
 					}
 				})
 
-				it("allows escaped search marker in content", async () => {
+				it("allows escaped search marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1085,7 +1085,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped separator in content", async () => {
+				it("allows escaped separator in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1098,7 +1098,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped search marker in content", async () => {
+				it("allows escaped search marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1111,7 +1111,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped search marker in content", async () => {
+				it("allows escaped search marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1124,7 +1124,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped separator in content", async () => {
+				it("allows escaped separator in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1137,7 +1137,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped replace marker in content", async () => {
+				it("allows escaped replace marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1150,7 +1150,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped separator in content", async () => {
+				it("allows escaped separator in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1163,7 +1163,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped replace marker in content", async () => {
+				it("allows escaped replace marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1176,7 +1176,7 @@ function five() {
 					expect(strategy["validateMarkerSequencing"](diff).success).toBe(true)
 				})
 
-				it("allows escaped replace marker in content", async () => {
+				it("allows escaped replace marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1388,7 +1388,7 @@ function five() {
 					}
 				})
 
-				it("allows escaped replace marker in content", async () => {
+				it("allows escaped replace marker in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1402,7 +1402,7 @@ function five() {
 					expect(result.success).toBe(true)
 				})
 
-				it("allows multiple escaped markers in content", async () => {
+				it("allows multiple escaped markers in content", () => {
 
 					const diff =
 						"<<<<<<< SEARCH\n" +
@@ -1416,7 +1416,7 @@ function five() {
 					expect(result.success).toBe(true)
 				})
 
-				it("detects separator when expecting replace", async () => {
+				it("detects separator when expecting replace", () => {
 
 					const diff = "<<<<<<< SEARCH\n" + "content\n" + "=======\n" + "new content\n" + "======="
 					const result = strategy["validateMarkerSequencing"](diff)
@@ -2238,14 +2238,14 @@ function two() {
 			strategy = new MultiSearchReplaceDiffStrategy()
 		})
 
-		it("should include the current working directory", async () => {
+		it("should include the current working directory", () => {
 
 			const cwd = "/test/dir"
 			const description = strategy.getToolDescription({ cwd })
 			expect(description).toContain(`relative to the current working directory ${cwd}`)
 		})
 
-		it("should include required format elements", async () => {
+		it("should include required format elements", () => {
 
 			const description = strategy.getToolDescription({ cwd: "/test" })
 			expect(description).toContain("<<<<<<< SEARCH")

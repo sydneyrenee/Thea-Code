@@ -187,10 +187,10 @@ describe("CustomModesManager", () => {
 			;(fs.writeFile as jest.Mock).mockImplementation(
 				(filePath: string, content: string) => {
 					if (filePath === mockSettingsPath) {
-						settingsContent = JSON.parse(content)
+						settingsContent = JSON.parse(content) as Record<string, unknown>
 					}
 					if (filePath === mockProjectModesPath) {
-						roomodesContent = JSON.parse(content)
+						roomodesContent = JSON.parse(content) as Record<string, unknown>
 					}
 					return Promise.resolve()
 				},

@@ -105,6 +105,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				files,
 				false,
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 				controller as any,
 				true,
 			)
@@ -155,6 +156,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				files,
 				false,
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 				controller as any,
 				false, // showTheaIgnoredFiles = false
 			)
@@ -187,6 +189,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				["file1.txt", "file2.txt"],
 				true, // didHitLimit = true
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 				controller as any,
 				true,
 			)
@@ -209,6 +212,7 @@ describe("TheaIgnore Response Formatting", () => {
 				TEST_CWD,
 				[],
 				false,
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 				controller as any,
 				true,
 			)

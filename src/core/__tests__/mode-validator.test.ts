@@ -125,6 +125,7 @@ describe("mode-validator", () => {
 
 	describe("validateToolUse", () => {
 		it("throws error for disallowed tools in architect mode", () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
 			expect(() => validateToolUse("unknown_tool" as any, "architect", [])).toThrow(
 				'Tool "unknown_tool" is not allowed in architect mode.',
 			)

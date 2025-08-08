@@ -109,14 +109,6 @@ function cleanupDocumentCache(): void {
 }
 
 /**
- * Clear all entries from the document cache
- * This should be called when the extension is deactivated or during cleanup
- */
-export function clearDocumentCache(): void {
-	documentCache.clear()
-}
-
-/**
  * Converts diagnostics to a formatted string representation of problems
  * 
  * @param diagnostics Array of diagnostics with their URIs

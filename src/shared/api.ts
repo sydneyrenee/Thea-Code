@@ -10,7 +10,7 @@ export type ApiConfiguration = ProviderSettings
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
 export type AnthropicModelId = keyof typeof anthropicModels
-export const anthropicDefaultModelId: AnthropicModelId = "claude-3-7-sonnet-20250219"
+export const anthropicDefaultModelId: AnthropicModelId = "" as AnthropicModelId
 export const anthropicModels = {
 	"claude-3-7-sonnet-20250219:thinking": {
 		maxTokens: 128_000,
@@ -103,7 +103,7 @@ export interface MessageContent {
 }
 
 export type BedrockModelId = keyof typeof bedrockModels
-export const bedrockDefaultModelId: BedrockModelId = "anthropic.claude-3-7-sonnet-20250219-v1:0"
+export const bedrockDefaultModelId: BedrockModelId = "" as BedrockModelId
 export const bedrockDefaultPromptRouterModelId: BedrockModelId = "anthropic.claude-3-sonnet-20240229-v1:0"
 
 // March, 12 2025 - updated prices to match US-West-2 list price shown at https://aws.amazon.com/bedrock/pricing/
@@ -403,7 +403,7 @@ export const bedrockModels = {
 
 // Glama
 // https://glama.ai/models
-export const glamaDefaultModelId = "anthropic/claude-3-7-sonnet"
+export const glamaDefaultModelId = ""
 export const glamaDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -420,7 +420,7 @@ export const glamaDefaultModelInfo: ModelInfo = {
 
 // Requesty
 // https://requesty.ai/router-2
-export const requestyDefaultModelId = "anthropic/claude-3-7-sonnet-latest"
+export const requestyDefaultModelId = ""
 export const requestyDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -437,7 +437,7 @@ export const requestyDefaultModelInfo: ModelInfo = {
 
 // OpenRouter
 // https://openrouter.ai/models?order=newest&supported_parameters=tools
-export const openRouterDefaultModelId = "anthropic/claude-3.7-sonnet"
+export const openRouterDefaultModelId = ""
 export const openRouterDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -455,7 +455,7 @@ export const openRouterDefaultModelInfo: ModelInfo = {
 // Vertex AI
 // https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude
 export type VertexModelId = keyof typeof vertexModels
-export const vertexDefaultModelId: VertexModelId = "claude-3-7-sonnet@20250219"
+export const vertexDefaultModelId: VertexModelId = "" as VertexModelId
 export const vertexModels = {
 	"gemini-2.0-flash-001": {
 		maxTokens: 8192,
@@ -602,7 +602,7 @@ export const openAiModelInfoSaneDefaults: ModelInfo = {
 // Gemini
 // https://ai.google.dev/gemini-api/docs/models/gemini
 export type GeminiModelId = keyof typeof geminiModels
-export const geminiDefaultModelId: GeminiModelId = "gemini-2.0-flash-001"
+export const geminiDefaultModelId: GeminiModelId = "" as GeminiModelId
 export const geminiModels = {
 	"gemini-2.5-pro-exp-03-25": {
 		maxTokens: 65_536,
@@ -713,7 +713,7 @@ export const geminiModels = {
 // OpenAI Native
 // https://openai.com/api/pricing/
 export type OpenAiNativeModelId = keyof typeof openAiNativeModels
-export const openAiNativeDefaultModelId: OpenAiNativeModelId = "gpt-4o"
+export const openAiNativeDefaultModelId: OpenAiNativeModelId = "" as OpenAiNativeModelId
 export const openAiNativeModels = {
 	// don't support tool use yet
 	"o3-mini": {
@@ -796,7 +796,7 @@ export const openAiNativeModels = {
 // DeepSeek
 // https://platform.deepseek.com/docs/api
 export type DeepSeekModelId = keyof typeof deepSeekModels
-export const deepSeekDefaultModelId: DeepSeekModelId = "deepseek-chat"
+export const deepSeekDefaultModelId: DeepSeekModelId = "" as DeepSeekModelId
 export const deepSeekModels = {
 	"deepseek-chat": {
 		maxTokens: 8192,
@@ -830,7 +830,7 @@ export const azureOpenAiDefaultApiVersion = "2024-08-01-preview"
 // Mistral
 // https://docs.mistral.ai/getting-started/models/models_overview/
 export type MistralModelId = keyof typeof mistralModels
-export const mistralDefaultModelId: MistralModelId = "codestral-latest"
+export const mistralDefaultModelId: MistralModelId = "" as MistralModelId
 export const mistralModels = {
 	"codestral-latest": {
 		maxTokens: 256_000,
@@ -883,7 +883,7 @@ export const mistralModels = {
 } as const satisfies Record<string, ModelInfo>
 
 // Unbound Security
-export const unboundDefaultModelId = "anthropic/claude-3-5-sonnet-20241022"
+export const unboundDefaultModelId = ""
 export const unboundDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,

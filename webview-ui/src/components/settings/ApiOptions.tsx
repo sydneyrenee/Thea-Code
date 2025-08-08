@@ -758,7 +758,7 @@ const ApiOptions = ({
 					<ModelPicker
 						apiConfiguration={apiConfiguration}
 						setApiConfigurationField={setApiConfigurationField}
-						defaultModelId="gpt-4o"
+						defaultModelId=""
 						defaultModelInfo={openAiModelInfoSaneDefaults}
 						models={openAiModels}
 						modelIdKey="openAiModelId"
@@ -1590,7 +1590,7 @@ const ApiOptions = ({
 				</>
 			)}
 
-			{!fromWelcomeView && (
+			{!fromWelcomeView && selectedModelInfo?.supportsTemperature !== false && (
 				<TemperatureControl
 					value={apiConfiguration?.modelTemperature}
 					onChange={handleInputChange("modelTemperature", noTransform)}
@@ -1612,9 +1612,14 @@ export function normalizeApiConfiguration(apiConfiguration?: ApiConfiguration) {
 		if (modelId && modelId in models) {
 			selectedModelId = modelId
 			selectedModelInfo = models[modelId]
-		} else {
+		} else if (defaultId && defaultId in models) {
 			selectedModelId = defaultId
 			selectedModelInfo = models[defaultId]
+		} else {
+			// If no default or default not found, use first available model
+			const modelKeys = Object.keys(models)
+			selectedModelId = modelKeys[0] || ""
+			selectedModelInfo = models[selectedModelId] || openAiModelInfoSaneDefaults
 		}
 
 		return { selectedProvider: provider, selectedModelId, selectedModelInfo }

@@ -74,7 +74,7 @@ const MAX_LINE_LENGTH = 500
  * @param maxLength The maximum allowed length (defaults to MAX_LINE_LENGTH)
  * @returns The truncated line, or the original line if it's shorter than maxLength
  */
-export function truncateLine(line: string, maxLength: number = MAX_LINE_LENGTH): string {
+function truncateLine(line: string, maxLength: number = MAX_LINE_LENGTH): string {
 	return line.length > maxLength ? line.substring(0, maxLength) + " [truncated...]" : line
 }
 /**

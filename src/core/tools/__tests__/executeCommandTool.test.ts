@@ -3,7 +3,12 @@
 import { describe, expect, it, jest, beforeEach } from "@jest/globals"
 import { executeCommandTool } from "../executeCommandTool"
 import { TheaTask } from "../../TheaTask" // Renamed import
-import { TheaIgnoreController } from "../../ignore/TheaIgnoreController"
+import type { TheaIgnoreController } from "../../ignore/TheaIgnoreController"
+import type { TaskWebviewCommunicator } from "../../TaskWebviewCommunicator"
+import type { TaskStateManager } from "../../TaskStateManager"
+jest.mock("../../ignore/TheaIgnoreController")
+import { TheaProvider } from "../../webview/TheaProvider"
+import type { TheaMessage } from "../../../shared/ExtensionMessage"
 import { ToolUse } from "../../assistant-message"
 import { formatResponse } from "../../prompts/responses"
 import { AskApproval, HandleError, PushToolResult, RemoveClosingTag } from "../types"
@@ -12,14 +17,20 @@ import { TheaAskResponse } from "../../../shared/WebviewMessage" // Import respo
 // Mock dependencies
 jest.mock("../../TheaTask") // Renamed mock
 jest.mock("../../prompts/responses")
+jest.mock("../../ignore/TheaIgnoreController")
 
 describe("executeCommandTool", () => {
 	// Setup common test variables
-	let mockTheaTask: jest.Mocked<Partial<TheaTask>> & {
+	let mockTheaTask: Partial<TheaTask> & {
 		consecutiveMistakeCount: number
 		didRejectTool: boolean
-		webviewCommunicator: { say: jest.Mock } // Add communicator mock
-		taskStateManager: { getTokenUsage: jest.Mock } // Add state manager mock for getTokenUsage if needed by other tests
+		webviewCommunicator: Partial<TaskWebviewCommunicator> & { say: jest.Mock }
+		taskStateManager: Partial<TaskStateManager> & { getTokenUsage: jest.Mock }
+		theaIgnoreController: Partial<TheaIgnoreController>
+		ask: jest.Mock
+		say: jest.Mock
+		sayAndCreateMissingParamError: jest.Mock
+		executeCommandTool: jest.Mock
 	}
 	let mockAskApproval: jest.Mock
 	let mockHandleError: jest.Mock
@@ -32,27 +43,37 @@ describe("executeCommandTool", () => {
 		jest.clearAllMocks()
 
 		// Create mock implementations with eslint directives to handle the type issues
-		mockTheaTask = {
-			// @ts-expect-error - Jest mock function type issues
-			ask: jest.fn().mockResolvedValue(undefined),
-			// @ts-expect-error - Jest mock function type issues
-			say: jest.fn().mockResolvedValue(undefined),
-			// @ts-expect-error - Jest mock function type issues
-			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error"),
-			// @ts-expect-error - Jest mock function type issues
-			executeCommandTool: jest.fn().mockResolvedValue([false, "Command executed"]),
+		mockTheaTask = ({
+			ask: jest.fn().mockResolvedValue(undefined as never),
+			say: jest.fn().mockResolvedValue(undefined as never),
+			sayAndCreateMissingParamError: jest.fn().mockResolvedValue("Missing parameter error" as never),
+			executeCommandTool: jest.fn().mockResolvedValue([false, "Command executed"] as never),
 			consecutiveMistakeCount: 0,
 			didRejectTool: false,
-			theaIgnoreController: {
-				validateCommand: jest.fn().mockReturnValue(null), // Simplified mock
-			} as Partial<TheaIgnoreController>, // Use proper partial type instead of any
+			theaIgnoreController: { 
+				validateCommand: jest.fn<(command: string) => string | undefined>().mockReturnValue(undefined),
+				validateAccess: jest.fn<(filePath: string) => boolean>().mockReturnValue(true),
+				filterPaths: jest.fn<(paths: string[]) => string[]>().mockImplementation((paths) => paths),
+				getInstructions: jest.fn<() => string | undefined>().mockReturnValue(undefined)
+			} as Partial<TheaIgnoreController>,
 			webviewCommunicator: {
-				// Add communicator mock setup
+				// minimal TaskWebviewCommunicator shape used by code
+				saveMessages: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+				isTaskAborted: jest.fn<() => boolean>().mockReturnValue(false),
+				taskId: "test-task-id",
+				instanceId: "test-instance-id",
+				onAskResponded: jest.fn(),
+				handleWebviewAskResponse: jest.fn().mockResolvedValue(undefined as never),
 				say: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
 				ask: jest
 					.fn<() => Promise<{ response: TheaAskResponse; text?: string; images?: string[] }>>()
 					.mockResolvedValue({ response: "yesButtonClicked" }),
-			} as unknown as { type: string }, // Cast partial mock to any
+				providerRef: new WeakRef({} as unknown as TheaProvider),
+				getMessages: jest.fn<() => TheaMessage[]>().mockReturnValue([]),
+				addMessage: jest.fn<(m: TheaMessage) => Promise<void>>().mockResolvedValue(undefined),
+				updateMessageUi: jest.fn<(m: TheaMessage) => Promise<void>>().mockResolvedValue(undefined),
+				// optional UI helpers are not required here
+			} as Partial<TaskWebviewCommunicator> & { say: jest.Mock },
 			taskStateManager: {
 				// Add state manager mock setup
 				getTokenUsage: jest
@@ -65,7 +86,25 @@ describe("executeCommandTool", () => {
 						}
 					>()
 					.mockReturnValue({ totalTokensIn: 0, totalTokensOut: 0, totalCost: 0, contextTokens: 0 }),
-			} as unknown as { type: string }, // Cast partial mock to any
+				providerRef: new WeakRef({} as unknown as TheaProvider),
+				taskId: "test",
+				taskNumber: 1,
+				apiConversationHistory: [],
+				setTaskState: jest.fn(),
+				updateLatestUiMessage: jest.fn(),
+				markTaskComplete: jest.fn(),
+				updateTokenUsage: jest.fn(),
+			} as Partial<TaskStateManager> & { getTokenUsage: jest.Mock },
+		} as unknown) as Partial<TheaTask> & {
+			consecutiveMistakeCount: number
+			didRejectTool: boolean
+			webviewCommunicator: Partial<TaskWebviewCommunicator> & { say: jest.Mock }
+			taskStateManager: Partial<TaskStateManager> & { getTokenUsage: jest.Mock }
+			theaIgnoreController: Partial<TheaIgnoreController>
+			ask: jest.Mock
+			say: jest.Mock
+			sayAndCreateMissingParamError: jest.Mock
+			executeCommandTool: jest.Mock
 		}
 
 		// @ts-expect-error - Jest mock function type issues

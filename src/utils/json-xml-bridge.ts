@@ -118,6 +118,8 @@ export class JsonMatcher {
 	private objectDepth = 0
 	private inString = false
 	private escapeNext = false
+	// Cap buffer growth to prevent unbounded memory usage when JSON never completes
+	private static readonly MAX_BUFFER_LENGTH = 256 * 1024 // 256 KB
 
 	/**
 	 * Create a new JsonMatcher
@@ -134,6 +136,15 @@ export class JsonMatcher {
 	 */
 	update(chunk: string): JsonMatcherResult[] {
 		this.buffer += chunk
+		// Enforce buffer cap: if exceeded without finding a complete object,
+		// emit the earliest portion as non-matched text to avoid deadlock/memory bloat.
+		if (this.buffer.length > JsonMatcher.MAX_BUFFER_LENGTH) {
+			const overflow = this.buffer.length - JsonMatcher.MAX_BUFFER_LENGTH
+			const spill = this.buffer.slice(0, overflow)
+			this.buffer = this.buffer.slice(overflow)
+			const spillResult: JsonMatcherResult = { matched: false, data: spill }
+			return [spillResult, ...this.processBuffer()]
+		}
 		return this.processBuffer()
 	}
 

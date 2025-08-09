@@ -22,6 +22,7 @@ export class SseTransport implements IMcpTransport {
 	public httpServer?: http.Server
 	public port?: number
 	private readonly config: SseTransportConfig
+	private usingSdk: boolean = false
 
 	constructor(config?: SseTransportConfig) {
 		this.config = { ...DEFAULT_SSE_CONFIG, ...config }
@@ -29,44 +30,30 @@ export class SseTransport implements IMcpTransport {
 
 	private async initTransport(): Promise<void> {
 		if (this.transport) return
-		const isTestEnv = !!process.env.JEST_WORKER_ID
 		if ((globalThis as Record<string, unknown>).__JEST_TEARDOWN__) return
-		if (isTestEnv) {
-			// Minimal HTTP server for tests; avoid importing MCP SDK
-			this.transport = {
-				start: async () => {},
-				close: async () => {},
-				handleRequest: async () => {},
-			}
-			const app = express()
-			app.use(express.json())
-			app.all(this.config.eventsPath!, (req: express.Request, res: express.Response) => { res.status(200).end() })
-			app.all(this.config.apiPath!, (req: express.Request, res: express.Response) => { res.status(200).end() })
-			await new Promise<void>((resolve) => {
-				// Bind explicitly to 'localhost' to satisfy tests that assert hostname
-				const host = this.config.hostname || 'localhost'
-				this.httpServer = app.listen(this.config.port || 0, host, () => resolve())
-			})
-			const address = this.httpServer?.address()
-			if (address && typeof address !== "string") this.port = address.port
-			return
-		}
 		// Non-test env original logic
 		try {
-			const mod = await import("@modelcontextprotocol/sdk/server/streamableHttp.js")
-			const Transport = mod.StreamableHTTPServerTransport as unknown as new (opts: Record<string, unknown>) => StreamableHTTPServerTransportLike
+			// Import via ESM path; SDK supports ESM in Node >=18
+			type ModShape = { StreamableHTTPServerTransport?: new (opts: any) => StreamableHTTPServerTransportLike }
+			const mod = (await import("@modelcontextprotocol/sdk/server/streamableHttp.js")) as unknown as ModShape
+			const TransportCtor = mod?.StreamableHTTPServerTransport as unknown as new (opts: any) => StreamableHTTPServerTransportLike
+			if (typeof TransportCtor !== 'function') {
+				throw new Error('StreamableHTTPServerTransport constructor not found')
+			}
+			const Transport = TransportCtor
 			this.transport = new Transport({ sessionIdGenerator: undefined })
 			const app = express()
 			app.use(express.json())
 			app.all(this.config.eventsPath!, async (req, res) => { await this.transport!.handleRequest(req, res, req.body) })
 			app.all(this.config.apiPath!, async (req, res) => { await this.transport!.handleRequest(req, res, req.body) })
-			await new Promise<void>(r => { this.httpServer = app.listen(this.config.port || 3000, this.config.hostname || 'localhost', () => r()) })
-			await this.transport.start()
+			await new Promise<void>(r => { this.httpServer = app.listen((this.config.port ?? 3000), (this.config.hostname ?? 'localhost'), () => r()) })
 			const address = this.httpServer?.address()
 			if (address && typeof address !== 'string') this.port = address.port
+			this.usingSdk = true
 		} catch (error) {
 			const msg = `Failed to initialize MCP SDK: ${error instanceof Error ? error.message : String(error)}`
-			console.error(msg)
+			// Avoid noisy logs and Jest teardown issues in tests
+			if (!process.env.JEST_WORKER_ID) console.error(msg)
 			throw new Error(msg)
 		}
 	}
@@ -91,6 +78,15 @@ export class SseTransport implements IMcpTransport {
 			throw new Error("Server not started")
 		}
 		return this.port
+	}
+
+	// Expose underlying SDK transport for server.connect in non-test environments
+	public getUnderlyingTransport(): StreamableHTTPServerTransportLike | undefined {
+		return this.transport
+	}
+
+	public isUsingSdk(): boolean {
+		return this.usingSdk
 	}
 
 	public set onerror(handler: (error: Error) => void) {

@@ -70,3 +70,7 @@ dist/
 # Ignore temp images
 /assets/images/temp_image_*.png
 .output.txt
+.thea/claude_bridge/session.json
+.vscode/mcp.json
+mcp-claude/requirements.txt
+mcp-claude/server.py

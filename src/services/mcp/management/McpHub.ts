@@ -16,6 +16,7 @@ import deepEqual from "fast-deep-equal"
 import * as fs from "fs/promises"
 import * as path from "path"
 import * as vscode from "vscode"
+import { parse as parseJSONC } from "jsonc-parser"
 import { z } from "zod"
 import { t } from "../../../i18n"
 import { EXTENSION_DISPLAY_NAME, CONFIG_DIR_NAME } from "../../../../dist/thea-config" // Import branded constants
@@ -130,6 +131,42 @@ export class McpHub {
 	}
 
 	/**
+	 * Parse settings content supporting JSON and JSONC (comments, trailing commas)
+	 */
+	private parseSettings(content: string): unknown {
+		// Try JSON first
+		try {
+			return JSON.parse(content)
+		} catch {
+			// Fallback to JSONC parser
+			try {
+				return parseJSONC(content)
+			} catch {
+				return undefined
+			}
+		}
+	}
+
+	/**
+	 * Normalize various config shapes into { mcpServers: Record<string, unknown> }
+	 */
+	private normalizeConfigShape(parsed: unknown): { mcpServers: Record<string, unknown> } {
+		if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+			return { mcpServers: {} }
+		}
+		const obj = parsed as Record<string, unknown>
+		// If config uses VS Code style { servers: { ... } }, convert to expected shape
+		if (!("mcpServers" in obj) && typeof obj.servers === "object" && obj.servers !== null) {
+			return { mcpServers: obj.servers as Record<string, unknown> }
+		}
+		// If already in expected shape
+		if (typeof obj.mcpServers === "object" && obj.mcpServers !== null) {
+			return { mcpServers: obj.mcpServers as Record<string, unknown> }
+		}
+		return { mcpServers: {} }
+	}
+
+	/**
 	 * Validates and normalizes server configuration
 	 * @param config The server configuration to validate
 	 * @param serverName Optional server name for error messages
@@ -226,8 +263,9 @@ export class McpHub {
 	private async handleConfigFileChange(filePath: string, source: "global" | "project"): Promise<void> {
 		try {
 			const content = await fs.readFile(filePath, "utf-8")
-			const config: unknown = JSON.parse(content)
-			const result = McpSettingsSchema.safeParse(config)
+			const parsed = this.parseSettings(content)
+			const normalized = this.normalizeConfigShape(parsed)
+			const result = McpSettingsSchema.safeParse(normalized)
 
 			if (!result.success) {
 				const errorMessages = result.error.errors
@@ -273,7 +311,8 @@ export class McpHub {
 
 			try {
 				// Parse with type assertion to the expected structure
-				const parsedConfig = JSON.parse(content) as unknown
+				let parsedConfig = this.parseSettings(content)
+				config = this.normalizeConfigShape(parsedConfig)
 				// Verify it's an object before assigning
 				if (parsedConfig && typeof parsedConfig === "object" && !Array.isArray(parsedConfig)) {
 					config = parsedConfig as RawConfigType
@@ -384,7 +423,8 @@ export class McpHub {
 
 			try {
 				// Parse with type assertion to the expected structure
-				const parsedConfig = JSON.parse(content) as unknown
+				let parsedConfig = this.parseSettings(content)
+				config = this.normalizeConfigShape(parsedConfig)
 
 				// If config is an array, convert it to an object with mcpServers property
 				if (Array.isArray(parsedConfig)) {
@@ -443,12 +483,19 @@ export class McpHub {
 		}
 
 		const workspaceFolder = vscode.workspace.workspaceFolders[0]
-		const projectMcpDir = path.join(workspaceFolder.uri.fsPath, CONFIG_DIR_NAME)
-		const projectMcpPath = path.join(projectMcpDir, "mcp.json")
+		const root = workspaceFolder.uri.fsPath
+		const theaConfigPath = path.join(path.join(root, CONFIG_DIR_NAME), "mcp.json")
+		const vscodeConfigPath = path.join(path.join(root, ".vscode"), "mcp.json")
 
 		try {
-			await fs.access(projectMcpPath)
-			return projectMcpPath
+			await fs.access(theaConfigPath)
+			return theaConfigPath
+		} catch {
+			// ignore
+		}
+		try {
+			await fs.access(vscodeConfigPath)
+			return vscodeConfigPath
 		} catch {
 			return null
 		}
@@ -719,29 +766,20 @@ export class McpHub {
 				if (configPath) {
 					const content = await fs.readFile(configPath, "utf-8")
 
-					try {
-						// Parse with type assertion to the expected structure
-						const parsedConfig = JSON.parse(content) as unknown
-
-						// Verify it's an object with the expected structure
-						if (parsedConfig && typeof parsedConfig === "object" && !Array.isArray(parsedConfig)) {
-							const config = parsedConfig as ConfigType
-
-							// Safely access nested properties
+						try {
+							const normalized = this.normalizeConfigShape(this.parseSettings(content)) as ConfigType
 							if (
-								config.mcpServers &&
-								typeof config.mcpServers === "object" &&
-								serverName in config.mcpServers &&
-								config.mcpServers[serverName]
+								normalized.mcpServers &&
+								typeof normalized.mcpServers === "object" &&
+								serverName in normalized.mcpServers &&
+								normalized.mcpServers[serverName]
 							) {
-								const serverConfig = config.mcpServers[serverName]
-
+								const serverConfig = normalized.mcpServers[serverName]
 								if (serverConfig.alwaysAllow && Array.isArray(serverConfig.alwaysAllow)) {
 									alwaysAllowConfig = serverConfig.alwaysAllow
 								}
 							}
-						}
-					} catch (parseError) {
+						} catch (parseError) {
 						console.error(`Failed to parse config for ${serverName}:`, parseError)
 					}
 				}

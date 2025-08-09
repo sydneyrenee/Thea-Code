@@ -26,6 +26,7 @@ export function convertToR1Format(neutralHistory: NeutralConversationHistory): M
 		if (Array.isArray(message.content)) {
 			const textParts: string[] = []
 			const imageParts: ContentPartImage[] = []
+			const unknownPartsAsText: string[] = []
 
 			message.content.forEach((part) => {
 				if (part.type === "text") {
@@ -34,18 +35,34 @@ export function convertToR1Format(neutralHistory: NeutralConversationHistory): M
 					hasImages = true
 					// Type assertion is safe here since we checked part.type === "image_url"
 					imageParts.push(part)
+				} else {
+					// Preserve unknown blocks by stringifying to avoid silent data loss
+					try {
+						if (typeof part === "object" && part !== null) {
+							const maybeText = (part as { text?: unknown }).text
+							if (typeof maybeText === "string") {
+								unknownPartsAsText.push(maybeText)
+							} else {
+								unknownPartsAsText.push(JSON.stringify(part))
+							}
+						} else {
+							unknownPartsAsText.push(String(part))
+						}
+					} catch {
+						unknownPartsAsText.push("[unsupported content]")
+					}
 				}
 			})
 
 			if (hasImages) {
 				const parts: (ContentPartText | ContentPartImage)[] = []
 				if (textParts.length > 0) {
-					parts.push({ type: "text", text: textParts.join("\n") })
+					parts.push({ type: "text", text: textParts.concat(unknownPartsAsText).join("\n") })
 				}
 				parts.push(...imageParts)
 				messageContent = parts
 			} else {
-				messageContent = textParts.join("\n")
+				messageContent = textParts.concat(unknownPartsAsText).join("\n")
 			}
 		} else {
 			messageContent = message.content || ""

@@ -1,5 +1,7 @@
 import { GoogleAuth } from "google-auth-library";
 import type { NeutralConversationHistory, NeutralMessageContent } from "../../shared/neutral-history";
+import { Tiktoken } from "js-tiktoken/lite";
+import o200kBase from "js-tiktoken/ranks/o200k_base";
 import {
   convertToVertexClaudeHistory,
   convertToVertexGeminiHistory,
@@ -33,6 +35,7 @@ export class NeutralVertexClient {
   private auth: GoogleAuth;
   private accessToken: string | null = null;
   private tokenExpiry: number = 0;
+  private encoder: Tiktoken | null = null;
 
   /**
    * Creates a new NeutralVertexClient
@@ -486,21 +489,28 @@ export class NeutralVertexClient {
    * @returns The token count
    */
   public countTokens(model: string, content: NeutralMessageContent): number {
-    // This is a placeholder implementation
-    // In a real implementation, this would use a tokenizer appropriate for the model
-    // or make an API call to the Vertex AI token counting endpoint if available
-    
-    // For now, return a simple estimate based on character count
-    // This is not accurate and should be replaced with proper token counting
-    const text = typeof content === 'string' 
-      ? content 
-      : Array.isArray(content)
-        ? content.map(item => 
-            item.type === 'text' ? item.text : JSON.stringify(item)
-          ).join(' ')
-        : JSON.stringify(content);
-    
-    // Very rough estimate: ~4 characters per token for English text
-    return Math.ceil(text.length / 4);
+    // Use tiktoken for text content; non-text blocks are not counted here.
+    if (!this.encoder) {
+      this.encoder = new Tiktoken(o200kBase);
+    }
+
+    if (typeof content === "string") {
+      return this.encoder.encode(content).length;
+    }
+
+    if (Array.isArray(content)) {
+      let total = 0;
+      for (const block of content) {
+        if (block && (block as { type?: string }).type === "text") {
+          const text = (block as { text?: string }).text ?? "";
+          if (text) {
+            total += this.encoder.encode(text).length;
+          }
+        }
+      }
+      return total;
+    }
+
+    return 0;
   }
 }

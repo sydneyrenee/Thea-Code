@@ -187,10 +187,10 @@ describe("McpToolRegistry", () => {
 // Helper function to create a mock tool definition
 function createMockTool(name: string, description: string = "Test tool"): ToolDefinition {
 	const mockHandler = jest.fn(() => {
-		return Promise.resolve({
-			content: [{ type: "text", text: "Success" }],
-		} as ToolCallResult)
-	})
+			return Promise.resolve({
+				content: [{ type: "text", text: "Success" }],
+			} as ToolCallResult)
+		})
 
 	return {
 		name,

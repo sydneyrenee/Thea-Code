@@ -177,4 +177,39 @@ describe("convertToR1Format", () => {
 
 		expect(convertToR1Format(input)).toEqual(expected)
 	})
+
+	it("preserves unknown parts as text when merging", () => {
+		const history: NeutralConversationHistory = [
+			{
+				role: "user",
+				content: [
+					{ type: "text", text: "hello" },
+					// @ts-expect-error testing unknown part preservation
+					{ type: "unknown", foo: "bar" },
+				],
+			},
+			{
+				role: "user",
+				content: [{ type: "text", text: "world" }],
+			},
+		]
+
+		const result = convertToR1Format(history)
+		expect(result).toHaveLength(1)
+		const first = result[0]
+		expect(first.role).toBe("user")
+		if (typeof first.content === "string") {
+			expect(first.content).toContain("hello")
+			expect(first.content).toContain("world")
+			expect(first.content).toContain("foo") // stringified unknown part
+		} else {
+			type TextPart = { type: "text"; text: string }
+			const contentArr = first.content as Array<TextPart | { type: string }>
+			const textPart = contentArr.find((p): p is TextPart => p.type === "text")
+			const text = textPart?.text ?? ""
+			expect(text).toContain("hello")
+			expect(text).toContain("world")
+			expect(text).toContain("foo")
+		}
+	})
 })

@@ -106,7 +106,7 @@ export class OpenAiNativeHandler extends OpenAiCompatibleHandler implements Sing
 			
 			// Emit completed tool calls as soon as they parse
 			for (const c of agg.addFromDelta(delta)) {
-				yield { type: "tool_call" as const, id: c.id, name: c.name, arguments: c.argString }
+				yield { type: "tool_use" as const, id: c.id, name: c.name, input: c.argString }
 			}
 			
 			// Existing text handling
@@ -126,7 +126,7 @@ export class OpenAiNativeHandler extends OpenAiCompatibleHandler implements Sing
 		// Flush any remaining aggregated tool calls
 		for (const c of agg.finalize()) {
 			if (c.argString) {
-				yield { type: "tool_call" as const, id: c.id, name: c.name, arguments: c.argString }
+				yield { type: "tool_use" as const, id: c.id, name: c.name, input: c.argString }
 			}
 		}
 	}

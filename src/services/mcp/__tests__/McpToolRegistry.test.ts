@@ -17,17 +17,16 @@ describe("McpToolRegistry", () => {
 
 	test("should register a tool", () => {
 		// Create a test tool definition
-		const toolDefinition: ToolDefinition = {
+				const toolDefinition: ToolDefinition = {
 			name: "test_tool",
 			description: "A test tool",
 			paramSchema: {
 				param: { type: "string", description: "A test parameter" },
 			},
-			handler: (args: Record<string, unknown>) => {
-				return {
-					content: [{ type: "text", text: `Executed test_tool with param: ${String(args.param)}` }],
-				}
-			},
+					handler: (args: Record<string, unknown>) =>
+						Promise.resolve({
+							content: [{ type: "text", text: `Executed test_tool with param: ${String(args.param)}` }],
+						}),
 		}
 
 		// Register the tool
@@ -40,10 +39,10 @@ describe("McpToolRegistry", () => {
 
 	test("should unregister a tool", () => {
 		// Create and register a test tool
-		const toolDefinition: ToolDefinition = {
+				const toolDefinition: ToolDefinition = {
 			name: "test_tool",
 			description: "A test tool",
-			handler: () => ({ content: [] }),
+					handler: () => Promise.resolve({ content: [] }),
 		}
 
 		registry.registerTool(toolDefinition)
@@ -68,16 +67,16 @@ describe("McpToolRegistry", () => {
 
 	test("should get all registered tools", () => {
 		// Create and register multiple tools
-		const tool1: ToolDefinition = {
+				const tool1: ToolDefinition = {
 			name: "tool1",
 			description: "Tool 1",
-			handler: () => ({ content: [] }),
+					handler: () => Promise.resolve({ content: [] }),
 		}
 
-		const tool2: ToolDefinition = {
+				const tool2: ToolDefinition = {
 			name: "tool2",
 			description: "Tool 2",
-			handler: () => ({ content: [] }),
+					handler: () => Promise.resolve({ content: [] }),
 		}
 
 		registry.registerTool(tool1)
@@ -94,14 +93,13 @@ describe("McpToolRegistry", () => {
 
 	test("should execute a tool", async () => {
 		// Create and register a test tool
-		const toolDefinition: ToolDefinition = {
+				const toolDefinition: ToolDefinition = {
 			name: "test_tool",
 			description: "A test tool",
-			handler: (args: Record<string, unknown>) => {
-				return {
-					content: [{ type: "text", text: `Executed with param: ${String(args.param)}` }],
-				}
-			},
+					handler: (args: Record<string, unknown>) =>
+						Promise.resolve({
+							content: [{ type: "text", text: `Executed with param: ${String(args.param)}` }],
+						}),
 		}
 
 		registry.registerTool(toolDefinition)
@@ -122,7 +120,7 @@ describe("McpToolRegistry", () => {
 
 	test("should handle errors in tool execution", async () => {
 		// Create and register a tool that throws an error
-		const toolDefinition: ToolDefinition = {
+	const toolDefinition: ToolDefinition = {
 			name: "error_tool",
 			description: "A tool that throws an error",
 			handler: () => {
@@ -147,10 +145,10 @@ describe("McpToolRegistry", () => {
 		registry.on("tool-unregistered", unregisterListener)
 
 		// Create a test tool
-		const toolDefinition: ToolDefinition = {
+				const toolDefinition: ToolDefinition = {
 			name: "test_tool",
 			description: "A test tool",
-			handler: () => ({ content: [] }),
+					handler: () => Promise.resolve({ content: [] }),
 		}
 
 		// Register the tool

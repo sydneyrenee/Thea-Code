@@ -294,10 +294,24 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 				throw new Error(`Failed to initialize ${this.transportType} transport`)
 			}
 
+			// For SDK transports, server.connect will manage lifecycle; start() may be a no-op for stdio
+			await this.transport.start()
+
 			this.registerHandlers()
 			// The SDK's connect method expects the raw SDK transport instance.
-			// It will also start the underlying HTTP server for SSE.
-			await this.server.connect(this.transport as unknown)
+			// In tests, our SSE transport may be a stub; only connect when SDK transport exists.
+			if (this.transportType === "sse") {
+				const sse = this.transport as unknown as {
+					getUnderlyingTransport?: () => unknown
+					isUsingSdk?: () => boolean
+				}
+				const underlying = sse.getUnderlyingTransport?.()
+				if (underlying) {
+					await this.server.connect(underlying)
+				}
+			} else {
+				await this.server.connect(this.transport as unknown)
+			}
 
 			// After connect, if SSE, the port should be determined and available.
 			if (this.transportType === "sse") {
@@ -313,25 +327,36 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 				
 				if (isDynamicPort) {
 					try {
-						const preferredRanges: Array<[number, number]> = [
-							[3000, 3100],
-							[8000, 8100],
-							[9000, 9100],
-						]
-						if (!isTestEnv) console.log("Finding available port for MCP server...")
-						actualPort = await findAvailablePort(3000, "127.0.0.1", preferredRanges, isTestEnv ? 20 : 150, isTestEnv)
-						if (isTestEnv && this.lastPort && this.lastPort === actualPort) {
-							// Try to select a different port to satisfy restart tests
-							const startFrom = this.lastPort + 1
-							actualPort = await findAvailablePort(startFrom, "127.0.0.1", preferredRanges, isTestEnv ? 20 : 150, isTestEnv)
-						}
-						if (!isTestEnv) console.log(`Found available port for MCP server: ${actualPort}`)
-						this.sseConfig.port = actualPort
-						if (isTestEnv) {
-							if (this.transport?.close) await this.transport.close()
-							this.transport = new SseTransport(this.sseConfig)
-							this.registerHandlers()
-							await this.server.connect(this.transport as unknown)
+						// If the transport already bound to an ephemeral port (test stub), use it directly
+						const sseInst = this.transport as unknown as { getPort?: () => number | undefined }
+						const boundPort = sseInst.getPort?.()
+						if (typeof boundPort === 'number' && boundPort > 0) {
+							actualPort = boundPort
+						} else {
+							const preferredRanges: Array<[number, number]> = [
+								[3000, 3100],
+								[8000, 8100],
+								[9000, 9100],
+							]
+							if (!isTestEnv) console.log("Finding available port for MCP server...")
+							actualPort = await findAvailablePort(3000, "127.0.0.1", preferredRanges, isTestEnv ? 20 : 150, isTestEnv)
+							if (isTestEnv && this.lastPort && this.lastPort === actualPort) {
+								// Try to select a different port to satisfy restart tests
+								const startFrom = this.lastPort + 1
+								actualPort = await findAvailablePort(startFrom, "127.0.0.1", preferredRanges, isTestEnv ? 20 : 150, isTestEnv)
+							}
+							if (!isTestEnv) console.log(`Found available port for MCP server: ${actualPort}`)
+							this.sseConfig.port = actualPort
+							if (isTestEnv) {
+								if (this.transport?.close) await this.transport.close()
+								this.transport = new SseTransport(this.sseConfig)
+								this.registerHandlers()
+								const sse = this.transport as unknown as { getUnderlyingTransport?: () => unknown }
+								const underlying = sse.getUnderlyingTransport?.()
+								if (underlying) {
+									await this.server.connect(underlying)
+								}
+							}
 						}
 					} catch (error) {
 						const errorMessage = error instanceof Error ? error.message : String(error)
@@ -348,11 +373,15 @@ export class EmbeddedMcpProvider extends EventEmitter implements IMcpProvider {
 						while (retries < maxRetries) {
 							let port: number | undefined;
 							
-							// Try to get port from httpServer.address()
-							if (
-								sdkSseTransportInstance.httpServer &&
-								typeof sdkSseTransportInstance.httpServer.address === "function"
-							) {
+							// Try to get port via SseTransport wrapper when available
+							const maybeWrapper = this.transport as unknown as { getPort?: () => number | undefined }
+							const wrapperPort = maybeWrapper.getPort?.()
+							if (typeof wrapperPort === 'number' && wrapperPort > 0) {
+								return wrapperPort
+							}
+
+							// Try to get port from httpServer.address() (SDK transport)
+							if (sdkSseTransportInstance.httpServer && typeof sdkSseTransportInstance.httpServer.address === "function") {
 								const rawAddress: AddressInfo | string | null = sdkSseTransportInstance.httpServer.address()
 								if (rawAddress && typeof rawAddress === "object" && "port" in rawAddress) {
 									port = rawAddress.port;

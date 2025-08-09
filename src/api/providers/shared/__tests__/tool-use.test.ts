@@ -3,8 +3,8 @@ import type OpenAI from "openai"
 
 function deltaToolCall(id: string, name: string, argsChunk: string, index?: number): OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta {
   return {
-    tool_calls: [{ id, index, type: "function", function: { name, arguments: argsChunk } }] as any,
-  } as any
+    tool_calls: [{ id, index, type: "function", function: { name, arguments: argsChunk } }],
+  } as OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta
 }
 
 describe("ToolCallAggregator", () => {
@@ -82,8 +82,8 @@ describe("ToolCallAggregator", () => {
   test("handles tool calls without explicit id using generated ids", () => {
     const agg = new ToolCallAggregator()
     // Without explicit IDs, the system generates them based on name and timestamp
-    const delta1 = { tool_calls: [{ type: "function", function: { name: "test1", arguments: `{"a":1}` }, index: 0 }] } as any
-    const delta2 = { tool_calls: [{ type: "function", function: { name: "test2", arguments: `{"b":2}` }, index: 1 }] } as any
+    const delta1: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta = { tool_calls: [{ type: "function", function: { name: "test1", arguments: `{"a":1}` }, index: 0 }] }
+    const delta2: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta = { tool_calls: [{ type: "function", function: { name: "test2", arguments: `{"b":2}` }, index: 1 }] }
     
     const out1 = agg.addFromDelta(delta1)
     const out2 = agg.addFromDelta(delta2)
@@ -99,8 +99,8 @@ describe("ToolCallAggregator", () => {
   test("accumulates chunks for same tool call without id", () => {
     const agg = new ToolCallAggregator()
     // Without ID, same name and index should accumulate
-    const delta1 = { tool_calls: [{ type: "function", function: { name: "test", arguments: `{"a":` }, index: 0 }] } as any
-    const delta2 = { tool_calls: [{ type: "function", function: { name: "test", arguments: `1}` }, index: 0 }] } as any
+    const delta1: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta = { tool_calls: [{ type: "function", function: { name: "test", arguments: `{"a":` }, index: 0 }] }
+    const delta2: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta = { tool_calls: [{ type: "function", function: { name: "test", arguments: `1}` }, index: 0 }] }
     
     const out1 = agg.addFromDelta(delta1)
     expect(out1).toHaveLength(0) // Not complete yet
@@ -132,7 +132,7 @@ describe("extractToolCallsFromDelta", () => {
     const calls = extractToolCallsFromDelta(delta)
     expect(calls).toHaveLength(1)
     expect(calls[0].function.name).toBe("search")
-    const args = JSON.parse(calls[0].function.arguments)
+    const args = JSON.parse(calls[0].function.arguments) as { query: string; limit: number }
     expect(args.query).toBe("test query")
     expect(args.limit).toBe(10)
   })
@@ -145,7 +145,7 @@ describe("extractToolCallsFromDelta", () => {
     expect(calls).toHaveLength(1)
     expect(calls[0].id).toBe("calc_1")
     expect(calls[0].function.name).toBe("calculate")
-    const args = JSON.parse(calls[0].function.arguments)
+    const args = JSON.parse(calls[0].function.arguments) as { x: number; y: number }
     expect(args.x).toBe(5)
     expect(args.y).toBe(3)
   })

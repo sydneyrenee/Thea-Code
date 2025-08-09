@@ -309,6 +309,6 @@ export class ToolCallAggregator {
 function isParsableJson(s: string): boolean {
   try { JSON.parse(s); return true } catch { return false }
 }
-function tryParseJson(s: string): unknown | undefined {
+function tryParseJson(s: string): unknown {
   try { return JSON.parse(s) } catch { return undefined }
 }

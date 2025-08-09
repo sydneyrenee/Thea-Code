@@ -13,7 +13,7 @@ import { convertToOpenAiHistory, convertToOpenAiContentBlocks } from "../transfo
 import { ApiStream, ApiStreamUsageChunk } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
 import { XmlMatcher } from "../../utils/xml-matcher"
-import { hasToolCalls as sharedHasToolCalls } from "./shared/tool-use"
+import { hasToolCalls as sharedHasToolCalls, ToolCallAggregator } from "./shared/tool-use"
 import { API_REFERENCES } from "../../../dist/thea-config" // Import branded constants
 import { ANTHROPIC_DEFAULT_MAX_TOKENS } from "./constants" // Import ANTHROPIC_DEFAULT_MAX_TOKENS
 import { supportsTemperature, hasCapability } from "../../utils/model-capabilities" // Import capability detection functions
@@ -540,35 +540,36 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 	}
 
 	private async *handleStreamResponse(stream: AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>): ApiStream {
+		const agg = new ToolCallAggregator() // default 256KB cap
+
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta
+			
+			// Emit completed tool calls as soon as they parse
+			for (const c of agg.addFromDelta(delta)) {
+				// Process tool use using MCP integration
+				const toolResult = await this.processToolUse({
+					id: c.id,
+					name: c.name,
+					input: c.parsedArgs || JSON.parse(c.argString || "{}"),
+				})
+
+				// Ensure the tool result content is a string
+				const toolResultString = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
+
+				// Yield tool result
+				yield {
+					type: "tool_result",
+					id: c.id,
+					content: toolResultString,
+				}
+			}
+
+			// Existing text handling
 			if (delta?.content) {
 				yield {
 					type: "text",
 					text: delta.content,
-				}
-			}
-
-			// Handle tool use (function calls) using the helper method
-			const toolCalls = this.extractToolCalls(delta)
-			for (const toolCall of toolCalls) {
-				if (toolCall.function) {
-					// Process tool use using MCP integration
-					const toolResult = await this.processToolUse({
-						id: toolCall.id,
-						name: toolCall.function.name,
-						input: JSON.parse(toolCall.function.arguments || "{}"),
-					})
-
-					// Ensure the tool result content is a string
-					const toolResultString = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
-
-					// Yield tool result
-					yield {
-						type: "tool_result",
-						id: toolCall.id,
-						content: toolResultString,
-					}
 				}
 			}
 
@@ -577,6 +578,26 @@ export class OpenAiHandler extends BaseProvider implements SingleCompletionHandl
 					type: "usage",
 					inputTokens: chunk.usage.prompt_tokens || 0,
 					outputTokens: chunk.usage.completion_tokens || 0,
+				}
+			}
+		}
+
+		// Flush any remaining aggregated tool calls
+		for (const c of agg.finalize()) {
+			if (c.argString) {
+				// Process any remaining tool calls
+				const toolResult = await this.processToolUse({
+					id: c.id,
+					name: c.name,
+					input: c.parsedArgs || JSON.parse(c.argString || "{}"),
+				})
+
+				const toolResultString = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult)
+
+				yield {
+					type: "tool_result",
+					id: c.id,
+					content: toolResultString,
 				}
 			}
 		}

@@ -13,6 +13,7 @@ import { OpenAiCompatibleHandler } from "./openai-compatible-base"
 import { defaultHeaders } from "./openai"
 import { supportsTemperature, getReasoningEffort } from "../../utils/model-capabilities"
 import { isThinkingModel, isO3MiniModel } from "../../utils/model-pattern-detection"
+import { ToolCallAggregator } from "./shared/tool-use"
 
 export class OpenAiNativeHandler extends OpenAiCompatibleHandler implements SingleCompletionHandler {
 	private nativeClient: OpenAI
@@ -98,17 +99,34 @@ export class OpenAiNativeHandler extends OpenAiCompatibleHandler implements Sing
 			throw new Error(message)
 		}
 
+		const agg = new ToolCallAggregator()
+
 		for await (const chunk of stream) {
 			const delta = chunk.choices[0]?.delta
+			
+			// Emit completed tool calls as soon as they parse
+			for (const c of agg.addFromDelta(delta)) {
+				yield { type: "tool_call" as const, id: c.id, name: c.name, arguments: c.argString }
+			}
+			
+			// Existing text handling
 			if (delta && typeof delta.content !== "undefined" && delta.content !== null) {
 				yield { type: "text" as const, text: delta.content }
 			}
+			
 			if (chunk.usage) {
 				yield {
 					type: "usage" as const,
 					inputTokens: chunk.usage.prompt_tokens || 0,
 					outputTokens: chunk.usage.completion_tokens || 0,
 				}
+			}
+		}
+
+		// Flush any remaining aggregated tool calls
+		for (const c of agg.finalize()) {
+			if (c.argString) {
+				yield { type: "tool_call" as const, id: c.id, name: c.name, arguments: c.argString }
 			}
 		}
 	}

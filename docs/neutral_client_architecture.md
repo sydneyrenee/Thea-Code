@@ -172,8 +172,36 @@ Protocol-specific handlers (e.g., `OpenAiHandler`, `AnthropicHandler`, `GeminiHa
 - Centralized tool-use routing via MCP
 - Clear separation of concerns between conversion, transport, and execution layers
 
+## Unified Tool-Use Pipeline (Streaming-Safe)
+
+The architecture includes a robust, streaming-safe tool-use pipeline that handles partial tool calls across all providers:
+
+### Extraction (Provider-Agnostic)
+- Standard OpenAI `tool_calls` array from streaming deltas
+- Inline JSON blocks with `{"type":"tool_use", ...}` format
+- Inline XML blocks with `<toolname>...</toolname>` format
+
+### Aggregation
+- `ToolCallAggregator` accumulates streamed `function.arguments` across deltas
+- Emits `tool_call` events when JSON becomes parseable
+- Preserves `id` and `index` for ordering semantics
+- Tracks `parseAttempts` for debugging streaming issues
+- Enforces `maxArgBytes` safety cap (default 256 KB) to prevent memory issues
+
+### Handoff
+- Providers emit `tool_call` chunks to the MCP executor for execution
+- Text chunks stream independently and are unaffected by tool aggregation
+- Tool results are processed through MCP integration and returned as `tool_result` events
+
+This pipeline ensures:
+- No duplicate parsing logic across providers
+- Consistent handling of partial tool calls
+- Memory safety with large or malformed tool arguments
+- Clean separation between text and tool streaming
+
 ## Future Enhancements
 
 - Extend capability detection coverage and unify capability surfacing for UI
 - Add retries and standardized error envelopes to all fetch-based clients
 - Broaden tests for mixed tool/image/text results across providers
+- Consider exposing `maxArgBytes` via config/env for runtime configuration
